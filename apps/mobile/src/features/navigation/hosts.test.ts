@@ -8,6 +8,12 @@ vi.mock("@/features/achievements/arrival/arrivals-host", () => ({
 vi.mock("@/features/player/now-playing/now-playing-host", () => ({
 	NowPlayingHost: () => null,
 }));
+vi.mock("@/features/connect/age-gate/age-ask-host", () => ({
+	AgeAskHost: () => null,
+}));
+vi.mock("@/features/letters/late-risk-host", () => ({
+	LateRiskHost: () => null,
+}));
 
 describe("ROOT_HOSTS", () => {
 	it("names each host once, since the name is its key", () => {

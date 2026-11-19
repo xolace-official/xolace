@@ -24,6 +24,8 @@ export type LettersHub = {
 		/** "Turn on" after Not now. */
 		turnOn: () => void;
 		withdraw: (id: string) => void;
+		/** A returned or late-held letter leaves Sent. */
+		dismiss: (id: string) => void;
 		/** These statuses are on screen now: their marks light once. */
 		markSeen: (ids: readonly string[]) => void;
 	};

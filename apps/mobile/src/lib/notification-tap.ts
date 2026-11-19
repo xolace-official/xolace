@@ -94,7 +94,7 @@ export type NotificationTapPlan = {
 const HOME: TapNavigation = { action: "home" };
 
 /**
- * Letters' three pushes (`backend.md` §2.3; S21 sends them, ids only): a letter placed with you
+ * Letters' three pushes (letters spec §6, ids only): a letter placed with you
  * opens it in the reader; yours received or acknowledged opens the Letters screen, reusing it
  * when it's already on top. Both stack, so a held screen keeps what's in progress under them.
  */

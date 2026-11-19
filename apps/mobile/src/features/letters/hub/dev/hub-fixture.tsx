@@ -28,6 +28,7 @@ export function HubFixtureScreen({ fixture }: { fixture: HubFixture }) {
 	const value: LettersHub = {
 		actions: {
 			answerOffer: (optIn) => setStatus((s) => ({ ...s, optIn })),
+			dismiss: (id) => setSent((all) => all.filter((l) => l.id !== id)),
 			markSeen: (ids) =>
 				setSent((all) =>
 					all.map((l) => (ids.includes(l.id) ? { ...l, seen: true } : l))

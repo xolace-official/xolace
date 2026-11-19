@@ -30,6 +30,8 @@ import {
 	readTarget,
 	receivedRowSub,
 	type SentLetter,
+	sentDismissable,
+	sentLit,
 	sentShown,
 	waitLeft,
 	withStarter,
@@ -42,6 +44,7 @@ vi.mock(
 );
 
 const OPEN: LettersStatus = {
+	invite: true,
 	optIn: "yes",
 	unopenedId: null,
 	writeLimit: null,
@@ -216,6 +219,14 @@ describe("the session-end cards", () => {
 				.write
 		).toBe(false);
 	});
+	it("stops asking for letters while Xolace isn't inviting them (decision C)", () => {
+		const backlog = { ...OPEN, invite: false };
+		expect(endCardOffer(backlog, END_CARD_FRESH, false, NOW).write).toBe(false);
+		expect(
+			endCardOffer({ ...backlog, unopenedId: "a" }, END_CARD_FRESH, false, NOW)
+				.waiting
+		).toBe(true);
+	});
 	it("rests the write card 7 days after it shows", () => {
 		const shown = endCardShown(END_CARD_FRESH, NOW);
 		expect(endCardOffer(OPEN, shown, false, NOW + 6 * DAY).write).toBe(false);
@@ -249,6 +260,23 @@ describe("heldAgain and canSend: a held letter, compared trimmed (W4)", () => {
 		expect(canSend(`${FORTY}y`, FORTY)).toBe(true);
 		expect(heldAgain(FORTY, "")).toBe(false);
 		expect(heldAgain(FORTY, "   ")).toBe(false);
+	});
+});
+
+describe("sent statuses", () => {
+	it("lights the mark only once received", () => {
+		expect(sentLit("waiting")).toBe(false);
+		expect(sentLit("received")).toBe(true);
+		expect(sentLit("acknowledged")).toBe(true);
+		expect(sentLit("returned")).toBe(false);
+		expect(sentLit("held")).toBe(false);
+	});
+
+	it("lets only a returned or late-held letter be dismissed", () => {
+		expect(sentDismissable("returned")).toBe(true);
+		expect(sentDismissable("held")).toBe(true);
+		expect(sentDismissable("waiting")).toBe(false);
+		expect(sentDismissable("received")).toBe(false);
 	});
 });
 

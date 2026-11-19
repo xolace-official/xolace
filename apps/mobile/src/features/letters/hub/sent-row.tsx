@@ -5,26 +5,29 @@ import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { LETTERS } from "../copy";
 import { LetterLine } from "../letter-sheet";
-import { type SentLetter, sentShown } from "../letters-model";
+import { type SentLetter, sentDismissable, sentShown } from "../letters-model";
 import { ReceivedMark } from "../received-mark";
 
 const WITHDRAW = "withdraw";
+const DISMISS = "dismiss";
 const HIT = 10;
 
 /**
  * One sent letter: its opening line, its status and the received mark. Nothing about the
  * recipient. The mark lights (800 ms along the ignite curve) the first time the sender sees a new
  * status: the first time this screen is in front with `seen` false. Then it's marked seen and
- * stays lit.
+ * stays lit. A returned or late-held letter says so, keeps its mark unlit, and can be dismissed.
  */
 export function SentRow({
 	letter,
 	onSeen,
 	onWithdraw,
+	onDismiss,
 }: {
 	letter: SentLetter;
 	onSeen: (id: string) => void;
 	onWithdraw: (id: string) => void;
+	onDismiss: (id: string) => void;
 }) {
 	const focused = useIsFocused();
 	const fresh = !letter.seen;
@@ -36,21 +39,25 @@ export function SentRow({
 		}
 	}, [focused, fresh, letter.id, onSeen]);
 
-	const status = LETTERS.status[letter.status];
+	// An unknown status from a newer server reads as waiting rather than breaking the row.
+	const status = LETTERS.status[letter.status] ?? LETTERS.status.waiting;
 	const waiting = letter.status === "waiting";
+	const act = waiting
+		? { label: LETTERS.withdraw.action, name: WITHDRAW, run: onWithdraw }
+		: sentDismissable(letter.status)
+			? { label: LETTERS.dismiss, name: DISMISS, run: onDismiss }
+			: null;
 	return (
 		<View
 			accessibilityActions={
-				waiting
-					? [{ label: LETTERS.withdraw.action, name: WITHDRAW }]
-					: undefined
+				act ? [{ label: act.label, name: act.name }] : undefined
 			}
 			accessibilityLabel={`${letter.line}, ${status}`}
 			accessible
 			className="mx-4 flex-row items-center gap-2.5 border-separator border-b px-4 py-3"
 			onAccessibilityAction={(e) => {
-				if (e.nativeEvent.actionName === WITHDRAW) {
-					onWithdraw(letter.id);
+				if (act && e.nativeEvent.actionName === act.name) {
+					act.run(letter.id);
 				}
 			}}
 		>
@@ -65,15 +72,19 @@ export function SentRow({
 					{status}
 				</AppText>
 			</View>
-			{waiting ? (
+			{act ? (
 				<PressScale
-					accessibilityLabel={LETTERS.withdraw.action}
+					accessibilityLabel={act.label}
 					accessibilityRole="button"
 					hitSlop={HIT}
-					onPress={() => onWithdraw(letter.id)}
+					onPress={() => act.run(letter.id)}
 				>
-					<AppText color="dangerInk" variant="detail" weight="semibold">
-						{LETTERS.withdraw.action}
+					<AppText
+						color={waiting ? "dangerInk" : "muted"}
+						variant="detail"
+						weight="semibold"
+					>
+						{act.label}
 					</AppText>
 				</PressScale>
 			) : null}

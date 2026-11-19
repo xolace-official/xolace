@@ -61,6 +61,7 @@ export function SentSection() {
 					>
 						<SentRow
 							letter={l}
+							onDismiss={actions.dismiss}
 							onSeen={(id) => actions.markSeen([id])}
 							onWithdraw={setWithdrawing}
 						/>

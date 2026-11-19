@@ -88,30 +88,49 @@ const ALTERNATIVES: {
 ];
 
 const REFUSALS = {
-	declined: {
-		body: "Without a date of birth we can't match you with a Xolacer. You can add it next time you ask to talk.",
-		title: "No problem",
+	letters: {
+		declined: {
+			body: "Without a date of birth, letters stay closed. You can add it next time you write or say yes to receiving them.",
+			title: "No problem",
+		},
+		not_available: {
+			body: "Letters are for people 18 and over. There's still plenty here for you.",
+			title: "Letters aren't open to you yet",
+		},
+		under_13: {
+			body: "So we can't open letters for you. If things feel heavy right now, someone at a crisis line can help.",
+			title: "Xolace is for people 13 and over",
+		},
 	},
-	not_available: {
-		body: "Talking with a Xolacer is for people 18 and over. There's still plenty here for you.",
-		title: "Xolacer chats aren't open to you yet",
-	},
-	under_13: {
-		body: "So we can't open Xolacer chats for you. If things feel heavy right now, someone at a crisis line can help.",
-		title: "Xolace is for people 13 and over",
+	xolacer_chat: {
+		declined: {
+			body: "Without a date of birth we can't match you with a Xolacer. You can add it next time you ask to talk.",
+			title: "No problem",
+		},
+		not_available: {
+			body: "Talking with a Xolacer is for people 18 and over. There's still plenty here for you.",
+			title: "Xolacer chats aren't open to you yet",
+		},
+		under_13: {
+			body: "So we can't open Xolacer chats for you. If things feel heavy right now, someone at a crisis line can help.",
+			title: "Xolace is for people 13 and over",
+		},
 	},
 } as const;
 
 /** Where an answer that isn't "adult" leads: something else to do, never a dead end. */
 export function RefusalStep({
 	step,
+	surface,
 	onClose,
 }: {
-	step: keyof typeof REFUSALS;
+	step: keyof (typeof REFUSALS)["xolacer_chat"];
+	/** What the date of birth was asked for: the refusal names it. */
+	surface: keyof typeof REFUSALS;
 	onClose: () => void;
 }) {
 	const router = useRouter();
-	const copy = REFUSALS[step];
+	const copy = REFUSALS[surface][step];
 	// Under 13 gets the crisis line only: Kindling and the Library are part of the app they're
 	// too young for.
 	const options =

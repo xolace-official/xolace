@@ -33,6 +33,12 @@ export const STARTERS = [
 	"On a hard day, I remind myself",
 ] as const;
 
+/**
+ * The offer's wording, recorded with each answer as its consent version (`letters.optIn.set`'s
+ * `promptVersion`). Bump it whenever `LETTERS.offer` changes.
+ */
+export const LETTERS_OFFER_VERSION = "letters_offer.v1";
+
 /** Report's reasons, in the board's order; a reason is required (open question 30). */
 export const REPORT_REASONS = [
 	"unkind",
@@ -66,6 +72,8 @@ export const LETTERS = {
 		held: "This letter can’t be sent.",
 		lang: "Letters are English-only for now.",
 	},
+	/** A returned or late-held row leaves Sent. */
+	dismiss: "Dismiss",
 	/** Above every letter. */
 	fixedLine: "Someone wrote this for whoever needed it",
 	hub: {
@@ -152,7 +160,11 @@ export const LETTERS = {
 	/** A sent letter's status: nothing about the recipient, and no "read". */
 	status: {
 		acknowledged: "Received · acknowledged",
+		/** A background re-check held it after it read as sent (spec §5.4). */
+		held: "This letter can’t be sent.",
 		received: "Received",
+		/** Not placed within 30 days, or a late re-check returned it (decision C). */
+		returned: "Not placed. No one it fit came along this time.",
 		waiting: "Waiting to be received",
 	},
 	title: "Letters",

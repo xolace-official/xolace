@@ -24,6 +24,7 @@ import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
 import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
 import { useVersionCheck } from "@/helpers/hooks/use-version-check";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import { screenName } from "@/lib/screen-name";
 import { ChatLocalDataGuard } from "@/lib/stream-chat/chat-local-data-guard";
 import { usePostHogIdentity } from "@/lib/use-posthog-identity";
 import { NavThemeProvider } from "@/providers/nav-theme-provider";
@@ -151,12 +152,14 @@ const AppContent = () => {
 	const previousPathname = useRef<string | undefined>(undefined);
 
 	useEffect(() => {
-		if (previousPathname.current !== pathname) {
-			posthog.screen(pathname, {
+		// Reported by name: a route with an id in its path (a letter's) reports its pattern.
+		const screen = screenName(pathname);
+		if (previousPathname.current !== screen) {
+			posthog.screen(screen, {
 				path: typeof params.path === "string" ? params.path : null,
 				previous_screen: previousPathname.current ?? null,
 			});
-			previousPathname.current = pathname;
+			previousPathname.current = screen;
 		}
 	}, [pathname, params, posthog]);
 
