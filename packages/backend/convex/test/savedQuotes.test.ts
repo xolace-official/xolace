@@ -130,4 +130,37 @@ describe("saved quotes", () => {
 		).rejects.toThrow(/Not your quote/);
 		expect(await savedCount(owner)).toBe(0);
 	});
+
+	it("remembers the background it was kept with, until it's let go (S11)", async () => {
+		const user = await asNewUser();
+		const quoteId = await seedQuote(user, "2026-01-01");
+		const kept = async () => {
+			const page = await user.t.query(api.dailyQuotes.listSaved, {
+				paginationOpts: { cursor: null, numItems: 10 },
+			});
+			return page.page[0]?.keptBackground;
+		};
+
+		await user.t.mutation(api.dailyQuotes.save, {
+			background: "quiet-lake",
+			quoteId,
+		});
+		expect(await kept()).toBe("quiet-lake");
+
+		await user.t.mutation(api.dailyQuotes.unsave, { quoteId });
+		const row = await user.root.run((ctx) =>
+			ctx.db.get("daily_quotes", quoteId)
+		);
+		expect(row?.keptBackground).toBeUndefined();
+
+		// A shipped build sends no background; a malformed one is dropped, not refused.
+		await user.t.mutation(api.dailyQuotes.save, { quoteId });
+		expect(await kept()).toBeUndefined();
+		await user.t.mutation(api.dailyQuotes.unsave, { quoteId });
+		await user.t.mutation(api.dailyQuotes.save, {
+			background: "Quiet Lake!",
+			quoteId,
+		});
+		expect(await kept()).toBeUndefined();
+	});
 });
