@@ -4,7 +4,6 @@ import { useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
-import { MorphLoader } from "@/components/shared/loader/morph/morph-loader";
 import { useHeaderOptions } from "@/lib/header-options";
 import { useLive } from "@/lib/motion/clock";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
@@ -14,7 +13,8 @@ import { COPY } from "./copy";
 import { KindlingHeader } from "./header/kindling-header";
 import { KindlingMenu } from "./header/kindling-menu";
 import { useKindling } from "./kindling-data";
-import { caught as hasCaught, type TrailView } from "./kindling-model";
+import { caught as hasCaught, settled, type TrailView } from "./kindling-model";
+import { KindlingStatus } from "./kindling-status";
 import { useKindlingColours } from "./trail/kindling-colours";
 import { KindlingTrail } from "./trail/kindling-trail";
 import { trailGeometry } from "./trail/trail-geometry";
@@ -30,6 +30,8 @@ const CARD_MIN_BOTTOM = 12;
 const HEADER_GAP = 35;
 /** Room between the fire and the card once scrolled to the end. */
 const FIRE_CLEAR = 40;
+/** Before a kindling loads, the screen's hooks run on no twigs. */
+const NO_VIEW: TrailView = { generatedAt: 0, id: "", states: [], twigs: [] };
 
 /** Your kindling (handoff `kindling.md`): the trail lights up as you tend it. */
 export function KindlingScreen() {
@@ -45,47 +47,20 @@ export function KindlingScreen() {
 					title: COPY.title,
 				}}
 			/>
-			{state.status === "ready" && state.view ? (
-				<KindlingReady view={state.view} />
-			) : (
-				<KindlingStatus status={state.status} />
-			)}
+			<KindlingBody
+				view={state.status === "ready" ? (state.view ?? null) : null}
+			/>
 		</>
 	);
 }
 
-/** Loading, offline, or no kindling: the scroll stays the first view, for the large title. */
-function KindlingStatus({
-	status,
-}: {
-	status: "loading" | "offline" | "none" | "ready";
-}) {
-	let line: string = COPY.none;
-	if (status === "loading") {
-		line = COPY.loading;
-	} else if (status === "offline") {
-		line = COPY.offline;
-	}
-	return (
-		<Animated.ScrollView
-			contentContainerClassName="flex-grow items-center justify-center gap-4 px-8 pb-24"
-			contentInsetAdjustmentBehavior="automatic"
-		>
-			{status === "loading" ? <MorphLoader /> : null}
-			<AppText
-				accessibilityLiveRegion="polite"
-				className="text-center"
-				color="muted"
-				variant="callout"
-			>
-				{line}
-			</AppText>
-		</Animated.ScrollView>
-	);
-}
-
-function KindlingReady({ view }: { view: TrailView }) {
+/**
+ * Every state draws in one scroll view, kept mounted from loading to ready: UIKit binds the
+ * large title's collapse to the first scroll view once (as production kept it).
+ */
+function KindlingBody({ view: ready }: { view: TrailView | null }) {
 	const { state, actions } = useKindling();
+	const view = ready ?? NO_VIEW;
 	const insets = useSafeAreaInsets();
 	const { width } = useWindowDimensions();
 	const reduced = useEffectiveReducedMotion();
@@ -117,8 +92,12 @@ function KindlingReady({ view }: { view: TrailView }) {
 
 	return (
 		<>
-			<KindlingMenu beforeOpen={k.commit} onPutOut={actions.putOut} />
+			{/* A settled kindling is completed: there's nothing left to put out. */}
+			{ready && !settled(k.shown) ? (
+				<KindlingMenu beforeOpen={k.commit} onPutOut={actions.putOut} />
+			) : null}
 			<Animated.ScrollView
+				contentContainerStyle={ready ? undefined : { flexGrow: 1 }}
 				contentInsetAdjustmentBehavior="automatic"
 				onScroll={s.onScroll}
 				ref={s.scroll}
@@ -126,54 +105,62 @@ function KindlingReady({ view }: { view: TrailView }) {
 				showsVerticalScrollIndicator={false}
 				{...s.scrollProps}
 			>
-				<KindlingHeader
-					held={state.held}
-					keys={view.twigs.map((t) => t.id)}
-					reduced={reduced}
-					states={k.shown}
-				/>
-				<View
-					onLayout={s.onTrailLayout}
-					style={{ height: blockH, marginTop: HEADER_GAP }}
-				>
-					<KindlingTrail
-						c={c}
-						caught={caught}
-						fade={k.fade}
-						live={live}
-						onOpen={k.actions.openStop}
-						open={k.open}
-						reduced={reduced}
-						shown={k.shown}
-						trail={trail}
-						twigs={view.twigs}
-					/>
-				</View>
-			</Animated.ScrollView>
-			<TwigCard
-				bottom={bottom}
-				onHeight={setCardH}
-				open={k.open}
-				reduced={reduced}
-				render={(id) => (
-					<CardContent
-						c={c}
-						h={{
-							onAct: k.actions.act,
-							onAgain: k.actions.again,
-							onBack: actions.back,
-							onBrowse: k.actions.browse,
-							onSkip: k.actions.skip,
-							onUndo: k.actions.undo,
-						}}
-						id={id}
-						matching={state.matching}
-						reduced={reduced}
-						states={k.shown}
-						twigs={view.twigs}
-					/>
+				{ready ? (
+					<>
+						<KindlingHeader
+							held={state.held}
+							keys={view.twigs.map((t) => t.id)}
+							reduced={reduced}
+							states={k.shown}
+						/>
+						<View
+							onLayout={s.onTrailLayout}
+							style={{ height: blockH, marginTop: HEADER_GAP }}
+						>
+							<KindlingTrail
+								c={c}
+								caught={caught}
+								fade={k.fade}
+								live={live}
+								onOpen={k.actions.openStop}
+								open={k.open}
+								reduced={reduced}
+								shown={k.shown}
+								trail={trail}
+								twigs={view.twigs}
+							/>
+						</View>
+					</>
+				) : (
+					<KindlingStatus status={state.status} />
 				)}
-			/>
+			</Animated.ScrollView>
+			{ready ? (
+				<TwigCard
+					bottom={bottom}
+					onHeight={setCardH}
+					open={k.open}
+					reduced={reduced}
+					render={(id) => (
+						<CardContent
+							c={c}
+							h={{
+								onAct: k.actions.act,
+								onAgain: k.actions.again,
+								onBack: actions.back,
+								onBrowse: k.actions.browse,
+								onSkip: k.actions.skip,
+								onUndo: k.actions.undo,
+							}}
+							id={id}
+							matching={state.matching}
+							reduced={reduced}
+							states={k.shown}
+							twigs={view.twigs}
+						/>
+					)}
+				/>
+			) : null}
 		</>
 	);
 }

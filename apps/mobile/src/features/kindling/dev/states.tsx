@@ -4,6 +4,9 @@ import type { DevState } from "@/dev/dev-state";
 import { kindling } from "./fixture-kindling";
 import { BOARD, viewOf, WITH_XOLACER } from "./fixtures";
 
+/** A cold open's read, long enough to see the swap. */
+const LOADS_MS = 1500;
+
 const LIGHT = { theme: "light" } as const;
 const FIRST_TENDED = viewOf(BOARD, ["done", "wait", "wait", "wait"]);
 const LAST_TENDED = viewOf(BOARD, ["wait", "wait", "wait", "done"]);
@@ -109,6 +112,11 @@ export const devStates: readonly DevState[] = [
 		}),
 	},
 	{ id: "loading", title: "Loading", ...kindling({ status: "loading" }) },
+	{
+		id: "loading-then-ready",
+		title: "Loading, then the trail (one scroll: the large title still folds)",
+		...kindling({ loadsMs: LOADS_MS, view: TRAIL }),
+	},
 	{
 		id: "loading-light",
 		title: "Loading, Daylight",

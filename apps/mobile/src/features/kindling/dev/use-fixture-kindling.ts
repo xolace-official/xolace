@@ -16,6 +16,8 @@ export type FixtureProps = {
 	matching?: number;
 	/** Twigs the server marks done once the screen is up: their tends play. */
 	arrive?: readonly number[];
+	/** Loading for this long first (a cold open from a notification), then `status`. */
+	loadsMs?: number;
 };
 
 const set = (states: readonly TwigState[], i: number, s: TwigState) =>
@@ -24,10 +26,20 @@ const set = (states: readonly TwigState[], i: number, s: TwigState) =>
 /** The kindling on fixtures: taps change the states as the server would, and nothing is sent. */
 export function useFixtureKindling({
 	view,
-	status = "ready",
+	status: given = "ready",
 	matching,
 	arrive,
+	loadsMs,
 }: FixtureProps): Kindling {
+	const [loaded, setLoaded] = useState(!loadsMs);
+	useEffect(() => {
+		if (!loadsMs) {
+			return;
+		}
+		const timer = setTimeout(() => setLoaded(true), loadsMs);
+		return () => clearTimeout(timer);
+	}, [loadsMs]);
+	const status = loaded ? given : "loading";
 	const [states, setStates] = useState<readonly TwigState[]>(
 		view?.states ?? []
 	);
