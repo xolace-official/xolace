@@ -49,9 +49,9 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   "printed object" surfaces (quotes poster, vent, first run, Lantern reader pages, Talk's
   voice orbs, look glows, aurora and leave scrim, Today's sky and light, Today's
   Reflect-card doors and light, Today's kindling and campfire firelight, Connect's avatar
-  art and Xolace flame, Reflect's sky and light, Letters' paper and ember), still as
-  tokens in `global.css`. Today's sky is the hour's, not the theme's, and its gradient
-  stops stay strings in `features/today/sky/` because
+  art and Xolace flame, Reflect's sky and light, Letters' paper and ember, the launch
+  cover's splash colours), still as tokens in `global.css`. Today's sky is the hour's,
+  not the theme's, and its gradient stops stay strings in `features/today/sky/` because
   worklets interpolate them. Connect's art is content a person or the brand wears, the
   same in every theme. First run's colours are `first-run-*` tokens too; only the
   colours a worklet mixes per frame stay RGB triplets, in `features/first-run/first-run-palette.ts`.
@@ -199,6 +199,22 @@ worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
 screen. `seatHeld` (the store) keeps `(first-run)` up for the seated moment after a sign-in;
 the sign-in hook releases it, and an onboarded account goes straight to `(protected)`.
 The launch cover and native splash sit before the guard and aren't first run's.
+
+## The launch cover
+
+`src/features/launch/` draws the native splash again on the first JS frame and stays up while
+anything at launch is loading, then fades over the first screen (`launch.md` in the prototype's
+handoff). A step that loads at launch never draws a loader: it calls `useLaunchHold(active,
+reason)`, or renders `<LaunchHold reason />` in place of its content, which holds the cover at
+launch and after it shows a quiet spinner (only past 400 ms). The cover leaves after
+`maxCoverMs` (8 s) whatever still holds it. Native appearance stays on the phone's setting until
+the cover leaves. `src/lib/native-appearance.ts` is the only writer of the theme and native
+appearance (`applyTheme`, behind `setThemeWithFonts`; `setNativeAppearance`): it holds every
+write back, Uniwind's own included, and applies the last one when the cover leaves.
+`theme-switch.test.ts` fails if another file calls `Uniwind.setTheme` or
+`Appearance.setColorScheme`. The splash's options live
+in `native-splash.ts` (which `app.config.ts` passes to `expo-splash-screen`) and its colours in `--color-launch-*`; `launch-model.test.ts` keeps them equal to the Default
+theme's backgrounds. Replay each launch path in a dev build: `xolace://dev/launch/<state>`.
 
 ## Tabs and the root seams
 

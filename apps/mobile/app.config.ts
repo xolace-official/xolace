@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { NATIVE_SPLASH } from "./native-splash.ts";
 import { assertProductionEnvironment } from "./release/production-guard.ts";
 
 function requireEnv(name: string, value: string | undefined): string {
@@ -247,24 +248,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			},
 		],
 		"expo-router",
-		[
-			"expo-splash-screen",
-			{
-				android: {
-					image: "./assets/images/icons/splash-icon-dark.png",
-					imageWidth: 76,
-				},
-				backgroundColor: "#040307",
-				ios: {
-					dark: {
-						backgroundColor: "#040307",
-						image: "./assets/images/icons/splash-icon-light.png",
-					},
-					image: "./assets/images/icons/splash-icon-dark.png",
-					imageWidth: 200,
-				},
-			},
-		],
+		["expo-splash-screen", NATIVE_SPLASH],
 		[
 			"expo-font",
 			{

@@ -1,11 +1,13 @@
 import * as Sentry from "@sentry/react-native";
 import { Observe } from "expo-observe";
 import type { ErrorBoundaryProps } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/shared/app-text";
+import { releaseNativeAppearance } from "@/lib/native-appearance";
 
 // Root route error fallback, rendered outside RootProvider: no HeroUI, Clerk, Convex or
 // theme context, so plain RN and global tokens only. Reports the error itself; the
@@ -16,6 +18,11 @@ export function RouteError({ error, retry }: ErrorBoundaryProps) {
 	useEffect(() => {
 		Sentry.captureException(error);
 		Observe.reportError(error);
+		// A crash in the root layout takes the launch cover with it, which would otherwise have
+		// hidden the native splash and released native appearance (left held, every later write
+		// would wait for a cover that never leaves).
+		SplashScreen.hideAsync().catch(() => undefined);
+		releaseNativeAppearance();
 	}, [error]);
 
 	return (

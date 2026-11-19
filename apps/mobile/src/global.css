@@ -196,6 +196,11 @@
 	--color-today-flame-core: #ffe2ae;
 	--color-today-ignite-glow: rgba(242, 163, 58, 0.6);
 	--color-today-gleam: rgba(255, 214, 170, 0.95);
+	/* The launch cover (S22): the native splash's colours (app.config.ts, expo-splash-screen), which
+     * are the Default theme's backgrounds. Fixed: the cover is drawn before any theme applies and
+     * follows the phone, as the splash does. launch-model.test.ts holds the three together. */
+	--color-launch-light: #f7f5fb;
+	--color-launch-dark: #0e0c15;
 	/* First run (S18): the promise's dusk and day, and the story and seat's night by Flux's fire,
      * the same in every theme. Colours its worklets mix per frame stay RGB triplets in
      * src/features/first-run/first-run-palette.ts; see the fixed-palette convention in

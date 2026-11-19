@@ -1,7 +1,6 @@
 import { useAuth } from "@clerk/expo";
 import { api } from "@xolace/backend/api";
 import { useQuery } from "convex/react";
-import { useObserve } from "expo-observe";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { useAppActive } from "@/components/shared/use-app-active";
@@ -147,14 +146,9 @@ function useMonthPrompt(now: Date): string | null {
 
 /** Today in the app: the profile summary, the hour and night mode, and the device. */
 export function useTodayData(): Today {
+	// No markInteractive here: Today is where a cold start lands, under the launch cover, and a
+	// startup keeps only its first mark. The cover marks it when nothing holds it any more.
 	const summary = useProfileSummary();
-	const { markInteractive } = useObserve();
-	// Per-route TTI: ready once the profile summary resolves, not at mount.
-	useEffect(() => {
-		if (summary !== undefined) {
-			markInteractive();
-		}
-	}, [summary, markInteractive]);
 	const { userId } = useAuth();
 	const { isNight } = useSessionMode();
 	const now = useNow();
