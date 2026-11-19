@@ -55,7 +55,6 @@ export const NOTIFICATION_MODEL = "claude-haiku-5-5";
 export const ACKNOWLEDGE_MODEL = "claude-haiku-5-5";
 export const SLOT_FILL_MODEL = "claude-haiku-5-5";
 export const CHAT_MODERATION_MODEL = "claude-haiku-5-5";
-export const LETTER_CHECK_MODEL = "claude-haiku-5-5";
 export const FOLLOW_UP_CARD_MODEL = "claude-haiku-5-5";
 export const INTAKE_READER_MODEL = "claude-haiku-5-5";
 export const TALK_DEMO_MODEL = "claude-haiku-5-5";

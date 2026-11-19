@@ -13,6 +13,9 @@ import { FIXABLE_CATEGORIES, type FixableCategory } from "../../letters/lines";
 // `RUN_EVALS=1 bunx vitest run convex/ai/prompts/__evals__/lettersCheck.eval.test.ts`.
 export const LETTER_CHECK_VERSION = "letter-check-v2-haiku-5.5";
 
+/** Kept here, beside its version, so a letters change doesn't touch `providers/anthropic.ts`. */
+export const LETTER_CHECK_MODEL = "claude-haiku-5-5";
+
 export type LetterVerdict = {
 	/** Harassment, hate, sexual content or threats: held for review. */
 	hostile: boolean;

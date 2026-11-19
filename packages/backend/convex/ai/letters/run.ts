@@ -10,11 +10,11 @@ import { checkWordsSafety, SAFETY_DEADLINE_MS, within } from "../intake/read";
 import {
 	extractTextFromResponse,
 	getAnthropicClient,
-	LETTER_CHECK_MODEL,
 	thinkingOff,
 } from "../providers/anthropic";
 import {
 	buildLetterCheckPrompt,
+	LETTER_CHECK_MODEL,
 	type LetterVerdict,
 	parseLetterCheckResponse,
 } from "./check";
