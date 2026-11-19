@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, use } from "react";
 import type { QuoteUi, ShareFmt } from "./motion/quote-ui";
-import type { DailyQuoteSlot } from "./offer/daily-quote-offer";
+import type { DailyQuoteSlot, OfferTrigger } from "./offer/daily-quote-offer";
 import type { KeptCard, QuoteBackground, Reason } from "./quotes-model";
 import { useQuotes } from "./use-quotes";
 
@@ -31,8 +31,8 @@ export type QuotesState = {
 	soundOn: boolean;
 	kept: readonly KeptCard[];
 	/**
-	 * The daily quote was never chosen and this device hasn't offered it: the first resonate or
-	 * keep raises the offer (B19).
+	 * The daily quote was never chosen, this device hasn't offered it, and the phone allows
+	 * notifications: the first resonate, keep or share raises the offer (B19).
 	 */
 	offerDailyQuote: boolean;
 	/** A dev state opens on a sheet, Words you kept, or Clear view. */
@@ -61,7 +61,7 @@ export type QuotesActions = {
 	saveImage: (fmt: ShareFmt) => Promise<string | null>;
 	shareImage: (fmt: ShareFmt) => Promise<string | null>;
 	/** The daily quote offer is up: this device won't show it again. */
-	offerShown: () => void;
+	offerShown: (trigger: OfferTrigger) => void;
 	/** Its answer: a time turns it on, null is Not now. Resolves with a line to show. */
 	answerOffer: (slot: DailyQuoteSlot | null) => Promise<string | null>;
 };

@@ -14,13 +14,32 @@ export const OFFER_SLOT: DailyQuoteSlot = "morning";
 
 /**
  * The offer may show once preferences have loaded, while the daily quote was never chosen on any
- * device (absent on the server), and if this device hasn't shown it already. `chosen` is
- * undefined while preferences load.
+ * device (absent on the server: never on, never answered), if this device hasn't shown it
+ * already, and if the phone hasn't denied notifications. `chosen` and `blocked` are undefined
+ * while they load.
  */
 export const mayOfferDailyQuote = (o: {
 	chosen: boolean | undefined;
 	seen: boolean;
-}) => o.chosen === false && !o.seen;
+	blocked: boolean | undefined;
+}) => o.chosen === false && !o.seen && o.blocked === false;
+
+/** What raises it: the first resonate, keep or share, whichever comes first. */
+export type OfferTrigger = "resonate" | "keep" | "share";
+
+/**
+ * How long after its trigger the card rises: past the heart's burst and its toast, or a beat
+ * after the share sheet has closed so it doesn't chase the share.
+ */
+const OFFER_AFTER_MS: Record<OfferTrigger, number> = {
+	keep: 900,
+	resonate: 900,
+	share: 700,
+};
+
+/** When this trigger raises the card, in ms; null when it may not show. */
+export const offerRisesAfter = (trigger: OfferTrigger, offerable: boolean) =>
+	offerable ? OFFER_AFTER_MS[trigger] : null;
 
 /**
  * What an answer writes: a time turns it on; Not now (null) records it off, so no device asks

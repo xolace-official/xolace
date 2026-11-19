@@ -7,16 +7,17 @@ import {
 	tap,
 } from "@/lib/haptics";
 import { QUOTE_COPY } from "../copy";
-import type { DailyQuoteSlot } from "../offer/daily-quote-offer";
+import {
+	type DailyQuoteSlot,
+	type OfferTrigger,
+	offerRisesAfter,
+} from "../offer/daily-quote-offer";
 import type { KeptCard, QuoteBackground } from "../quotes-model";
 import { tileTap } from "../quotes-model";
 import type { QuotesScreenValue } from "../quotes-screen-data";
 import { isSheetView, useQuoteUi } from "./quote-ui";
 
 export type QuoteHandlers = ReturnType<typeof quoteHandlers>;
-
-/** The daily quote offer rises after the heart's burst and its toast have landed. */
-const OFFER_AFTER_MS = 900;
 
 /**
  * Everything a tap does on Quotes: the provider's actions joined to the screen's own UI store.
@@ -28,18 +29,19 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 	const now = () => live.current.state;
 	const act = () => live.current.actions;
 
-	/** The first resonate or keep on a device that never offered the daily quote raises it once,
-	 * unless another sheet is up by then. */
-	const maybeOffer = () => {
-		if (!now().offerDailyQuote) {
+	/** The first resonate, keep or share on a device that never offered the daily quote raises
+	 * it once, unless another sheet is up by then. */
+	const maybeOffer = (trigger: OfferTrigger) => {
+		const after = offerRisesAfter(trigger, now().offerDailyQuote);
+		if (after === null) {
 			return;
 		}
-		act().offerShown();
+		act().offerShown(trigger);
 		setTimeout(() => {
 			if (ui().view === "today" && !ui().clear) {
 				ui().set({ view: "offer" });
 			}
-		}, OFFER_AFTER_MS);
+		}, after);
 	};
 
 	const resonate = () => {
@@ -49,7 +51,7 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 		if (on) {
 			ui().burst();
 			ui().showToast(QUOTE_COPY.toasts.resonate);
-			maybeOffer();
+			maybeOffer("resonate");
 		}
 	};
 
@@ -84,7 +86,7 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 			ui().showToast(QUOTE_COPY.errors.generic);
 			return;
 		}
-		maybeOffer();
+		maybeOffer("keep");
 	};
 
 	const pick = async (b: QuoteBackground) => {
@@ -133,7 +135,10 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 		if (go === "save") {
 			ui().showToast(QUOTE_COPY.toasts.savedImage);
 			playAffirmativePress();
+			return;
 		}
+		// The sheet has closed by now (sent or not: neither platform says reliably).
+		maybeOffer("share");
 	};
 
 	const plus = (from: "keep" | "background" | "reason") => {
