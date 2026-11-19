@@ -6,7 +6,7 @@ import {
 	Path,
 } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
-import { arrivalOf, type Burn, END } from "./burn";
+import { arrivalOf, type Burn, END, maxBurns } from "./burn";
 import { fxPaths } from "./burn-art";
 import { useSparkColours } from "./kindling-colours";
 import { FLASH, SparkGlow, StopFlash } from "./spark-parts";
@@ -20,12 +20,11 @@ const FX = {
 	smoke: { blur: 7, day: 0.14, dusk: 0.2 },
 	warmWidth: 1.3,
 } as const;
-/** At most three sparks run at once (two tends 300 ms apart, and a catch): fixed slots. */
-const SLOTS = ["spark0", "spark1", "spark2"] as const;
 
 type Props = {
 	trail: Trail;
 	burns: SharedValue<Burn[]>;
+	/** The burns' clock: it holds still while nothing burns, so this layer does no work. */
 	time: SharedValue<number>;
 	/** The trail clock when the fire's embers began rising (−1: none). */
 	embersAt: SharedValue<number>;
@@ -55,6 +54,12 @@ export function KindlingSparks({ trail, burns, time, embersAt, day }: Props) {
 	const emberAlpha = useDerivedValue(() => paths.get().emberLevel);
 	const smoke = useDerivedValue(() => paths.get().smoke);
 	const embers = useDerivedValue(() => paths.get().embers);
+	// A spark per burn that can be in flight at once: each stop's own leg (a stop is tended once,
+	// and a refused tend's burn goes), and a catch in place. Four tends on return all glow.
+	const slots = Array.from(
+		{ length: maxBurns(trail.stops.length) },
+		(_, k) => `spark${k}`
+	);
 	const fireFlash = useDerivedValue(() => {
 		let o = 0;
 		for (const b of burns.get()) {
@@ -113,7 +118,7 @@ export function KindlingSparks({ trail, burns, time, embersAt, day }: Props) {
 			>
 				<BlurMask blur={2} style="solid" />
 			</Path>
-			{SLOTS.map((slot, k) => (
+			{slots.map((slot, k) => (
 				<SparkGlow
 					blend={blend}
 					burns={burns}

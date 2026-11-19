@@ -117,6 +117,12 @@ export const planCatch = (t0: number): Burn => ({
 	t0,
 });
 
+/**
+ * The most burns in flight at once on a trail of `stops`: one on each stop's own leg (a stop is
+ * tended once, and a refused tend's burn is taken back), and a catch in place.
+ */
+export const maxBurns = (stops: number) => stops + 1;
+
 /** Seconds from the tend to the arrival (the burst). */
 export function arrivalOf(b: Burn) {
 	"worklet";

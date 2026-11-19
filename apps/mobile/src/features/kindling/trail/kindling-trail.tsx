@@ -85,7 +85,7 @@ export function KindlingTrail({
 				lit={shown.map((s) => s === "done")}
 				march={march}
 				passed={shown.map((s) => s === "passed" || s === "undo")}
-				time={tend.time}
+				time={tend.fxTime}
 				trail={trail}
 			/>
 			<KindlingFire fire={trail.fire} lift={tend.lift} reduced={reduced} />
@@ -119,7 +119,7 @@ export function KindlingTrail({
 				burns={tend.burns}
 				day={c.day}
 				embersAt={tend.embersAt}
-				time={tend.time}
+				time={tend.fxTime}
 				trail={trail}
 			/>
 		</View>

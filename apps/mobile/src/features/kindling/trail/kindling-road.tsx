@@ -39,7 +39,10 @@ type Props = {
 	/** The dashes' phase (0 → −16 every 530 ms), on the UI thread. */
 	march: SharedValue<number>;
 	fade: TendFade;
-	/** The burns in flight and the trail clock: a burning leg's gold runs behind its spark. */
+	/**
+	 * The burns in flight and their clock (still while nothing burns): a burning leg's gold runs
+	 * behind its spark.
+	 */
 	burns: SharedValue<Burn[]>;
 	time: SharedValue<number>;
 	fireGlow: SharedValue<number>;

@@ -8,6 +8,7 @@ import {
 	goldEnd,
 	legBurning,
 	lifeOf,
+	maxBurns,
 	planBurn,
 	planCatch,
 	sparkAt,
@@ -92,5 +93,11 @@ describe("the burn on its leg", () => {
 		expect(near).toBeGreaterThan(RADIUS);
 		expect(sparkLevel(trail, b, mid)).toBeCloseTo(1);
 		expect(sparkLevel(trail, b, arrivalOf(b) + 0.2)).toBe(0);
+	});
+});
+
+describe("spark slots", () => {
+	it("four tends on return and a catch in place each get a glow", () => {
+		expect(maxBurns(4)).toBe(5);
 	});
 });
