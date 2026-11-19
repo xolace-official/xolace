@@ -26,6 +26,7 @@ import {
 import type { Trail } from "./trail/trail-geometry";
 import { useTend } from "./trail/use-tend";
 import {
+	type Choices,
 	type CommitCause,
 	catchesInPlace,
 	chosen,
@@ -139,20 +140,23 @@ export function useTrail(
 			}
 		});
 	// A new kindling: the old one's undo window closes without sending (its twig is gone), and
-	// nothing still pending for it (a move-on, a tend's light) runs.
+	// nothing still pending for it (a move-on, a tend's light, a burn on its way to the fire) runs.
 	useEffect(() => {
 		stopUndoTimer();
 		clearLater();
 		choose();
+		tend.reset();
 		localRef.current = NO_LOCAL;
 	}, [view.id]);
 
 	/**
 	 * Light twig i on the trail: its stop and the count at once, then the spark runs its leg to
 	 * the next stop (held dim until it lands) or, the `last` of a batch with nothing left
-	 * waiting, on into the fire (§4, §5). The card moves on once it lands.
+	 * waiting, on into the fire (§4, §5). The card moves on once it lands, unless a card was chosen
+	 * since `ticket`: taken when the tend was asked for (the press, or the return that found it),
+	 * not when it starts, so a stop tapped in between keeps its card.
 	 */
-	const play = (i: number, last: boolean) => {
+	const play = (i: number, last: boolean, ticket: Choices) => {
 		// "I did this" plays it itself, and the return effect may find it too; a tend the server
 		// refused before it played has gone back to waiting.
 		if (!tendPlays(latest.current.shown, latest.current.now, i)) {
@@ -164,8 +168,6 @@ export function useTrail(
 		AccessibilityInfo.announceForAccessibility(
 			COPY.a11y.announce(tendedCount(run.after), run.after.length)
 		);
-		// The move-on is ticketed now: a stop they choose while the spark is on its way keeps the card.
-		const ticket = choices.current;
 		tend.tend(i, run.toFire, () => {
 			setHeld((h) => letGo(h, i));
 			moveOn(MOVE_ON_MS, ticket);
@@ -185,9 +187,11 @@ export function useTrail(
 			return;
 		}
 		const fresh = freshTends(latest.current.shown, latest.current.now);
+		// One ticket for the batch: a stop they tap while the plays are staggered keeps its card.
+		const ticket = choices.current;
 		const ids = fresh.map((i, n) =>
 			setTimeout(
-				() => play(i, n === fresh.length - 1),
+				() => play(i, n === fresh.length - 1, ticket),
 				SETTLE_MS + n * STAGGER_MS
 			)
 		);
@@ -278,7 +282,8 @@ export function useTrail(
 						refuse(i, twig.id);
 					}
 				});
-				later(PRESS_TEND_MS, () => play(i, true));
+				const ticket = choices.current;
+				later(PRESS_TEND_MS, () => play(i, true, ticket));
 			},
 			again: (i: number) => {
 				choose();

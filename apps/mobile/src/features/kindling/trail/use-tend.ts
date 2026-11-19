@@ -213,6 +213,23 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 		}
 	};
 
+	/**
+	 * A new kindling replaced this one: every burn, its landing and drop, the embers and the gold
+	 * go, so nothing of the old trail lights the new one or catches its fire.
+	 */
+	const reset = () => {
+		setBurns([]);
+		setAlarms([]);
+		for (const id of fades.current.values()) {
+			clearTimeout(id);
+		}
+		fades.current.clear();
+		fade.leg.set(NO_LEG);
+		fade.t.set(1);
+		embersAt.set(-1);
+		setEmbering(false);
+	};
+
 	/** The last waiting twig was passed: the fire catches where it is, with no run (§5). */
 	const catchInPlace = () => {
 		if (motion) {
@@ -229,6 +246,7 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 		fade,
 		fxTime,
 		lift,
+		reset,
 		tend,
 		time,
 	};
