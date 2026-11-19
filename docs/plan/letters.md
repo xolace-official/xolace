@@ -74,8 +74,8 @@ held as hostile). Fixable and at-risk letters are never stored (#750).
 | `reportedAt` | `optional(number)` | Gone from the recipient at once; kept for review |
 | `senderSeen` | `optional("received" \| "acknowledged" \| "returned" \| "held")` | The latest status the sender has seen (`markSeen`) |
 | `textHash` | `optional(string)` | Held letters only: SHA-256 of the trimmed text, so the same words are refused again |
-| `heldLate` | `optional(boolean)` | Set when a re-check held a letter that read as sent (§5.4): its Sent row shows `held` until the sender dismisses it, then this is cleared and the row stays for its review (or is deleted, when the same words were already held and this copy has no review of its own) |
-| `wipedSenderProfileId` | `optional(id)` | **Server-only.** Set by the sender's data wipe on a received letter its recipient keeps (§10). Read only by the recipient's hide and report; never returned, thrown or pushed. Cleared on the sender's account deletion |
+| `heldLate` | `optional(boolean)` | Set when a re-check held a letter that read as sent (§5.4): its Sent row shows `held` until the sender dismisses it, then this is cleared and the row stays for its review. A re-check that holds words already held deletes its copy instead (§5.4) |
+| `wipedSenderProfileId` | `optional(id)` | **Server-only.** Set by the sender's data wipe or the retention setting on a received letter its recipient keeps (§10). Read only by the recipient's hide and report; never returned, thrown or pushed. Cleared on the sender's account deletion |
 
 Indexes: `by_wiped_sender` `[wipedSenderProfileId]` (deletion clears the link),
 `by_sender_created` `[senderProfileId, createdAt]` (Sent list, the daily cap),
@@ -193,27 +193,35 @@ saw "This letter can't be sent" and kept their words). One a re-check held later
 4. **In parallel, each with its own deadline:**
    - `checkWordsSafety(text, letterPhrasePeak)` from `ai/intake/read.ts` (phrase floor,
      OpenAI moderation, the Haiku safeguard; 8 s). Letters pass their own phrase floor
-     (`ai/letters/floor.ts`, owner F1): each sentence is floored on its own, and one
-     that only mentions a crisis phrase (past tense, or about someone else: "a few years
-     ago I tried to end my life", "I lost my brother to suicide") doesn't raise; the
-     engine decides those. A present-tense, first-person phrase raises exactly as
-     talk's floor does. Only the mention's own span is cut ("since my brother's
-     suicide", "a week ago I tried to …"); whatever is left of the sentence is floored
-     as usual, so "since my brother's suicide I want to kill myself too" still raises,
-     and "tried to …" with a recent time ("last night", "again today") is never a
-     mention. Intake's floor is unchanged;
+     (`ai/letters/floor.ts`, owner F1): a span that only mentions a crisis phrase (past
+     tense, or about someone else: "a few years ago I tried to end my life", "I lost my
+     brother to suicide", "I used to think about hurting myself") is cut before the
+     floor reads the letter, and the engine reads the whole letter. A span never
+     crosses "and", "but", "so" or a new "I", "I'm used to" is never a past habit, and
+     an attempt in a letter that says anything was recent ("last night", "last week",
+     "two days ago") is never cut. Whatever is left is floored as talk's floor does, so
+     "since my brother's suicide I want to kill myself too" still raises. **A cut
+     never passes a letter on its own** (fail-safe, step 5): when it lowered the floor's
+     level, the letter passes only if the classifier confirms the mention is past or
+     someone else's. Intake's floor is unchanged;
    - the letters classifier (`ai/letters/check.ts`, one Haiku call, 8 s; its model,
      `LETTER_CHECK_MODEL`, sits beside the prompt version there, not in
      `ai/providers/anthropic.ts`, so changing it is a letters change only): returns
-     `{ hostile, fixable: category | null, language }` (off-topic is one of the fixable
-     categories). The letter goes inside tags the prompt calls data to judge, never
-     instructions, and any tag in the text is neutralised first.
+     `{ hostile, fixable: category | null, language, crisisMention }` (off-topic is one
+     of the fixable categories; `crisisMention` is `none`, `past_or_others` or
+     `current`, and anything unsure is `current`). The letter goes inside tags the
+     prompt calls data to judge, never instructions, and any tag in the text is
+     neutralised first.
 
    A half that throws counts as unavailable for that half; `send` never rejects
    because a check call failed.
 5. **Decide**, first that applies:
    - safeguard `elevated` or `crisis` → **`risk`**: an escalation row (`source:
      "letter"`, the verdict's `peak` as evidence, never the text), nothing stored.
+   - the letters floor cut a mention that lowered its level, and the classifier didn't
+     answer `past_or_others` (it said `none` or `current`, or was down, timed out or
+     unparseable) → **`risk`** at the level talk's floor gives the whole letter. Never
+     `pass` or `unavailable`.
    - classifier `hostile` (harassment, hate, sexual content, threats), or the safety
      half's moderation rejecting the text on content policy → **`held`**: stored
      `held` with `textHash`, a `letter_reviews` row, a strike (§8).
@@ -280,12 +288,17 @@ towns, employers), and whether the text is a letter to a reader at all.
   in passing, "it gets better" said gently), and contact attempts the regexes miss.
   Runs only with `RUN_EVALS=1`. The sexual letter, the invitation to meet and the vivid
   self-harm detail are anchors: each must be flagged, whatever the overall pass rate.
+  A `crisis_mention` set anchors the owner's three past mentions as `past_or_others`
+  and present tense, a continuing habit, past-then-present and a recent attempt as
+  `current`. End to end (moderation, the safeguard and both floors live), the three
+  past mentions must pass and three present-tense sentences must be `risk`; a pass case
+  that misses logs moderation's self-harm scores, the safeguard's level and trigger, and
+  `crisisMention`, three runs over.
   CI's **Letters eval** (`.github/workflows/letters-gate.yml`, `test:evals:letters`)
   runs it on PRs touching the letters check, its floor, `ai/providers/anthropic.ts`,
   intake's `read.ts` or its classifier prompt (`ai/prompts/classifier.ts`), with
-  read-only permissions and one run per PR at a time. Without `OPENAI_API_KEY` the
-  moderation-backed cases skip with a warning; that becomes a failure once the secret is
-  set.
+  read-only permissions and one run per PR at a time. It needs both
+  `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` and fails without either.
 
 ### 4. Client functions
 
@@ -298,7 +311,7 @@ letter that doesn't exist.
 | Function | Kind | Args | Returns |
 |---|---|---|---|
 | `letters.status.get` | query | — | `{ optIn: "unset" \| "yes" \| "no", writeLimit: "today" \| "three" \| null, unopenedId: Id<"letters"> \| null, invite: boolean, lastSentDay: string \| null, lateRisk: "elevated" \| "crisis" \| null }` (`invite`: decision C; `lateRisk`: §5.4) |
-| `letters.status.lateRiskShown` | mutation | `{ shown?: "elevated" \| "crisis" }` | `null`; clears `lateRisk` once the client has shown intake's care. With `shown`, it clears only a stored level at or below it, so a crisis raised while support resources were on screen stays to be shown. Without it (older clients), whatever is stored clears |
+| `letters.status.lateRiskShown` | mutation | `{ shown?: "elevated" \| "crisis" }` | `null`; clears `lateRisk` once the client has shown intake's care. It clears only a stored level at or below `shown`, so a crisis raised while support resources were on screen stays to be shown. Without `shown` it counts as `elevated`, so a call that doesn't say it showed crisis care never clears a crisis |
 | `letters.send.send` | action | `{ text, aim? }` | `SendOutcome` (§3) |
 | `letters.sent.list` | query | — | `{ id, line, status: "waiting" \| "received" \| "acknowledged" \| "returned" \| "held", seen }[]`, newest first, at most 50 (`held` only for a late hold, §5.4) |
 | `letters.sent.dismiss` | mutation | `{ id }` | `null`; a returned letter leaves Sent and its row is deleted; a late-held one leaves Sent and its row stays for review |
@@ -376,9 +389,11 @@ first, then `lighter`; after the window (or with no aim) it reads `by_pool_band`
   being deleted or wiped), not inside their quiet window now (`quietWindowEndsAt`,
   `outreach/quietWindow.ts`; skipped, not reserved, #749), and no open acute or
   escalation-derived follow-up (turned away **for themselves**). Escalation-derived
-  cards have their own index, so that check is exact; acute ones are looked for among
-  the newest `FOLLOW_UP_PROBE_MAX` (20) open cards per status (a card is only
-  superseded by one at least as heavy, so an open acute card is never buried).
+  cards have their own index, so that check is exact for every open status,
+  superseded included; acute ones are looked for among the newest
+  `FOLLOW_UP_PROBE_MAX` (20) cards per status. That half is a bound, not a guarantee:
+  an acute card under more than 20 newer cards of its status (most likely superseded
+  ones) is missed, accepted so a placement's reads stay bounded.
 
 The first that passes gets the letter: `status: received`, `recipientProfileId`,
 `receivedAt`, the recipient's `unopenedLetterId`, `lastReceivedAt`, a new `tiebreak`,
@@ -392,9 +407,11 @@ is refreshed: `pool: out` with `poolCheckAt` at the end of their quiet window, o
 `FOLLOW_UP_LOOK_AGAIN_MS` (1 h, one sweep) later while a hard follow-up is open, capped
 by freshness ending. Someone turned away only for this sender stays `ready` for others
 and is stepped past. Each try is about ten reads (twenty-odd with the follow-up probe),
-so two bands of 50 stay far inside a mutation's limits; the walk also stops early once
-the transaction is down to `PLACE_BUDGET_RESERVE` (200 queries or 2,000 documents),
-which it keeps for its writes. A placement runs in its own mutation.
+and each refresh after the walk costs about as much again (`REFRESH_BUDGET`: 20
+queries, 100 documents). The walk stops early once the transaction is down to
+`PLACE_BUDGET_RESERVE` (200 queries or 2,000 documents, kept for its writes) plus a
+`REFRESH_BUDGET` for each refresh it owes and one for the next try; a stop there
+answers "not the pool" (`anyone: false`). A placement runs in its own mutation.
 
 #### 5.3 The hourly sweep
 
@@ -444,8 +461,9 @@ next time they open the app (owner F5):
 - **`held`** sets `letters.heldLate`. The letter comes back into Sent with status `held`
   ("This letter can't be sent"), `seen` like any other status, until the sender
   dismisses it with `sent.dismiss`; the row stays for its review. If the same words were
-  already held (sent again and held at send while this one waited), it adds no second
-  review or strike, and dismissing it deletes the row.
+  already held (sent again and held at send while this one waited), the late copy is
+  deleted: the held copy and its one review and strike stand for both, so no second
+  copy of the words sits outside a review and nothing stale stays in Sent.
 
 An unchecked letter still unchecked `LETTER_WAIT_DAYS` (30) after it was written is
 returned too.
@@ -561,16 +579,16 @@ row is deleted once neither side holds it and no review is open. How the build r
   own `senderProfileId`, so `decide`, `pauseSender` and `liftPause` still reach them and
   the audit row still names them. Admin functions read the letter's sender, then the
   review's.
-- **A wipe leaves a hidden link on letters the recipient keeps** (owner, 19 November
-  2026). The letter is cut from the sender as on deletion, but keeps them in the
-  server-only `wipedSenderProfileId`. Only `received.hide` and `received.report` read
-  it: the block is still written, so the sender is never matched to that recipient
-  again, and a report copies it onto its review's `senderProfileId`, so a confirm still
-  strikes (and may pause) the right sender. No client query, return value, error or
-  push carries it, and an acknowledge after a wipe still pushes no one. The sender's
-  account deletion clears it (`by_wiped_sender`), so a deleted sender stays
-  unreachable. The retention setting leaves no link: it is the sender's standing
-  choice about their own old words.
+- **A wipe or the retention setting leaves a hidden link on letters the recipient
+  keeps** (owner, 19 November 2026). The letter is cut from the sender as on deletion,
+  but keeps them in the server-only `wipedSenderProfileId`. Only `received.hide` and
+  `received.report` read it: the block is still written, so the sender is never matched
+  to that recipient again, and a report copies it onto its review's `senderProfileId`,
+  so a confirm still strikes (and may pause) the right sender. No client query, return
+  value, error or push carries it, and an acknowledge after a wipe still pushes no one.
+  The sender's account deletion clears it (`by_wiped_sender`), so a deleted sender stays
+  unreachable. The retention setting keeps the link too (owner): cutting old words from
+  a sender doesn't let them reach a recipient who hid them.
 - **A wipe keeps strikes, a pause, other people's blocks of the sender, and the blocks
   they made.** B says a wipe is the same as deletion; following it would let a paused
   sender wipe to lift the pause, or reach a recipient who hid them again. Those rows
@@ -788,7 +806,9 @@ Six calls on the built slices, each now in the code and tested:
 1. **A softer floor for letters.** Past-tense and third-person mentions ("A few years
    ago I tried to end my life", "I lost my brother to suicide", "I used to think about
    hurting myself") don't reach `risk` on the phrase floor alone; present-tense crisis
-   phrases still do. A letters-specific floor; intake's is untouched (§3).
+   phrases still do. A letters-specific floor; intake's is untouched (§3). Fail-safe
+   (review of the built slice): the cut alone never passes; the letters classifier must
+   answer that the mention is past or someone else's, or the letter is `risk`.
 2. **Moderation down means unavailable.** If OpenAI moderation can't answer, a missing
    key included, the letter is `unavailable` even when the safeguard answered (§3).
 3. **A wipe keeps both sides' records.** A sender's wipe keeps open reviews (report or
@@ -801,8 +821,9 @@ Six calls on the built slices, each now in the code and tested:
    care, or "This letter can't be sent" in place of that Sent row, the next time they
    open the app; the flag clears once shown (§5.4, §13).
 6. **A wiped sender stays blockable.** A received letter keeps a server-only link to its
-   sender after their wipe, read only by hide and report, so the block is written and a
-   confirmed report still strikes. Account deletion removes it (§1, §10).
+   sender after their wipe or a retention cut, read only by hide and report, so the
+   block is written and a confirmed report still strikes. Account deletion removes it
+   (§1, §10).
 
 ---
 
@@ -835,19 +856,25 @@ Six calls on the built slices, each now in the code and tested:
   struck after it; dismissed on deletion, including after a wipe; a recipient's blocks
   kept on a wipe; reviewed text gone 30 days after the decision; `letter_viewed` rows
   aged out and cleared of the sender's id.
-- **The letters floor** (F1): the three kinds of mention pass, present tense still
-  routes to risk, and moderation down is unavailable (F2).
+- **The letters floor** (F1): the three kinds of mention pass when the classifier
+  confirms them; with the classifier silent, `none` or `current` they are `risk`
+  (removing the guard turns those tests red). Every present-tense sentence from the
+  review ("I'm used to wanting to kill myself", "I survived today and I want to die",
+  "I tried to kill myself last week", and the rest) keeps talk's level at the floor and
+  is `risk` through the check, the classifier silent or confirming. Moderation down is
+  unavailable (F2).
 - **Late outcomes** (F5): a late risk is returned once and cleared, and an `elevated`
   `shown` never clears a `crisis`; a late hold shows in Sent until dismissed and keeps
-  its row; a late hold of words already held adds no review or strike; a letter held at
+  its row; a late hold of words already held deletes its copy, adding no review or
+  strike; a letter held at
   send never shows; two held letters at once, the second answers `today`.
 - **The sweep:** a letter whose only candidate is its own sender doesn't stop another
   sender's letter; its steps start side by side; the invite flag is written only when
   it changes; an escalation-derived follow-up is found under more cards than the probe
-  reads.
+  reads; a stop on the budget answers `anyone: false` and leaves the candidate untried.
 - **The wipe link:** a wipe then a hide blocks the sender for that recipient (never
   matched again); a wipe, a report and a confirm strike the right sender; account
-  deletion removes the link; retention leaves none.
+  deletion removes the link; a retention cut then a hide blocks the sender too.
 - **Admin:** `openReview`'s `closedBy` tells a person's dismissal from a deletion's;
   dismissing a held review after a wipe takes back only its strike.
 
