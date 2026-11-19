@@ -141,9 +141,10 @@ export function useKindlingData(): Kindling {
 				if (!last) {
 					return;
 				}
-				// Pop before the read flips to null, so the empty state never flashes; Today's
-				// card then crossfades to "none right now".
-				router.back();
+				// Home before the read flips to null, so the empty state never flashes; Today's card
+				// then crossfades to "none right now". Today itself, as Back to Today goes: arriving
+				// from You would otherwise land on Steadiness.
+				goHome();
 				dismiss({ pathId: last._id }).catch((error: unknown) => {
 					report(error);
 					tryAgain(COPY.toast.putOut);

@@ -81,3 +81,20 @@ export function tendStep(
 export const tendFailed = (l: LocalStates, id: string): FlowStep => ({
 	local: { ...l, tended: minus(l.tended, id) },
 });
+
+/**
+ * Put it out (§11.1) while an Undo shows: the pending skip is dropped, not sent. The whole
+ * kindling is going, and sending it would complete the kindling behind the alert.
+ */
+export const putOutStep = (l: LocalStates): FlowStep => undoStep(l);
+
+/**
+ * How many times the person has chosen a card (opened a stop, acted, skipped, undone). Each
+ * move-on is scheduled with the count at that moment and lands only if nothing was chosen since,
+ * so a stop they tap is never taken from them by a move-on already on its way.
+ */
+export type Choices = number;
+export const NO_CHOICES: Choices = 0;
+export const chosen = (c: Choices): Choices => c + 1;
+export const moveOnLands = (scheduledAt: Choices, now: Choices) =>
+	scheduledAt === now;

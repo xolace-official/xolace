@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { effectiveStates, type TrailView } from "./kindling-model";
 import {
+	chosen,
 	commitStep,
+	moveOnLands,
+	NO_CHOICES,
 	NO_LOCAL,
+	putOutStep,
 	skipFailed,
 	skipStep,
 	tendFailed,
@@ -95,5 +99,36 @@ describe("I did this", () => {
 	it("a refused tend puts the twig back", () => {
 		const s = tendFailed(tendStep(NO_LOCAL, "c", false).local, "c");
 		expect(effectiveStates(view, s.local)[2]).toBe("wait");
+	});
+});
+
+describe("Put it out while an Undo shows (§11.1)", () => {
+	it("drops the pending skip: nothing is sent, and nothing is left to send", () => {
+		const s = putOutStep(skipStep(NO_LOCAL, "b").local);
+		expect(s.skip).toBeUndefined();
+		expect(commitStep(s.local, "left").skip).toBeUndefined();
+	});
+});
+
+describe("a move-on never takes a chosen card (§6)", () => {
+	it("lands when nothing was chosen since it was scheduled", () => {
+		expect(moveOnLands(NO_CHOICES, NO_CHOICES)).toBe(true);
+	});
+
+	it("Undo runs out (move-on scheduled), then they tap stop 3 before it lands: it doesn't", () => {
+		const scheduled = NO_CHOICES;
+		const tappedStop = chosen(scheduled);
+		expect(moveOnLands(scheduled, tappedStop)).toBe(false);
+	});
+
+	it("a tend's move-on, with a stop tapped while it's on its way: it doesn't land", () => {
+		const pressed = chosen(NO_CHOICES);
+		const tendMoveOn = pressed;
+		expect(moveOnLands(tendMoveOn, chosen(pressed))).toBe(false);
+	});
+
+	it("a move-on scheduled after their last choice still lands", () => {
+		const tapped = chosen(chosen(NO_CHOICES));
+		expect(moveOnLands(tapped, tapped)).toBe(true);
 	});
 });

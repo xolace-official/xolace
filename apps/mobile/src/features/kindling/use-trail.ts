@@ -27,9 +27,13 @@ import {
 } from "./kindling-motion";
 import {
 	type CommitCause,
+	chosen,
 	commitStep,
 	type FlowStep,
+	moveOnLands,
+	NO_CHOICES,
 	NO_LOCAL,
+	putOutStep,
 	skipFailed,
 	skipStep,
 	tendFailed,
@@ -92,17 +96,35 @@ export function useTrail(
 		localRef.current = step.local;
 		setLocal(step.local);
 	};
-	// A new kindling: the old one's undo window closes without sending (its twig is gone).
-	useEffect(() => {
-		stopUndoTimer();
-		localRef.current = NO_LOCAL;
-	}, [view.id]);
 	const timers = useRef<Timer[]>([]);
 	const later = (ms: number, fn: () => void) => {
 		timers.current.push(setTimeout(fn, ms));
 	};
-	const moveOn = (ms: number) =>
-		later(ms, () => setOpen(restingCard(latest.current.now)));
+	const clearLater = () => {
+		for (const id of timers.current) {
+			clearTimeout(id);
+		}
+		timers.current = [];
+	};
+	// Each move-on lands only if no card was chosen since it was scheduled.
+	const choices = useRef(NO_CHOICES);
+	const choose = () => {
+		choices.current = chosen(choices.current);
+	};
+	const moveOn = (ms: number, ticket = choices.current) =>
+		later(ms, () => {
+			if (moveOnLands(ticket, choices.current)) {
+				setOpen(restingCard(latest.current.now));
+			}
+		});
+	// A new kindling: the old one's undo window closes without sending (its twig is gone), and
+	// nothing still pending for it (a move-on, a tend's light) runs.
+	useEffect(() => {
+		stopUndoTimer();
+		clearLater();
+		choose();
+		localRef.current = NO_LOCAL;
+	}, [view.id]);
 
 	/** Light twig i on the trail: its stop, its leg's gold, the count; then the card moves on. */
 	const play = (i: number) => {
@@ -183,19 +205,13 @@ export function useTrail(
 		});
 		return () => sub.remove();
 	}, []);
-	useEffect(
-		() => () => {
-			for (const id of timers.current) {
-				clearTimeout(id);
-			}
-		},
-		[]
-	);
+	useEffect(() => clearLater, []);
 
 	const twigAt = (i: number) => latest.current.view.twigs[i];
 	return {
 		actions: {
 			act: (i: number) => {
+				choose();
 				commit("chose");
 				const twig = twigAt(i);
 				if (!twig) {
@@ -226,6 +242,7 @@ export function useTrail(
 				later(PRESS_TEND_MS, () => play(i));
 			},
 			again: (i: number) => {
+				choose();
 				commit("chose");
 				const twig = twigAt(i);
 				if (twig) {
@@ -234,6 +251,7 @@ export function useTrail(
 				}
 			},
 			browse: (i: number) => {
+				choose();
 				commit("chose");
 				const twig = twigAt(i);
 				if (twig) {
@@ -243,6 +261,7 @@ export function useTrail(
 			},
 			openStop: (i: number) => {
 				// They chose this card: the skip is sent, and nothing moves the card off it.
+				choose();
 				commit("chose");
 				if (i !== open) {
 					playTextureSelect();
@@ -254,6 +273,7 @@ export function useTrail(
 				if (!twig) {
 					return;
 				}
+				choose();
 				stopUndoTimer();
 				playSoftPress();
 				const step = skipStep(localRef.current, twig.id);
@@ -265,14 +285,23 @@ export function useTrail(
 				);
 			},
 			undo: () => {
+				choose();
 				stopUndoTimer();
 				playTextureSelect();
 				apply(undoStep(localRef.current));
 			},
 		},
-		/** The ⋯ menu opening: the window closes and the card moves on. */
-		commit: () => commit("closed"),
 		fade,
+		/**
+		 * The ⋯ menu's Put it out (§11.1). While its alert asks, the Undo window waits: nothing
+		 * completes the kindling behind it. Confirmed, the pending skip is dropped (the kindling is
+		 * going); cancelled, it's sent and the card moves on, as the window closing would.
+		 */
+		menu: {
+			asking: stopUndoTimer,
+			cancelled: () => commit("closed"),
+			putOut: () => apply(putOutStep(localRef.current)),
+		},
 		open,
 		shown,
 	};

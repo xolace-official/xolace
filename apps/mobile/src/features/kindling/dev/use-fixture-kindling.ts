@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { goHome } from "@/lib/landing";
 import { COPY } from "../copy";
@@ -71,7 +70,7 @@ export function useFixtureKindling({
 					setTimeout(() => mark(id, "done"), RETURN_MS);
 				}
 			},
-			putOut: () => router.back(),
+			putOut: goHome,
 			skip: (id) => {
 				mark(id, "passed");
 				return Promise.resolve(true);

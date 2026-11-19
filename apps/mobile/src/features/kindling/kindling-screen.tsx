@@ -94,7 +94,14 @@ function KindlingBody({ view: ready }: { view: TrailView | null }) {
 		<>
 			{/* A settled kindling is completed: there's nothing left to put out. */}
 			{ready && !settled(k.shown) ? (
-				<KindlingMenu beforeOpen={k.commit} onPutOut={actions.putOut} />
+				<KindlingMenu
+					onAsk={k.menu.asking}
+					onCancel={k.menu.cancelled}
+					onPutOut={() => {
+						k.menu.putOut();
+						actions.putOut();
+					}}
+				/>
 			) : null}
 			<Animated.ScrollView
 				contentContainerStyle={ready ? undefined : { flexGrow: 1 }}
