@@ -105,6 +105,17 @@ describe("resolveBackgrounds", () => {
 		});
 	});
 
+	it("offers only what the catalogue lists, plus Poster", () => {
+		expect(
+			resolveBackgrounds([ROWS[1], { ...ROWS[3], key: "dunes" }], STILLS).map(
+				(b) => b.key
+			)
+		).toEqual(["poster", "first-light", "dunes"]);
+		expect(resolveBackgrounds([], STILLS).map((b) => b.key)).toEqual([
+			"poster",
+		]);
+	});
+
 	it("is Poster then Night before the catalogue answers", () => {
 		expect(resolveBackgrounds(undefined, STILLS).map((b) => b.key)).toEqual([
 			"poster",

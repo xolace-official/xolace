@@ -71,16 +71,21 @@ const FOCUS: Readonly<Record<string, { x: number; y: number }>> = {
 };
 
 /**
- * The sheet's backgrounds, in catalogue order. A still the app has no image for is left out (a
- * newer catalogue than this build); so is a loop with no video. Before the catalogue answers,
- * or on a deployment where it's empty, Poster and Night.
+ * The sheet's backgrounds, in catalogue order: only what the catalogue lists, plus Poster, since
+ * `set` refuses any other key (`unknown_background`), Night included until the deployment's
+ * catalogue is uploaded. A still the app has no image for is left out (a newer catalogue than
+ * this build); so is a loop with no video. Before the catalogue answers, Poster and Night, so a
+ * saved Night doesn't flash Poster on the way in.
  */
 export function resolveBackgrounds(
 	rows: readonly CatalogueRow[] | undefined,
 	stills: Readonly<Record<string, number>>
 ): QuoteBackground[] {
+	if (!rows) {
+		return [POSTER, NIGHT];
+	}
 	const out: QuoteBackground[] = [];
-	for (const row of rows ?? []) {
+	for (const row of rows) {
 		const base = {
 			focus: FOCUS[row.key],
 			ink: row.ink,
@@ -105,9 +110,6 @@ export function resolveBackgrounds(
 	}
 	if (!out.some((b) => b.key === POSTER.key)) {
 		out.unshift(POSTER);
-	}
-	if (!out.some((b) => b.key === NIGHT.key)) {
-		out.splice(1, 0, NIGHT);
 	}
 	return out;
 }

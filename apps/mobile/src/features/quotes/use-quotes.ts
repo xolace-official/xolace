@@ -2,6 +2,7 @@ import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import type { OptimisticLocalStore } from "convex/browser";
 import { useAction, useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
@@ -248,6 +249,14 @@ export function useQuotes(): QuotesScreenValue {
 					});
 					return true;
 				} catch (e: unknown) {
+					// A key this deployment's catalogue doesn't have yet: Convex rolls the
+					// optimistic choice back, and the screen says nothing.
+					if (
+						e instanceof ConvexError &&
+						e.data?.code === "unknown_background"
+					) {
+						return true;
+					}
 					console.error("[quotes] background failed", e);
 					return false;
 				}

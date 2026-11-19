@@ -3,6 +3,10 @@
  * 1080 × 1920 WebP each, made by `quote-backgrounds:process`. Poster and Night are drawn in code.
  * A key the catalogue lists that isn't here (a newer catalogue than this build) is left off the
  * sheet.
+ *
+ * STAND-INS: every file here is a plain gradient made in code (rights-clean), standing in for the
+ * owner's art until it lands. Don't ship a store build with them: replace them with
+ * `quote-backgrounds:process` on the real art first (`assets/quotes/stills/README.md`).
  */
 export const STILLS: Readonly<Record<string, number>> = {
 	"deep-forest": require("@/assets/quotes/stills/deep-forest.webp"),
