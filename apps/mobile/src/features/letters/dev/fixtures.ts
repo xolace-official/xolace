@@ -12,7 +12,7 @@ import type {
 
 /**
  * The check's line for the fixable draft below. The server writes each fixable line itself
- * (`outcome.line`), so this is fixture text, not copy. @public Read by the Letters dev states (S20 PR 2).
+ * (`outcome.line`), so this is fixture text, not copy.
  */
 export const FIXABLE_LINE =
 	"Letters can’t carry contact details, so no one can be found through one. Could you take out the Instagram handle?";
@@ -40,14 +40,12 @@ export const RECEIVED_TEXT = {
 	warm: "I don’t know what you’re carrying, but I know some days it’s heavy. Mine was too.\nIt got lighter slowly, and then one morning it just did. Be patient with yourself tonight.\nYou’re doing better than you think.",
 } as const;
 
-/** @public Read by the Letters dev states (S20 PR 2). */
-export const RECEIVED_IDS = {
+const RECEIVED_IDS = {
 	long: "r-long",
 	short: "r-short",
 	warm: "r-warm",
 } as const;
 
-/** @public Read by the Letters dev states (S20 PR 2). */
 export const receivedLetter = (
 	which: keyof typeof RECEIVED_TEXT,
 	state: Partial<Omit<ReceivedLetter, "id" | "text">> = {}
@@ -60,7 +58,7 @@ export const receivedLetter = (
 	...state,
 });
 
-/** The board's sent list: one in each status. @public Read by the Letters dev states (S20 PR 2). */
+/** The board's sent list: one in each status. */
 export const SENT_SAMPLE: readonly SentLetter[] = [
 	{
 		id: "a",
@@ -82,22 +80,21 @@ export const SENT_SAMPLE: readonly SentLetter[] = [
 	},
 ];
 
-/** All three waiting: Write is off until one is received. @public Read by the Letters dev states (S20 PR 2). */
+/** All three waiting: Write is off until one is received. */
 export const SENT_THREE_WAITING: readonly SentLetter[] = [
 	{ ...SENT_SAMPLE[0], id: "a" },
 	{ ...SENT_SAMPLE[1], id: "d", status: "waiting" },
 	{ ...SENT_SAMPLE[2], id: "e", status: "waiting" },
 ];
 
-/** The board's received list: the short one, read and acknowledged. @public Read by the Letters dev states (S20 PR 2). */
+/** The board's received list: the short one, read and acknowledged. */
 export const RECEIVED_SAMPLE: readonly ReceivedLetter[] = [
 	receivedLetter("short", { acknowledged: true }),
 ];
 
-/** The warm letter, still sealed: the one waiting for you. @public Read by the Letters dev states (S20 PR 2). */
+/** The warm letter, still sealed: the one waiting for you. */
 export const WAITING = receivedLetter("warm", { opened: false });
 
-/** @public Read by the Letters dev states (S20 PR 2). */
 export const STATUS_OPEN: LettersStatus = {
 	optIn: "yes",
 	unopenedId: null,

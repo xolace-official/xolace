@@ -11,7 +11,7 @@ export const LETTER_MIN = 40;
 export const LETTER_MAX = 500;
 /** The count shows under LETTER_MIN and past this. */
 export const COUNT_FROM = 400;
-/** Acknowledge and Hide can be undone for this long. @public Read by the Letters screens (S20 PR 2). */
+/** Acknowledge and Hide can be undone for this long. */
 export const UNDO_SECONDS = 5;
 
 /** "For": Anyone by default, then the matching's feeling families (the board's stand-ins). */
@@ -25,7 +25,7 @@ export const FOR = [
 ] as const;
 export type LetterFor = (typeof FOR)[number];
 
-/** Human-written starters. They drop into the letter and stay editable. Never AI help. @public Read by the Letters screens (S20 PR 2). */
+/** Human-written starters. They drop into the letter and stay editable. Never AI help. */
 export const STARTERS = [
 	"I don’t know what you’re carrying, but",
 	"Something that helped me:",
@@ -126,7 +126,11 @@ export const LETTERS = {
 		gone: "Reported. The letter is gone.",
 		hide: "Hide",
 		hint: "Drag the letter up to open it",
+		/** Proposed (the prototype has no line): a letter that's gone, or not yours. */
+		notThere: "This letter isn’t here anymore.",
 		open: "Open",
+		/** Proposed: Open failed, and the letter sealed again. */
+		openFailed: "Couldn’t open it. Try again.",
 		report: "Report",
 		rowAcknowledged: "Received · you acknowledged it",
 		rowHidden: "Hidden",
@@ -172,6 +176,8 @@ export const LETTERS = {
 		countLeft: (n: number) => `${n} left`,
 		/** Under LETTER_MIN, then past COUNT_FROM. */
 		countUnder: (n: number) => `${n} more characters to send`,
+		/** Send didn't reach the server: the words stay; nothing else changes. */
+		failed: "Your letter didn’t send. Your words are still here.",
 		field: "Your letter",
 		for: "For",
 		placeholder: "Write to someone you’ll never meet…",

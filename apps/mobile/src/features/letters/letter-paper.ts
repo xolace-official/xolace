@@ -9,8 +9,7 @@ import { NIGHT_VARIANT } from "@/design/themes";
  */
 export type Light = "day" | "dusk" | "night";
 
-/** @public Read by the Letters screens (S20 PR 2). */
-export function useLight(): Light {
+function useLight(): Light {
 	const { theme } = useUniwind();
 	const dark = useScheme() === "dark";
 	if (theme === NIGHT_VARIANT) {
@@ -111,5 +110,4 @@ export function useLetterInk() {
 		stampShadow: `inset 0px 0px 0px 3px ${c["letter-stamp-rim"]}, 0px 4px 10px -4px ${c["letter-seal-shadow"]}`,
 	};
 }
-/** @public Read by the Letters screens (S20 PR 2). */
 export type LetterInk = ReturnType<typeof useLetterInk>;

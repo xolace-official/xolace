@@ -55,8 +55,8 @@ export function LetterSheet({ size, text, children, style }: SheetProps) {
 	);
 }
 
-/** A letter's words in the letter's own type, one line of text per paragraph. @public Read by the Letters screens (S20 PR 2). */
-export function LetterText({
+/** A letter's words in the letter's own type, one line of text per paragraph. */
+function LetterText({
 	size,
 	text,
 	className,
@@ -82,7 +82,6 @@ export function LetterText({
 /**
  * One run of the letter's type: upright Newsreader in the letter's ink. The face loads where
  * it's drawn; until it's in, the words keep their place unseen rather than swap faces.
- * @public Read by the Letters screens (S20 PR 2).
  */
 export function LetterLine({
 	size,
