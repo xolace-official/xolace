@@ -19,6 +19,7 @@ import { languageOfLocale, letterProfileOf } from "./profiles";
 import {
 	DAY_MS,
 	FOLLOW_UP_LOOK_AGAIN_MS,
+	FOLLOW_UP_PROBE_MAX,
 	HEAVIER_FROM,
 	METADATA_FRESH_DAYS,
 	RECIPIENT_REST_DAYS,
@@ -85,20 +86,40 @@ export async function mayReceive(
 	return (await effectiveAgeStatus(ctx, { profile, user })) === "adult";
 }
 
-/** An open acute or escalation-derived follow-up: no letter now (#749). */
+/**
+ * An open acute or escalation-derived follow-up: no letter now (#749).
+ * Escalation-derived cards have their own index, so that half is exact. Acute
+ * ones are looked for among the newest {@link FOLLOW_UP_PROBE_MAX} open cards
+ * per status: a card is only superseded by one at least as heavy, so an open
+ * acute card is never buried under lighter ones that replaced it, and old
+ * superseded cards can pile up without making every placement read them.
+ */
 async function hasOpenHardFollowUp(
 	ctx: MutationCtx,
 	emotionalProfileId: Id<"emotional_profiles">
 ): Promise<boolean> {
 	for (const status of OPEN_FOLLOW_UP) {
-		for await (const card of ctx.db
+		const escalated = await ctx.db
+			.query("follow_up_cards")
+			.withIndex("by_profile_escalation_status", (q) =>
+				q
+					.eq("emotionalProfileId", emotionalProfileId)
+					.eq("escalationDerived", true)
+					.eq("status", status)
+			)
+			.first();
+		if (escalated) {
+			return true;
+		}
+		const newest = await ctx.db
 			.query("follow_up_cards")
 			.withIndex("by_profile_status", (q) =>
 				q.eq("emotionalProfileId", emotionalProfileId).eq("status", status)
-			)) {
-			if (card.tier === "acute" || card.escalationDerived) {
-				return true;
-			}
+			)
+			.order("desc")
+			.take(FOLLOW_UP_PROBE_MAX);
+		if (newest.some((card) => card.tier === "acute")) {
+			return true;
 		}
 	}
 	return false;

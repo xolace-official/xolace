@@ -28,13 +28,16 @@ import { waitBucketOf } from "./analytics";
 import {
 	CANDIDATES_TRIED_MAX,
 	DAY_MS,
+	FOLLOW_UP_PROBE_MAX,
 	LETTER_WAIT_DAYS,
+	PLACE_AFTER_MS,
 	RECHECK_DELAYS_MS,
 	RECHECK_OVERDUE_MS,
 	RECHECK_SWEEP_MAX,
 	RECIPIENT_PUSH_DELAY_MS,
 	recipientPushDelay,
 	SWEEP_BATCH,
+	textHashOf,
 } from "./rules";
 
 type Pushed = {
@@ -619,6 +622,25 @@ describe("letters.match.place", () => {
 		expect(await place(root, await waitingLetter(sender))).toBe(true);
 	});
 
+	it("finds an escalation-derived follow-up under more cards than the probe reads", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const reader = await recipient(2, root);
+		const sessionId = await seedSession(root, reader.profileId);
+		await openFollowUp(reader, sessionId, {
+			escalationDerived: true,
+			tier: "elevated",
+		});
+		for (let i = 0; i < FOLLOW_UP_PROBE_MAX + 5; i++) {
+			vi.advanceTimersByTime(1);
+			await openFollowUp(reader, sessionId, {
+				escalationDerived: false,
+				tier: "standard",
+			});
+		}
+		expect(await place(root, await waitingLetter(sender))).toBe(false);
+	});
+
 	it("never places a paused sender's letters, silently", async () => {
 		const root = asUnauthed();
 		const sender = await adult(1, root);
@@ -895,6 +917,31 @@ describe("letters.check.recheck", () => {
 		);
 	});
 
+	it("clears a late risk only up to the level the client showed", async () => {
+		const { id, root, sender } = await unchecked();
+		stub.safety = { level: "crisis", resources: [], unavailable: false };
+		await recheck(root, id);
+		const lateRisk = async () =>
+			(await sender.t.query(api.letters.status.get, {})).lateRisk;
+		// Raised to crisis while the client was showing support resources.
+		await sender.t.mutation(api.letters.status.lateRiskShown, {
+			shown: "elevated",
+		});
+		expect(await lateRisk()).toBe("crisis");
+		await sender.t.mutation(api.letters.status.lateRiskShown, {
+			shown: "crisis",
+		});
+		expect(await lateRisk()).toBeNull();
+	});
+
+	it("refuses lateRiskShown without a signed-in user", async () => {
+		await expect(
+			asUnauthed().mutation(api.letters.status.lateRiskShown, {
+				shown: "crisis",
+			})
+		).rejects.toThrow();
+	});
+
 	it("a late hostile verdict holds it, with a review and a strike", async () => {
 		const { id, root } = await unchecked();
 		stub.verdict = {
@@ -930,6 +977,32 @@ describe("letters.check.recheck", () => {
 		expect(await sender.t.query(api.letters.sent.list, {})).toEqual([]);
 		// Still kept for its review.
 		expect((await letter(root, id))?.status).toBe("held");
+	});
+
+	it("a late hold of words already held is one review and one strike", async () => {
+		const { id, root, sender } = await unchecked();
+		await root.run(async (ctx) => {
+			await ctx.db.insert("letters", {
+				createdAt: NOW,
+				language: "en",
+				senderProfileId: sender.profileId,
+				status: "held",
+				text: KIND_LETTER,
+				textHash: await textHashOf(KIND_LETTER),
+			});
+		});
+		stub.verdict = { fixable: null, hostile: true, language: "en" };
+		await recheck(root, id);
+		expect((await letter(root, id))?.status).toBe("held");
+		const [reviews, strikes] = await root.run(async (ctx) => [
+			await ctx.db.query("letter_reviews").collect(),
+			await ctx.db.query("letter_strikes").collect(),
+		]);
+		expect(reviews).toHaveLength(0);
+		expect(strikes).toHaveLength(0);
+		// Nothing keeps this copy for review: dismissing it deletes it.
+		await sender.t.mutation(api.letters.sent.dismiss, { id });
+		expect(await letter(root, id)).toBeNull();
 	});
 
 	it.each([
@@ -1162,7 +1235,19 @@ describe("letters.sweep", () => {
 		expect((await rowOf(reader))?.unopenedLetterId).toBe(english);
 	});
 
-	it("runs its steps in order, and two sweeps at once place each letter once", async () => {
+	it("places another sender's letter when only its own sender stood in the way", async () => {
+		const root = asUnauthed();
+		// The only ready recipient also wrote the oldest letter.
+		const reader = await recipient(2, root);
+		const other = await adult(3, root);
+		const own = await waitingLetter(reader, {}, 2 * HOUR_MS);
+		const theirs = await waitingLetter(other, {}, HOUR_MS);
+		await sweepPlace(root);
+		expect((await letter(root, own))?.status).toBe("waiting");
+		expect((await rowOf(reader))?.unopenedLetterId).toBe(theirs);
+	});
+
+	it("starts its steps side by side, and two sweeps at once place each letter once", async () => {
 		const root = asUnauthed();
 		const sender = await adult(1, root);
 		const second = await adult(3, root);
@@ -1180,8 +1265,20 @@ describe("letters.sweep", () => {
 				.map((j) => j.name)
 				.filter((n) => n.startsWith("letters/sweep:"));
 		await root.mutation(internal.letters.sweep.run, {});
-		// Only the first step is scheduled; it starts the next when it's done.
-		expect(await sweepJobs()).toEqual(["letters/sweep:refreshDue"]);
+		// Every step starts on its own, so one failing never starves the rest;
+		// placement a little later, once the refresh has usually run.
+		expect((await sweepJobs()).sort()).toEqual([
+			"letters/sweep:invite",
+			"letters/sweep:placeWaiting",
+			"letters/sweep:refreshDue",
+			"letters/sweep:uncheckedDue",
+		]);
+		const jobs = await root.run((ctx) =>
+			ctx.db.system.query("_scheduled_functions").collect()
+		);
+		expect(
+			jobs.find((j) => j.name === "letters/sweep:placeWaiting")?.scheduledTime
+		).toBe(NOW + PLACE_AFTER_MS);
 
 		await root.mutation(internal.letters.sweep.run, {});
 		await root.finishAllScheduledFunctions(vi.runAllTimers);
@@ -1193,15 +1290,24 @@ describe("letters.sweep", () => {
 				.then((rows) => rows.map((r) => r.unopenedLetterId).filter(Boolean))
 		);
 		expect(placed.sort()).toEqual([a, b].sort());
-		const names = await sweepJobs();
-		// Both chains ran to the end, in §5.3's order.
-		expect(names.filter((n) => n === "letters/sweep:invite")).toHaveLength(2);
-		expect(names.indexOf("letters/sweep:placeWaiting")).toBeGreaterThan(
-			names.indexOf("letters/sweep:refreshDue")
-		);
-		expect(names.indexOf("letters/sweep:uncheckedDue")).toBeGreaterThan(
-			names.indexOf("letters/sweep:placeWaiting")
-		);
+	});
+
+	it("writes the invite flag only when it changes", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const stats = () => root.run((ctx) => ctx.db.query("letter_stats").first());
+		await root.mutation(internal.letters.sweep.invite, {});
+		const first = await stats();
+		vi.advanceTimersByTime(HOUR_MS);
+		await root.mutation(internal.letters.sweep.invite, {});
+		expect(await stats()).toEqual(first);
+
+		await waitingLetter(sender);
+		await root.mutation(internal.letters.sweep.invite, {});
+		expect(await stats()).toMatchObject({
+			invite: false,
+			updatedAt: NOW + HOUR_MS,
+		});
 	});
 
 	it("stops inviting letters while more wait than a week of placements", async () => {

@@ -54,10 +54,22 @@ export const AIM_WINDOW_HOURS = 72;
  * Candidates one placement may try per band before it gives up for now. Those
  * turned away for this sender alone (a block) stay in the pool and are stepped
  * past; those turned away for themselves (quiet hours, an open hard follow-up)
- * are refreshed out of it. Each try is about ten reads, and a placement runs
- * in its own mutation.
+ * are refreshed out of it. A try is at most about 15 index reads (the block,
+ * the person's account and age, quiet hours, and the follow-up probe, bounded
+ * by {@link FOLLOW_UP_PROBE_MAX}), so two bands of 50 stay well inside
+ * Convex's 4,096 queries a transaction. `placeLetter` also stops early once
+ * the transaction's own remaining budget falls to {@link PLACE_BUDGET_RESERVE}.
  */
-export const CANDIDATES_TRIED_MAX = 100;
+export const CANDIDATES_TRIED_MAX = 50;
+/** Open follow-up cards read per status, newest first, looking for a hard one. */
+export const FOLLOW_UP_PROBE_MAX = 20;
+/** Queries and documents a placement leaves unused for its own writes. */
+export const PLACE_BUDGET_RESERVE = { documentsRead: 2000, queries: 200 };
+/**
+ * How long after the hourly sweep starts it places waiting letters, so the
+ * pool refresh it starts at the same time has usually run first (§5.3).
+ */
+export const PLACE_AFTER_MS = 2 * 60 * 1000;
 /**
  * How long someone with an open hard follow-up stays out of the pool before a
  * refresh looks again: one sweep.

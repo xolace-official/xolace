@@ -19,6 +19,7 @@ import { letterProfileOf } from "./profiles";
 import {
 	AIM_WINDOW_MS,
 	CANDIDATES_TRIED_MAX,
+	PLACE_BUDGET_RESERVE,
 	recipientPushDelay,
 } from "./rules";
 
@@ -30,8 +31,12 @@ export type PlaceResult =
 	/**
 	 * No candidate passed; still waiting. `aimOnly`: only the letter's aim was
 	 * read (inside its aim window), so this says nothing about other letters.
+	 * `anyone`: every candidate tried was turned away for themselves, and the
+	 * walk reached the end of the pool, so another sender's letter in the same
+	 * language would find no one either. False when someone was turned away
+	 * only for this sender (their own row, a block) or the walk stopped early.
 	 */
-	| { none: true; aimOnly: boolean }
+	| { none: true; aimOnly: boolean; anyone: boolean }
 	/** The sender is paused; still waiting, skipped silently. */
 	| "paused"
 	/** Not a waiting letter (any more). */
@@ -140,6 +145,15 @@ async function give(
 	});
 }
 
+/** Whether this transaction is down to the reserve it keeps for its writes. */
+async function nearBudget(ctx: MutationCtx): Promise<boolean> {
+	const metrics = await ctx.meta.getTransactionMetrics();
+	return (
+		metrics.databaseQueries.remaining <= PLACE_BUDGET_RESERVE.queries ||
+		metrics.documentsRead.remaining <= PLACE_BUDGET_RESERVE.documentsRead
+	);
+}
+
 /** Try to place one letter now. Reads its own writes, so a sweep can loop. */
 export async function placeLetter(
 	ctx: MutationCtx,
@@ -163,6 +177,8 @@ export async function placeLetter(
 	const inAimWindow = now < letter.checkedAt + AIM_WINDOW_MS;
 	const away: Id<"emotional_profiles">[] = [];
 	let chosen: Doc<"letter_profiles"> | null = null;
+	// Whether the pool, not this sender, is why no one was found.
+	let anyone = true;
 	for (const band of BANDS) {
 		let tried = 0;
 		for await (const candidate of readyCandidates(
@@ -171,6 +187,10 @@ export async function placeLetter(
 			band,
 			inAimWindow
 		)) {
+			if (tried >= CANDIDATES_TRIED_MAX || (await nearBudget(ctx))) {
+				anyone = false;
+				break;
+			}
 			const why = await turnedAway(ctx, candidate, senderProfileId, now);
 			if (why === null) {
 				chosen = candidate;
@@ -178,11 +198,10 @@ export async function placeLetter(
 			}
 			if (why === "person") {
 				away.push(candidate.emotionalProfileId);
+			} else {
+				anyone = false;
 			}
 			tried += 1;
-			if (tried >= CANDIDATES_TRIED_MAX) {
-				break;
-			}
 		}
 		if (chosen) {
 			break;
@@ -196,7 +215,7 @@ export async function placeLetter(
 		await give(ctx, letter, chosen, senderProfileId, now);
 		return "placed";
 	}
-	return { aimOnly: Boolean(letter.aim && inAimWindow), none: true };
+	return { aimOnly: Boolean(letter.aim && inAimWindow), anyone, none: true };
 }
 
 export const place = internalMutation({

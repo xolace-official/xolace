@@ -1,9 +1,10 @@
 /**
- * The hourly sweep (spec §5.3), one step after another: pool rows due a
- * refresh, then waiting letters in the order they passed (FIFO, #749) with
- * those waiting too long returned, then unchecked letters due a re-check, then
- * the invite flag. Each step works in bounded pages, schedules its own next
- * page, and starts the next step when it's done. Two sweeps overlapping only
+ * The hourly sweep (spec §5.3): four steps started side by side, so one
+ * failing never starves the others. Pool rows due a refresh; waiting letters
+ * in the order they passed (FIFO, #749) with those waiting too long returned,
+ * started {@link PLACE_AFTER_MS} later so the refresh has usually run;
+ * unchecked letters due a re-check; and the invite flag. Each step works in
+ * bounded pages and schedules its own next page. Two sweeps overlapping only
  * repeat work: every write re-reads the row it changes.
  */
 import { v } from "convex/values";
@@ -18,6 +19,7 @@ import {
 	INVITE_BACKLOG_DAYS,
 	INVITE_COUNT_MAX,
 	LETTER_WAIT_DAYS,
+	PLACE_AFTER_MS,
 	RECHECK_DELAYS_MS,
 	RECHECK_OVERDUE_MS,
 	RECHECK_SWEEP_MAX,
@@ -28,6 +30,13 @@ export const run = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		await ctx.scheduler.runAfter(0, internal.letters.sweep.refreshDue, {});
+		await ctx.scheduler.runAfter(
+			PLACE_AFTER_MS,
+			internal.letters.sweep.placeWaiting,
+			{}
+		);
+		await ctx.scheduler.runAfter(0, internal.letters.sweep.uncheckedDue, {});
+		await ctx.scheduler.runAfter(0, internal.letters.sweep.invite, {});
 		return null;
 	},
 	returns: v.null(),
@@ -47,9 +56,9 @@ export const refreshDue = internalMutation({
 		for (const row of due) {
 			await refreshPool(ctx, row.emotionalProfileId, now);
 		}
-		await (due.length === SWEEP_BATCH
-			? ctx.scheduler.runAfter(0, internal.letters.sweep.refreshDue, {})
-			: ctx.scheduler.runAfter(0, internal.letters.sweep.placeWaiting, {}));
+		if (due.length === SWEEP_BATCH) {
+			await ctx.scheduler.runAfter(0, internal.letters.sweep.refreshDue, {});
+		}
 		return null;
 	},
 	returns: v.null(),
@@ -65,9 +74,11 @@ const placeCursorValidator = v.object({
  * Waiting letters, oldest pass first: return those past the wait, place the
  * rest. Returns and skips are cheap and run `SWEEP_BATCH` to a mutation; a
  * placement reads the pool, so each runs in a mutation of its own and the
- * next one is scheduled after it. Once a letter finds no one, the rest of
- * this sweep skips its language (or, inside an aim window, its language and
- * aim): the next letter would read the same pool.
+ * next one is scheduled after it. Once a letter finds no one because of the
+ * pool, the rest of this sweep skips its language (or, inside an aim window,
+ * its language and aim): the next letter would read the same pool. When only
+ * its sender stood in the way (their own row, a block) or the walk stopped
+ * early, only that sender's letters there are skipped.
  */
 export const placeWaiting = internalMutation({
 	args: {
@@ -100,10 +111,11 @@ export const placeWaiting = internalMutation({
 			handled += 1;
 			if (checkedAt + LETTER_WAIT_DAYS * DAY_MS <= now) {
 				await returnUnplaced(ctx, letter);
-			} else if (!(skip.has(letter.language) || skip.has(aimKey(letter)))) {
+			} else if (!skippedBy(skip, letter)) {
 				const result = await placeLetter(ctx, letter._id, now);
 				if (typeof result === "object") {
-					skip.add(result.aimOnly ? aimKey(letter) : letter.language);
+					const pool = result.aimOnly ? aimKey(letter) : letter.language;
+					skip.add(result.anyone ? pool : senderKey(pool, letter));
 				}
 				if (result === "placed" || typeof result === "object") {
 					break;
@@ -113,12 +125,12 @@ export const placeWaiting = internalMutation({
 				break;
 			}
 		}
-		await (last
-			? ctx.scheduler.runAfter(0, internal.letters.sweep.placeWaiting, {
-					after: last,
-					skip: [...skip],
-				})
-			: ctx.scheduler.runAfter(0, internal.letters.sweep.uncheckedDue, {}));
+		if (last) {
+			await ctx.scheduler.runAfter(0, internal.letters.sweep.placeWaiting, {
+				after: last,
+				skip: [...skip],
+			});
+		}
 		return null;
 	},
 	returns: v.null(),
@@ -127,6 +139,17 @@ export const placeWaiting = internalMutation({
 /** The skip key for a letter's own aim inside its window. */
 const aimKey = (letter: Doc<"letters">) =>
 	`${letter.language}:${letter.aim ?? ""}`;
+
+/** A pool's skip key narrowed to one sender's letters. */
+const senderKey = (pool: string, letter: Doc<"letters">) =>
+	`${pool}#${letter.senderProfileId ?? ""}`;
+
+/** Whether this sweep already found no one for a letter like this one. */
+function skippedBy(skip: Set<string>, letter: Doc<"letters">): boolean {
+	return [letter.language, aimKey(letter)].some(
+		(pool) => skip.has(pool) || skip.has(senderKey(pool, letter))
+	);
+}
 
 /** "Not placed. No one it fit came along this time." (decision C) */
 async function returnUnplaced(
@@ -183,12 +206,12 @@ export const uncheckedDue = internalMutation({
 				started += 1;
 			}
 		}
-		await (page.isDone
-			? ctx.scheduler.runAfter(0, internal.letters.sweep.invite, {})
-			: ctx.scheduler.runAfter(0, internal.letters.sweep.uncheckedDue, {
-					cursor: page.continueCursor,
-					started,
-				}));
+		if (!page.isDone) {
+			await ctx.scheduler.runAfter(0, internal.letters.sweep.uncheckedDue, {
+				cursor: page.continueCursor,
+				started,
+			});
+		}
 		return null;
 	},
 	returns: v.null(),
@@ -197,7 +220,9 @@ export const uncheckedDue = internalMutation({
 /**
  * Whether the session-end write card may invite a letter: not while more
  * letters wait than `INVITE_BACKLOG_DAYS` of recent placements (§9). Kept on
- * one row so `status.get` reads a single document.
+ * one row so `status.get` reads a single document, written only when the flag
+ * changes so subscribed clients don't re-run every hour (`updatedAt` is when
+ * it last changed).
  */
 export const invite = internalMutation({
 	args: {},
@@ -213,14 +238,16 @@ export const invite = internalMutation({
 			.query("letters")
 			.withIndex("by_status_checked", (q) => q.eq("status", "waiting"))
 			.take(placed.length + 1);
-		const stats = {
-			invite: waiting.length <= placed.length,
-			updatedAt: now,
-		};
+		const invite = waiting.length <= placed.length;
 		const existing = await ctx.db.query("letter_stats").first();
-		await (existing
-			? ctx.db.patch("letter_stats", existing._id, stats)
-			: ctx.db.insert("letter_stats", stats));
+		if (!existing) {
+			await ctx.db.insert("letter_stats", { invite, updatedAt: now });
+		} else if (existing.invite !== invite) {
+			await ctx.db.patch("letter_stats", existing._id, {
+				invite,
+				updatedAt: now,
+			});
+		}
 		return null;
 	},
 	returns: v.null(),

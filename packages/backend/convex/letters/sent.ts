@@ -123,7 +123,8 @@ export const markSeen = mutation({
 
 /**
  * A returned letter leaves Sent: its row is deleted (decision C). A late-held
- * one leaves Sent too, but its row stays for its review.
+ * one leaves Sent too, and its row stays for its review; one with no review
+ * (the same words were already held, so it carries no second one) is deleted.
  */
 export const dismiss = mutation({
 	args: { id: v.id("letters") },
@@ -133,8 +134,13 @@ export const dismiss = mutation({
 		if (letter?.status === "returned") {
 			await ctx.db.delete("letters", letter._id);
 		} else if (letter?.status === "held" && letter.heldLate) {
-			// Leaves Sent; the row stays for its review.
-			await ctx.db.patch("letters", letter._id, { heldLate: undefined });
+			const review = await ctx.db
+				.query("letter_reviews")
+				.withIndex("by_letter", (q) => q.eq("letterId", letter._id))
+				.first();
+			await (review
+				? ctx.db.patch("letters", letter._id, { heldLate: undefined })
+				: ctx.db.delete("letters", letter._id));
 		}
 		return null;
 	},

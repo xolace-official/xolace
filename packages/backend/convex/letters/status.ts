@@ -45,15 +45,23 @@ export const get = query({
 	}),
 });
 
-/** The care for a late risk was shown: it doesn't show again. */
+/**
+ * The care for a late risk was shown: it doesn't show again. `shown` is the
+ * level the client showed; a crisis raised since then stays until it's shown
+ * too. Without `shown`, whatever is stored clears (S21 always passes it).
+ */
 export const lateRiskShown = mutation({
-	args: {},
-	handler: async (ctx) => {
+	args: { shown: v.optional(lateRiskValidator) },
+	handler: async (ctx, args) => {
 		const { profile } = await requireAuth(ctx);
 		const row = await letterProfileOf(ctx, profile._id);
-		if (row?.lateRisk) {
-			await ctx.db.patch("letter_profiles", row._id, { lateRisk: undefined });
+		if (!row?.lateRisk) {
+			return null;
 		}
+		if (args.shown === "elevated" && row.lateRisk === "crisis") {
+			return null;
+		}
+		await ctx.db.patch("letter_profiles", row._id, { lateRisk: undefined });
 		return null;
 	},
 	returns: v.null(),

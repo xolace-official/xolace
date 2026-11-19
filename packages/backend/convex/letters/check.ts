@@ -133,17 +133,28 @@ export const apply = internalMutation({
 				// At-risk words are never stored (#750).
 				await ctx.db.delete("letters", letterId);
 				break;
-			case "held":
+			case "held": {
+				// The same words already held (resent and held at send while
+				// this one waited): one review and one strike (spec §3 step 2).
+				const heldBefore = sender
+					? await ctx.db
+							.query("letters")
+							.withIndex("by_sender_hash", (q) =>
+								q.eq("senderProfileId", sender).eq("textHash", outcome.textHash)
+							)
+							.first()
+					: null;
 				await ctx.db.patch("letters", letterId, {
 					heldLate: true,
 					recheckCount,
 					status: "held",
 					textHash: outcome.textHash,
 				});
-				if (sender) {
+				if (sender && heldBefore?.status !== "held") {
 					await holdForReview(ctx, letterId, sender, now);
 				}
 				break;
+			}
 			case "returned":
 				await ctx.db.patch("letters", letterId, {
 					recheckCount,

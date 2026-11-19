@@ -100,8 +100,10 @@ export const gate = internalQuery({
  * the loser answers `limit`). A held letter skips the caps, since it's kept
  * for review whatever else was sent, but still uses the day, so a sender
  * (paused or not) adds at most one held letter a day to the review queue and
- * then meets the same `limit: today` as anyone. The same held words twice,
- * even from two devices at once, are one row and one strike (spec §3 step 2).
+ * then meets the same `limit: today` as anyone. Two different letters held
+ * at once from two devices: the second reads the first's day and answers
+ * `today`, unstored. The same held words twice, even from two devices at
+ * once, are one row and one strike (spec §3 step 2).
  */
 export const store = internalMutation({
 	args: {
@@ -137,6 +139,9 @@ export const store = internalMutation({
 				.first();
 			if (heldBefore?.status === "held") {
 				return null;
+			}
+			if (sender.lastSentDay === (await senderToday(ctx, profile))) {
+				return "today" as const;
 			}
 			const letterId = await ctx.db.insert("letters", {
 				createdAt: now,
@@ -345,9 +350,10 @@ async function outcomeOf(
 				...(check.peak && { peak: check.peak }),
 			});
 			return { kind: "risk" };
-		case "held":
-			await store("held");
-			return { kind: "held" };
+		case "held": {
+			const limit = await store("held");
+			return limit ? { kind: "limit", reason: limit } : { kind: "held" };
+		}
 		case "lang":
 			return { kind: "lang" };
 		case "fixable":
