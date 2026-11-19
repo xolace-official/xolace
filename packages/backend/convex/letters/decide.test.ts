@@ -47,6 +47,7 @@ describe("decideLetterCheck", () => {
 		(level) => {
 			expect(decide({ ...SAFE, level, peak: PEAK }, KIND)).toEqual({
 				kind: "risk",
+				level,
 				peak: PEAK,
 			});
 		}
@@ -159,13 +160,18 @@ describe("decideLetterCheck", () => {
 			(crisisMention) => {
 				expect(cut({ ...KIND, crisisMention })).toEqual({
 					kind: "risk",
+					level: "crisis",
 					peak: PEAK,
 				});
 			}
 		);
 
 		it("is risk, never pass or unavailable, when the classifier is silent", () => {
-			expect(cut(null)).toEqual({ kind: "risk", peak: PEAK });
+			expect(cut(null)).toEqual({
+				kind: "risk",
+				level: "crisis",
+				peak: PEAK,
+			});
 		});
 
 		it("comes before a hostile verdict or a pattern hit", () => {
@@ -195,7 +201,7 @@ describe("decideLetterCheck", () => {
 						safety: { ...SAFE, level: "elevated", peak: ELEVATED_PEAK },
 						verdict: crisisMention ? { ...KIND, crisisMention } : null,
 					})
-				).toEqual({ kind: "risk", peak: PEAK });
+				).toEqual({ kind: "risk", level: "crisis", peak: PEAK });
 			}
 		);
 
@@ -208,7 +214,7 @@ describe("decideLetterCheck", () => {
 					safety: { ...SAFE, level: "crisis", peak: PEAK },
 					verdict: { ...KIND, crisisMention: "past_or_others" },
 				})
-			).toEqual({ kind: "risk", peak: PEAK });
+			).toEqual({ kind: "risk", level: "crisis", peak: PEAK });
 		});
 	});
 
@@ -252,12 +258,13 @@ describe("decideLetterCheck", () => {
 		it("1: never at crisis", () => {
 			expect(
 				flagged({ safety: { ...FLAGGED, level: "crisis", peak: PEAK } })
-			).toEqual({ kind: "risk", peak: PEAK });
+			).toEqual({ kind: "risk", level: "crisis", peak: PEAK });
 		});
 
 		it("2: only when the floor cut a mention", () => {
 			expect(flagged({ discounted: null })).toEqual({
 				kind: "risk",
+				level: "elevated",
 				peak: ELEVATED_PEAK,
 			});
 		});
@@ -265,6 +272,7 @@ describe("decideLetterCheck", () => {
 		it("2: only when what's left after the cut raises nothing", () => {
 			expect(flagged({ remainder: ELEVATED_PEAK })).toEqual({
 				kind: "risk",
+				level: "elevated",
 				peak: ELEVATED_PEAK,
 			});
 		});
@@ -273,6 +281,7 @@ describe("decideLetterCheck", () => {
 			const { selfHarmScoresOnly: _, ...byIntensity } = FLAGGED;
 			expect(flagged({ safety: byIntensity })).toEqual({
 				kind: "risk",
+				level: "elevated",
 				peak: ELEVATED_PEAK,
 			});
 		});
@@ -284,7 +293,7 @@ describe("decideLetterCheck", () => {
 					flagged({
 						verdict: crisisMention ? { ...KIND, crisisMention } : null,
 					})
-				).toEqual({ kind: "risk", peak: ELEVATED_PEAK });
+				).toEqual({ kind: "risk", level: "elevated", peak: ELEVATED_PEAK });
 			}
 		);
 	});
@@ -355,7 +364,7 @@ describe("checkLetterText", () => {
 		const d = deps(KIND, { ...SAFE, level: "crisis", peak: PEAK });
 		expect(
 			await checkLetterText("call me 0244 123 4567, i won't be here", d)
-		).toEqual({ kind: "risk", peak: PEAK });
+		).toEqual({ kind: "risk", level: "crisis", peak: PEAK });
 		expect(d.safety).toHaveBeenCalledOnce();
 	});
 

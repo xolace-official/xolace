@@ -106,6 +106,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// `notification` bucket.
 	kindlingReady: { kind: "fixed window", period: DAY, rate: 1 },
 
+	// The letters check at send (#750): a model call and moderation per try.
+	// One letter a day, so this only bounds fixable resends: a sender past it
+	// keeps their words and tries again later.
+	letterCheck: { kind: "fixed window", period: DAY, rate: 20 },
+
 	// Notification spam prevention — 1 per 24 hours
 	notification: { kind: "fixed window", period: DAY, rate: 1 },
 

@@ -157,6 +157,9 @@ const updateArgs = {
 			chat: v.optional(v.boolean()),
 			enabled: v.boolean(),
 			gentleReturn: v.boolean(),
+			// The letters push (absent = on). Merged like the flags above; the
+			// letters screen's own switch is `letters.settings.setPush`.
+			letters: v.optional(v.boolean()),
 			milestone: v.boolean(),
 			patternNudge: v.boolean(),
 			quietWindow: v.optional(
