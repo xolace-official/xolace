@@ -52,6 +52,7 @@ export function KindlingHeader({
 					{progress.text}
 				</AppText>
 				<View
+					accessibilityElementsHidden
 					accessible={false}
 					className="flex-1 flex-row gap-1.25"
 					importantForAccessibility="no-hide-descendants"

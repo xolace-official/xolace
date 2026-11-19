@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
+import { goHome } from "@/lib/landing";
 import { COPY } from "../copy";
 import type { Kindling } from "../kindling-data";
 import { heldOn, type TrailView, type TwigState } from "../kindling-model";
@@ -63,7 +64,7 @@ export function useFixtureKindling({
 	const shown = view ? { ...view, states: [...states] } : null;
 	return {
 		actions: {
-			back: () => router.back(),
+			back: goHome,
 			browse: () => undefined,
 			open: (id, again) => {
 				if (!again) {

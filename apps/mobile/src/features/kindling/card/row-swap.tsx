@@ -56,6 +56,7 @@ export function RowSwap<Id extends string>({
 		<View className="mt-3.5 min-h-12.5">
 			{rows.was === null ? null : (
 				<Animated.View
+					accessibilityElementsHidden
 					className={FILL}
 					importantForAccessibility="no-hide-descendants"
 					pointerEvents="none"

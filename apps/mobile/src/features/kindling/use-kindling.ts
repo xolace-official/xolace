@@ -6,6 +6,7 @@ import { useNavigation, useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
+import { goHome } from "@/lib/landing";
 import { trackLibrary } from "@/lib/library-analytics";
 import { COPY } from "./copy";
 import type { Kindling } from "./kindling-data";
@@ -123,7 +124,8 @@ export function useKindlingData(): Kindling {
 
 	return {
 		actions: {
-			back: () => router.back(),
+			// Today itself, not the screen below: arriving from You would land on Steadiness.
+			back: goHome,
 			browse: (id) => {
 				const twig = twigOf(id);
 				const href = twig ? twigBrowseHref(twig) : null;

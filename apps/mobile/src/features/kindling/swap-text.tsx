@@ -115,6 +115,7 @@ export function SwapText({
 			</Animated.View>
 			{lines.was === lines.now ? null : (
 				<Animated.View
+					accessibilityElementsHidden
 					className="absolute inset-x-0 top-0"
 					importantForAccessibility="no-hide-descendants"
 					pointerEvents="none"

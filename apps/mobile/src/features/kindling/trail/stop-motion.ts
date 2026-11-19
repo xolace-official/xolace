@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import {
-	interpolateColor,
 	useAnimatedStyle,
 	useSharedValue,
 	withSpring,
@@ -18,10 +17,9 @@ const DIM_LABEL = 0.45;
 const PASSED_LABEL = 0.6;
 const EMBER_HALO = 0.1;
 
-type Colours = { rim: string; violet: string; ember: string; ink3: string };
-
 /**
- * A stop's motion on the UI thread (§2.4, §3, §4): the ring and badge light when tended, the
+ * A stop's motion on the UI thread (§2.4, §3, §4): the ring and badge light when tended (the
+ * violet and ember rings crossfade over the rim: opacity only, no animated colour), the
  * open stop grows, passed greys at once, dimming and lifting ease. The violet halo's breath is an
  * Ease loop in the stop itself.
  */
@@ -29,8 +27,7 @@ export function useStopMotion(
 	state: TwigState,
 	open: boolean,
 	dim: boolean,
-	reduced: boolean,
-	c: Colours
+	reduced: boolean
 ) {
 	const done = state === "done";
 	const passed = state === "passed" || state === "undo";
@@ -95,15 +92,10 @@ export function useStopMotion(
 	const scale = useAnimatedStyle(() => ({
 		transform: [{ scale: 1 + (KMOTION.openScale - 1) * opened.get() }],
 	}));
-	const ring = useAnimatedStyle(() => ({
-		borderColor: passed
-			? c.ink3
-			: interpolateColor(
-					lit.get(),
-					[0, 1],
-					[interpolateColor(opened.get(), [0, 1], [c.rim, c.violet]), c.ember]
-				),
+	const violetRing = useAnimatedStyle(() => ({
+		opacity: opened.get() * (1 - lit.get()),
 	}));
+	const emberRing = useAnimatedStyle(() => ({ opacity: lit.get() }));
 	const violetHalo = useAnimatedStyle(() => ({
 		opacity: opened.get() * (1 - lit.get()),
 	}));
@@ -114,11 +106,12 @@ export function useStopMotion(
 		alpha,
 		badge,
 		emberHalo,
+		emberRing,
 		label,
-		ring,
 		scale,
 		tone,
 		veil,
 		violetHalo,
+		violetRing,
 	};
 }

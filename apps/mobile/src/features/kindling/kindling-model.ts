@@ -48,13 +48,13 @@ const SERVER_STATE = {
 } as const satisfies Record<ServerTwig["state"], TwigState>;
 
 /** Production's `removeEmDash` (quotes' text utils): a dash reads as a pause, so a comma. */
+const EM_DASH = /\s*—\s*/g;
+const DOUBLE_SPACE = / {2}/g;
 const removeEmDash = (text: string) =>
-	text
-		.replace(/\s*—\s*/g, ", ")
-		.replace(/ {2}/g, " ")
-		.trim();
+	text.replace(EM_DASH, ", ").replace(DOUBLE_SPACE, " ").trim();
 
-const BROWSABLE = /^(audio|music)_topic_(.+)$/;
+/** A bound track with a topic: `audio_topic_<slug>` or `music_topic_<slug>`. */
+export const BROWSABLE = /^(audio|music)_topic_(.+)$/;
 
 /** The look for a kind, with a fallback for a kind this build doesn't know. */
 function kindCopy(kind: string): KindCopy {

@@ -1,5 +1,9 @@
 import type { Href } from "expo-router";
-import type { ActiveKindling, ServerTwig } from "./kindling-model";
+import {
+	type ActiveKindling,
+	BROWSABLE,
+	type ServerTwig,
+} from "./kindling-model";
 
 type Params = { slug?: string; specialty?: string } | null;
 
@@ -9,7 +13,7 @@ export const twigSlug = (twig: ServerTwig) => (twig.params as Params)?.slug;
 /** "Browse more like this" (paths-v1 §9.6): the bound twig's topic in Browse. One-off
  * listening: no `stepId`, so plays can't tend the twig, and the binding is untouched. */
 export function twigBrowseHref(twig: ServerTwig): Href | null {
-	const match = /^(audio|music)_topic_(.+)$/.exec(twig.actionType);
+	const match = BROWSABLE.exec(twig.actionType);
 	if (!match) {
 		return null;
 	}

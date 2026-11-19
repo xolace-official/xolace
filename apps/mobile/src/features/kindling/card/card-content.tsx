@@ -146,6 +146,7 @@ function Thumb({
 	const clean = twig ? isCleanPose(twig.kind) : true;
 	return (
 		<View
+			accessibilityElementsHidden
 			className="overflow-hidden rounded-full"
 			importantForAccessibility="no-hide-descendants"
 			style={{

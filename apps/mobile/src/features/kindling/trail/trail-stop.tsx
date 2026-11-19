@@ -13,6 +13,7 @@ import { useStopMotion } from "./stop-motion";
 import { CIRCLE, isRight } from "./trail-points";
 
 const LABEL_GAP = 14;
+const RING_CLASS = "absolute inset-0 rounded-full border-solid";
 const HALO = 10;
 /** The open stop's violet wash breathes .12 ↔ .26, .94 ↔ 1.06 (§2.4). */
 const BREATH_FROM = { opacity: 0.12, scale: 0.94 };
@@ -58,7 +59,7 @@ export function TrailStop({
 	const right = isRight(index);
 	const done = state === "done";
 	const passed = state === "passed" || state === "undo";
-	const m = useStopMotion(state, open, dim, reduced, c);
+	const m = useStopMotion(state, open, dim, reduced);
 	const breathing = live && open && !done;
 	const run = useLoopRun(breathing, KMOTION.haloMs);
 
@@ -123,13 +124,28 @@ export function TrailStop({
 					tone={m.tone}
 					veil={m.veil}
 				/>
-				<Animated.View
+				<View
 					className={cn(
 						"absolute inset-0 rounded-full",
 						passed ? "border-dashed" : "border-solid"
 					)}
-					style={[{ borderWidth: RING }, m.ring]}
+					style={{ borderColor: passed ? c.ink3 : c.rim, borderWidth: RING }}
 				/>
+				{passed ? null : (
+					<>
+						<Animated.View
+							className={RING_CLASS}
+							style={[
+								{ borderColor: c.violet, borderWidth: RING },
+								m.violetRing,
+							]}
+						/>
+						<Animated.View
+							className={RING_CLASS}
+							style={[{ borderColor: c.ember, borderWidth: RING }, m.emberRing]}
+						/>
+					</>
+				)}
 				<CheckBadge onEmber={c.onEmber} right={right} scale={m.badge} />
 			</Animated.View>
 			<View>

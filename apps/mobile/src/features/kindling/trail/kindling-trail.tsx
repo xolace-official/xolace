@@ -15,6 +15,9 @@ import { KindlingRoad, type TendFade } from "./kindling-road";
 import type { Trail } from "./trail-geometry";
 import { TrailStop } from "./trail-stop";
 
+/** The dashes march at 30 fps: the canvas and its blurred paths needn't redraw at 120 Hz. */
+const TRAIL_FPS = 30;
+
 /** The dashes march 16 pt (one dash and gap) every 530 ms. */
 const MARCH = { periodMs: 530, step: 16 };
 
@@ -60,7 +63,7 @@ export function KindlingTrail({
 		fireGlow.set(withTiming(to, { duration, ...PLAY_AS_CHOSEN }));
 	}, [caught, fireGlow, n, reduced]);
 
-	const t = useClock(live && shown.includes("wait"));
+	const t = useClock(live && shown.includes("wait"), undefined, TRAIL_FPS);
 	const march = useDerivedValue(
 		() => -((((t.get() * 1000) / MARCH.periodMs) % 1) * MARCH.step)
 	);
