@@ -137,8 +137,9 @@ export function sentStatusOf(letter: Doc<"letters">): SentStatus | null {
 		case "returned":
 			return "returned";
 		case "held":
-			// The sender saw "This letter can't be sent" and kept their words.
-			return null;
+			// At send, the sender saw "This letter can't be sent" and kept their
+			// words. A late re-check's hold says so in Sent until dismissed.
+			return letter.heldLate ? "held" : null;
 		default:
 			return null;
 	}

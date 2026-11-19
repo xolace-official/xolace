@@ -2,9 +2,10 @@
  * What the letters screens need to know about the caller, in one read.
  */
 import { v } from "convex/values";
-import { query } from "../_generated/server";
+import { mutation, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import { letterProfileOf, writeLimitOf } from "./profiles";
+import { lateRiskValidator } from "./validators";
 
 export const get = query({
 	args: {},
@@ -23,6 +24,10 @@ export const get = query({
 			// the clock passes midnight, so a client compares it with its own
 			// local day and treats `writeLimit: "today"` as lifted once they differ.
 			lastSentDay: letterProfile?.lastSentDay ?? null,
+			// A late re-check found the sender at risk after they were told their
+			// letter was on its way: show intake's care (crisis or support
+			// resources by level) at this open, then call `lateRiskShown`.
+			lateRisk: letterProfile?.lateRisk ?? null,
 			optIn,
 			unopenedId:
 				optIn === "yes" ? (letterProfile?.unopenedLetterId ?? null) : null,
@@ -33,8 +38,23 @@ export const get = query({
 	returns: v.object({
 		invite: v.boolean(),
 		lastSentDay: v.union(v.string(), v.null()),
+		lateRisk: v.union(lateRiskValidator, v.null()),
 		optIn: v.union(v.literal("unset"), v.literal("yes"), v.literal("no")),
 		unopenedId: v.union(v.id("letters"), v.null()),
 		writeLimit: v.union(v.literal("today"), v.literal("three"), v.null()),
 	}),
+});
+
+/** The care for a late risk was shown: it doesn't show again. */
+export const lateRiskShown = mutation({
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
+		const row = await letterProfileOf(ctx, profile._id);
+		if (row?.lateRisk) {
+			await ctx.db.patch("letter_profiles", row._id, { lateRisk: undefined });
+		}
+		return null;
+	},
+	returns: v.null(),
 });

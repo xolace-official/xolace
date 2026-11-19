@@ -859,6 +859,42 @@ describe("letters.check.recheck", () => {
 		expect(JSON.stringify(events)).not.toContain("carrying");
 	});
 
+	it("a late risk shows care at the sender's next open, once", async () => {
+		const { id, root, sender } = await unchecked();
+		expect(
+			(await sender.t.query(api.letters.status.get, {})).lateRisk
+		).toBeNull();
+		stub.safety = { level: "elevated", resources: [], unavailable: false };
+		await recheck(root, id);
+		expect((await sender.t.query(api.letters.status.get, {})).lateRisk).toBe(
+			"elevated"
+		);
+		await sender.t.mutation(api.letters.status.lateRiskShown, {});
+		expect(
+			(await sender.t.query(api.letters.status.get, {})).lateRisk
+		).toBeNull();
+	});
+
+	it("a later elevated risk never lowers a crisis still to be shown", async () => {
+		const { id, root, sender } = await unchecked();
+		stub.safety = { level: "crisis", resources: [], unavailable: false };
+		await recheck(root, id);
+		const second = await root.run((ctx) =>
+			ctx.db.insert("letters", {
+				createdAt: NOW,
+				language: "en",
+				senderProfileId: sender.profileId,
+				status: "unchecked",
+				text: KIND_LETTER,
+			})
+		);
+		stub.safety = { level: "elevated", resources: [], unavailable: false };
+		await recheck(root, second);
+		expect((await sender.t.query(api.letters.status.get, {})).lateRisk).toBe(
+			"crisis"
+		);
+	});
+
 	it("a late hostile verdict holds it, with a review and a strike", async () => {
 		const { id, root } = await unchecked();
 		stub.verdict = {
@@ -874,6 +910,26 @@ describe("letters.check.recheck", () => {
 		]);
 		expect(reviews).toHaveLength(1);
 		expect(strikes).toHaveLength(1);
+	});
+
+	it("a late hold says so in Sent until the sender dismisses it", async () => {
+		const { id, root, sender } = await unchecked();
+		expect(await sender.t.query(api.letters.sent.list, {})).toMatchObject([
+			{ id, status: "waiting" },
+		]);
+		stub.verdict = { fixable: null, hostile: true, language: "en" };
+		await recheck(root, id);
+		expect(await sender.t.query(api.letters.sent.list, {})).toMatchObject([
+			{ id, seen: false, status: "held" },
+		]);
+		await sender.t.mutation(api.letters.sent.markSeen, { ids: [id] });
+		expect(await sender.t.query(api.letters.sent.list, {})).toMatchObject([
+			{ id, seen: true, status: "held" },
+		]);
+		await sender.t.mutation(api.letters.sent.dismiss, { id });
+		expect(await sender.t.query(api.letters.sent.list, {})).toEqual([]);
+		// Still kept for its review.
+		expect((await letter(root, id))?.status).toBe("held");
 	});
 
 	it.each([

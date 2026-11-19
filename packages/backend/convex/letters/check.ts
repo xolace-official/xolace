@@ -4,19 +4,25 @@
  * at send; an unchecked letter is never placed.
  *
  * Late outcomes: pass → waiting (and it tries the pool); risk → the
- * escalation, and the letter is deleted; held → held (review, strike);
- * fixable or not English → returned (decision C).
+ * escalation, the letter is deleted, and the sender's next open shows care;
+ * held → held (review, strike), and its Sent row says it can't be sent;
+ * fixable or not English → returned (decision C). The sender was told the
+ * letter was on its way, so a late risk or hold is shown, not left silent
+ * (owner, 19 Nov 2026).
  */
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 import {
 	internalAction,
 	internalMutation,
 	internalQuery,
+	type MutationCtx,
 } from "../_generated/server";
 import { letterCheckDeps } from "../ai/letters/run";
 import { captureLetterEvent } from "./analytics";
 import { checkLetterText } from "./decide";
+import { letterProfileOf } from "./profiles";
 import { RECHECK_DELAYS_MS, textHashOf } from "./rules";
 import { holdForReview, raiseLetterRisk, riskArgs } from "./send";
 
@@ -81,6 +87,18 @@ export const recheck = internalAction({
 	returns: v.null(),
 });
 
+/** Care at the sender's next open; a crisis is never lowered by a later risk. */
+async function flagLateRisk(
+	ctx: MutationCtx,
+	sender: Id<"emotional_profiles">,
+	level: "elevated" | "crisis"
+): Promise<void> {
+	const row = await letterProfileOf(ctx, sender);
+	if (row && row.lateRisk !== "crisis") {
+		await ctx.db.patch("letter_profiles", row._id, { lateRisk: level });
+	}
+}
+
 export const apply = internalMutation({
 	args: { letterId: v.id("letters"), outcome: recheckOutcomeValidator },
 	handler: async (ctx, { letterId, outcome }) => {
@@ -110,12 +128,14 @@ export const apply = internalMutation({
 						profileId: sender,
 						...(outcome.peak && { peak: outcome.peak }),
 					});
+					await flagLateRisk(ctx, sender, outcome.level);
 				}
 				// At-risk words are never stored (#750).
 				await ctx.db.delete("letters", letterId);
 				break;
 			case "held":
 				await ctx.db.patch("letters", letterId, {
+					heldLate: true,
 					recheckCount,
 					status: "held",
 					textHash: outcome.textHash,

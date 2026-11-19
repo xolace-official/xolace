@@ -4,6 +4,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import {
 	bandValidator,
+	lateRiskValidator,
 	letterAimValidator,
 	letterStatusValidator,
 	optInValidator,
@@ -1566,6 +1567,10 @@ export default defineSchema({
 		// The sender's local day (YYYY-MM-DD) of their last stored letter: the
 		// 1-a-day cap. A withdraw doesn't give it back.
 		lastSentDay: v.optional(v.string()),
+		// A late re-check found this sender at risk after they were told their
+		// letter was on its way: intake's care shows at their next open, then
+		// `letters.status.lateRiskShown` clears it.
+		lateRisk: v.optional(lateRiskValidator),
 		// The device locale sent with Yes.
 		locale: v.optional(v.string()),
 		metadataAt: v.optional(v.number()),
@@ -1658,6 +1663,9 @@ export default defineSchema({
 		// When it passed the check: the FIFO key and the aim window's start.
 		checkedAt: v.optional(v.number()),
 		createdAt: v.number(),
+		// Held by a late re-check, after the sender was told it was on its way:
+		// its Sent row reads "This letter can't be sent" until they dismiss it.
+		heldLate: v.optional(v.boolean()),
 		hiddenAt: v.optional(v.number()),
 		// From the check ("en" at launch).
 		language: v.string(),

@@ -802,6 +802,7 @@ describe("letters.optIn", () => {
 		expect(await user.t.query(api.letters.status.get, {})).toEqual({
 			invite: true,
 			lastSentDay: null,
+			lateRisk: null,
 			optIn: "unset",
 			unopenedId: null,
 			writeLimit: null,
