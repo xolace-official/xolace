@@ -15,27 +15,15 @@ import {
 	type TwigState,
 	tendedCount,
 } from "./kindling-model";
-import {
-	MOVE_ON_MS,
-	PRESS_TEND_MS,
-	SETTLE_MS,
-	SKIP_MOVE_ON_MS,
-	STAGGER_MS,
-	UNDO_MS,
-} from "./kindling-motion";
 import type { Trail } from "./trail/trail-geometry";
 import { useTend } from "./trail/use-tend";
 import {
-	type Choices,
 	type CommitCause,
 	catchesInPlace,
-	chosen,
 	commitStep,
 	type FlowStep,
 	holdFor,
 	letGo,
-	moveOnLands,
-	NO_CHOICES,
 	NO_HOLD,
 	NO_LOCAL,
 	NOT_HELD,
@@ -48,6 +36,7 @@ import {
 	tendStep,
 	undoStep,
 } from "./trail-flow";
+import { SKIP_MOVE_ON_MS, trailSchedule, UNDO_MS } from "./trail-schedule";
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -118,45 +107,34 @@ export function useTrail(
 		localRef.current = step.local;
 		setLocal(step.local);
 	};
-	const timers = useRef<Timer[]>([]);
-	const later = (ms: number, fn: () => void) => {
-		timers.current.push(setTimeout(fn, ms));
-	};
-	const clearLater = () => {
-		for (const id of timers.current) {
-			clearTimeout(id);
-		}
-		timers.current = [];
-	};
-	// Each move-on lands only if no card was chosen since it was scheduled.
-	const choices = useRef(NO_CHOICES);
-	const choose = () => {
-		choices.current = chosen(choices.current);
-	};
-	const moveOn = (ms: number, ticket = choices.current) =>
-		later(ms, () => {
-			if (moveOnLands(ticket, choices.current)) {
-				setOpen(restingCard(latest.current.now));
-			}
-		});
+	const tendRef = useRef(tend);
+	const playRef = useRef<
+		(i: number, last: boolean, landed: () => void) => void
+	>(() => undefined);
+	// Move-ons, and tends played after the press or on return (`trail-schedule.ts`).
+	const [schedule] = useState(() =>
+		trailSchedule({
+			clearTimeout,
+			moveCard: () => setOpen(restingCard(latest.current.now)),
+			play: (i, last, landed) => playRef.current(i, last, landed),
+			resetTend: () => tendRef.current.reset(),
+			setTimeout,
+		})
+	);
 	// A new kindling: the old one's undo window closes without sending (its twig is gone), and
 	// nothing still pending for it (a move-on, a tend's light, a burn on its way to the fire) runs.
 	useEffect(() => {
 		stopUndoTimer();
-		clearLater();
-		choose();
-		tend.reset();
+		schedule.newKindling();
 		localRef.current = NO_LOCAL;
 	}, [view.id]);
 
 	/**
 	 * Light twig i on the trail: its stop and the count at once, then the spark runs its leg to
 	 * the next stop (held dim until it lands) or, the `last` of a batch with nothing left
-	 * waiting, on into the fire (§4, §5). The card moves on once it lands, unless a card was chosen
-	 * since `ticket`: taken when the tend was asked for (the press, or the return that found it),
-	 * not when it starts, so a stop tapped in between keeps its card.
+	 * waiting, on into the fire (§4, §5). `landed` once it lands.
 	 */
-	const play = (i: number, last: boolean, ticket: Choices) => {
+	const play = (i: number, last: boolean, landed: () => void) => {
 		// "I did this" plays it itself, and the return effect may find it too; a tend the server
 		// refused before it played has gone back to waiting.
 		if (!tendPlays(latest.current.shown, latest.current.now, i)) {
@@ -170,9 +148,13 @@ export function useTrail(
 		);
 		tend.tend(i, run.toFire, () => {
 			setHeld((h) => letGo(h, i));
-			moveOn(MOVE_ON_MS, ticket);
+			landed();
 		});
 	};
+	useEffect(() => {
+		playRef.current = play;
+		tendRef.current = tend;
+	});
 	/** The server refused twig i's tend: its burn stops where it is, and it lands nothing. */
 	const refuse = (i: number, id: string) => {
 		apply(tendFailed(localRef.current, id));
@@ -186,21 +168,10 @@ export function useTrail(
 		if (!focused) {
 			return;
 		}
-		const fresh = freshTends(latest.current.shown, latest.current.now);
-		// One ticket for the batch: a stop they tap while the plays are staggered keeps its card.
-		const ticket = choices.current;
-		const ids = fresh.map((i, n) =>
-			setTimeout(
-				() => play(i, n === fresh.length - 1, ticket),
-				SETTLE_MS + n * STAGGER_MS
-			)
+		return schedule.playBatch(
+			freshTends(latest.current.shown, latest.current.now)
 		);
-		return () => {
-			for (const id of ids) {
-				clearTimeout(id);
-			}
-		};
-		// `play` reads the latest through refs; re-run when the states or focus change.
+		// The plays read the latest through refs; re-run when the states or focus change.
 	}, [focused, key]);
 
 	/** Send a skip; a refusal puts the twig back. */
@@ -226,7 +197,7 @@ export function useTrail(
 		}
 		apply(step);
 		if (step.moveOn) {
-			moveOn(SKIP_MOVE_ON_MS);
+			schedule.moveOn(SKIP_MOVE_ON_MS);
 		}
 		if (catchesInPlace(latest.current.view, step, cause)) {
 			tend.catchInPlace();
@@ -248,13 +219,13 @@ export function useTrail(
 		});
 		return () => sub.remove();
 	}, []);
-	useEffect(() => clearLater, []);
+	useEffect(() => schedule.dispose, []);
 
 	const twigAt = (i: number) => latest.current.view.twigs[i];
 	return {
 		actions: {
 			act: (i: number) => {
-				choose();
+				schedule.choose();
 				commit("chose");
 				const twig = twigAt(i);
 				if (!twig) {
@@ -282,11 +253,10 @@ export function useTrail(
 						refuse(i, twig.id);
 					}
 				});
-				const ticket = choices.current;
-				later(PRESS_TEND_MS, () => play(i, true, ticket));
+				schedule.press(i);
 			},
 			again: (i: number) => {
-				choose();
+				schedule.choose();
 				commit("chose");
 				const twig = twigAt(i);
 				if (twig) {
@@ -295,7 +265,7 @@ export function useTrail(
 				}
 			},
 			browse: (i: number) => {
-				choose();
+				schedule.choose();
 				commit("chose");
 				const twig = twigAt(i);
 				if (twig) {
@@ -305,7 +275,7 @@ export function useTrail(
 			},
 			openStop: (i: number) => {
 				// They chose this card: the skip is sent, and nothing moves the card off it.
-				choose();
+				schedule.choose();
 				commit("chose");
 				if (i !== open) {
 					playTextureSelect();
@@ -317,7 +287,7 @@ export function useTrail(
 				if (!twig) {
 					return;
 				}
-				choose();
+				schedule.choose();
 				stopUndoTimer();
 				playSoftPress();
 				const step = skipStep(localRef.current, twig.id);
@@ -329,7 +299,7 @@ export function useTrail(
 				);
 			},
 			undo: () => {
-				choose();
+				schedule.choose();
 				stopUndoTimer();
 				playTextureSelect();
 				apply(undoStep(localRef.current));

@@ -37,13 +37,3 @@ export const KMOTION = {
 
 /** The fire's glow by lit legs, for 0, 1, 2… lit (§5); past the list it holds the last. */
 export const FIRE_GLOW = [0.1, 0.22, 0.34, 0.46, 0.58] as const;
-
-/** The settle before a tend plays on return, and the gap between two tends shown together. */
-export const SETTLE_MS = 450;
-export const STAGGER_MS = 300;
-/** "I did this" lights 160 ms after the press. */
-export const PRESS_TEND_MS = 160;
-/** The card moves on this long after a tend lands (450) or a skip commits (500). */
-export const MOVE_ON_MS = 450;
-export const SKIP_MOVE_ON_MS = 500;
-export const UNDO_MS = 4000;
