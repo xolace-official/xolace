@@ -27,9 +27,13 @@ const MOVED: Readonly<Record<string, Moved>> = {
 	// The player redesign (S10) took the player's own name.
 	"browse-player": { to: "/player" },
 	discovery: { to: "/today" },
+	// The check-in is coming back's now (S4); its card still rides in the query.
+	"follow-up": { to: "/check-in" },
 	// Its beat folded into the session end's next step (S3).
 	"kindling-announcement": { to: "/session-end" },
 	profile: { paths: { insights: "/you/steadiness" }, to: "/you" },
+	// Coming back's greeting says a freeze held the streak (S4).
+	"streak-held": { to: "/today" },
 	// Renamed Moments (S5d); a session's page moved with it.
 	timeline: { subtree: true, to: "/moments" },
 };

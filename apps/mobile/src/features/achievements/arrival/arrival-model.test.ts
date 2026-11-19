@@ -174,7 +174,7 @@ describe("mayArrive (the quiet-moment gate, #693)", () => {
 		"/talk",
 		"/session-end",
 		"/chat/conversation_1",
-		"/follow-up",
+		"/check-in",
 		"/player",
 	])("never interrupts %s", (pathname) => {
 		expect(mayArrive({ homeBusy: false, pathname, presented: false })).toBe(

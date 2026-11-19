@@ -563,6 +563,9 @@ export const markReturn = mutation({
  * answered, e.g. backgrounded the app mid-check-in — only re-surfaces once its
  * re-show cooldown has elapsed, so it doesn't nag on every launch. Gating here
  * (server) keeps the client render pure — it never has to read the clock.
+ *
+ * @deprecated Shipped builds' v1 check-in only. The app reads
+ * `followUps/waiting.getWaitingCard` since S4 (`DEPRECATIONS.md`).
  */
 export const getReadyCard = query({
 	args: {},

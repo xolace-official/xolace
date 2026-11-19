@@ -40,7 +40,7 @@ function ReflectShake() {
 function ReflectStarter() {
 	const isFocused = useIsFocused();
 	const reflectSettled = useAppStore((s) => s.reflectSettled);
-	// Set by the coming-back chain on Today: a follow-up, return welcome or monthly event.
+	// Set by coming back on Today while its greeting is due or up.
 	const homeSheetBlocking = useAppStore((s) => s.homeSheetBlocking);
 	const setHomeSheetOpen = useAppStore((s) => s.setHomeSheetOpen);
 	const fullContext = useFullContext();

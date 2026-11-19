@@ -15,13 +15,10 @@ import {
  * shape) or deletes it.
  */
 const REPLACED_FEATURES = [
-	"awareness-events",
 	"browse",
-	"follow-up",
 	"intake",
 	"reach-me-on",
 	"starter-suggestions",
-	"streak",
 	"xolacer-chat",
 ];
 

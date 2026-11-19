@@ -23,9 +23,10 @@ const HELD_ROUTES = [
 	"/chat",
 	"/xolace-channel",
 	"/rate",
+	// Coming back: the greeting and the check-in over it.
+	"/welcome-back",
+	"/check-in",
 	// Full-screen moments. (A badge's arrival is an overlay, not a route: it holds itself.)
-	"/follow-up",
-	"/streak-held",
 	"/browse-intro",
 	"/lantern-welcome",
 	"/upgrade",
