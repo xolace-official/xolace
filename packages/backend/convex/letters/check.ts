@@ -15,6 +15,7 @@ import {
 	internalQuery,
 } from "../_generated/server";
 import { letterCheckDeps } from "../ai/letters/run";
+import { captureLetterEvent } from "./analytics";
 import { checkLetterText } from "./decide";
 import { RECHECK_DELAYS_MS, textHashOf } from "./rules";
 import { holdForReview, raiseLetterRisk, riskArgs } from "./send";
@@ -128,6 +129,12 @@ export const apply = internalMutation({
 					recheckCount,
 					status: "returned",
 				});
+				if (sender) {
+					await captureLetterEvent(ctx, sender, {
+						event: "letter_returned",
+						properties: { why: "recheck" },
+					});
+				}
 				break;
 			default: {
 				await ctx.db.patch("letters", letterId, { recheckCount });

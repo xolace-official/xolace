@@ -9,6 +9,7 @@ import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { internalMutation, type MutationCtx } from "../_generated/server";
 import { quietWindowEndsAt } from "../outreach/quietWindow";
+import { captureLetterEvent, waitBucketOf } from "./analytics";
 import { letterProfileOf } from "./profiles";
 import { AIM_WINDOW_MS, CANDIDATES_PER_READ } from "./rules";
 
@@ -138,6 +139,10 @@ async function give(
 		letterId: letter._id,
 		to: senderProfileId,
 		type: "letter_received",
+	});
+	await captureLetterEvent(ctx, senderProfileId, {
+		event: "letter_placed",
+		properties: { waitBucket: waitBucketOf(now - (letter.checkedAt ?? now)) },
 	});
 }
 

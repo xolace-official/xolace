@@ -22,12 +22,9 @@ import {
 	asUnauthed,
 	type SeededUser,
 } from "../test/harness.helpers";
-import {
-	aggregatesMock,
-	posthogMock,
-	rateLimiterMock,
-} from "../test/mocks.helpers";
+import { aggregatesMock, rateLimiterMock } from "../test/mocks.helpers";
 import { letterAimOf } from "./aims";
+import { waitBucketOf } from "./analytics";
 import { DAY_MS, LETTER_WAIT_DAYS, RECHECK_DELAYS_MS } from "./rules";
 
 type Pushed = {
@@ -35,7 +32,14 @@ type Pushed = {
 	notification: { title: string; body?: string; data: Record<string, unknown> };
 };
 
+type Captured = {
+	distinctId: string;
+	event: string;
+	properties?: Record<string, unknown>;
+};
+
 const stub = vi.hoisted(() => ({
+	events: [] as Captured[],
 	pushes: [] as Pushed[],
 	safety: { level: "none", resources: [], unavailable: false } as WordsVerdict,
 	verdict: {
@@ -46,7 +50,13 @@ const stub = vi.hoisted(() => ({
 }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
-vi.mock("../posthog", () => posthogMock());
+vi.mock("../posthog", () => ({
+	posthog: {
+		capture: async (_ctx: unknown, event: Captured) => {
+			stub.events.push(event);
+		},
+	},
+}));
 vi.mock("../lib/rateLimits", async (orig) => ({
 	...(await orig<typeof import("../lib/rateLimits")>()),
 	...rateLimiterMock(() => ({ ok: true })),
@@ -76,6 +86,7 @@ beforeEach(() => {
 	vi.useFakeTimers();
 	vi.setSystemTime(NOW);
 	stub.pushes = [];
+	stub.events = [];
 	stub.safety = { level: "none", resources: [], unavailable: false };
 	stub.verdict = {
 		fixable: null,
@@ -859,5 +870,40 @@ describe("letters.sweep", () => {
 		await root.mutation(internal.letters.sweep.placeWaiting, {});
 		await root.mutation(internal.letters.sweep.invite, {});
 		expect((await status()).invite).toBe(true);
+	});
+});
+
+describe("letters analytics", () => {
+	it("buckets the wait from pass to placement", () => {
+		expect(waitBucketOf(10 * 60 * 1000)).toBe("under_1h");
+		expect(waitBucketOf(5 * HOUR_MS)).toBe("1h_1d");
+		expect(waitBucketOf(2 * DAY_MS)).toBe("1d_3d");
+		expect(waitBucketOf(4 * DAY_MS)).toBe("3d_7d");
+		expect(waitBucketOf(9 * DAY_MS)).toBe("over_7d");
+	});
+
+	it("records placements and returns on the sender, with no letter id", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		await recipient(2, root);
+		await place(root, await waitingLetter(sender, {}, 5 * HOUR_MS));
+		await waitingLetter(sender, {}, LETTER_WAIT_DAYS * DAY_MS);
+		await root.mutation(internal.letters.sweep.placeWaiting, {});
+
+		const letterEvents = stub.events.filter((e) =>
+			e.event.startsWith("letter_")
+		);
+		expect(letterEvents).toEqual([
+			{
+				distinctId: sender.profileId,
+				event: "letter_placed",
+				properties: { waitBucket: "1h_1d" },
+			},
+			{
+				distinctId: sender.profileId,
+				event: "letter_returned",
+				properties: { why: "unplaced" },
+			},
+		]);
 	});
 });

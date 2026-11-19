@@ -7,6 +7,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
+import { captureLetterEvent } from "./analytics";
 import { placeLetter } from "./match";
 import { refreshPool } from "./pool";
 import {
@@ -73,6 +74,12 @@ export const placeWaiting = internalMutation({
 			if ((letter.checkedAt ?? 0) + LETTER_WAIT_DAYS * DAY_MS <= now) {
 				// "Not placed. No one it fit came along this time." (decision C)
 				await ctx.db.patch("letters", letter._id, { status: "returned" });
+				if (letter.senderProfileId) {
+					await captureLetterEvent(ctx, letter.senderProfileId, {
+						event: "letter_returned",
+						properties: { why: "unplaced" },
+					});
+				}
 				continue;
 			}
 			if (empty.has(letter.language)) {
@@ -109,6 +116,12 @@ export const uncheckedDue = internalMutation({
 		for (const letter of page.page) {
 			if (letter.createdAt + LETTER_WAIT_DAYS * DAY_MS <= now) {
 				await ctx.db.patch("letters", letter._id, { status: "returned" });
+				if (letter.senderProfileId) {
+					await captureLetterEvent(ctx, letter.senderProfileId, {
+						event: "letter_returned",
+						properties: { why: "unchecked" },
+					});
+				}
 			} else if ((letter.recheckCount ?? 0) >= RECHECK_DELAYS_MS.length) {
 				await ctx.scheduler.runAfter(0, internal.letters.check.recheck, {
 					letterId: letter._id,

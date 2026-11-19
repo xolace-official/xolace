@@ -194,6 +194,7 @@ import type * as jobs_rankAudit from "../jobs/rankAudit.js";
 import type * as jobs_reflectionAnonymizer from "../jobs/reflectionAnonymizer.js";
 import type * as jobs_reflectionDistiller from "../jobs/reflectionDistiller.js";
 import type * as letters_aims from "../letters/aims.js";
+import type * as letters_analytics from "../letters/analytics.js";
 import type * as letters_check from "../letters/check.js";
 import type * as letters_decide from "../letters/decide.js";
 import type * as letters_lines from "../letters/lines.js";
@@ -551,6 +552,7 @@ declare const fullApi: ApiFromModules<{
   "jobs/reflectionAnonymizer": typeof jobs_reflectionAnonymizer;
   "jobs/reflectionDistiller": typeof jobs_reflectionDistiller;
   "letters/aims": typeof letters_aims;
+  "letters/analytics": typeof letters_analytics;
   "letters/check": typeof letters_check;
   "letters/decide": typeof letters_decide;
   "letters/lines": typeof letters_lines;
