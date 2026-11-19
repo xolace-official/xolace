@@ -35,6 +35,10 @@ export const TABS: readonly TabSpec[] = [
 		icon: { md: "explore", sf: { default: "safari", selected: "safari.fill" } },
 		label: "Explore",
 		name: "explore",
+		// A topic's cover runs under the bar (`contentInsetAdjustmentBehavior="never"`); every
+		// other Explore screen sets "automatic" itself. iOS only: on Android the flag also drops
+		// the tab bar's bottom inset, and the topic's cover sits below an opaque bar there.
+		ownInsets: process.env.EXPO_OS === "ios",
 	},
 	{
 		badge: "unread",

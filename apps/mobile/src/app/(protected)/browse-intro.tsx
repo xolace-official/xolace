@@ -39,8 +39,8 @@ const CONTENT: Record<
 	},
 };
 
-/** Browse family welcome, full-screen modal. Opened by `FamilyListScreen` (`?family=`); each
- * intro flag is independent. Lantern has its own (`/lantern-welcome`). */
+/** Browse family welcome, full-screen modal. Opened by Explore's Support audio and Music list
+ * (`useFamilyList`, `?family=`); each intro flag is independent. Lantern has its own (`/lantern-welcome`). */
 export default function BrowseIntroRoute() {
 	const { family: rawFamily } = useLocalSearchParams<{ family?: string }>();
 	const family: Family = rawFamily === "support" ? "support" : "music";
