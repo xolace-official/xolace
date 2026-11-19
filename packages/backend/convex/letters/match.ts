@@ -16,7 +16,11 @@ import { internalMutation, type MutationCtx } from "../_generated/server";
 import { captureLetterEvent, waitBucketOf } from "./analytics";
 import { awayUntil, mayReceive, refreshPool } from "./pool";
 import { letterProfileOf } from "./profiles";
-import { AIM_WINDOW_MS, CANDIDATES_TRIED_MAX } from "./rules";
+import {
+	AIM_WINDOW_MS,
+	CANDIDATES_TRIED_MAX,
+	recipientPushDelay,
+} from "./rules";
 
 const BANDS = ["heavier", "lighter"] as const;
 
@@ -115,11 +119,16 @@ async function give(
 		tiebreak: Math.random(),
 		unopenedLetterId: letter._id,
 	});
-	await ctx.scheduler.runAfter(0, internal.letters.push.send, {
-		letterId: letter._id,
-		to: recipient.emotionalProfileId,
-		type: "letter_for_you",
-	});
+	// Later, at random, so the two pushes can't be matched up (spec §6).
+	await ctx.scheduler.runAfter(
+		recipientPushDelay(),
+		internal.letters.push.send,
+		{
+			letterId: letter._id,
+			to: recipient.emotionalProfileId,
+			type: "letter_for_you",
+		}
+	);
 	await ctx.scheduler.runAfter(0, internal.letters.push.send, {
 		letterId: letter._id,
 		to: senderProfileId,

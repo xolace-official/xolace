@@ -63,6 +63,22 @@ export const CANDIDATES_TRIED_MAX = 100;
  * refresh looks again: one sweep.
  */
 export const FOLLOW_UP_LOOK_AGAIN_MS = HOUR_MS;
+/**
+ * The recipient's push at placement goes out a random time in this range
+ * later; the sender's goes at once. The sender's Sent row turns `received` at
+ * placement, so a recipient's phone buzzing at the same moment would tell a
+ * sender beside them who got their letter (spec §6).
+ */
+export const RECIPIENT_PUSH_DELAY_MS = {
+	max: 2 * HOUR_MS,
+	min: 15 * MINUTE_MS,
+} as const;
+
+/** A random delay inside `RECIPIENT_PUSH_DELAY_MS`. */
+export function recipientPushDelay(random = Math.random()): number {
+	const { max, min } = RECIPIENT_PUSH_DELAY_MS;
+	return Math.round(min + random * (max - min));
+}
 /** A letter still waiting this long after it passed is returned (decision C). */
 export const LETTER_WAIT_DAYS = 30;
 /**

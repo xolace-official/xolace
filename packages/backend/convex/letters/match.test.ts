@@ -32,6 +32,8 @@ import {
 	RECHECK_DELAYS_MS,
 	RECHECK_OVERDUE_MS,
 	RECHECK_SWEEP_MAX,
+	RECIPIENT_PUSH_DELAY_MS,
+	recipientPushDelay,
 	SWEEP_BATCH,
 } from "./rules";
 
@@ -459,6 +461,21 @@ describe("letters.match.place", () => {
 			{ letterId: id, to: reader.profileId, type: "letter_for_you" },
 			{ letterId: id, to: sender.profileId, type: "letter_received" },
 		]);
+		// The sender's goes at once; the recipient's a random while later.
+		const at = await root.run(async (ctx) =>
+			(await ctx.db.system.query("_scheduled_functions").collect())
+				.filter((j) => j.name.includes("letters/push"))
+				.map((j) => [j.args[0].type, j.scheduledTime - NOW])
+		);
+		expect(Object.fromEntries(at).letter_received).toBe(0);
+		const later = Object.fromEntries(at).letter_for_you;
+		expect(later).toBeGreaterThanOrEqual(RECIPIENT_PUSH_DELAY_MS.min);
+		expect(later).toBeLessThanOrEqual(RECIPIENT_PUSH_DELAY_MS.max);
+	});
+
+	it("draws the recipient's push delay across its whole range", () => {
+		expect(recipientPushDelay(0)).toBe(RECIPIENT_PUSH_DELAY_MS.min);
+		expect(recipientPushDelay(1)).toBe(RECIPIENT_PUSH_DELAY_MS.max);
 	});
 
 	it("gives a recipient one letter a week at most", async () => {
