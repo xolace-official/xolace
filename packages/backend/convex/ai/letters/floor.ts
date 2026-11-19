@@ -5,54 +5,70 @@
  * speaks of the past or of someone else ("a few years ago I tried to end my
  * life", "I lost my brother to suicide"), and that's often what makes it kind.
  *
- * So each sentence is floored on its own, and one that only mentions a phrase
- * (past tense, or about someone else) doesn't count: moderation and the
- * safeguard decide those. A present-tense, first-person phrase still raises
- * exactly as talk's does. Intake's floor is untouched.
+ * So a mention is cut out before talk's floor reads the letter: only the span
+ * a marker governs ("tried to end my life", "used to think about hurting
+ * myself", "lost my brother to suicide"), never the rest of the clause. Every
+ * other phrase is read exactly as talk's floor reads it, so "a week ago I lost
+ * my job and I want to kill myself" still raises to crisis. An attempt in a
+ * sentence that says it was recent ("last night", "today") isn't a mention.
+ * Moderation and the safeguard read the whole letter either way. Intake's
+ * floor is untouched.
  */
 import { phrasePeak } from "../../talk/safety";
-import { levelAbove, type TalkPeak } from "../safeguard";
+import type { TalkPeak } from "../safeguard";
 
 /**
- * Where one sentence or clause ends: punctuation, a line break, a dash, or a
- * turn like ", but", so "I used to, but now I want to kill myself" is two.
+ * Every phrase talk's floor raises on (`CRISIS_PHRASES` and `DISTRESS_PHRASES`
+ * in `talk/safety.ts`), as one alternation a marker can govern. A phrase
+ * missing here is never cut, so it still raises: the safe direction.
  */
-const SENTENCE_BREAK = /[.!?;\n]+|\s[-–—]\s|,?\s+(?:but|yet|and now|now)\s+/;
+const PHRASE =
+	"(?:kill(?:ing)? my ?self|(?:end|take|ending|taking) (?:my|my own) life|better off dead|no reason to (?:live|go on|be here)|suicid(?:e|al)|(?:want|wanna|going) (?:to )?die|(?:don'?t|do not) want to (?:be alive|live|wake up)|(?:hurt(?:ing)?|harm(?:ing)?|cut(?:ting)?) my ?self|end it all)";
+
+/** A few words between a marker and the phrase it governs, within a clause. */
+const GAP = (max: number) => `(?:[a-z']+ ){0,${max}}?`;
+
+/** A past attempt; not a mention when the sentence says it was recent. */
+const ATTEMPT = new RegExp(`\\b(?:tried|attempted) to ${GAP(2)}${PHRASE}`, "g");
+
+/** Says the attempt was recent, so it's still a crisis now. */
+const RECENT =
+	/\b(last night|tonight|today|this (morning|afternoon|evening|week)|yesterday|just now|earlier|again)\b/;
+
+/** Mentions that are always about the past or about someone else. */
+const MENTIONS = [
+	// "I used to think about hurting myself".
+	new RegExp(`\\bused to ${GAP(3)}${PHRASE}`, "g"),
+	// "I survived a suicide attempt", "recovered from being suicidal".
+	new RegExp(`\\b(?:survived|recovered from) ${GAP(3)}${PHRASE}`, "g"),
+	// Someone else's: "lost my brother to suicide", "died by suicide",
+	// "my brother's suicide", "the suicide of a friend".
+	/\blost (my|a|our|her|his|their) [a-z' ]{1,30}? to suicide\b/g,
+	/\bdied (by|of|from) suicide\b/g,
+	/\b(his|her|their|[a-z]+'s) suicide\b/g,
+	/\bsuicide of (my|a|our|her|his|their) [a-z]+/g,
+];
+
+/** Where a sentence ends, which is as far as `RECENT` reaches. */
+const SENTENCE_END = /[.!?;\n]+/;
 
 /**
- * Marks a sentence as about the past, not now. Narrow on purpose: "was" or
- * "last night" stay in, since a recent crisis is still a crisis, and the
- * safeguard reads those.
- */
-const PAST =
-	/\b(used to|tried to|attempted|ago\b|back then|back when|when i was (younger|a (kid|child|teen(ager)?))|in the past|survived|survivor|recovered from|i'?ve been there)/;
-
-/** Marks a sentence's suicide or self-harm as someone else's. */
-const SOMEONE_ELSE =
-	/\b(lost (my|a|our|her|his|their) [a-z' ]{1,30}? to suicide|died (by|of|from) suicide|took (his|her|their) (own )?life|(his|her|their|[a-z]+'s) suicide|suicide of|(he|she|they) (killed|hurt|harmed|cut) (him|her|them)sel(f|ves))/;
-
-/** True when a sentence mentions a phrase rather than saying it of now. */
-function onlyMentions(sentence: string): boolean {
-	return PAST.test(sentence) || SOMEONE_ELSE.test(sentence);
-}
-
-/**
- * The highest phrase peak among the letter's present-tense, first-person
- * sentences, or `null`. Same shape as talk's `phrasePeak`, so it drops into
- * `checkWordsSafety`.
+ * Talk's phrase peak of the letter with its mentions cut out, or `null`. Same
+ * shape as talk's `phrasePeak`, so it drops into `checkWordsSafety`.
  */
 export function letterPhrasePeak(text: string): TalkPeak | null {
-	let peak: TalkPeak | null = null;
-	const normalised = text.toLowerCase().replace(/[’‘]/g, "'");
-	for (const sentence of normalised.split(SENTENCE_BREAK)) {
-		const found = phrasePeak(sentence);
-		if (
-			found &&
-			!onlyMentions(sentence) &&
-			(!peak || levelAbove(found.level, peak.level))
-		) {
-			peak = found;
-		}
-	}
-	return peak;
+	const kept = text
+		.toLowerCase()
+		.replace(/[’‘]/g, "'")
+		.split(SENTENCE_END)
+		.map((sentence) => {
+			let rest = RECENT.test(sentence)
+				? sentence
+				: sentence.replace(ATTEMPT, " ");
+			for (const mention of MENTIONS) {
+				rest = rest.replace(mention, " ");
+			}
+			return rest;
+		});
+	return phrasePeak(kept.join(". "));
 }

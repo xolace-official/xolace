@@ -86,6 +86,25 @@ describe("letterPhrasePeak", () => {
 		).toBe("crisis");
 	});
 
+	it.each([
+		"I tried to hold on, I can't anymore, I want to end my life.",
+		"A week ago I lost my job and I want to kill myself.",
+		"Since my brother's suicide I want to kill myself too.",
+		"I tried to end my life last night.",
+		"I attempted to kill myself again today.",
+	])("a marker elsewhere doesn't hide a present crisis: %s", (text) => {
+		expect(phrasePeak(text.toLowerCase())?.level).toBe("crisis");
+		expect(letterPhrasePeak(text)?.level).toBe("crisis");
+	});
+
+	it("cuts only the mention, so a second phrase in the same clause still counts", () => {
+		expect(
+			letterPhrasePeak(
+				"I used to think about hurting myself and now I want to die"
+			)?.level
+		).toBe("elevated");
+	});
+
 	it("keeps a present-tense distress phrase at elevated", () => {
 		expect(letterPhrasePeak("Some nights I feel suicidal.")?.level).toBe(
 			"elevated"
@@ -108,6 +127,8 @@ describe("the letters check with its floor", () => {
 		});
 	});
 
+	// Both halves of the safety engine are down here; `read.test.ts` proves
+	// moderation alone being down is reported (decision 2).
 	it("is unavailable when moderation can't answer, even with the classifier's verdict", async () => {
 		stub.moderation = MODERATION_UNAVAILABLE;
 		expect(await check(MENTIONS[0] ?? "")).toEqual({ kind: "unavailable" });
