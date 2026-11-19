@@ -14,6 +14,7 @@ on:
       - packages/backend/convex/letters/lines.ts
       - packages/backend/convex/lib/contactPatterns.ts
       - packages/backend/convex/ai/intake/read.ts
+      - packages/backend/convex/ai/prompts/classifier.ts
       - packages/backend/convex/ai/safeguard.ts
       - packages/backend/convex/talk/safety.ts
       - packages/backend/convex/ai/providers/anthropic.ts
@@ -22,6 +23,14 @@ on:
       - packages/backend/convex/ai/prompts/__evals__/harness.eval.ts
       - .github/workflows/letters-gate.yml
   workflow_dispatch:
+
+# A new push cancels the run in progress, so a superseded diff spends nothing more.
+concurrency:
+  group: letters-gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
 
 jobs:
   letters:
