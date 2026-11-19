@@ -1,9 +1,12 @@
-# Quote stills: STAND-INS
+# Quote stills
 
-Every `.webp` here is a **placeholder**: a plain gradient drawn in code, rights-clean, so the
-Quotes screen (S11) can be built and reviewed before the real art exists. **Do not ship a store
-build with these.**
+The bundled stills, 1080 × 1920 WebP, made from the owner's art by
+`bun run quote-backgrounds:process --in <path to quote-art> --only <keys>` in `packages/backend`.
 
-To replace them, put the owner's art in `quote-art/stills/<key>.{png,jpg}` and run
-`bun run quote-backgrounds:process --in <path to quote-art>` in `packages/backend`. It writes 1080 × 1920 WebP files
-here under the same names, so nothing else changes. Then delete this file.
+**One stand-in is left:** `dusk-clouds.webp` is a plain gradient drawn in code (rights-clean),
+waiting for its take. Do not ship a store build with it. When the take lands in
+`quote-art/stills/dusk-clouds.{png,jpg,jpeg}`, run the command above with `--only dusk-clouds`,
+then delete this note.
+
+A new still needs its row in `packages/backend/scripts/quote-backgrounds/manifest.json` and its
+line in `src/features/quotes/background/stills.ts`, added only once its file is here.

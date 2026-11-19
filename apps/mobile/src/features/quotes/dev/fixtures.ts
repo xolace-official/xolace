@@ -49,6 +49,7 @@ const CATALOGUE: readonly CatalogueRow[] = [
 		name: "Moonrise",
 		plus: true,
 	},
+	{ ink: "dark", key: "ink-wash", kind: "still", name: "Ink wash", plus: true },
 ];
 const BACKGROUNDS = resolveBackgrounds(CATALOGUE, STILLS);
 

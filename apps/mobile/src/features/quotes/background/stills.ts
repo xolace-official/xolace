@@ -4,15 +4,16 @@
  * A key the catalogue lists that isn't here (a newer catalogue than this build) is left off the
  * sheet.
  *
- * STAND-INS: every file here is a plain gradient made in code (rights-clean), standing in for the
- * owner's art until it lands. Don't ship a store build with them: replace them with
- * `quote-backgrounds:process` on the real art first (`assets/quotes/stills/README.md`).
+ * STAND-IN: `dusk-clouds.webp` is still a plain gradient made in code (rights-clean), waiting for the
+ * owner's art. Don't ship a store build with it: replace it with `quote-backgrounds:process` on
+ * the real take first (`assets/quotes/stills/README.md`). Every other file is the owner's art.
  */
 export const STILLS: Readonly<Record<string, number>> = {
 	"deep-forest": require("@/assets/quotes/stills/deep-forest.webp"),
 	dunes: require("@/assets/quotes/stills/dunes.webp"),
 	"dusk-clouds": require("@/assets/quotes/stills/dusk-clouds.webp"),
 	"first-light": require("@/assets/quotes/stills/first-light.webp"),
+	"ink-wash": require("@/assets/quotes/stills/ink-wash.webp"),
 	moonrise: require("@/assets/quotes/stills/moonrise.webp"),
 	"mountain-air": require("@/assets/quotes/stills/mountain-air.webp"),
 	shallows: require("@/assets/quotes/stills/shallows.webp"),

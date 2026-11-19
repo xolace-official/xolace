@@ -29,6 +29,7 @@ const state = (
 export const devStates: readonly DevState[] = [
 	{ id: "today", ...state("Today, on Poster", "poster") },
 	{ id: "still", ...state("Today, on First light (light ink)", "first-light") },
+	{ id: "dark-ink", ...state("Today, on Ink wash (dark ink)", "ink-wash") },
 	{
 		id: "night",
 		...state("Night, a short quote", "night", { quote: QUOTES.short }),

@@ -84,6 +84,13 @@
     "plus": true
   },
   {
+    "key": "ink-wash",
+    "name": "Ink wash",
+    "kind": "still",
+    "ink": "dark",
+    "plus": true
+  },
+  {
     "key": "rain-window",
     "name": "Rain on glass",
     "kind": "loop",
