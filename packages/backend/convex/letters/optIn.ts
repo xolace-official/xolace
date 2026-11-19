@@ -9,14 +9,9 @@ import { mutation } from "../_generated/server";
 import { requireAdult } from "../age/gate";
 import { requireAuth } from "../lib/auth";
 import { posthog } from "../posthog";
-import { ensureLetterProfile } from "./profiles";
+import { refreshPool } from "./pool";
+import { ensureLetterProfile, languageOfLocale } from "./profiles";
 import { optInValidator } from "./validators";
-
-/** `"en-GB"` → `"en"`; anything unreadable → undefined. */
-function languageOfLocale(locale: string | undefined): string | undefined {
-	const code = locale?.trim().toLowerCase().split(/[-_]/)[0];
-	return code && /^[a-z]{2,3}$/.test(code) ? code : undefined;
-}
 
 /**
  * Answer the offer. Yes needs an adult (`age_required` / `age_restricted`);
@@ -56,6 +51,8 @@ export const set = mutation({
 				// Sessions' language (slice 6) wins once written.
 				...(row.language === undefined && language && { language }),
 			});
+			// Into the pool now if they already qualify, not at the next sweep.
+			await refreshPool(ctx, profile._id, now);
 		} else {
 			await ctx.db.patch("letter_profiles", row._id, {
 				aim: undefined,

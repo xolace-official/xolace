@@ -39,6 +39,43 @@ export const STRIKE_WINDOW_DAYS = 90;
 export const PAUSE_DAYS = 30;
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
+
+/** A recipient's latest session older than this leaves them out of the pool. */
+export const METADATA_FRESH_DAYS = 14;
+/** At most one letter a week per recipient (#749). */
+export const RECIPIENT_REST_DAYS = 7;
+/** A session at or above this intensity puts its person in the heavier band. */
+export const HEAVIER_FROM = 6;
+/** A letter's aim steers matching for this long after it passes the check. */
+export const AIM_WINDOW_HOURS = 72;
+/** Candidates one pool read takes before the live checks. */
+export const CANDIDATES_PER_READ = 25;
+/** A letter still waiting this long after it passed is returned (decision C). */
+export const LETTER_WAIT_DAYS = 30;
+/**
+ * The waiting pool may hold this many days of recent placements before the
+ * session-end write card stops inviting letters (§9).
+ */
+export const INVITE_BACKLOG_DAYS = 7;
+/** How often the sweep runs in production. */
+export const SWEEP_EVERY_HOURS = 1;
+/** Rows one sweep step handles before it schedules the next page. */
+export const SWEEP_BATCH = 50;
+/** The most placements the invite count reads; past it the backlog is moot. */
+export const INVITE_COUNT_MAX = 1000;
+/**
+ * When an unchecked letter is re-checked, after it was stored (§5.4); after
+ * the last, each sweep tries again.
+ */
+export const RECHECK_DELAYS_MS = [
+	5 * MINUTE_MS,
+	30 * MINUTE_MS,
+	2 * HOUR_MS,
+] as const;
+
+export const AIM_WINDOW_MS = AIM_WINDOW_HOURS * HOUR_MS;
 
 /**
  * The opening line the Sent list shows, cut the way S20's `openingLine` cuts

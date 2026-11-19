@@ -15,8 +15,9 @@ export const get = query({
 		return {
 			// Decision C: false while the waiting pool runs well ahead of
 			// placements, so the session-end card stops asking for letters
-			// nobody will receive. Always true until matching lands (slice 3).
-			invite: true,
+			// nobody will receive. The hourly sweep works it out; true until
+			// it first runs.
+			invite: (await ctx.db.query("letter_stats").first())?.invite ?? true,
 			// The sender's local day (YYYY-MM-DD, their timezone) of their last
 			// letter, held ones included. Convex doesn't re-run this query when
 			// the clock passes midnight, so a client compares it with its own

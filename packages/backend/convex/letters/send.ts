@@ -6,7 +6,7 @@
  * Fixable, at-risk and not-English letters are never stored (#750). The words
  * are never logged or sent to analytics.
  */
-import { ConvexError, type Infer, v } from "convex/values";
+import { ConvexError, type Infer, type ObjectType, v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import {
@@ -14,6 +14,7 @@ import {
 	action,
 	internalMutation,
 	internalQuery,
+	type MutationCtx,
 } from "../_generated/server";
 import { requireAdult } from "../age/gate";
 import { letterCheckDeps } from "../ai/letters/run";
@@ -31,7 +32,12 @@ import {
 	senderToday,
 	writeLimitOf,
 } from "./profiles";
-import { LETTER_MAX_CHARS, LETTER_MIN_CHARS, textHashOf } from "./rules";
+import {
+	LETTER_MAX_CHARS,
+	LETTER_MIN_CHARS,
+	RECHECK_DELAYS_MS,
+	textHashOf,
+} from "./rules";
 import { addStrike } from "./strikes";
 import {
 	letterAimValidator,
@@ -141,18 +147,7 @@ export const store = internalMutation({
 				textHash: args.textHash,
 				...(args.aim && { aim: args.aim }),
 			});
-			const reviewId = await ctx.db.insert("letter_reviews", {
-				createdAt: now,
-				kind: "held",
-				letterId,
-				state: "open",
-			});
-			await addStrike(ctx, {
-				at: now,
-				cause: "held",
-				reviewId,
-				senderProfileId: args.profileId,
-			});
+			await holdForReview(ctx, letterId, args.profileId, now);
 			await spendTheDay();
 			return null;
 		}
@@ -161,7 +156,7 @@ export const store = internalMutation({
 		if (reason) {
 			return reason;
 		}
-		await ctx.db.insert("letters", {
+		const letterId = await ctx.db.insert("letters", {
 			createdAt: now,
 			language: args.language,
 			senderProfileId: args.profileId,
@@ -171,10 +166,62 @@ export const store = internalMutation({
 			...(args.aim && { aim: args.aim }),
 		});
 		await spendTheDay();
+		// A passed letter tries the pool at once; an unchecked one is checked
+		// again in the background, and never placed until it passes.
+		await (args.status === "waiting"
+			? ctx.scheduler.runAfter(0, internal.letters.match.place, { letterId })
+			: ctx.scheduler.runAfter(
+					RECHECK_DELAYS_MS[0],
+					internal.letters.check.recheck,
+					{ letterId }
+				));
 		return null;
 	},
 	returns: v.union(v.null(), limitReasonValidator),
 });
+
+export const riskArgs = {
+	level: v.union(v.literal("elevated"), v.literal("crisis")),
+	peak: v.optional(talkPeakValidator),
+	profileId: v.id("emotional_profiles"),
+};
+
+/**
+ * One escalation event for a writer who may be at risk, with the safeguard's
+ * trigger as evidence and never the letter (#750).
+ */
+export async function raiseLetterRisk(
+	ctx: MutationCtx,
+	args: ObjectType<typeof riskArgs>
+): Promise<void> {
+	const crisis = args.level === "crisis";
+	await raiseEscalation(ctx, {
+		actionTaken: crisis ? "crisis_line_presented" : "resources_shown",
+		emotionalProfileId: args.profileId,
+		resourcesPresented: crisis ? CRISIS_RESOURCES : SUPPORT_RESOURCES,
+		source: "letter",
+		triggerConfidence: args.peak?.triggerConfidence ?? 0,
+		triggerEvidence:
+			args.peak?.triggerEvidence ?? `letter check: ${args.level}`,
+		triggerType: args.peak?.triggerType ?? "implicit_risk_language",
+	});
+}
+
+/** A held letter: an open review for a person, and a strike on its sender. */
+export async function holdForReview(
+	ctx: MutationCtx,
+	letterId: Id<"letters">,
+	senderProfileId: Id<"emotional_profiles">,
+	now: number
+): Promise<void> {
+	const reviewId = await ctx.db.insert("letter_reviews", {
+		createdAt: now,
+		kind: "held",
+		letterId,
+		state: "open",
+	});
+	await addStrike(ctx, { at: now, cause: "held", reviewId, senderProfileId });
+}
 
 /**
  * The check found the writer may be at risk: one escalation event, with the
@@ -182,23 +229,9 @@ export const store = internalMutation({
  * is written; the client shows intake's care.
  */
 export const raiseRisk = internalMutation({
-	args: {
-		level: v.union(v.literal("elevated"), v.literal("crisis")),
-		peak: v.optional(talkPeakValidator),
-		profileId: v.id("emotional_profiles"),
-	},
+	args: riskArgs,
 	handler: async (ctx, args) => {
-		const crisis = args.level === "crisis";
-		await raiseEscalation(ctx, {
-			actionTaken: crisis ? "crisis_line_presented" : "resources_shown",
-			emotionalProfileId: args.profileId,
-			resourcesPresented: crisis ? CRISIS_RESOURCES : SUPPORT_RESOURCES,
-			source: "letter",
-			triggerConfidence: args.peak?.triggerConfidence ?? 0,
-			triggerEvidence:
-				args.peak?.triggerEvidence ?? `letter check: ${args.level}`,
-			triggerType: args.peak?.triggerType ?? "implicit_risk_language",
-		});
+		await raiseLetterRisk(ctx, args);
 		return null;
 	},
 	returns: v.null(),

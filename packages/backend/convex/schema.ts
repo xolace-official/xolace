@@ -1623,6 +1623,13 @@ export default defineSchema({
 		.index("by_state_created", ["state", "createdAt"])
 		.index("by_letter", ["letterId"]),
 
+	// One row: what the hourly sweep last worked out for every client (§9).
+	letter_stats: defineTable({
+		// False while more letters wait than a week of placements.
+		invite: v.boolean(),
+		updatedAt: v.number(),
+	}),
+
 	// A held letter, or a report a person confirmed. Two in 90 days pause the
 	// sender's letters for 30 (§8). No text.
 	letter_strikes: defineTable({
@@ -1678,7 +1685,9 @@ export default defineSchema({
 		.index("by_sender_status", ["senderProfileId", "status"])
 		.index("by_sender_hash", ["senderProfileId", "textHash"])
 		.index("by_recipient_received", ["recipientProfileId", "receivedAt"])
-		.index("by_status_checked", ["status", "checkedAt"]),
+		.index("by_status_checked", ["status", "checkedAt"])
+		// Recent placements, for the invite backlog (§9).
+		.index("by_received", ["receivedAt"]),
 
 	library_entries: defineTable({
 		active: v.boolean(),
