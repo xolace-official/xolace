@@ -56,6 +56,7 @@ const stub = vi.hoisted(() => ({
 	pushes: [] as Pushed[],
 	safety: { level: "none", resources: [], unavailable: false } as WordsVerdict,
 	verdict: {
+		crisisMention: "none",
 		fixable: null,
 		hostile: false,
 		language: "en",
@@ -102,6 +103,7 @@ beforeEach(() => {
 	stub.events = [];
 	stub.safety = { level: "none", resources: [], unavailable: false };
 	stub.verdict = {
+		crisisMention: "none",
 		fixable: null,
 		hostile: false,
 		language: "en",
@@ -945,6 +947,7 @@ describe("letters.check.recheck", () => {
 	it("a late hostile verdict holds it, with a review and a strike", async () => {
 		const { id, root } = await unchecked();
 		stub.verdict = {
+			crisisMention: "none",
 			fixable: null,
 			hostile: true,
 			language: "en",
@@ -964,7 +967,12 @@ describe("letters.check.recheck", () => {
 		expect(await sender.t.query(api.letters.sent.list, {})).toMatchObject([
 			{ id, status: "waiting" },
 		]);
-		stub.verdict = { fixable: null, hostile: true, language: "en" };
+		stub.verdict = {
+			crisisMention: "none",
+			fixable: null,
+			hostile: true,
+			language: "en",
+		};
 		await recheck(root, id);
 		expect(await sender.t.query(api.letters.sent.list, {})).toMatchObject([
 			{ id, seen: false, status: "held" },
@@ -991,7 +999,12 @@ describe("letters.check.recheck", () => {
 				textHash: await textHashOf(KIND_LETTER),
 			});
 		});
-		stub.verdict = { fixable: null, hostile: true, language: "en" };
+		stub.verdict = {
+			crisisMention: "none",
+			fixable: null,
+			hostile: true,
+			language: "en",
+		};
 		await recheck(root, id);
 		expect((await letter(root, id))?.status).toBe("held");
 		const [reviews, strikes] = await root.run(async (ctx) => [
@@ -1005,16 +1018,20 @@ describe("letters.check.recheck", () => {
 		expect(await letter(root, id)).toBeNull();
 	});
 
-	it.each([
+	it.each<[string, LetterVerdict]>([
 		[
 			"fixable",
 			{
+				crisisMention: "none",
 				fixable: "link" as const,
 				hostile: false,
 				language: "en",
 			},
 		],
-		["not English", { fixable: null, hostile: false, language: "fr" }],
+		[
+			"not English",
+			{ crisisMention: "none", fixable: null, hostile: false, language: "fr" },
+		],
 	])("a late %s verdict returns it", async (_name, verdict) => {
 		const { id, root } = await unchecked();
 		stub.verdict = verdict;
