@@ -49,6 +49,7 @@ export function useYouFollowUps() {
 			params: {
 				cardId: card._id,
 				cardText: card.cardText,
+				createdAt: String(card.createdAt),
 				escalation: card.escalationDerived ? "1" : undefined,
 				tier: card.tier,
 			},

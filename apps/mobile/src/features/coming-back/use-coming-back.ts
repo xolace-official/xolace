@@ -127,8 +127,8 @@ export function useComingBackHost(): {
 	const loaded =
 		!!profile && frozen !== null && card !== undefined && event !== undefined;
 	const away = profile ? awayOf(profile, now) : "next";
-	// Placeholder until the card carries its own day: the session it followed up on.
-	const day = dayLabel(profile?.lastSessionAt ?? now, now);
+	// The day of the session the check-in follows up on, in this device's time.
+	const day = card ? dayLabel(card.createdAt, now) : "";
 	const items: Items = {
 		card: card ?? null,
 		day,

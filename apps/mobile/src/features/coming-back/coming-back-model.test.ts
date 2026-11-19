@@ -218,12 +218,14 @@ describe("cardFromParams", () => {
 			cardFromParams({
 				cardId: "c1",
 				cardText: "How is it?",
+				createdAt: "1700000000000",
 				escalation: "1",
 				tier: "elevated",
 			})
 		).toEqual({
 			_id: "c1",
 			cardText: "How is it?",
+			createdAt: 1_700_000_000_000,
 			escalationDerived: true,
 			shown: true,
 			tier: "elevated",

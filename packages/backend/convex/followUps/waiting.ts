@@ -32,6 +32,8 @@ const cardFields = schema.tables.follow_up_cards.validator.fields;
 export const waitingCardValidator = v.object({
 	_id: v.id("follow_up_cards"),
 	cardText: cardFields.cardText,
+	// When the session ended unresolved; the client names the day in local time.
+	createdAt: cardFields.createdAt,
 	// Gates the check-in's "resources are still here" link and sharing.
 	escalationDerived: cardFields.escalationDerived,
 	// False while `ready`: the person is back but hasn't seen it yet.
@@ -74,6 +76,7 @@ function toWaitingCard(card: Doc<"follow_up_cards">) {
 	return {
 		_id: card._id,
 		cardText: card.cardText,
+		createdAt: card.createdAt,
 		escalationDerived: card.escalationDerived,
 		shown: card.status === "shown",
 		tier: card.tier,

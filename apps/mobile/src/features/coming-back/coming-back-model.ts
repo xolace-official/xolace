@@ -309,6 +309,8 @@ export function promptRow(state: PromptState) {
 export type CheckInParams = {
 	cardId?: string;
 	cardText?: string;
+	/** The card's `createdAt`, in ms (absent from links made before it was passed). */
+	createdAt?: string;
 	escalation?: string;
 	tier?: CheckInTier;
 };
@@ -323,6 +325,8 @@ export function cardFromParams(p: CheckInParams): WaitingCard | null {
 	return {
 		_id: p.cardId as Id<"follow_up_cards">,
 		cardText: p.cardText ?? "",
+		// Only the greeting's row says the day; standing alone the check-in never shows it.
+		createdAt: Number(p.createdAt) || 0,
 		escalationDerived: p.escalation === "1",
 		shown: true,
 		tier: p.tier,

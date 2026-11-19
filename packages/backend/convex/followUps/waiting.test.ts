@@ -218,9 +218,11 @@ describe("followUps.waiting.getWaitingCard", () => {
 
 		// The old sheet stays quiet for 2 hours; the greeting and pill don't.
 		expect(await user.t.query(api.followUps.getReadyCard, {})).toBeNull();
+		const { createdAt } = (await readCard(user, cardId)) ?? {};
 		expect(await waitingCard(user)).toEqual({
 			_id: cardId,
 			cardText: "How's it sitting now?",
+			createdAt,
 			escalationDerived: true,
 			shown: true,
 			tier: "acute",
@@ -230,13 +232,14 @@ describe("followUps.waiting.getWaitingCard", () => {
 	it("returns a ready card as not shown, however old its session", async () => {
 		const user = await asNewUser();
 		// Pending for 10 days before the person came back.
-		const cardId = await seedCard(user, {
-			createdAt: Date.now() - 10 * DAY,
-		});
+		const createdAt = Date.now() - 10 * DAY;
+		const cardId = await seedCard(user, { createdAt });
 		await user.t.mutation(api.followUps.markReturn, {});
 
+		// The session's own time, so the row can say the day it happened.
 		expect(await waitingCard(user)).toMatchObject({
 			_id: cardId,
+			createdAt,
 			shown: false,
 		});
 	});
