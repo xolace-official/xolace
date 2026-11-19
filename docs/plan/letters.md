@@ -419,7 +419,8 @@ row is deleted once neither side holds it and no review is open. How the build r
 - **A wipe keeps strikes, a pause, and other people's blocks of the sender.** B says a
   wipe is the same as deletion; following it would let a paused sender wipe to lift the
   pause, or reach a recipient who hid them again. Those rows record what others chose
-  about the sender, not what the sender said. **Open: owner to confirm.**
+  about the sender, not what the sender said. The owner confirmed this (19 November
+  2026).
 - **Retention cuts a letter still under review from its sender** instead of deleting it,
   so an admin can still decide; that review can no longer strike them.
 - **A reported letter's text outlives its review's 30 days while its sender has an
