@@ -12,7 +12,7 @@ import {
 	useNowPlayingIsPlaying,
 } from "@/lib/now-playing/now-playing-store";
 import { campfireView } from "./campfire/campfire-model";
-import { kindlingEmptyMode } from "./kindling/card-mode";
+import { heldEmptyMode, kindlingEmptyMode } from "./kindling/card-mode";
 import { kindlingView } from "./kindling/kindling-model";
 import { useKeptKindling } from "./kindling/use-kept-kindling";
 import { momentView } from "./moments/moments-model";
@@ -75,6 +75,11 @@ export function useModules() {
 	// whenever `getActive` has one, and the server clears a stuck mark itself (B13): the card
 	// shows setting up only while this says so.
 	const settingUp = useQuery(api.paths.settingUp.get, isPlus ? {} : "skip");
+	const empty = kindlingEmptyMode({ isLoading, isPlus, settingUp });
+	const [lastEmpty, setLastEmpty] = useState(empty);
+	if (empty !== undefined && empty !== lastEmpty) {
+		setLastEmpty(empty);
+	}
 	const cohort = useQuery(api.cohort.getWeeklyCohortCard);
 	// v2 cut the intake's campfire count; it stands in for the cohort until there's a
 	// weekly number of their own (#712), as on production's Discovery.
@@ -95,7 +100,7 @@ export function useModules() {
 			settled
 		),
 		kindling,
-		kindlingEmpty: kindlingEmptyMode({ isLoading, isPlus, settingUp }),
+		kindlingEmpty: heldEmptyMode(lastEmpty, empty),
 	};
 }
 

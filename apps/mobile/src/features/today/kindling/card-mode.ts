@@ -10,14 +10,15 @@ export type KindlingCardMode = "live" | KindlingEmptyMode;
 /**
  * The card's state with no kindling to draw, or undefined while what decides it loads (the
  * card keeps its skeleton). `settingUp` is the server's mark: undefined while it loads (or
- * isn't read, for a free member), null with none.
+ * isn't read, for a free member), null with none. A server-side Xolace+ doesn't wait for
+ * RevenueCat (`isLoading` includes its offerings fetch): RevenueCat can only add Xolace+.
  */
 export function kindlingEmptyMode(s: {
 	isPlus: boolean;
 	isLoading: boolean;
 	settingUp: object | null | undefined;
 }): KindlingEmptyMode | undefined {
-	if (s.isLoading) {
+	if (s.isLoading && !s.isPlus) {
 		return;
 	}
 	if (!s.isPlus) {
@@ -42,4 +43,16 @@ export function kindlingCardMode(
 		return "live";
 	}
 	return kindling === null ? empty : undefined;
+}
+
+/**
+ * The mode the card shows: a re-read that loads (free → Xolace+ mid-session, while
+ * `settingUp.get` starts) keeps the last one it had, so the card crossfades straight to the
+ * next mode. The skeleton is for the first resolve only.
+ */
+export function heldEmptyMode(
+	last: KindlingEmptyMode | undefined,
+	next: KindlingEmptyMode | undefined
+): KindlingEmptyMode | undefined {
+	return next ?? last;
 }

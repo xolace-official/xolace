@@ -189,10 +189,11 @@ export function useTodayData(): Today {
 			openStreak: () => router.navigate("/you"),
 			pressReflect: playSoftPress,
 			rekindle: () => void spendSaver(),
-			seeKindlingPlus: () => {
-				playSoftPress();
-				usePaywall.getState().open("kindling");
-			},
+			seeKindlingPlus: () =>
+				pushOnce(() => {
+					playSoftPress();
+					usePaywall.getState().open("kindling");
+				}),
 			talkForKindling: () =>
 				pushOnce(() => {
 					playSoftPress();

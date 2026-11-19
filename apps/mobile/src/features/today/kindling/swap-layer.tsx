@@ -15,7 +15,11 @@ const EASE_IN = Easing.bezier(0.4, 0, 1, 1);
 type Props = {
 	/** Leaving: absolutely placed at the frame's padding, fading out, hidden from VoiceOver. */
 	out: { left: number; right: number; top: number } | null;
-	/** Mounted by a swap: fades in. The first draw is simply there. */
+	/**
+	 * Mounted by a swap: fades in. Every layer after the card's first draw does, so a cold
+	 * start that resolves from the skeleton fades its first mode in; a mode known at mount is
+	 * simply there.
+	 */
 	fadeIn: boolean;
 	reduced: boolean;
 	children: ReactNode;

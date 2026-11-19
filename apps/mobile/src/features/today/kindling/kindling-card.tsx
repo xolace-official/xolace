@@ -22,32 +22,38 @@ const RADIUS = 26;
 const RISE_SLOT = 0;
 const OUT = { left: PAD_X, right: PAD_X, top: PAD_Y } as const;
 
+/** The card before its first mode resolves: the frame holds its place, empty. */
+const SKELETON = "skeleton";
+type Layer = KindlingCardMode | typeof SKELETON;
+
 /**
- * The mode on screen, the one fading out of it for the swap's 400 ms, and the last live
- * kindling, which the live layer keeps drawing while it fades out (put out: the server's
- * is already null).
+ * The layer on screen, the one fading out of it for the swap's 400 ms (null: none), and the
+ * last live kindling, which the live layer keeps drawing while it fades out (put out: the
+ * server's is already null).
  */
 function useSwap(
 	mode: KindlingCardMode | undefined,
 	kindling: KindlingView | null | undefined
 ) {
-	const [shown, setShown] = useState(mode);
-	const [leaving, setLeaving] = useState<KindlingCardMode | undefined>();
+	const layer: Layer = mode ?? SKELETON;
+	const [shown, setShown] = useState(layer);
+	const [leaving, setLeaving] = useState<Layer | null>(null);
 	const [swapped, setSwapped] = useState(false);
 	const [lastLive, setLastLive] = useState(kindling);
 	if (kindling && kindling !== lastLive) {
 		setLastLive(kindling);
 	}
-	if (shown !== mode) {
-		setLeaving(shown);
-		setShown(mode);
+	if (shown !== layer) {
+		// The skeleton never fades out: it has nothing to show.
+		setLeaving(shown === SKELETON ? null : shown);
+		setShown(layer);
 		setSwapped(true);
 	}
 	useEffect(() => {
-		if (leaving === undefined) {
+		if (leaving === null) {
 			return;
 		}
-		const id = setTimeout(() => setLeaving(undefined), SWAP.inAt + SWAP.inMs);
+		const id = setTimeout(() => setLeaving(null), SWAP.inAt + SWAP.inMs);
 		return () => clearTimeout(id);
 	}, [leaving]);
 	return { lastLive: kindling ?? lastLive, leaving, shown, swapped };
@@ -68,14 +74,14 @@ export function KindlingCard({ width }: { width: number }) {
 	const mode = kindlingCardMode(kindling, kindlingEmpty);
 	const { lastLive, leaving, shown, swapped } = useSwap(mode, kindling);
 	const pathW = width - PAD_X * 2;
-	// Keyed by mode, so a layer keeps its instance (and the live path its canvas) when it
-	// turns outgoing. The skeleton never fades out: it has nothing to show.
-	const layers: { mode: KindlingCardMode | undefined; out: boolean }[] =
-		leaving === undefined || leaving === shown
-			? [{ mode: shown, out: false }]
+	// Keyed by layer, so a layer keeps its instance (and the live path its canvas) when it
+	// turns outgoing.
+	const layers: { layer: Layer; out: boolean }[] =
+		leaving === null
+			? [{ layer: shown, out: false }]
 			: [
-					{ mode: leaving, out: true },
-					{ mode: shown, out: false },
+					{ layer: leaving, out: true },
+					{ layer: shown, out: false },
 				];
 
 	return (
@@ -90,13 +96,13 @@ export function KindlingCard({ width }: { width: number }) {
 					{layers.map((l) => (
 						<SwapLayer
 							fadeIn={swapped}
-							key={l.mode ?? "loading"}
+							key={l.layer}
 							out={l.out ? OUT : null}
 							reduced={reduced}
 						>
 							<Body
 								kindling={lastLive}
-								mode={l.mode}
+								layer={l.layer}
 								onScreen={onScreen}
 								width={pathW}
 							/>
@@ -109,21 +115,21 @@ export function KindlingCard({ width }: { width: number }) {
 }
 
 type BodyProps = {
-	mode: KindlingCardMode | undefined;
+	layer: Layer;
 	kindling: KindlingView | null | undefined;
 	width: number;
 	onScreen: SharedValue<boolean>;
 };
 
-function Body({ mode, kindling, width, onScreen }: BodyProps) {
-	if (mode === undefined) {
+function Body({ layer, kindling, width, onScreen }: BodyProps) {
+	if (layer === SKELETON) {
 		// Loading (as production's skeleton): the frame holds its place.
 		return <View style={{ height: CARD_H - PAD_Y * 2 }} />;
 	}
-	if (mode === "live") {
+	if (layer === "live") {
 		return kindling ? (
 			<KindlingLive kindling={kindling} onScreen={onScreen} width={width} />
 		) : null;
 	}
-	return <KindlingEmpty mode={mode} onScreen={onScreen} width={width} />;
+	return <KindlingEmpty mode={layer} onScreen={onScreen} width={width} />;
 }

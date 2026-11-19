@@ -287,6 +287,13 @@ describe("todayReady", () => {
 		expect(todayReady({ ...drawn, kindlingEmpty: "setting-up" })).toBe(true);
 	});
 
+	it("with a live kindling, never waits on the entitlement", () => {
+		const live = { id: "k", twigs: [] };
+		expect(
+			todayReady({ ...drawn, kindling: live, kindlingEmpty: undefined })
+		).toBe(true);
+	});
+
 	it("late, waits for the rail instead: the page's only module", () => {
 		const late = { ...drawn, phase: "late" } satisfies TodayFold;
 		expect(todayReady(late)).toBe(false);
@@ -313,6 +320,24 @@ describe("todayHolds", () => {
 	it("lets go when its budget runs out, still loading", () => {
 		expect(todayHolds({ ...loading, waitedMs: TODAY_HOLD_MS - 1 })).toBe(true);
 		expect(todayHolds({ ...loading, waitedMs: TODAY_HOLD_MS })).toBe(false);
+	});
+
+	it("lets go when the card's mode never resolves (RevenueCat or settingUp.get stuck)", () => {
+		const stuck = todayReady({
+			campfireSettled: true,
+			kindling: null,
+			kindlingEmpty: undefined,
+			phase: "evening",
+			rail: undefined,
+			session: null,
+			summary: { currentStreak: 3, displayName: "Ama" },
+		});
+		expect(stuck).toBe(false);
+		expect(todayHolds({ ...loading, ready: stuck })).toBe(true);
+		expect(
+			todayHolds({ ...loading, ready: stuck, waitedMs: TODAY_HOLD_MS })
+		).toBe(false);
+		expect(todayHolds({ ...loading, offline: true, ready: stuck })).toBe(false);
 	});
 
 	it("never holds offline: the reads wait for a socket that isn't coming", () => {
