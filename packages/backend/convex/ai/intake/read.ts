@@ -91,7 +91,7 @@ const PHRASE_WAIT_MS = 3000;
  * stops the work then, so a provider past its deadline doesn't keep running (or
  * retry) for an answer nobody will read.
  */
-async function within<T>(
+export async function within<T>(
 	work: Promise<T>,
 	ms: number,
 	fallback: () => T,

@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+	CONTACT_LEAK_BLOCKLIST,
 	DESIRED_BLOCK_LIST_POLICY,
 	DESIRED_MESSAGING,
 	DESIRED_XOLACE_BROADCAST,
@@ -256,5 +257,18 @@ describe("planBlockList", () => {
 
 	it("is a no-op when identical", () => {
 		expect(planBlockList({ ...desired }, desired)).toBeNull();
+	});
+});
+
+describe("CONTACT_LEAK_BLOCKLIST", () => {
+	// Stream's list as it shipped before `contactPatterns` (#344). Moving the
+	// patterns must not change a byte of what Stream is sent.
+	it("sends Stream the same four regexes", () => {
+		expect(CONTACT_LEAK_BLOCKLIST.words).toEqual([
+			String.raw`\+?\d[\d\s().-]{7,}\d`,
+			String.raw`(^|\s)@[A-Za-z0-9_.]{3,}`,
+			String.raw`(?i)\b(whatsapp|telegram|snapchat|instagram|insta)\b`,
+			String.raw`(?i)\b(my|on|via)\s+(ig|snap|signal)\b`,
+		]);
 	});
 });
