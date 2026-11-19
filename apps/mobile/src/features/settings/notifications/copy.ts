@@ -22,6 +22,18 @@ export const NOTIFY_COPY = {
 	/** Production #776: one row opening "Reach me on…", behind the `reach-me-on` flag. */
 	checkIns: "Check-ins",
 	conversations: "Conversations",
+	/** The daily quote push (B19). */
+	dailyQuote: "Daily quote",
+	dailyQuoteNote:
+		"Today’s quote, once a day at the time you choose. If it was made from your reflections, the notification says only that it’s here.",
+	dailyQuotePaused:
+		"Paused after a few went unopened. Turn it back on whenever you like.",
+	dailyQuoteRow: "Daily quote",
+	dailyQuoteSlots: {
+		afternoon: "Afternoon",
+		evening: "Evening",
+		morning: "Morning",
+	},
 	dayLabels: ["noon", "6 pm", "midnight", "6 am", "noon"],
 	/** Letters (S20): every letter push, separate from Privacy › Receive letters. */
 	letters: "Letters",

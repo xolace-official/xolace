@@ -10,6 +10,7 @@ import { CARD_REF } from "../share/make-share-file";
 import { ShareCard } from "../share/share-card";
 import { ShareSheet } from "../share/share-sheet";
 import { GateSheet } from "./gate-sheet";
+import { OfferSheet } from "./offer-sheet";
 import { WriteSheet } from "./write-sheet";
 
 /** The capture card is 360 pt wide (2.4 × the board's 150), drawn off screen. */
@@ -88,6 +89,9 @@ export function QuoteSheets({
 					onPlus={shownSheet === "gate" ? h.plusKeep : h.plusBackground}
 					what={shownSheet === "gate" ? "keep" : "background"}
 				/>
+			)}
+			{shownSheet === "offer" && (
+				<OfferSheet ink={ink} onAnswer={h.offerAnswer} onClose={h.toToday} />
 			)}
 			{shownSheet === "share" && (
 				<ShareSheet

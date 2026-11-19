@@ -13,6 +13,7 @@ import {
 	NOTIFY_COPY as C,
 	NOTIFY_ICONS,
 } from "@/features/settings/notifications/copy";
+import { DailyQuoteSection } from "@/features/settings/notifications/daily-quote/daily-quote-section";
 import { LockCard } from "@/features/settings/notifications/lock/lock-card";
 import { useNotificationsScreen } from "@/features/settings/notifications/notifications-data";
 import {
@@ -119,6 +120,7 @@ export function NotificationsScreen({
 						</Section>
 					</>
 				) : null}
+				<DailyQuoteSection />
 				<Section note={C.chatNote} title={C.conversations}>
 					<SettingsCard>
 						<SettingsSwitchRow

@@ -184,6 +184,23 @@ describe("notificationTapPlan", () => {
 		});
 	});
 
+	it("opens Quotes on the daily quote push's quote", () => {
+		expect(
+			notificationTapPlan(
+				{ logId: "log1", quoteId: "q1", screen: "quotes", type: "daily_quote" },
+				"“Rest is part of it.”",
+				1,
+				ON_TABS
+			)
+		).toEqual({
+			logId: "log1",
+			navigation: {
+				action: "push",
+				href: { params: { quote: "q1" }, pathname: "/(protected)/quotes" },
+			},
+		});
+	});
+
 	it("routes quotes and nudges", () => {
 		expect(
 			notificationTapPlan({ screen: "quotes" }, null, 1, ON_TABS).navigation

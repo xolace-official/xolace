@@ -74,6 +74,11 @@ export type TapNavigation =
 			action: "push";
 			href:
 				| "/(protected)/quotes"
+				| {
+						pathname: "/(protected)/quotes";
+						/** The daily quote push's quote (B19), counted as opened. */
+						params: { quote: string };
+				  }
 				| "/(protected)/kindling"
 				| "/profile/insights"
 				| {
@@ -145,7 +150,14 @@ export function notificationTapPlan(
 			};
 		}
 	} else if (data?.screen === "quotes") {
-		plan.navigation = { action: "push", href: "/(protected)/quotes" };
+		// The daily quote push names its quote; older quote pushes don't.
+		const quote = typeof data.quoteId === "string" ? data.quoteId : "";
+		plan.navigation = {
+			action: "push",
+			href: quote
+				? { params: { quote }, pathname: "/(protected)/quotes" }
+				: "/(protected)/quotes",
+		};
 	} else if (data?.type === "domain_unlock" && !isHeldRoute(pathname)) {
 		// Steadiness lives in the You tab (/you/steadiness). The old path's MovedRoute shim gets
 		// there the right way from anywhere: back to the tabs when they're in the stack, in the

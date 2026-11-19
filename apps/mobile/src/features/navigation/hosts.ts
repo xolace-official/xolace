@@ -5,6 +5,7 @@ import { LateRiskHost } from "@/features/letters/late-risk-host";
 import { isPresentedRoute } from "@/features/navigation/presented-routes";
 import { GoneHost } from "@/features/peer-reflection/gone-host";
 import { NowPlayingHost } from "@/features/player/now-playing/now-playing-host";
+import { ReminderHandoverHost } from "@/features/quotes/reminders/reminder-handover-host";
 
 /**
  * A host: a component the `(protected)` layout keeps mounted above its stack
@@ -59,4 +60,6 @@ export const ROOT_HOSTS: readonly RootHost[] = [
 	{ Host: AgeAskHost, name: "age-ask" },
 	// A late re-check's care for a letter that read as sent, at the next open (S21).
 	{ Host: LateRisk, name: "letters-late-risk" },
+	// Cancels the old on-device daily quote reminders and carries their setting to the push (B19).
+	{ Host: ReminderHandoverHost, name: "daily-quote-handover" },
 ];

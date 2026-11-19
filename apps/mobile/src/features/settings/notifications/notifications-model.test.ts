@@ -6,6 +6,9 @@ import {
 } from "@/features/settings/notifications/dev/fixtures";
 import {
 	chatChoice,
+	DAILY_QUOTE_DEFAULT_SLOT,
+	dailyQuoteChoice,
+	dailyQuoteOf,
 	dayPercent,
 	daySpan,
 	gentleChoice,
@@ -78,8 +81,16 @@ describe("nextNotificationPrefs", () => {
 		);
 	});
 
+	it("never carries the daily quote: it's set on its own", () => {
+		const next = nextNotificationPrefs({ chat: true, gentle: true });
+		expect("dailyQuote" in next).toBe(false);
+	});
+
 	it("mutes chat without touching the AI nudges", () => {
-		const next = nextNotificationPrefs({ chat: false, gentle: true });
+		const next = nextNotificationPrefs({
+			chat: false,
+			gentle: true,
+		});
 		expect(next.chat).toBe(false);
 		expect(next.gentleReturn).toBe(true);
 		expect(next.patternNudge).toBe(true);
@@ -87,7 +98,10 @@ describe("nextNotificationPrefs", () => {
 	});
 
 	it("mutes the AI nudges without touching chat", () => {
-		const next = nextNotificationPrefs({ chat: true, gentle: false });
+		const next = nextNotificationPrefs({
+			chat: true,
+			gentle: false,
+		});
 		expect(next.chat).toBe(true);
 		expect(next.gentleReturn).toBe(false);
 		expect(next.patternNudge).toBe(false);
@@ -107,7 +121,10 @@ describe("nextNotificationPrefs", () => {
 	// The server merges notification writes; an echoed stale value erased the
 	// timezone `applyToggles` had just synced.
 	it("says nothing about reach, quiet window, or timezone", () => {
-		const next = nextNotificationPrefs({ chat: true, gentle: false });
+		const next = nextNotificationPrefs({
+			chat: true,
+			gentle: false,
+		});
 		expect("reach" in next).toBe(false);
 		expect("quietWindow" in next).toBe(false);
 		expect("timezone" in next).toBe(false);
@@ -271,5 +288,46 @@ describe("lockSample", () => {
 		expect(lockSample({ ...base, reach: "direct" }).line).toBe(
 			"Sunday nights are usually when it piles up for you. Tonight might be one of them."
 		);
+	});
+});
+
+describe("the daily quote", () => {
+	it("is off and in the morning until someone chooses", () => {
+		expect(dailyQuoteOf(prefs())).toEqual({
+			on: false,
+			paused: false,
+			slot: DAILY_QUOTE_DEFAULT_SLOT,
+		});
+		expect(dailyQuoteChoice(undefined)).toBe(false);
+	});
+
+	it("shows on, at its time", () => {
+		const p = prefs({ dailyQuote: { enabled: true, slot: "evening" } });
+		expect(dailyQuoteOf(p)).toEqual({
+			on: true,
+			paused: false,
+			slot: "evening",
+		});
+		expect(dailyQuoteChoice(p)).toBe(true);
+	});
+
+	it("stays on with the master off: it has its own switch", () => {
+		const p = prefs({
+			dailyQuote: { enabled: true, slot: "evening" },
+			enabled: false,
+		});
+		expect(dailyQuoteOf(p).on).toBe(true);
+		expect(dailyQuoteChoice(p)).toBe(true);
+	});
+
+	it("says when the backoff paused it", () => {
+		const p = prefs({
+			dailyQuote: { enabled: false, pausedAt: 1, slot: "afternoon" },
+		});
+		expect(dailyQuoteOf(p)).toEqual({
+			on: false,
+			paused: true,
+			slot: "afternoon",
+		});
 	});
 });

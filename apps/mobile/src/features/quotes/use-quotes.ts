@@ -14,6 +14,7 @@ import { useSoundMemory } from "./background/sound-memory";
 import { STILLS } from "./background/stills";
 import { useLoopRest } from "./background/use-loop-rest";
 import { QUOTE_COPY } from "./copy";
+import { useDailyQuoteOffer } from "./offer/use-daily-quote-offer";
 import {
 	KEPT_PREFETCH,
 	keptCard,
@@ -80,11 +81,16 @@ function patchToday(
 	);
 }
 
-/** Quotes' data: today's quote, the catalogue and the choice, Words you kept, and every write. */
-export function useQuotes(): QuotesScreenValue {
+/**
+ * Quotes' data: today's quote, the catalogue and the choice, Words you kept, the daily quote
+ * offer, and every write. `tappedQuoteId`: the quote a daily quote push opened.
+ */
+export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	const posthog = usePostHog();
 	const today = useQuery(api.dailyQuotes.getToday);
 	const prefs = useQuery(api.preferences.getQuotePreferences);
+	const markOpened = useMutation(api.dailyQuotes.opened.markOpened);
+	const offer = useDailyQuoteOffer();
 	const catalogue = useQuery(api.quoteBackgrounds.catalogue.list);
 	const savedKey = useQuery(api.preferences.quoteBackground.get);
 	const live = useQuery(api.sessions.getActive);
@@ -126,6 +132,7 @@ export function useQuotes(): QuotesScreenValue {
 	const tracked = useRef({ gate: false, viewed: false });
 
 	const raw = today?.session ?? today?.curated ?? null;
+	const opened = useRef(new Set<string>());
 	const waiting = today !== undefined && prefs !== undefined && raw === null;
 
 	// A first visit (no quote preferences yet) signs up quietly, any curated quote and no
@@ -165,6 +172,19 @@ export function useQuotes(): QuotesScreenValue {
 			quote_type: raw.type,
 		});
 	}, [raw, today?.hasSessionToday, posthog]);
+	// The quote on screen, and the one a push opened (a day late, it's no longer today's), count
+	// as opened: the daily quote push skips an opened day and starts its backoff over.
+	useEffect(() => {
+		for (const id of [raw?._id, tappedQuoteId]) {
+			if (!id || opened.current.has(id)) {
+				continue;
+			}
+			opened.current.add(id);
+			markOpened({ quoteId: id as Id<"daily_quotes"> }).catch((e: unknown) =>
+				console.error("[quotes] markOpened failed", e)
+			);
+		}
+	}, [raw?._id, tappedQuoteId, markOpened]);
 	useEffect(() => {
 		if (!today?.sessionLocked || tracked.current.gate) {
 			return;
@@ -193,6 +213,7 @@ export function useQuotes(): QuotesScreenValue {
 		kept: kept.results.map(keptCard),
 		keptCount: today?.savedCount ?? 0,
 		lowPower: rest.lowPower,
+		offerDailyQuote: offer.offerable,
 		quote: raw ? { text: plainQuote(raw.text), title: raw.title } : null,
 		reason: reasonLine({
 			hasSessionToday: today?.hasSessionToday ?? false,
@@ -227,6 +248,7 @@ export function useQuotes(): QuotesScreenValue {
 
 	return {
 		actions: {
+			answerOffer: offer.answer,
 			close: () => router.back(),
 			keptAt: (index) => {
 				if (
@@ -236,6 +258,7 @@ export function useQuotes(): QuotesScreenValue {
 					kept.loadMore(KEPT_PAGE);
 				}
 			},
+			offerShown: offer.shown,
 			openPlus: (from) => {
 				posthog.capture("quote_plus_opened", { from });
 				openPaywall("daily_quote");

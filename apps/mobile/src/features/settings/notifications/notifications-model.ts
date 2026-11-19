@@ -25,8 +25,40 @@ export const chatChoice = (prefs: NotificationPrefs | undefined) =>
 export const gentleChoice = (prefs: NotificationPrefs | undefined) =>
 	prefs?.gentleReturn ?? false;
 
-/** The toggle fields only. Carries no `reach`, `quietWindow` or `timezone`: the
- * server merges writes, and echoing a stale snapshot would erase newer values. */
+/* ── The daily quote (B19) ───────────────────────────────────────────────────────────── */
+
+export type DailyQuoteSlot = NonNullable<
+	NotificationPrefs["dailyQuote"]
+>["slot"];
+export const DAILY_QUOTE_SLOTS: readonly DailyQuoteSlot[] = [
+	"morning",
+	"afternoon",
+	"evening",
+];
+/** The time it comes when nobody picked one: production's old reminder default. */
+export const DAILY_QUOTE_DEFAULT_SLOT: DailyQuoteSlot = "morning";
+
+/** As shown: on, when, and whether the backoff paused it after quotes went unopened. */
+export type DailyQuote = { on: boolean; slot: DailyQuoteSlot; paused: boolean };
+
+/** What the user chose. Absent = never chosen, which is off. */
+export const dailyQuoteChoice = (prefs: NotificationPrefs | undefined) =>
+	prefs?.dailyQuote?.enabled === true;
+
+/** Its own switch, apart from the master: the server sends it whatever `enabled` says, so
+ * turning it on wakes no other kind and turning the others off never silences it. */
+export function dailyQuoteOf(prefs: NotificationPrefs | undefined): DailyQuote {
+	const setting = prefs?.dailyQuote;
+	return {
+		on: setting?.enabled === true,
+		paused: setting?.enabled === false && setting.pausedAt !== undefined,
+		slot: setting?.slot ?? DAILY_QUOTE_DEFAULT_SLOT,
+	};
+}
+
+/** The toggle fields only. Carries no `reach`, `quietWindow`, `timezone` or `dailyQuote`: the
+ * server merges writes, and echoing a stale snapshot would erase newer values. The master covers
+ * gentle reminders and chat; the daily quote has its own switch. */
 export const nextNotificationPrefs = (next: {
 	gentle: boolean;
 	chat: boolean;

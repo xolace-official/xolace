@@ -14,6 +14,9 @@ vi.mock("@/features/connect/age-gate/age-ask-host", () => ({
 vi.mock("@/features/letters/late-risk-host", () => ({
 	LateRiskHost: () => null,
 }));
+vi.mock("@/features/quotes/reminders/reminder-handover-host", () => ({
+	ReminderHandoverHost: () => null,
+}));
 
 describe("ROOT_HOSTS", () => {
 	it("names each host once, since the name is its key", () => {
