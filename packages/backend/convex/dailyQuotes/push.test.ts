@@ -43,7 +43,13 @@ const h = vi.hoisted(() => ({
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../revenuecat", () => revenuecatMock(() => h.plus));
 vi.mock("../posthog", () => posthogMock());
-vi.mock("../lib/pushNotifications", () => ({
+vi.mock("../lib/pushNotifications", async (orig) => ({
+	...(await orig<typeof import("../lib/pushNotifications")>()),
+	prunePushDeviceHistory: async () => null,
+	pushNotifications: {
+		recordToken: async () => null,
+		removeToken: async () => null,
+	},
 	sendPushToProfile: async (_ctx: unknown, args: Sent) => {
 		h.pushes.push(args);
 		return 1;
@@ -86,6 +92,7 @@ vi.mock("../outreach/adapters", async (orig) => {
 // Modules that reach `../revenuecat` load after the mocks are ready: a static
 // import would run before `revenuecatMock` is initialised.
 const channels = () => import("../outreach/channels");
+const router = () => import("../outreach/router");
 const telegramAdapter = () => import("../outreach/telegram/adapter");
 const push = () => import("./push");
 const schedule = () => import("./schedule");
@@ -592,32 +599,76 @@ describe("the setting", () => {
 		});
 	});
 
-	it("turning it on turns push on, and wakes nothing else", async () => {
+	it("turning it on from all off sends the daily quote and wakes nothing else", async () => {
 		const user = await asNewUser();
 		register(user);
 		await settleSignup(user);
 		await setNotifications(user, { timezone: "UTC" });
+		const before = (await prefsOf(user)).notifications;
 		await user.t.mutation(api.preferences.update, {
 			notificationDailyQuote: { enabled: true, slot: "morning" },
 		});
+		const after = (await prefsOf(user)).notifications;
+		// Every other flag as it was: the master stays off, so letters,
+		// Kindling, achievements and chat (absent = on) stay asleep.
+		expect({ ...after, dailyQuote: undefined }).toEqual({
+			...before,
+			dailyQuote: undefined,
+		});
+		expect(after.enabled).toBe(false);
+		const { suppressionFor } = await router();
+		for (const intent of ["kindling_ready", "gentle_return"] as const) {
+			expect(
+				await user.root.run((ctx) =>
+					suppressionFor(
+						ctx,
+						{ emotionalProfileId: user.profileId, intent },
+						Date.now()
+					)
+				)
+			).not.toBeNull();
+		}
+		expect((await morning(user, 0)).pushes).toBe(1);
+	});
+
+	it("keeps sending when Settings turns gentle reminders and chat off", async () => {
+		const user = await subscribed();
+		await setNotifications(user, { chat: true, gentleReturn: true });
+		const { notifications } = await prefsOf(user);
+		// What every build's Settings writes once both are off.
+		await user.t.mutation(api.preferences.update, {
+			notifications: {
+				...notifications,
+				chat: false,
+				enabled: false,
+				gentleReturn: false,
+			},
+		});
 		expect((await prefsOf(user)).notifications).toMatchObject({
-			chat: false,
-			enabled: true,
-			gentleReturn: false,
-			milestone: false,
-			patternNudge: false,
+			dailyQuote: { enabled: true, slot: "morning" },
+			enabled: false,
 		});
 		expect((await morning(user, 0)).pushes).toBe(1);
 	});
 
-	it("leaves a chat choice alone when push was already on", async () => {
+	it("asking for push for it alone registers the device and changes no preference", async () => {
 		const user = await asNewUser();
 		await settleSignup(user);
-		await setNotifications(user, { enabled: true });
-		await user.t.mutation(api.preferences.update, {
-			notificationDailyQuote: { enabled: true, slot: "morning" },
+		const before = (await prefsOf(user)).notifications;
+		await user.t.mutation(api.notifications.registerToken, {
+			autoEnable: false,
+			pushToken: "ExponentPushToken[quote]",
 		});
-		expect((await prefsOf(user)).notifications.chat).toBeUndefined();
+		expect((await prefsOf(user)).notifications).toEqual(before);
+		// Shipped builds keep the first-grant auto-enable.
+		await user.t.mutation(api.notifications.registerToken, {
+			pushToken: "ExponentPushToken[quote]",
+		});
+		expect((await prefsOf(user)).notifications).toMatchObject({
+			chat: true,
+			enabled: true,
+			gentleReturn: true,
+		});
 	});
 
 	it("an old client echoing its notifications back keeps the setting", async () => {
@@ -700,11 +751,7 @@ describe("migration from the on-device reminders", () => {
 			api.dailyQuotes.pushSettings.adoptLegacyReminders,
 			{}
 		);
-		expect((await prefsOf(user)).notifications).toMatchObject({
-			chat: false,
-			enabled: true,
-			gentleReturn: false,
-		});
+		expect((await prefsOf(user)).notifications.enabled).toBe(false);
 		expect((await morning(user, 0)).pushes).toBe(1);
 	});
 

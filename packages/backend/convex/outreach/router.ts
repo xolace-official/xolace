@@ -393,7 +393,13 @@ export async function channelIneligibility(
 		// The global switch is push's alone (#760). A profile with no device
 		// rows still reaches the pre-registry profile-keyed recipient
 		// (`sendPushToProfile`), so `no_device` isn't decided here while that
-		// fallback lives.
+		// fallback lives. The daily quote is the exception: its own switch is
+		// its consent (B19), so a master left off by Settings never silences
+		// it, and turning it on never has to wake the master and every intent
+		// that reads absent as on (letters, Kindling) with it.
+		if (input.intent === "daily_quote") {
+			return null;
+		}
 		return notifications?.enabled ? null : "push_off";
 	}
 

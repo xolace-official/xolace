@@ -191,6 +191,13 @@ export const schedule = internalMutation({
  */
 export const registerToken = mutation({
 	args: {
+		/**
+		 * `false`: register this device and change no preference. For a client
+		 * asking for push on behalf of one kind of notification (the daily
+		 * quote, B19), so a yes to that wakes nothing else. Absent keeps the
+		 * first-grant auto-enable below, which shipped builds rely on.
+		 */
+		autoEnable: v.optional(v.boolean()),
 		pushToken: v.string(),
 	},
 	handler: async (ctx, args) => {
@@ -252,7 +259,11 @@ export const registerToken = mutation({
 			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
 			.unique();
 
-		if (preferences && !preferences.notifications.enabled) {
+		if (
+			args.autoEnable !== false &&
+			preferences &&
+			!preferences.notifications.enabled
+		) {
 			await updateNotificationPrefs(ctx, profile._id, {
 				// Chat notifications ride the same permission grant and the same
 				// token; a user who just allowed notifications gets the feature
