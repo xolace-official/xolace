@@ -15,7 +15,10 @@ const ALL = viewOf(BOARD, ["done", "done", "done", "done"]);
 const SOME = viewOf(BOARD, ["done", "passed", "done", "done"]);
 const NONE_TENDED = viewOf(BOARD, ["passed", "passed", "passed", "passed"]);
 const TRAIL = viewOf(BOARD);
+/** One left waiting, the second: its tend rides on into the fire, or passing it catches in place. */
+const ONE_LEFT = viewOf(BOARD, ["done", "wait", "done", "done"]);
 const ARRIVE_FIRST = [0] as const;
+const ARRIVE_SECOND = [1] as const;
 const ARRIVE_TWO = [0, 2] as const;
 const XOLACER = 1;
 
@@ -45,6 +48,21 @@ export const devStates: readonly DevState[] = [
 		id: "two-on-return",
 		title: "Two tends play in trail order",
 		...kindling({ arrive: ARRIVE_TWO, view: TRAIL }),
+	},
+	{
+		id: "into-the-fire",
+		title: "The last tend rides into the fire",
+		...kindling({ arrive: ARRIVE_SECOND, view: ONE_LEFT }),
+	},
+	{
+		id: "into-the-fire-light",
+		title: "Into the fire, Daylight",
+		...kindling({ ...LIGHT, arrive: ARRIVE_SECOND, view: ONE_LEFT }),
+	},
+	{
+		id: "one-left",
+		title: "One left (Begin rides into the fire, Not for me catches in place)",
+		...kindling({ view: ONE_LEFT }),
 	},
 	{
 		id: "tended",
