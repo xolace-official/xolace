@@ -27,6 +27,9 @@ import {
 	motionPreferenceValidator,
 	platformValidator,
 	profileCardValidator,
+	quoteBackgroundFileValidator,
+	quoteBackgroundInkValidator,
+	quoteBackgroundKindValidator,
 	quoteBackgroundValidator,
 	resourceValidator,
 	safeguardLevelValidator,
@@ -2378,8 +2381,8 @@ export default defineSchema({
 		// private, never shown to other Xolacers. Cleared by a data wipe.
 		preferredName: v.optional(v.string()),
 
-		// The background behind the daily quote (redesign B7). Undefined =
-		// Poster. Kept apart from `quotes`, whose presence opts the account into
+		// The background behind the daily quote (redesign B7): a key in
+		// `quote_backgrounds` (B18). Undefined = Poster. Kept apart from `quotes`, whose presence opts the account into
 		// the nightly generator and whose `themes` are content slugs.
 		quoteBackground: v.optional(quoteBackgroundValidator),
 
@@ -2549,6 +2552,28 @@ export default defineSchema({
 		.index("by_profile", ["emotionalProfileId", "lastRegisteredAt"])
 		// Single ownership: who currently holds this token.
 		.index("by_token", ["expoPushToken"]),
+
+	// The daily quote's backgrounds (B18), ordered as the Background sheet
+	// shows them. Stills carry no media: the app maps their key to a bundled
+	// image (or draws Poster and Night in code) and skips keys it doesn't know.
+	// A loop's video, first-frame poster and ambient sound are hosted here, put
+	// by scripts/quote-backgrounds/upload.ts. `plus` is the tier, so a
+	// background moves between free and Xolace+ without a release.
+	quote_backgrounds: defineTable({
+		active: v.boolean(),
+		audio: v.optional(quoteBackgroundFileValidator),
+		ink: quoteBackgroundInkValidator,
+		key: v.string(),
+		kind: quoteBackgroundKindValidator,
+		name: v.string(),
+		order: v.number(),
+		plus: v.boolean(),
+		poster: v.optional(quoteBackgroundFileValidator),
+		updatedAt: v.number(),
+		video: v.optional(quoteBackgroundFileValidator),
+	})
+		.index("by_key", ["key"])
+		.index("by_active_and_order", ["active", "order"]),
 
 	// ===========================================================
 	// 13. QUOTES LIBRARY

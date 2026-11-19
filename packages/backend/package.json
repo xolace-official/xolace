@@ -29,6 +29,8 @@
     "kindling:ingest:prod": "node scripts/kindling/ingest.ts --prod",
     "lint": "biome check . && eslint convex",
     "lint:convex": "eslint convex",
+    "quote-backgrounds:process": "bun scripts/quote-backgrounds/process.ts",
+    "quote-backgrounds:upload": "bun scripts/quote-backgrounds/upload.ts",
     "stream:setup": "convex run streamSetup:setup",
     "stream:setup:prod": "convex run --prod streamSetup:setup",
     "stream:webhook": "convex run streamWebhook:registerWebhook",
