@@ -1,10 +1,10 @@
 /**
- * #690: the upload script never reaches prod or staging by default. What can
- * go wrong: a bare run follows a CONVEX_DEPLOY_KEY left in the shell (it beats
+ * #690: the content scripts (badge art, quote backgrounds, Kindling, Library)
+ * never reach prod or staging by default. What can go wrong: a bare run follows a CONVEX_DEPLOY_KEY left in the shell (it beats
  * CONVEX_DEPLOYMENT in the Convex CLI) or a `.env.local` pointing at prod.
  */
 import { describe, expect, it } from "vitest";
-import { resolveTarget } from "./target";
+import { catalogueFor, resolveTarget } from "./target";
 
 const DEV = { CONVEX_DEPLOYMENT: "dev:groovy-mink-123" };
 
@@ -62,5 +62,28 @@ describe("resolveTarget", () => {
 		expect(() =>
 			resolveTarget(["--prod", "--deploy-key"], { CONVEX_DEPLOY_KEY: "k" }, DEV)
 		).toThrow(/one of/);
+	});
+
+	it("follows the deploy key even when .env.local names another deployment", () => {
+		expect(
+			resolveTarget(
+				["--deploy-key", "--dry-run"],
+				{ CONVEX_DEPLOY_KEY: "k" },
+				{ CONVEX_DEPLOYMENT: "prod:energetic-guineapig-283" }
+			).pushFunctions
+		).toBe(false);
+	});
+});
+
+describe("catalogueFor", () => {
+	it("gives the real catalogue only to --prod", () => {
+		expect(catalogueFor(["--prod"])).toBe("prod");
+		expect(catalogueFor(["--prod", "--thumbs-only"])).toBe("prod");
+	});
+
+	it("gives your dev deployment and a deploy key (staging) the dev fixtures", () => {
+		expect(catalogueFor([])).toBe("dev");
+		expect(catalogueFor(["--deploy-key"])).toBe("dev");
+		expect(catalogueFor(["--deploy-key", "--cover-variants"])).toBe("dev");
 	});
 });

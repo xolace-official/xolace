@@ -1,6 +1,6 @@
 # Library
 
-`ingest.ts` upserts `prod/` (or `dev/`) `sources.json` → `manifest.json` → `hubs.json` into Convex. See the header of `ingest.ts` for the gates and flags.
+`ingest.ts` upserts `prod/` (or `dev/`) `sources.json` → `manifest.json` → `hubs.json` into Convex: `bun run library:ingest` (your dev deployment), `library:ingest:key` (staging, `dev/` tree; see `docs/setup/staging.md`) or `library:ingest:prod`. See the header of `ingest.ts` for the gates and flags.
 
 ## Cover art
 

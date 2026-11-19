@@ -16,7 +16,7 @@
 //   bun run quote-backgrounds:upload --prod           # release owner only
 //   bun run quote-backgrounds:upload --deploy-key     # release owner: staging or a preview
 //
-// A bare run never reaches prod or staging (../badges/target.ts) and first
+// A bare run never reaches prod or staging (../target.ts) and first
 // pushes this checkout's functions to your dev deployment. `--prod` and
 // `--deploy-key` are the release owner's, run after that deployment is live,
 // with the final art only; agents never pass them.
@@ -25,8 +25,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { parseEnv } from "node:util";
-import { resolveTarget } from "../badges/target";
+import { targetFromArgs } from "../target";
 import {
 	isRecord,
 	LOOP_FILES,
@@ -56,12 +55,7 @@ const only =
 				.map((k) => k.trim())
 				.filter(Boolean);
 
-const envLocalPath = path.join(HERE, "../../.env.local");
-const target = resolveTarget(
-	args,
-	process.env,
-	existsSync(envLocalPath) ? parseEnv(readFileSync(envLocalPath, "utf8")) : {}
-);
+const target = targetFromArgs(args);
 
 function convexRun(fn: string, jsonArgs: Record<string, unknown>): unknown {
 	const out = execFileSync(
