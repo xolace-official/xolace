@@ -3,7 +3,13 @@
   // scripts. convex/tsconfig.json stays the Convex-owned config for deployed code.
   "extends": "./convex/tsconfig.json",
   "compilerOptions": {
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client"],
+    // `check-types` reuses the last run's program: a no-change run takes seconds.
+    // The cache sits in this worktree's gitignored node_modules; CI runs cold.
+    // The convex/ pass gets the same flags from the check-types script instead,
+    // so the Convex CLI's own typecheck stays as Convex ships it.
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsc/tsconfig.tsbuildinfo"
   },
   "include": ["convex/**/*", "scripts/**/*", "vitest.config.ts"],
   "exclude": ["convex/_generated"]

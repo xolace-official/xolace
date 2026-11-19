@@ -2,6 +2,11 @@
   "extends": "expo/tsconfig.base.json",
   "compilerOptions": {
     "strict": true,
+    // `tsc --noEmit` reuses the last run's program: a no-change run takes a few
+    // seconds instead of ~30. The cache sits in this worktree's own (gitignored)
+    // node_modules; CI starts without it and runs cold.
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsc/tsconfig.tsbuildinfo",
     // app.config.ts imports release/production-guard.ts with its extension:
     // Expo's config loader only resolves a TS import written that way.
     "allowImportingTsExtensions": true,

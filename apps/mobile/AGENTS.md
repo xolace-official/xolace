@@ -10,7 +10,8 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   add `-- --port <metro from .xolace/ports.json>`.
 - Native dev build: `bun run ios` / `bun run android` (needed after adding a native module).
 - Add an Expo package: `bunx expo install <pkg>` (picks the SDK-compatible version).
-- Check: `bun run check:changed` from the root; `bun run check-types` here.
+- Check: `bun run check:changed` from the root; `bun run check-types` here (incremental:
+  a no-change rerun takes seconds; `rm -rf node_modules/.cache/tsc` forces a cold one).
 - Tests: `bun run test` here (vitest, node + RN stubs in `vitest.setup.ts`).
 
 ## Boundaries
