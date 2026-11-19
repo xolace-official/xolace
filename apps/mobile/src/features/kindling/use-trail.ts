@@ -1,6 +1,6 @@
 import { useFocusEffect, useIsFocused } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AccessibilityInfo } from "react-native";
+import { AccessibilityInfo, AppState } from "react-native";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { playSoftPress, playTextureSelect } from "@/lib/haptics";
@@ -25,20 +25,23 @@ import {
 	STAGGER_MS,
 	UNDO_MS,
 } from "./kindling-motion";
+import {
+	type CommitCause,
+	commitStep,
+	type FlowStep,
+	NO_LOCAL,
+	skipFailed,
+	skipStep,
+	tendFailed,
+	tendStep,
+	undoStep,
+} from "./trail-flow";
 
-const EMPTY: LocalStates = {
-	skipped: new Set(),
-	tended: new Set(),
-	undo: null,
-};
 const NO_LEG = -1;
 type Timer = ReturnType<typeof setTimeout>;
 
 const sameStates = (a: readonly TwigState[], b: readonly TwigState[]) =>
 	a.length === b.length && a.every((s, i) => s === b[i]);
-const plus = (set: ReadonlySet<string>, id: string) => new Set([...set, id]);
-const minus = (set: ReadonlySet<string>, id: string) =>
-	new Set([...set].filter((x) => x !== id));
 
 /**
  * The kindling screen's own state (handoff §1, §3, §7, §8): what the stops show (`shown`, which
@@ -51,7 +54,7 @@ export function useTrail(
 	reduced: boolean
 ) {
 	const focused = useIsFocused();
-	const [local, setLocal] = useState<LocalStates>(EMPTY);
+	const [local, setLocal] = useState<LocalStates>(NO_LOCAL);
 	const now = effectiveStates(view, local);
 	const [forId, setForId] = useState(view.id);
 	const [shown, setShown] = useState(now);
@@ -63,9 +66,9 @@ export function useTrail(
 			setShown(followed);
 		}
 	} else {
-		const fresh = effectiveStates(view, EMPTY);
+		const fresh = effectiveStates(view, NO_LOCAL);
 		setForId(view.id);
-		setLocal(EMPTY);
+		setLocal(NO_LOCAL);
 		setShown(fresh);
 		setOpen(restingCard(fresh));
 	}
@@ -76,8 +79,24 @@ export function useTrail(
 	useEffect(() => {
 		latest.current = { now, shown, view };
 	});
-	const undoing = useRef<string | null>(null);
+	// The latest local states for callbacks and timers (state lags a render behind).
+	const localRef = useRef<LocalStates>(NO_LOCAL);
 	const undoTimer = useRef<Timer | null>(null);
+	const stopUndoTimer = () => {
+		if (undoTimer.current) {
+			clearTimeout(undoTimer.current);
+		}
+		undoTimer.current = null;
+	};
+	const apply = (step: FlowStep) => {
+		localRef.current = step.local;
+		setLocal(step.local);
+	};
+	// A new kindling: the old one's undo window closes without sending (its twig is gone).
+	useEffect(() => {
+		stopUndoTimer();
+		localRef.current = NO_LOCAL;
+	}, [view.id]);
 	const timers = useRef<Timer[]>([]);
 	const later = (ms: number, fn: () => void) => {
 		timers.current.push(setTimeout(fn, ms));
@@ -87,6 +106,10 @@ export function useTrail(
 
 	/** Light twig i on the trail: its stop, its leg's gold, the count; then the card moves on. */
 	const play = (i: number) => {
+		// "I did this" plays it itself; the return effect may find it too.
+		if (latest.current.shown[i] === "done") {
+			return;
+		}
 		const after = latest.current.now.map((s, j) => (j === i ? "done" : s));
 		setShown((s) => s.map((x, j) => (j === i ? "done" : x)));
 		fade.leg.set(i);
@@ -121,31 +144,45 @@ export function useTrail(
 		// `play` reads the latest through refs; re-run when the states or focus change.
 	}, [focused, key]);
 
-	/** Close the undo window: the skip is sent, and the card moves on (§8). */
-	const commit = () => {
-		if (undoTimer.current) {
-			clearTimeout(undoTimer.current);
-		}
-		undoTimer.current = null;
-		const id = undoing.current;
+	/** Send a skip; a refusal puts the twig back. */
+	const sendSkip = (id: string | undefined) => {
 		if (!id) {
 			return;
 		}
-		undoing.current = null;
-		setLocal((l) => ({ ...l, skipped: plus(l.skipped, id), undo: null }));
-		moveOn(SKIP_MOVE_ON_MS);
 		k.skip(id).then((ok) => {
 			if (!ok) {
-				setLocal((l) => ({ ...l, skipped: minus(l.skipped, id) }));
+				apply(skipFailed(localRef.current, id));
 			}
 		});
+	};
+	/** Close the undo window (§8): the skip is sent; the card moves on unless they chose one. */
+	const commit = (cause: CommitCause) => {
+		stopUndoTimer();
+		const step = commitStep(localRef.current, cause);
+		if (!step.skip) {
+			return;
+		}
+		apply(step);
+		if (step.moveOn) {
+			moveOn(SKIP_MOVE_ON_MS);
+		}
+		sendSkip(step.skip);
 	};
 	const commitRef = useRef(commit);
 	useEffect(() => {
 		commitRef.current = commit;
 	});
-	// Leaving the screen sends a skip still in its undo window.
-	useFocusEffect(useCallback(() => () => commitRef.current(), []));
+	// Leaving sends a skip still in its window: blur and unmount, and the app going to the
+	// background, where JS timers pause and the OS may end the app before the window would.
+	useFocusEffect(useCallback(() => () => commitRef.current("left"), []));
+	useEffect(() => {
+		const sub = AppState.addEventListener("change", (next) => {
+			if (next === "background") {
+				commitRef.current("left");
+			}
+		});
+		return () => sub.remove();
+	}, []);
 	useEffect(
 		() => () => {
 			for (const id of timers.current) {
@@ -159,29 +196,37 @@ export function useTrail(
 	return {
 		actions: {
 			act: (i: number) => {
-				commit();
+				commit("chose");
 				const twig = twigAt(i);
 				if (!twig) {
 					return;
 				}
-				playSoftPress();
 				if (twig.kind !== "try") {
+					playSoftPress();
 					k.open(twig.id, false);
 					return;
 				}
-				// "I did this" lights at once; the server confirms, or it goes back.
-				later(PRESS_TEND_MS, () => {
-					setLocal((l) => ({ ...l, tended: plus(l.tended, twig.id) }));
-					play(i);
-					k.tend(twig.id).then((ok) => {
-						if (!ok) {
-							setLocal((l) => ({ ...l, tended: minus(l.tended, twig.id) }));
-						}
-					});
+				// "I did this" is sent at once (a quick Back can't drop it, a second tap sends
+				// nothing); it lights after the press, and goes back if the server refuses.
+				const step = tendStep(
+					localRef.current,
+					twig.id,
+					latest.current.now[i] === "done"
+				);
+				if (!step.tend) {
+					return;
+				}
+				playSoftPress();
+				apply(step);
+				k.tend(twig.id).then((ok) => {
+					if (!ok) {
+						apply(tendFailed(localRef.current, twig.id));
+					}
 				});
+				later(PRESS_TEND_MS, () => play(i));
 			},
 			again: (i: number) => {
-				commit();
+				commit("chose");
 				const twig = twigAt(i);
 				if (twig) {
 					playSoftPress();
@@ -189,7 +234,7 @@ export function useTrail(
 				}
 			},
 			browse: (i: number) => {
-				commit();
+				commit("chose");
 				const twig = twigAt(i);
 				if (twig) {
 					playSoftPress();
@@ -197,34 +242,36 @@ export function useTrail(
 				}
 			},
 			openStop: (i: number) => {
-				commit();
+				// They chose this card: the skip is sent, and nothing moves the card off it.
+				commit("chose");
 				if (i !== open) {
 					playTextureSelect();
 					setOpen(i);
 				}
 			},
 			skip: (i: number) => {
-				commit();
 				const twig = twigAt(i);
 				if (!twig) {
 					return;
 				}
+				stopUndoTimer();
 				playSoftPress();
-				undoing.current = twig.id;
-				setLocal((l) => ({ ...l, undo: twig.id }));
-				undoTimer.current = setTimeout(() => commitRef.current(), UNDO_MS);
+				const step = skipStep(localRef.current, twig.id);
+				apply(step);
+				sendSkip(step.skip);
+				undoTimer.current = setTimeout(
+					() => commitRef.current("closed"),
+					UNDO_MS
+				);
 			},
 			undo: () => {
-				if (undoTimer.current) {
-					clearTimeout(undoTimer.current);
-				}
-				undoTimer.current = null;
-				undoing.current = null;
+				stopUndoTimer();
 				playTextureSelect();
-				setLocal((l) => ({ ...l, undo: null }));
+				apply(undoStep(localRef.current));
 			},
 		},
-		commit,
+		/** The ⋯ menu opening: the window closes and the card moves on. */
+		commit: () => commit("closed"),
 		fade,
 		open,
 		shown,

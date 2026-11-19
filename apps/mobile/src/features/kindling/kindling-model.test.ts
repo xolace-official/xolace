@@ -178,6 +178,11 @@ describe("states", () => {
 		expect(caught(["done", "wait"])).toBe(false);
 		expect(caught([])).toBe(false);
 	});
+
+	it("doesn't catch while an Undo still shows: only once the skip is sent", () => {
+		expect(caught(["done", "undo"])).toBe(false);
+		expect(caught(["done", "passed"])).toBe(true);
+	});
 });
 
 describe("progressText", () => {

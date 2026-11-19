@@ -176,9 +176,12 @@ export const tendedCount = (states: readonly TwigState[]) =>
 	states.filter((s) => s === "done").length;
 const passedCount = (states: readonly TwigState[]) =>
 	states.filter((s) => s === "passed" || s === "undo").length;
-/** Nothing is left waiting (an Undo still showing counts as settled on screen). */
-const settled = (states: readonly TwigState[]) =>
-	states.length > 0 && !states.includes("wait");
+/**
+ * Nothing is left waiting, and no Undo shows: the server has (or is about to have) completed
+ * it. A skip in its undo window isn't settled yet, so the fire doesn't catch until it's sent.
+ */
+export const settled = (states: readonly TwigState[]) =>
+	states.length > 0 && !states.includes("wait") && !states.includes("undo");
 /** The fire has caught: nothing left waiting, and something was tended. */
 export const caught = (states: readonly TwigState[]) =>
 	settled(states) && tendedCount(states) > 0;
