@@ -129,6 +129,8 @@ export const AIM_WINDOW_MS = AIM_WINDOW_HOURS * HOUR_MS;
 export const REVIEW_KEEP_DAYS = 30;
 /** An undecided review's letter text is kept at most this long. */
 export const REVIEW_OPEN_MAX_DAYS = 180;
+/** How long a `letter_viewed` audit row is kept (letters spec §10). */
+export const LETTER_VIEW_AUDIT_KEEP_DAYS = 365;
 /** Past this a strike can no longer start or extend a pause, so it goes. */
 export const STRIKE_KEEP_DAYS = STRIKE_WINDOW_DAYS + PAUSE_DAYS;
 /**

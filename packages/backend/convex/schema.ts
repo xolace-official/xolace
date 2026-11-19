@@ -124,7 +124,11 @@ export default defineSchema({
 		targetClerkUserId: v.optional(v.string()),
 	})
 		.index("by_target", ["targetClerkUserId", "at"])
-		.index("by_admin", ["adminClerkUserId", "at"]),
+		.index("by_admin", ["adminClerkUserId", "at"])
+		// letter_viewed rows go after a year (letters spec §10).
+		.index("by_action_at", ["action", "at"])
+		// A sender's deletion clears their id from letter_viewed rows.
+		.index("by_action_target", ["action", "targetClerkUserId"]),
 
 	// ===========================================================
 	// AGE DECLARATIONS (#716)
@@ -1628,6 +1632,10 @@ export default defineSchema({
 		reason: v.optional(reportReasonValidator),
 		// Cut when the reporter deletes their account (decision B).
 		reporterProfileId: v.optional(v.id("emotional_profiles")),
+		// The sender, once a wipe or their retention setting cut them from the
+		// letter while this review was open, so a decision can still strike
+		// them. Cleared when they delete their account.
+		senderProfileId: v.optional(v.id("emotional_profiles")),
 		state: v.union(
 			v.literal("open"),
 			v.literal("confirmed"),
@@ -1638,6 +1646,8 @@ export default defineSchema({
 		.index("by_letter", ["letterId"])
 		// A reporter's deletion or wipe cuts them from their reports.
 		.index("by_reporter", ["reporterProfileId"])
+		// A sender's deletion closes the reviews a wipe moved them onto.
+		.index("by_sender", ["senderProfileId"])
 		// Reviewed text goes 30 days after the decision (decision B).
 		.index("by_decided", ["decidedAt"]),
 
