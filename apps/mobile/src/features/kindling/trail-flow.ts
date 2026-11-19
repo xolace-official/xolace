@@ -1,4 +1,11 @@
-import type { LocalStates } from "./kindling-model";
+import {
+	caught,
+	effectiveStates,
+	type LocalStates,
+	restingCard,
+	type TrailView,
+	type TwigState,
+} from "./kindling-model";
 
 /**
  * What the screen does locally before the server says so (§8): Not for me with its Undo, the
@@ -98,3 +105,32 @@ export const NO_CHOICES: Choices = 0;
 export const chosen = (c: Choices): Choices => c + 1;
 export const moveOnLands = (scheduledAt: Choices, now: Choices) =>
 	scheduledAt === now;
+
+/** No stop held dim. */
+export const NO_HOLD = -1;
+
+/**
+ * Where twig i's tend runs (§4, §5). The `last` of a batch, with nothing left waiting after it,
+ * runs on into the fire. Otherwise, if the card goes to the next stop, that stop holds dim until
+ * the spark lands.
+ */
+export function tendRun(
+	now: readonly TwigState[],
+	i: number,
+	last: boolean
+): { after: TwigState[]; toFire: boolean; hold: number } {
+	const after = now.map((s, j) => (j === i ? "done" : s));
+	const toFire = last && caught(after);
+	const hold = !toFire && restingCard(after) === i + 1 ? i + 1 : NO_HOLD;
+	return { after, hold, toFire };
+}
+
+/** A committed skip that leaves nothing waiting: the fire catches where it is (§5), unless leaving. */
+export const catchesInPlace = (
+	view: TrailView,
+	step: FlowStep,
+	cause: CommitCause
+) =>
+	cause !== "left" &&
+	step.skip !== undefined &&
+	caught(effectiveStates(view, step.local));

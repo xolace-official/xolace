@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { effectiveStates, type TrailView } from "./kindling-model";
 import {
+	catchesInPlace,
 	chosen,
 	commitStep,
 	moveOnLands,
 	NO_CHOICES,
+	NO_HOLD,
 	NO_LOCAL,
 	putOutStep,
 	skipFailed,
 	skipStep,
 	tendFailed,
+	tendRun,
 	tendStep,
 	undoStep,
 } from "./trail-flow";
@@ -130,5 +133,70 @@ describe("a move-on never takes a chosen card (§6)", () => {
 	it("a move-on scheduled after their last choice still lands", () => {
 		const tapped = chosen(chosen(NO_CHOICES));
 		expect(moveOnLands(tapped, tapped)).toBe(true);
+	});
+});
+
+describe("where a tend runs (§4, §5)", () => {
+	it("runs to the next stop, held dim until the spark lands", () => {
+		const r = tendRun(["done", "wait", "wait", "wait"], 1, true);
+		expect(r.toFire).toBe(false);
+		expect(r.hold).toBe(2);
+	});
+
+	it("holds nothing when the card goes elsewhere (the next stop is already done)", () => {
+		expect(tendRun(["wait", "wait", "done", "wait"], 1, true).hold).toBe(
+			NO_HOLD
+		);
+	});
+
+	it("the last waiting twig runs on into the fire", () => {
+		const r = tendRun(["done", "passed", "done", "wait"], 3, true);
+		expect(r.toFire).toBe(true);
+		expect(r.hold).toBe(NO_HOLD);
+	});
+
+	it("only the last of a batch runs into the fire", () => {
+		expect(tendRun(["done", "passed", "done", "wait"], 3, false).toFire).toBe(
+			false
+		);
+	});
+
+	it("doesn't run into the fire while an Undo still shows", () => {
+		expect(tendRun(["done", "undo", "done", "wait"], 3, true).toFire).toBe(
+			false
+		);
+	});
+});
+
+describe("a skip that leaves nothing waiting (§5)", () => {
+	const last = {
+		...view,
+		states: ["done", "passed", "passed", "wait"],
+	} as unknown as TrailView;
+	const sent = (cause: "closed" | "chose" | "left") =>
+		commitStep(skipStep(NO_LOCAL, "d").local, cause);
+
+	it("catches the fire where it is when the window closes", () => {
+		expect(catchesInPlace(last, sent("closed"), "closed")).toBe(true);
+	});
+
+	it("catches when they open another stop, too", () => {
+		expect(catchesInPlace(last, sent("chose"), "chose")).toBe(true);
+	});
+
+	it("doesn't play the catch while they're leaving", () => {
+		expect(catchesInPlace(last, sent("left"), "left")).toBe(false);
+	});
+
+	it("nothing tended: everything passed, so nothing catches", () => {
+		const none = {
+			...view,
+			states: ["passed", "passed", "passed", "wait"],
+		} as unknown as TrailView;
+		expect(catchesInPlace(none, sent("closed"), "closed")).toBe(false);
+	});
+
+	it("a twig still waiting elsewhere: nothing catches yet", () => {
+		expect(catchesInPlace(view, sent("closed"), "closed")).toBe(false);
 	});
 });

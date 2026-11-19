@@ -11,7 +11,7 @@ export const KMOTION = {
 	fireCatchMs: 300,
 	/** The fire's glow follows the lit legs, and goes full when it catches. */
 	fireGlowMs: 900,
-	/** The tend's gold fades in (Reduce Motion's tend, §4; PR 3 runs the spark). */
+	/** The tend's gold fades in when the spark can't run (§4). */
 	goldMs: 250,
 	/** The open stop's halo breathes on a 4 s loop. */
 	haloMs: 4000,
