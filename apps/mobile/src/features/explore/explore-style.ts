@@ -75,3 +75,49 @@ export const EX_CURVES = {
 	/** CSS ease-in. */
 	swapOut: [0.42, 0, 1, 1],
 } as const satisfies Record<string, CubicBezier>;
+
+/** Explore home (`ExploreAlive`, handoff `explore.md` §1–§14), in points and ms. */
+export const HOME_S = {
+	cardGutter: 16,
+	cont: { h: 76, r: 22, ring: 40, w: 286 },
+	door: { glyph: 26, r: 18, size: 58, w: 76 },
+	feat: { h: 212, play: 48, r: 30 },
+	five: { gap: 14, snap: 332, w: 318 },
+	/** Headers and shelves sit 20 in; cards and grouped lists 16. */
+	gutter: 20,
+	headerGap: 12,
+	/** Hairlines in For the hour (from the text) and Five (from the text, no padding). */
+	rule: { five: 64, hour: 80 },
+	sectionTop: 26,
+	shelfGap: 12,
+	tile: { art: 148, artR: 22, gap: 7 },
+} as const;
+
+export const HOME_TIMING = {
+	/** Choose for me's Another: out, swap at the midpoint, in. */
+	anotherMs: 600,
+	/** Hold to hear: held this long, a preview starts; it ends after the cap. */
+	holdMs: 350,
+	previewCapMs: 8000,
+	/** Continue's ring fills to its place. */
+	ringMs: 900,
+	/** Skeleton to content: a short fade, no entrance. */
+	swapMs: 200,
+} as const;
+
+export const HOME_CURVES = {
+	/** Continue's ring: Easing.bezier(.33, 1, .68, 1). */
+	ring: [0.33, 1, 0.68, 1],
+	/** Choose for me: the in half of 1 − sin πt. */
+	sineIn: [0.12, 0, 0.39, 0],
+	/** Choose for me: the out half of 1 − sin πt. */
+	sineOut: [0.61, 1, 0.88, 1],
+} as const satisfies Record<string, CubicBezier>;
+
+/** Fixed white-on-art colours (Featured's play and scrim), the board's. */
+export const ON_ART = {
+	playBg: "rgba(255,255,255,0.94)",
+	playFg: "#191524",
+	scrimFrom: "rgba(0,0,0,0)",
+	scrimTo: "rgba(0,0,0,0.42)",
+} as const;

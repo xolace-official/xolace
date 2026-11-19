@@ -2,10 +2,12 @@ import { useIsFocused } from "expo-router/react-navigation";
 import { useState } from "react";
 import { View } from "react-native";
 import { BrowseHome } from "@/features/browse/search/browse-home";
+import { HomeData } from "@/features/explore/home/home-data";
+import { HomeScreen } from "@/features/explore/home/home-screen";
 
-/** Explore hosts the Browse hub until Explore's own screen (S7) replaces it. NativeTabs mounts
- * every tab eagerly (see connect/index.tsx); held until focused so Today does not also fire the
- * shelf query. */
+/** Explore: its home (S7) under Browse's search, which stays legacy for now; the two meet here.
+ * NativeTabs mounts every tab eagerly (see connect/index.tsx); held until focused so Today does
+ * not also fire the shelves' queries. */
 export default function ExploreRoute() {
 	const isFocused = useIsFocused();
 	const [everFocused, setEverFocused] = useState(isFocused);
@@ -16,5 +18,11 @@ export default function ExploreRoute() {
 	if (!everFocused) {
 		return <View className="flex-1 bg-background" />;
 	}
-	return <BrowseHome />;
+	return (
+		<BrowseHome>
+			<HomeData>
+				<HomeScreen />
+			</HomeData>
+		</BrowseHome>
+	);
 }

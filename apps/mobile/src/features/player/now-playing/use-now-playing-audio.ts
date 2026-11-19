@@ -1,6 +1,6 @@
 import type { Id } from "@xolace/backend/dataModel";
 import { usePostHog } from "posthog-react-native";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
 	consumePlayOnLoad,
 	nowPlayingPlayback,
@@ -40,14 +40,37 @@ export function useNowPlayingAudio(slug: string, stepId?: Id<"path_steps">) {
 	useEffect(() => publishPlayback(p));
 	useEffect(() => () => publishPlayback(null), []);
 
-	// Asked to play with the load: once minted, play (a toggle before it's loaded queues).
+	// Asked to play with the load: once minted, play (a toggle before it's loaded queues). From a
+	// saved place, it waits for the player to load, moves there, then plays.
+	const startAt = useRef<number | null>(null);
 	useEffect(() => {
-		if (p.track && consumePlayOnLoad(slug)) {
-			togglePlayback(p, posthog);
+		if (!p.track) {
+			return;
 		}
+		const { asked, at } = consumePlayOnLoad(slug);
+		if (!asked) {
+			return;
+		}
+		if (at > 0) {
+			startAt.current = at;
+			return;
+		}
+		togglePlayback(p, posthog);
 		// On the mint only: `p` is rebuilt every render.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [p.track, slug]);
+	useEffect(() => {
+		const at = startAt.current;
+		if (at === null || !p.isLoaded) {
+			return;
+		}
+		startAt.current = null;
+		p.seekTo(at)
+			.then(() => togglePlayback(nowPlayingPlayback(), posthog))
+			.catch((e) => console.error("[useNowPlayingAudio] resume failed:", e));
+		// On the load only, as above.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [p.isLoaded]);
 
 	// Any play forgets "Paused by the sleep timer": the lock screen's and headphones' too.
 	useEffect(() => {

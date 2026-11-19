@@ -18,9 +18,8 @@ export type TabSpec = {
 };
 
 /**
- * The tabs, in order: Today · Explore · Connect · You. Until its screen PR, a tab
- * hosts the old screen that did its job (Explore: the Browse hub); a screen PR swaps
- * the tab's route shim and edits only its own entry here.
+ * The tabs, in order: Today · Explore · Connect · You. Each tab's route shim renders its
+ * screen; a screen PR edits only its own entry here.
  */
 export const TABS: readonly TabSpec[] = [
 	{

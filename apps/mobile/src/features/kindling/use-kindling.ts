@@ -129,7 +129,7 @@ export function useKindlingData(): Kindling {
 			browse: (id) => {
 				const twig = twigOf(id);
 				const href = twig ? twigBrowseHref(twig) : null;
-				// Lands the Browse hub under the topic, so back and a tab re-tap reach it.
+				// Lands Explore's home under the topic, so back and a tab re-tap reach it.
 				if (href) {
 					router.push(href, { withAnchor: true });
 				}

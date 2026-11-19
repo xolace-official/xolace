@@ -9,14 +9,12 @@ import {
 	localDay,
 	monthPromptOnCard,
 	nextStreakShown,
-	nextWakeHour,
 	parseIntroDay,
 	parseSeenStreak,
 	streakStep,
 	TODAY_HOLD_MS,
 	type TodayFold,
 	todayHolds,
-	todayPhase,
 	todayReady,
 } from "./today-model";
 
@@ -64,35 +62,6 @@ describe("cardMode", () => {
 		]) {
 			expect(cardMode(state)).toBe("idle");
 		}
-	});
-});
-
-describe("todayPhase", () => {
-	it("is late whenever night mode has the night", () => {
-		expect(todayPhase(23, true)).toBe("late");
-	});
-
-	it("keeps the late hours as evening when night mode is off", () => {
-		expect(todayPhase(23, false)).toBe("evening");
-		expect(todayPhase(2, false)).toBe("evening");
-	});
-
-	it("follows the hour by day", () => {
-		expect(todayPhase(10, false)).toBe("day");
-	});
-});
-
-describe("nextWakeHour", () => {
-	it("is the next phase boundary", () => {
-		expect(nextWakeHour(5)).toBe(9);
-		expect(nextWakeHour(9)).toBe(17);
-		expect(nextWakeHour(20)).toBe(22);
-		expect(nextWakeHour(1)).toBe(4);
-	});
-
-	it("wakes at midnight after late begins, for the weekday", () => {
-		expect(nextWakeHour(22)).toBe(24);
-		expect(nextWakeHour(23)).toBe(24);
 	});
 });
 

@@ -21,7 +21,13 @@ export type BrowseFrom =
 	| "discovery-strip"
 	| "twig-more-like-this"
 	| "library-hub"
-	| "search";
+	| "search"
+	| "explore-continue"
+	| "explore-featured"
+	| "explore-hour"
+	| "explore-named"
+	| "explore-short"
+	| "explore-pick";
 
 export type NowPlaying = {
 	slug: string;
@@ -59,6 +65,7 @@ const getLoaded = () => !!playback?.track;
 const getIsPlaying = () => !!playback?.isPlaying;
 
 const noop = () => {};
+const noopAsync = async () => {};
 /** What a reader sees before the host has published. */
 const IDLE: Playback = {
 	currentTime: 0,
@@ -69,7 +76,7 @@ const IDLE: Playback = {
 	isPlaying: false,
 	laps: 0,
 	loop: false,
-	seekTo: noop,
+	seekTo: noopAsync,
 	setLoop: noop,
 	setVolume: noop,
 	toggle: noop,
@@ -80,13 +87,21 @@ const IDLE: Playback = {
 // A play asked for with the load (a Lantern hub's listen card plays in place), for the
 // host to start once the track is minted: the slug it was asked for (`play-on-load.ts`).
 let playOnLoad: string | null = null;
+// Where that play starts, in seconds (Explore's Pick up where you left off); 0 from the top.
+let playOnLoadAt = 0;
 
 /**
- * `play`: start it as soon as it's loaded, with no player screen to tap play on. Without it,
- * as before: load only.
+ * `play`: start it as soon as it's loaded, with no player screen to tap play on, from `at`
+ * seconds in. Without it, as before: load only.
  */
-export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
+export function setNowPlaying(
+	next: NowPlaying,
+	options?: { play?: boolean; at?: number }
+) {
 	playOnLoad = armPlayOnLoad(playOnLoad, next.slug, options?.play === true);
+	if (options?.play === true) {
+		playOnLoadAt = Math.max(0, options.at ?? 0);
+	}
 	if (
 		current?.slug === next.slug &&
 		current.stepId === next.stepId &&
@@ -146,11 +161,18 @@ const getAttention = () => attention;
 export const useMiniPlayerAttention = () =>
 	useSyncExternalStore(subscribe, getAttention, getAttention);
 
-/** Host only: whether `slug`, now loaded, was asked to play. Asks once. */
-export function consumePlayOnLoad(slug: string) {
+/** Host only: whether `slug`, now loaded, was asked to play, and from where. Asks once. */
+export function consumePlayOnLoad(slug: string): {
+	asked: boolean;
+	at: number;
+} {
 	const taken = takePlayOnLoad(playOnLoad, slug);
 	playOnLoad = taken.pending;
-	return taken.asked;
+	const at = taken.asked ? playOnLoadAt : 0;
+	if (taken.asked) {
+		playOnLoadAt = 0;
+	}
+	return { asked: taken.asked, at };
 }
 
 /** Host only. */

@@ -3,9 +3,10 @@ import { api } from "@xolace/backend/api";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { useAppActive } from "@/components/shared/use-app-active";
 import { useSessionMode } from "@/context/session-mode-context";
 import { usePaywall } from "@/features/purchases/use-paywall";
+import { useLocalNow } from "@/lib/day-clock";
+import { todayPhase } from "@/lib/day-phase";
 import { playSoftPress } from "@/lib/haptics";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
@@ -20,11 +21,9 @@ import {
 	localDay,
 	monthPromptOnCard,
 	nextStreakShown,
-	nextWakeHour,
 	parseIntroDay,
 	parseSeenStreak,
 	type StreakShown,
-	todayPhase,
 	todayReady,
 } from "./today-model";
 import { useTodayActions } from "./use-today-actions";
@@ -52,32 +51,6 @@ const STREAK_KEY = "today-seen-streak";
 
 const keep = (key: string, value: object) =>
 	zustandJSONStorage.setItem(key, JSON.stringify(value)).catch(() => undefined);
-
-/**
- * The time Today keeps: re-read when the app comes to the front (timers sleep in the
- * background), when the next phase begins and at midnight while it's open.
- */
-function useNow(): Date {
-	const active = useAppActive();
-	const [now, setNow] = useState(() => new Date());
-	useEffect(() => {
-		if (!active) {
-			return;
-		}
-		setNow(new Date());
-	}, [active]);
-	useEffect(() => {
-		const next = new Date(now);
-		// Hour 24 is the next midnight.
-		next.setHours(nextWakeHour(now.getHours()), 0, 1, 0);
-		const id = setTimeout(
-			() => setNow(new Date()),
-			next.getTime() - now.getTime()
-		);
-		return () => clearTimeout(id);
-	}, [now]);
-	return now;
-}
 
 /**
  * The streak and the key that ignites its flame, once a day, when it grew. Worked out
@@ -153,7 +126,7 @@ export function useTodayData(): Today {
 	const summary = useProfileSummary();
 	const { userId } = useAuth();
 	const { isNight } = useSessionMode();
-	const now = useNow();
+	const now = useLocalNow();
 	const day = localDay(now);
 	const phase = todayPhase(now.getHours(), isNight);
 	const weekday = now.toLocaleDateString(undefined, { weekday: "long" });

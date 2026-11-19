@@ -1,6 +1,6 @@
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
-import { type DayPhase, PHASE_HOURS, phaseForHour } from "@/lib/day-phase";
+import type { DayPhase } from "@/lib/day-phase";
 import type { ProfileSummary } from "@/lib/profile-summary";
 import { COPY } from "./copy";
 import { type KindlingEmptyMode, kindlingCardMode } from "./kindling/card-mode";
@@ -9,36 +9,6 @@ import type { RailTile } from "./rail/rail-model";
 
 /** The hour Today keeps: its sky, its greeting and how much it shows. */
 export type TodayPhase = DayPhase;
-
-const HOURS_IN_DAY = 24;
-
-/**
- * Today's phase. Late is the night window with night mode on (`useSessionMode().isNight`,
- * the same 22–4 window), which also puts the app on the night theme; with night mode off
- * those hours stay evening, as the prototype's Night "off" did.
- */
-export function todayPhase(hour: number, isNight: boolean): TodayPhase {
-	if (isNight) {
-		return "late";
-	}
-	const phase = phaseForHour(hour);
-	return phase === "late" ? "evening" : phase;
-}
-
-/**
- * The next hour Today has to wake at after `hour` (0–23): a phase boundary, or midnight
- * (24) for the weekday and the once-a-day intro.
- */
-export function nextWakeHour(hour: number): number {
-	const wakes = [
-		PHASE_HOURS.dawn,
-		PHASE_HOURS.day,
-		PHASE_HOURS.evening,
-		PHASE_HOURS.late,
-		HOURS_IN_DAY,
-	];
-	return wakes.find((w) => w > hour) ?? HOURS_IN_DAY;
-}
 
 /**
  * What the Reflect card shows for your open session (board `restWaiting` / `restReady`), from
