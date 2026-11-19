@@ -19,6 +19,7 @@ import {
 	internalQuery,
 	type MutationCtx,
 } from "../_generated/server";
+import { awardAchievement } from "../achievements/award";
 import { letterCheckDeps } from "../ai/letters/run";
 import { captureLetterEvent } from "./analytics";
 import { checkLetterText } from "./decide";
@@ -117,6 +118,9 @@ export const apply = internalMutation({
 					recheckCount,
 					status: "waiting",
 				});
+				if (sender) {
+					await awardAchievement(ctx, sender, "first-letter", now);
+				}
 				await ctx.scheduler.runAfter(0, internal.letters.match.place, {
 					letterId,
 				});

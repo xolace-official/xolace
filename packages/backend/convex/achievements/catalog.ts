@@ -173,6 +173,12 @@ export const FIXED_ACHIEVEMENTS = [
 		"First listen",
 		"You let something carry you for a while."
 	),
+	// Letters decision A: trying letters once, never a ladder or a streak credit.
+	exploring(
+		"first-letter",
+		"First letter",
+		"You wrote something kind for a stranger."
+	),
 	understanding(
 		1,
 		"First area unlocked",

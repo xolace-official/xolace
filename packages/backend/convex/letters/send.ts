@@ -16,6 +16,7 @@ import {
 	internalQuery,
 	type MutationCtx,
 } from "../_generated/server";
+import { awardAchievement } from "../achievements/award";
 import { requireAdult } from "../age/gate";
 import { letterCheckDeps } from "../ai/letters/run";
 import { CRISIS_RESOURCES, SUPPORT_RESOURCES } from "../ai/safeguard";
@@ -173,6 +174,10 @@ export const store = internalMutation({
 			...(args.aim && { aim: args.aim }),
 		});
 		await spendTheDay();
+		if (args.status === "waiting") {
+			// Decision A: earned when a first letter passes the check.
+			await awardAchievement(ctx, args.profileId, "first-letter", now);
+		}
 		// A passed letter tries the pool at once; an unchecked one is checked
 		// again in the background, and never placed until it passes.
 		await (args.status === "waiting"

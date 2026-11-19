@@ -1024,3 +1024,57 @@ describe("letters functions refuse a caller who isn't signed in", () => {
 		);
 	});
 });
+
+describe("the First letter achievement", () => {
+	const firstLetter = (user: SeededUser) =>
+		user.root.run(async (ctx) => ({
+			awards: await ctx.db
+				.query("user_achievements")
+				.withIndex("by_emotionalProfileId_and_achievementId", (q) =>
+					q
+						.eq("emotionalProfileId", user.profileId)
+						.eq("achievementId", "first-letter")
+				)
+				.collect(),
+			sparks: (await ctx.db.get("emotional_profiles", user.profileId))
+				?.sparksEarned,
+		}));
+
+	it("is earned once, with 10 sparks, when a first letter passes", async () => {
+		const user = await writer();
+		const before = (await firstLetter(user)).sparks ?? 0;
+		await send(user);
+		nextDay();
+		await send(user, OTHER_LETTER);
+		const { awards, sparks } = await firstLetter(user);
+		expect(awards).toMatchObject([{ earnedAt: NOW, sparks: 10 }]);
+		expect(sparks).toBe(before + 10);
+	});
+
+	it("isn't earned by a held or an unchecked letter", async () => {
+		const held = await writer(1);
+		stub.verdict = { ...stub.verdict!, hostile: true };
+		await send(held);
+		expect((await firstLetter(held)).awards).toEqual([]);
+
+		const unchecked = await writer(2, held.root);
+		stub.verdict = null;
+		await send(unchecked);
+		expect((await firstLetter(unchecked)).awards).toEqual([]);
+	});
+
+	it("is earned when an unchecked letter passes its re-check", async () => {
+		const user = await writer();
+		stub.verdict = null;
+		await send(user);
+		const [letter] = await lettersOf(user);
+		vi.setSystemTime(NOW + 1000);
+		await user.root.mutation(internal.letters.check.apply, {
+			letterId: letter!._id,
+			outcome: { kind: "pass" },
+		});
+		expect((await firstLetter(user)).awards).toMatchObject([
+			{ earnedAt: NOW + 1000, sparks: 10 },
+		]);
+	});
+});
