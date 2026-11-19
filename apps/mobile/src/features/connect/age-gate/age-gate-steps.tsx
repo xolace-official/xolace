@@ -5,6 +5,7 @@ import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { playSoftPress } from "@/lib/haptics";
 import { Fact } from "../parts/fact-row";
+import type { AgeGateSurface } from "./age-gate-step";
 import { DateOfBirthPicker } from "./date-of-birth-picker";
 
 function Heading({ title, body }: { title: string; body: string }) {
@@ -20,16 +21,25 @@ function Heading({ title, body }: { title: string; body: string }) {
 	);
 }
 
+/** Who never sees the answer, by what it was asked for. */
+const PRIVATE: Record<AgeGateSurface, string> = {
+	letters: "Kept private. No one you write to or hear from sees it.",
+	xolacer_chat: "Kept private. Xolacers never see it.",
+};
+
 /** The question itself. The copy says why, never where the lines are, so the screen doesn't
  * teach which year to pick. */
 export function AskStep({
 	value,
+	surface,
 	onChange,
 	onContinue,
 	onDecline,
 	saving,
 }: {
 	value: string | null;
+	/** What the date of birth is asked for: the privacy line names who never sees it. */
+	surface: AgeGateSurface;
 	onChange: (dateOfBirth: string) => void;
 	onContinue: () => void;
 	onDecline: () => void;
@@ -43,7 +53,7 @@ export function AskStep({
 			/>
 			<DateOfBirthPicker onChange={onChange} value={value} />
 			<AppText className="pt-3 pb-6 text-[12px] text-muted leading-4">
-				Kept private. Xolacers never see it.
+				{PRIVATE[surface]}
 			</AppText>
 			<View className="gap-2">
 				<Button isDisabled={!value || saving} onPress={onContinue}>

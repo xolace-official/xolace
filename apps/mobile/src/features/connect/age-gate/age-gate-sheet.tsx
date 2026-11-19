@@ -44,6 +44,7 @@ export function AgeGateSheet({ gate }: { gate: AgeGate }) {
 									onContinue={gate.submit}
 									onDecline={gate.decline}
 									saving={gate.saving}
+									surface={gate.surface}
 									value={gate.dateOfBirth}
 								/>
 							)}

@@ -182,6 +182,9 @@ export const LETTERS = {
 		failed: "Your letter didn’t send. Your words are still here.",
 		field: "Your letter",
 		for: "For",
+		/** Send refused before a first finished session (`no_session`): the words stay. */
+		noSession:
+			"Letters open after your first session. Your words are still here.",
 		placeholder: "Write to someone you’ll never meet…",
 		reading: "Reading it over…",
 		send: "Send",

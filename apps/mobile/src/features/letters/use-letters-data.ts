@@ -13,8 +13,10 @@
  * it knows.
  *
  * Anonymity: nothing here logs, captures or reports a letter id. Errors go to the callers, which
- * hand them to Sentry; a Convex error carries a code, never the call's args.
+ * hand them to Sentry (the opt-in's retry after the age ask has no caller, so it reports here);
+ * a Convex error carries a code, never the call's args.
  */
+import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useAction, useMutation, useQuery } from "convex/react";
@@ -140,8 +142,9 @@ export function useLettersCalls(): LettersCalls {
 			}
 			askAge({
 				error,
+				// Nobody waits on the retry: a failure goes to Sentry (a code, never the args).
 				retry: () => {
-					answer(optIn).catch(() => undefined);
+					answer(optIn).catch((e: unknown) => Sentry.captureException(e));
 				},
 				surface: "letters",
 			});
