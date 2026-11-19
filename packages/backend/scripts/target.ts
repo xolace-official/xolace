@@ -1,6 +1,11 @@
-// Which deployment the badge upload talks to (#690). A bare run reaches only
+// Which deployment a content script talks to (#690): badge art, quote
+// backgrounds, the Kindling catalogue and the Library. A bare run reaches only
 // your own dev (or local) deployment; prod and staging are the release owner's,
 // each behind a flag they pass on purpose.
+
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { parseEnv } from "node:util";
 
 export type Target = {
 	/** Passed to every `convex` CLI call. */
@@ -13,6 +18,7 @@ export type Target = {
 type Env = Record<string, string | undefined>;
 
 const OWN_DEPLOYMENT = /^(dev|local|anonymous):/;
+const ENV_LOCAL = path.join(import.meta.dirname, "../.env.local");
 
 export function resolveTarget(
 	args: readonly string[],
@@ -56,4 +62,23 @@ export function resolveTarget(
 		);
 	}
 	return { convexArgs: [], label: deployment, pushFunctions: true };
+}
+
+/** `resolveTarget` with this shell's env and packages/backend/.env.local. */
+export function targetFromArgs(args: readonly string[]): Target {
+	return resolveTarget(
+		args,
+		process.env,
+		existsSync(ENV_LOCAL) ? parseEnv(readFileSync(ENV_LOCAL, "utf8")) : {}
+	);
+}
+
+/**
+ * Which catalogue tree (Kindling, Library) a run reads by default. Only
+ * `--prod` gets the real `prod/` catalogue; your dev deployment and a deploy
+ * key (staging, a preview: for testing) get the small `dev/` fixtures. An
+ * explicit `--manifest` / `--media` still wins in the script.
+ */
+export function catalogueFor(args: readonly string[]): "dev" | "prod" {
+	return args.includes("--prod") ? "prod" : "dev";
 }
