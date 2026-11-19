@@ -1289,17 +1289,25 @@ export default defineSchema({
 		// Whether the triggering session was escalation-derived. Gates the
 		// "resources are still here" link in the UI.
 		escalationDerived: v.boolean(),
+		// First viewing, never re-stamped: a shown card expires
+		// WAITING_CARD_LIFETIME_MS after it. Absent on cards shown before B1.
+		firstShownAt: v.optional(v.number()),
+		// When `markReturn` flipped it to ready (the person came back).
+		// Absent on cards made ready before B1.
+		readyAt: v.optional(v.number()),
 		resolvedAt: v.optional(v.number()),
 
 		// The session that triggered this follow-up.
 		sessionId: v.id("sessions"),
+		// Latest viewing; `markShown` re-stamps it on every re-show.
 		shownAt: v.optional(v.number()),
 
 		// "pending"    — workflow active, card not yet due
 		// "ready"      — user returned (or nudge fired); show on next open
 		// "shown"      — card was rendered in-app, awaiting user response
 		// "resolved"   — user tapped a response or dismissed
-		// "expired"    — workflow timed out with no return
+		// "expired"    — workflow timed out with no return, or shown and
+		//                unanswered for WAITING_CARD_LIFETIME_MS (silent)
 		// "superseded" — a newer, equal-or-higher-weight session replaced it;
 		//                stays visible/tappable until an explicit user dismiss
 		status: v.union(
