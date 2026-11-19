@@ -1,5 +1,10 @@
+import type { api } from "@xolace/backend/api";
+import type { FunctionReturnType } from "convex/server";
 import { type DayPhase, PHASE_HOURS, phaseForHour } from "@/lib/day-phase";
+import type { ProfileSummary } from "@/lib/profile-summary";
 import { COPY } from "./copy";
+import type { KindlingView } from "./kindling/kindling-model";
+import type { RailTile } from "./rail/rail-model";
 
 /** The hour Today keeps: its sky, its greeting and how much it shows. */
 export type TodayPhase = DayPhase;
@@ -120,13 +125,19 @@ export function monthPromptOnCard(
 export type TodayFold = {
 	phase: TodayPhase;
 	/** The profile summary: the greeting's name and the streak chip. */
-	summary: unknown;
-	/** Reflect's open session: the card's face. */
-	session: unknown;
-	kindling: unknown;
+	summary: Pick<ProfileSummary, "displayName" | "currentStreak"> | undefined;
+	/** Reflect's open session (null with none): the card's face. */
+	session:
+		| Pick<
+				NonNullable<FunctionReturnType<typeof api.sessions.getActive>>,
+				"state"
+		  >
+		| null
+		| undefined;
+	kindling: KindlingView | null | undefined;
 	campfireSettled: boolean;
 	/** The hub's New shelf: late, it is the page's only module. */
-	rail: unknown;
+	rail: RailTile[] | undefined;
 };
 
 /**
@@ -142,6 +153,28 @@ export function todayReady(fold: TodayFold): boolean {
 		return fold.rail !== undefined;
 	}
 	return fold.kindling !== undefined && fold.campfireSettled;
+}
+
+/**
+ * How long Today may keep the launch cover up for its own reads, from Today's mount (the
+ * cover's 8 s cap counts from launch). Measured on three dev-client cold starts (iPhone 17
+ * simulator, machine load ~100, socket already up from the gate): the hold lasted 0.77–0.94 s
+ * and the last read landed 1.15 s after mount. 2.5 s is about twice that, room for a slow
+ * cellular round trip, and keeps fonts, gate (2.8–3.5 s there) and Today well inside 8 s.
+ */
+export const TODAY_HOLD_MS = 2500;
+
+/**
+ * Whether Today still keeps the launch cover up: until its first screen is drawn
+ * (`todayReady`), but never offline (its reads wait for a socket that isn't coming; Today
+ * has its own offline states) or past its budget (a slow read shows its own loading state).
+ */
+export function todayHolds(hold: {
+	ready: boolean;
+	offline: boolean;
+	waitedMs: number;
+}): boolean {
+	return !(hold.ready || hold.offline) && hold.waitedMs < TODAY_HOLD_MS;
 }
 
 /**

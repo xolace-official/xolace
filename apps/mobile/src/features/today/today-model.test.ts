@@ -13,6 +13,9 @@ import {
 	parseIntroDay,
 	parseSeenStreak,
 	streakStep,
+	TODAY_HOLD_MS,
+	type TodayFold,
+	todayHolds,
 	todayPhase,
 	todayReady,
 } from "./today-model";
@@ -264,8 +267,8 @@ describe("todayReady", () => {
 		phase: "evening",
 		rail: undefined,
 		session: null,
-		summary: { displayName: "Ama" },
-	} as const;
+		summary: { currentStreak: 3, displayName: "Ama" },
+	} satisfies TodayFold;
 
 	it("waits for the greeting's name and the card's face", () => {
 		expect(todayReady(drawn)).toBe(true);
@@ -279,7 +282,7 @@ describe("todayReady", () => {
 	});
 
 	it("late, waits for the rail instead: the page's only module", () => {
-		const late = { ...drawn, phase: "late" } as const;
+		const late = { ...drawn, phase: "late" } satisfies TodayFold;
 		expect(todayReady(late)).toBe(false);
 		expect(
 			todayReady({
@@ -289,6 +292,24 @@ describe("todayReady", () => {
 				rail: [],
 			})
 		).toBe(true);
+	});
+});
+
+describe("todayHolds", () => {
+	const loading = { offline: false, ready: false, waitedMs: 0 };
+
+	it("holds while Today's first screen loads, and lets go once it's drawn", () => {
+		expect(todayHolds(loading)).toBe(true);
+		expect(todayHolds({ ...loading, ready: true })).toBe(false);
+	});
+
+	it("lets go when its budget runs out, still loading", () => {
+		expect(todayHolds({ ...loading, waitedMs: TODAY_HOLD_MS - 1 })).toBe(true);
+		expect(todayHolds({ ...loading, waitedMs: TODAY_HOLD_MS })).toBe(false);
+	});
+
+	it("never holds offline: the reads wait for a socket that isn't coming", () => {
+		expect(todayHolds({ ...loading, offline: true })).toBe(false);
 	});
 });
 

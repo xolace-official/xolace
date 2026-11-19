@@ -60,8 +60,11 @@ export const EXIT_LIFT = { scale: 1.05, translateY: -6 } as const;
  */
 export type LaunchPhase = "cover" | "exiting" | "gone";
 
-/** What can hold the cover at launch: the font pair, the root gate, the account's bootstrap. */
-export type HoldReason = "fonts" | "gate" | "bootstrap";
+/**
+ * What can hold the cover at launch: the font pair, the root gate, the account's bootstrap and
+ * Today's first screen (its route).
+ */
+export type HoldReason = "fonts" | "gate" | "bootstrap" | "today";
 
 export type LaunchState = {
 	phase: LaunchPhase;

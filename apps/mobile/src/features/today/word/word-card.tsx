@@ -42,7 +42,7 @@ const ART_WINDOW = {
 export function WordCard() {
 	const surface = useTokenColor("surface");
 	const { state, actions } = useToday();
-	const { intro, reduced } = useTodayFrame();
+	const { intro, reduced, waiting } = useTodayFrame();
 	const [line, setLine] = useState<{ w: number; h: number } | null>(null);
 	const word = state.word;
 	// Decided when the word first arrives: it inks in only while the first open is still
@@ -52,7 +52,8 @@ export function WordCard() {
 		setInk(word && intro && !reduced ? "play" : "done");
 	}
 	const inking = ink === "play";
-	// Until the cover has drawn, an inking line stays hidden (no flash of the whole line).
+	// Until the cover has drawn, an inking line stays hidden (no flash of the whole line). The
+	// ink itself starts once the launch cover leaves (`waiting`).
 	const [covered, setCovered] = useState(false);
 	const text = word ?? COPY.word.fallback;
 
@@ -100,7 +101,7 @@ export function WordCard() {
 								>
 									{text}
 								</AppText>
-								{inking && line ? (
+								{inking && line && !waiting ? (
 									<InkReveal
 										cover={surface}
 										h={line.h}

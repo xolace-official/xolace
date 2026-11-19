@@ -31,7 +31,6 @@
       "ignoreDependencies": [
         // Peer dependencies of stream-chat-react-native-core (stream-chat-expo).
         "@op-engineering/op-sqlite",
-        "@react-native-community/netinfo",
         "react-native-teleport",
         // Turned on with EXPO_ATLAS=1; never imported.
         "expo-atlas",

@@ -35,7 +35,7 @@ const GLOW_UP = { opacity: 1, scale: 1.06, translateX: 10 };
  */
 export function CampfireCard() {
 	const { state } = useToday();
-	const { live, reduced, intro, low } = useTodayFrame();
+	const { live, reduced, intro, low, waiting } = useTodayFrame();
 	// The warmth off its lower edge: fixed firelight, fading out.
 	const warmth = useTokenColor("today-campfire-glow");
 	const top = useSharedValue(0);
@@ -79,7 +79,7 @@ export function CampfireCard() {
 
 	return (
 		<EaseView
-			{...todayRiseProps(RISE_SLOT, intro, reduced)}
+			{...todayRiseProps(RISE_SLOT, intro, reduced, waiting)}
 			className="mx-4"
 			onLayout={(e) => top.set(e.nativeEvent.layout.y)}
 			style={{ marginTop: MODULE_GAP }}
@@ -119,6 +119,7 @@ export function CampfireCard() {
 							rest={line.rest}
 							tail={line.tail}
 							value={line.count}
+							waiting={waiting}
 						/>
 						{link ? (
 							<AppText

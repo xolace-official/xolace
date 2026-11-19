@@ -7,6 +7,7 @@ import {
 } from "@/features/launch/launch-store";
 import { TodayData, useToday } from "@/features/today/today-data";
 import { TodayScreen } from "@/features/today/today-screen";
+import { useTodayHolds } from "@/features/today/use-today-hold";
 
 /**
  * The Today tab, the app's landing: Today on its data, with the intake's day-3 question
@@ -26,9 +27,12 @@ export default function TodayRoute() {
 	);
 }
 
-/** Keeps the launch cover up until Today is drawn above the fold; after launch, nothing. */
+/**
+ * Keeps the launch cover up until Today is drawn above the fold, within Today's budget and
+ * never offline (`todayHolds`); after launch, nothing.
+ */
 function HoldForToday() {
 	const { state } = useToday();
-	useLaunchHold(!state.ready, "today");
+	useLaunchHold(useTodayHolds(state.ready), "today");
 	return null;
 }

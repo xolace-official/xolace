@@ -35,7 +35,7 @@ export function TodayHeader({
 }) {
 	const danger = useTokenColor("danger");
 	const { state, actions } = useToday();
-	const { intro, reduced, scrollY, live } = useTodayFrame();
+	const { intro, reduced, scrollY, live, waiting } = useTodayFrame();
 	// The chip's flame stops once the row has faded out under the band.
 	const faded = useScrolledPast(scrollY, FADE_OVER);
 	const fade = useAnimatedStyle(() => ({
@@ -81,7 +81,12 @@ export function TodayHeader({
 					</PressScale>
 				</GlassGroup>
 			</View>
-			<Greeting intro={intro} reduced={reduced} text={state.greeting} />
+			<Greeting
+				intro={intro}
+				reduced={reduced}
+				text={state.greeting}
+				waiting={waiting}
+			/>
 			<RekindlePill height={PILL_SLOT} />
 		</Animated.View>
 	);

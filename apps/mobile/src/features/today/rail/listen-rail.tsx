@@ -19,7 +19,7 @@ const RISE_SLOT = 2;
  */
 export function ListenRail() {
 	const { state, actions } = useToday();
-	const { live, reduced, intro } = useTodayFrame();
+	const { live, reduced, intro, waiting } = useTodayFrame();
 	const tiles = state.rail ?? [];
 	const { angles, onScroll } = useChimes(tiles.length, reduced);
 	// Hidden while loading and with nothing new, as production's strip (never padded).
@@ -29,7 +29,7 @@ export function ListenRail() {
 
 	return (
 		<EaseView
-			{...todayRiseProps(RISE_SLOT, intro, reduced)}
+			{...todayRiseProps(RISE_SLOT, intro, reduced, waiting)}
 			style={{ marginTop: MODULE_GAP }}
 		>
 			<View className="mx-4">
