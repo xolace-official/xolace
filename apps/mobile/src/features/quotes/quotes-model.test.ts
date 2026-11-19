@@ -7,6 +7,8 @@ import {
 	keptDay,
 	LARGE_TEXT_STEP,
 	loopState,
+	loopsMayMove,
+	numberWords,
 	POSTER,
 	plainQuote,
 	quoteType,
@@ -201,6 +203,14 @@ describe("loopState", () => {
 		expect(loopState({ ...base, lowPower: true }).moving).toBe(false);
 	});
 
+	it("lets the sheet's loop tiles move over a still, and rest with the screen's rules", () => {
+		const still = { lowPower: false, reduced: false };
+		expect(loopState({ ...base, kind: "still" }).moving).toBe(false);
+		expect(loopsMayMove(still)).toBe(true);
+		expect(loopsMayMove({ ...still, reduced: true })).toBe(false);
+		expect(loopsMayMove({ ...still, lowPower: true })).toBe(false);
+	});
+
 	it("stops while paused, put away or sharing, but still moves", () => {
 		for (const patch of [
 			{ paused: true },
@@ -367,5 +377,21 @@ describe("keptCard", () => {
 		expect(card.flagged).toBe(true);
 		expect(card.reply).toBeUndefined();
 		expect(card.background).toBeUndefined();
+	});
+});
+
+describe("numberWords", () => {
+	it("numbers words across lines, in reading order", () => {
+		expect(numberWords(["What stands", "in the way"])).toEqual([
+			[
+				{ index: 0, word: "What" },
+				{ index: 1, word: "stands" },
+			],
+			[
+				{ index: 2, word: "in" },
+				{ index: 3, word: "the" },
+				{ index: 4, word: "way" },
+			],
+		]);
 	});
 });

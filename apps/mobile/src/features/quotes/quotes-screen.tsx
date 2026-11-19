@@ -17,7 +17,7 @@ import { QuoteMotionContext, T } from "./motion/quote-motion";
 import { QUOTE_UI_DEFAULTS, useQuoteUi } from "./motion/quote-ui";
 import { useQuoteChoreo } from "./motion/use-quote-choreo";
 import { useQuoteHandlers } from "./motion/use-quote-handlers";
-import { loopState, quoteType, soundPlays } from "./quotes-model";
+import { loopState, loopsMayMove, quoteType, soundPlays } from "./quotes-model";
 import { useQuotesScreen } from "./quotes-screen-data";
 import { QuoteSheets } from "./sheets/quote-sheets";
 import { QuoteStage } from "./stage/quote-stage";
@@ -115,7 +115,7 @@ export function QuotesScreen() {
 					h={h}
 					ink={ink}
 					inks={inks}
-					moving={loop.moving}
+					moving={loopsMayMove({ lowPower: state.lowPower, reduced })}
 					reduced={reduced}
 					shownSheet={shownSheet}
 				/>

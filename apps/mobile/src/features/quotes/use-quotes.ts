@@ -210,19 +210,20 @@ export function useQuotes(): QuotesScreenValue {
 		status,
 	};
 
-	const share = async (fmt: "story" | "square", go: "save" | "share") => {
-		try {
-			const uri = await makeStill(fmt);
-			await (go === "save" ? saveToPhotos(uri) : shareImage(uri));
-			posthog.capture(go === "save" ? "quote_image_saved" : "quote_shared", {
-				background: background.key,
-				format: fmt,
-			});
-			return null;
-		} catch (e: unknown) {
-			return readable(e);
-		}
-	};
+	// Promise chains, not try/catch, here and below: the React Compiler can't compile a try that
+	// holds a condition yet, and this hook must stay compiled so `{ state, actions }` keeps its
+	// identity between renders.
+	const share = (fmt: "story" | "square", go: "save" | "share") =>
+		makeStill(fmt)
+			.then((uri) => (go === "save" ? saveToPhotos(uri) : shareImage(uri)))
+			.then(() => {
+				posthog.capture(go === "save" ? "quote_image_saved" : "quote_shared", {
+					background: background.key,
+					format: fmt,
+				});
+				return null;
+			})
+			.catch((e: unknown) => readable(e));
 
 	return {
 		actions: {
@@ -239,28 +240,28 @@ export function useQuotes(): QuotesScreenValue {
 				posthog.capture("quote_plus_opened", { from });
 				openPaywall("daily_quote");
 			},
-			pickBackground: async (b) => {
-				try {
-					await setBackground({ background: b.key });
-					posthog.capture("quote_background_set", {
-						background: b.key,
-						kind: b.kind,
-						plus: b.plus,
-					});
-					return true;
-				} catch (e: unknown) {
-					// A key this deployment's catalogue doesn't have yet: Convex rolls the
-					// optimistic choice back, and the screen says nothing.
-					if (
-						e instanceof ConvexError &&
-						e.data?.code === "unknown_background"
-					) {
+			pickBackground: (b) =>
+				setBackground({ background: b.key })
+					.then(() => {
+						posthog.capture("quote_background_set", {
+							background: b.key,
+							kind: b.kind,
+							plus: b.plus,
+						});
 						return true;
-					}
-					console.error("[quotes] background failed", e);
-					return false;
-				}
-			},
+					})
+					.catch((e: unknown) => {
+						// A key this deployment's catalogue doesn't have yet: Convex rolls the
+						// optimistic choice back, and the screen says nothing.
+						if (
+							e instanceof ConvexError &&
+							e.data?.code === "unknown_background"
+						) {
+							return true;
+						}
+						console.error("[quotes] background failed", e);
+						return false;
+					}),
 			reflect: (reply, flagged) => {
 				const seed = reflectSeed({
 					flagged,
@@ -276,26 +277,29 @@ export function useQuotes(): QuotesScreenValue {
 				}
 				router.dismissTo("/reflect");
 			},
-			reply: async (text): Promise<ReplyOutcome> => {
+			reply: (text): Promise<ReplyOutcome> => {
 				if (!raw) {
-					return "failed";
+					return Promise.resolve("failed");
 				}
 				setSending(true);
-				try {
-					const { flagged } = await replyTo({ quoteId: raw._id, text });
-					posthog.capture("quote_replied", {
-						flagged,
-						is_edit: raw.reply !== undefined,
-						length: text.length,
-						quote_type: raw.type,
+				return replyTo({ quoteId: raw._id, text })
+					.then(({ flagged }): ReplyOutcome => {
+						posthog.capture("quote_replied", {
+							flagged,
+							is_edit: raw.reply !== undefined,
+							length: text.length,
+							quote_type: raw.type,
+						});
+						return flagged ? "flagged" : "sent";
+					})
+					.catch((e: unknown): ReplyOutcome => {
+						console.error("[quotes] reply failed", e);
+						return "failed";
+					})
+					.then((outcome) => {
+						setSending(false);
+						return outcome;
 					});
-					return flagged ? "flagged" : "sent";
-				} catch (e: unknown) {
-					console.error("[quotes] reply failed", e);
-					return "failed";
-				} finally {
-					setSending(false);
-				}
 			},
 			retry: () => {
 				issued.current = false;
@@ -317,22 +321,24 @@ export function useQuotes(): QuotesScreenValue {
 					)
 					.catch((e: unknown) => console.error("[quotes] reaction failed", e));
 			},
-			setSaved: async (on) => {
+			setSaved: (on) => {
 				if (!raw) {
-					return false;
+					return Promise.resolve(false);
 				}
-				try {
-					await (on
-						? save({ background: background.key, quoteId: raw._id })
-						: unsave({ quoteId: raw._id }));
-					posthog.capture(on ? "quote_saved" : "quote_unsaved", {
-						quote_type: raw.type,
+				const write = on
+					? save({ background: background.key, quoteId: raw._id })
+					: unsave({ quoteId: raw._id });
+				return write
+					.then(() => {
+						posthog.capture(on ? "quote_saved" : "quote_unsaved", {
+							quote_type: raw.type,
+						});
+						return true;
+					})
+					.catch((e: unknown) => {
+						console.error("[quotes] keep failed", e);
+						return false;
 					});
-					return true;
-				} catch (e: unknown) {
-					console.error("[quotes] keep failed", e);
-					return false;
-				}
 			},
 			setSoundOn: (on) => {
 				useSoundMemory.setState({ soundOn: on });

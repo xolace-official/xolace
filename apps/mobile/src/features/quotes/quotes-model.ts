@@ -148,6 +148,13 @@ export function tileTap(
 	return tile.plus && !isPlus ? "plus" : "apply";
 }
 
+/**
+ * Loops may move: no Reduce Motion, no Low Power Mode. The sheet's loop tiles follow this alone,
+ * whatever the screen shows, so they are live before a loop is chosen.
+ */
+export const loopsMayMove = (o: { reduced: boolean; lowPower: boolean }) =>
+	!(o.reduced || o.lowPower);
+
 /** A loop moves unless Reduce Motion or Low Power Mode; it plays unless paused or put away. */
 export function loopState(o: {
 	kind: BackgroundKind;
@@ -157,11 +164,25 @@ export function loopState(o: {
 	active: boolean;
 	sharing: boolean;
 }): { moving: boolean; playing: boolean } {
-	const moving = o.kind === "loop" && !o.reduced && !o.lowPower;
+	const moving = o.kind === "loop" && loopsMayMove(o);
 	return {
 		moving,
 		playing: moving && !o.paused && o.active && !o.sharing,
 	};
+}
+
+/** Each line's words with their place in the whole quote, which times their arrival. */
+export function numberWords(
+	lines: readonly string[]
+): { index: number; word: string }[][] {
+	let next = 0;
+	return lines.map((line) =>
+		line.split(" ").map((word) => {
+			const index = next;
+			next += 1;
+			return { index, word };
+		})
+	);
 }
 
 /** The ambient sound plays only while its loop does, and only once turned on. */

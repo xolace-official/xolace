@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { type InkPalette, textShadow } from "../chrome/quote-ink";
 import { EASE, slice, T, useQuoteMotion } from "../motion/quote-motion";
+import { numberWords } from "../quotes-model";
 import { POSTER_MEDIUM } from "./quote-type";
 
 type TextLayoutLine = TextLayoutEvent["nativeEvent"]["lines"][number];
@@ -101,26 +102,23 @@ export function QuoteWords({
 	}
 
 	const shadow = ink.shadow ? textShadow(shadowColor) : null;
-	let index = 0;
+	const wordStyle = [style, { color: ink.text }, shadow];
 	return (
 		<View className="items-center" style={{ width }}>
-			{lines.map((line, li) => (
+			{numberWords(lines).map((line, li) => (
 				<View
 					className="flex-row justify-center"
-					key={`${li}-${line}`}
+					key={`${li}-${lines[li]}`}
 					style={{ gap: size * WORD_GAP }}
 				>
-					{line.split(" ").map((w) => {
-						const i = index++;
-						return (
-							<Word
-								index={i}
-								key={`${i}-${w}`}
-								style={[style, { color: ink.text }, shadow]}
-								word={w}
-							/>
-						);
-					})}
+					{line.map(({ index, word }) => (
+						<Word
+							index={index}
+							key={`${index}-${word}`}
+							style={wordStyle}
+							word={word}
+						/>
+					))}
 				</View>
 			))}
 		</View>
