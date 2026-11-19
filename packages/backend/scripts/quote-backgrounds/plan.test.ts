@@ -12,8 +12,10 @@ import {
 	audioPlan,
 	chainFilter,
 	gainDb,
+	nextStillQuality,
 	rotateFilter,
 	SAMPLE_RATE,
+	STILL,
 	seamAudioFilter,
 	seamSeconds,
 	VIDEO_TARGET_BYTES,
@@ -111,6 +113,21 @@ describe("the ambient track", () => {
 		expect(gainDb({ loudness: -30, truePeak: -12 })).toBe(6);
 		expect(gainDb({ loudness: -30, truePeak: -3 })).toBe(1);
 		expect(gainDb({ loudness: -16.7, truePeak: -4 })).toBe(-7.3);
+	});
+});
+
+describe("still quality", () => {
+	it("starts high and steps down in small steps, never below the floor", () => {
+		const tried: number[] = [STILL.quality];
+		while (tried.at(-1)! > STILL.minQuality) {
+			tried.push(nextStillQuality(tried.at(-1)!));
+		}
+		expect(tried[0]).toBeGreaterThanOrEqual(90);
+		expect(Math.min(...tried)).toBe(STILL.minQuality);
+		expect(STILL.minQuality).toBeGreaterThanOrEqual(75);
+		for (let i = 1; i < tried.length; i++) {
+			expect(tried[i - 1] - tried[i]).toBeLessThanOrEqual(3);
+		}
 	});
 });
 

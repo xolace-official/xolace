@@ -14,12 +14,18 @@ export const AUDIO = {
 	targetSeconds: 30,
 	truePeak: -2,
 } as const;
-/** The bundled stills: 1080 × 1920 WebP, ~150–250 KB. */
+/**
+ * The bundled stills: 1080 × 1920 WebP at quality 90 with sharp YUV (cwebp's `-sharp_yuv`),
+ * so smooth skies keep their gradients without blocking or banding. Most land under 150 KB;
+ * a detailed one steps down only as far as it must to fit `maxBytes`, never below
+ * `minQuality`, where blocking shows.
+ */
 export const STILL = {
 	height: 1920,
-	maxBytes: 260_000,
-	minQuality: 50,
-	quality: 80,
+	maxBytes: 450_000,
+	minQuality: 75,
+	quality: 90,
+	smartSubsample: true,
 	width: 1080,
 } as const;
 
@@ -220,5 +226,9 @@ export function artFileName(
 	return undefined;
 }
 
-/** The WebP quality to try next when a still came out too big. */
-export const nextStillQuality = (quality: number) => quality - 8;
+/** How far each retry lowers a too-big still's quality: small, so it stops just under the cap. */
+const STILL_QUALITY_STEP = 3;
+
+/** The WebP quality to try next when a still came out too big, never below `minQuality`. */
+export const nextStillQuality = (quality: number) =>
+	Math.max(STILL.minQuality, quality - STILL_QUALITY_STEP);
