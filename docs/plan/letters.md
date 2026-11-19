@@ -75,8 +75,10 @@ held as hostile). Fixable and at-risk letters are never stored (#750).
 | `senderSeen` | `optional("received" \| "acknowledged" \| "returned" \| "held")` | The latest status the sender has seen (`markSeen`) |
 | `textHash` | `optional(string)` | Held letters only: SHA-256 of the trimmed text, so the same words are refused again |
 | `heldLate` | `optional(boolean)` | Set when a re-check held a letter that read as sent (§5.4): its Sent row shows `held` until the sender dismisses it, then this is cleared and the row stays for its review (or is deleted, when the same words were already held and this copy has no review of its own) |
+| `wipedSenderProfileId` | `optional(id)` | **Server-only.** Set by the sender's data wipe on a received letter its recipient keeps (§10). Read only by the recipient's hide and report; never returned, thrown or pushed. Cleared on the sender's account deletion |
 
-Indexes: `by_sender_created` `[senderProfileId, createdAt]` (Sent list, the daily cap),
+Indexes: `by_wiped_sender` `[wipedSenderProfileId]` (deletion clears the link),
+`by_sender_created` `[senderProfileId, createdAt]` (Sent list, the daily cap),
 `by_sender_status` `[senderProfileId, status]` (three waiting), `by_recipient_received`
 `[recipientProfileId, receivedAt]` (For you), `by_status_checked`
 `[status, checkedAt]` (the FIFO pool, expiry, re-checks), `by_sender_hash`
@@ -559,6 +561,16 @@ row is deleted once neither side holds it and no review is open. How the build r
   own `senderProfileId`, so `decide`, `pauseSender` and `liftPause` still reach them and
   the audit row still names them. Admin functions read the letter's sender, then the
   review's.
+- **A wipe leaves a hidden link on letters the recipient keeps** (owner, 19 November
+  2026). The letter is cut from the sender as on deletion, but keeps them in the
+  server-only `wipedSenderProfileId`. Only `received.hide` and `received.report` read
+  it: the block is still written, so the sender is never matched to that recipient
+  again, and a report copies it onto its review's `senderProfileId`, so a confirm still
+  strikes (and may pause) the right sender. No client query, return value, error or
+  push carries it, and an acknowledge after a wipe still pushes no one. The sender's
+  account deletion clears it (`by_wiped_sender`), so a deleted sender stays
+  unreachable. The retention setting leaves no link: it is the sender's standing
+  choice about their own old words.
 - **A wipe keeps strikes, a pause, other people's blocks of the sender, and the blocks
   they made.** B says a wipe is the same as deletion; following it would let a paused
   sender wipe to lift the pause, or reach a recipient who hid them again. Those rows
@@ -596,8 +608,9 @@ Never the text, a letter id, or anything that links a sender's event to a recipi
 - After review (owner F): `status.get` gains `lateRisk`, `sent.list`'s status gains
   `"held"`, and `status.lateRiskShown` is new. No shipped client calls letters yet, so
   the widened status reaches only S21's build, which handles it from the start.
-  `letter_reviews.senderProfileId`, `letters.heldLate` and `letter_profiles.lateRisk`
-  are optional fields; the new indexes change nothing a client reads.
+  `letter_reviews.senderProfileId`, `letters.heldLate`, `letters.wipedSenderProfileId`
+  and `letter_profiles.lateRisk` are optional fields; the new indexes change nothing a
+  client reads. `lateRiskShown`'s `shown` and `openReview`'s `closedBy` are optional.
 
 ### 13. How S21 maps S20's seam
 
@@ -621,7 +634,7 @@ test that no captured screen name contains a letter id.
 | `useLettersPush` / `setPush` | `letters.settings.getPush` / `setPush` | — |
 | `send(draft)` | `letters.send.send` | `forWho: LetterFor` becomes `aim?: letterAim` (Anyone → absent); the UI's "For" list takes the contract's keys and labels. A network error or `rate_limited` throws (keep the words, Try again) |
 | `withdraw`, `markSeen`, `open`, `acknowledge`, `hide`, `unhide` | the mutations above | A letter that's gone (reported from another device, say) refuses with `ConvexError` `letter_not_found`: drop the row, don't show an error |
-| `report(id, reason)` | `letters.received.report` | — |
+| `report(id, reason)` | `letters.received.report` | — (after the sender's wipe, hide and report still block them, and a report can still strike them, all on the server: nothing changes on the client) |
 | `setOptIn(choice)` | `letters.optIn.set` | **Changes:** sends `locale` and `promptVersion`, and handles `age_required` / `age_restricted` by opening Connect's age gate (`surface: "letters"`). Send handles the same errors. `promptVersion` is a client constant beside the offer's copy in `features/letters/copy.ts` (`LETTERS_OFFER_VERSION`, like `TELEGRAM_OUTREACH_CONSENT_VERSION`), bumped whenever the offer's wording changes |
 | (none) | `returned` (decision C) | `SentStatus` gains `"returned"`: its row says "Not placed. No one it fit came along this time." and can be dismissed (`letters.sent.dismiss`, a mutation added with decision C). It frees a waiting slot. `LettersCalls` **gains** `dismiss: (id: string) => Promise<void>` |
 
@@ -770,7 +783,7 @@ they aren't, and splits the opt-in from the state it governs.
 
 ### F. After review (owner, 19 November 2026)
 
-Five calls on the built slices, each now in the code and tested:
+Six calls on the built slices, each now in the code and tested:
 
 1. **A softer floor for letters.** Past-tense and third-person mentions ("A few years
    ago I tried to end my life", "I lost my brother to suicide", "I used to think about
@@ -787,6 +800,9 @@ Five calls on the built slices, each now in the code and tested:
    at send and the re-check later finds `risk` or `held`, the sender sees intake's crisis
    care, or "This letter can't be sent" in place of that Sent row, the next time they
    open the app; the flag clears once shown (§5.4, §13).
+6. **A wiped sender stays blockable.** A received letter keeps a server-only link to its
+   sender after their wipe, read only by hide and report, so the block is written and a
+   confirmed report still strikes. Account deletion removes it (§1, §10).
 
 ---
 
@@ -829,6 +845,9 @@ Five calls on the built slices, each now in the code and tested:
   sender's letter; its steps start side by side; the invite flag is written only when
   it changes; an escalation-derived follow-up is found under more cards than the probe
   reads.
+- **The wipe link:** a wipe then a hide blocks the sender for that recipient (never
+  matched again); a wipe, a report and a confirm strike the right sender; account
+  deletion removes the link; retention leaves none.
 - **Admin:** `openReview`'s `closedBy` tells a person's dismissal from a deletion's;
   dismissing a held review after a wipe takes back only its strike.
 
