@@ -56,12 +56,19 @@ export const pushAdapter: Omit<MutationAdapter, "pool"> = {
 			...(provenance.generatedBy && { generatedBy: provenance.generatedBy }),
 		});
 
+		// A daily quote opens on Quotes. Shipped builds already route
+		// `screen: "quotes"`; `quoteId` is for the app to land on that quote.
+		const quoteTap =
+			outreach.moment?.kind === "daily_quote"
+				? { quoteId: outreach.moment.quoteId, screen: "quotes" }
+				: {};
+
 		const reached = await sendPushToProfile(ctx, {
 			emotionalProfileId: outreach.emotionalProfileId,
 			notification: {
 				body: outreach.content.body,
 				channelId: NUDGE_NOTIFICATION_SOUND.channelId,
-				data: { logId: notificationLogId, type },
+				data: { logId: notificationLogId, type, ...quoteTap },
 				// iOS reads the sound off the payload; Android ignores it and takes the
 				// sound from the channel. Sending both covers the two platforms in one
 				// call. Deliberately not the `default` channel — that one exists

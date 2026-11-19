@@ -64,6 +64,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// points at support rather than at tomorrow.
 	concernReport: { kind: "fixed window", period: DAY, rate: 2 },
 
+	// daily_quote (B19) — one a day, its own bucket so it never spends a
+	// gentle return's. 20 hours, not a day: a clock change brings the next
+	// slot round in 23, and a day-long bucket would drop it.
+	dailyQuote: { capacity: 1, kind: "token bucket", period: 20 * HOUR, rate: 1 },
+
 	// Data wipe — once per 7 days (wipeInProgress flag handles in-flight dedup)
 	dataWipe: { kind: "fixed window", period: 7 * DAY, rate: 1 },
 

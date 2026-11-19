@@ -14,7 +14,9 @@ export const outreachIntentValidator = v.union(
 	v.literal("milestone"),
 	v.literal("kindling_ready"),
 	v.literal("domain_unlock"),
-	v.literal("achievement")
+	v.literal("achievement"),
+	/** Today's quote at the person's chosen time, or the backoff's last line (B19). */
+	v.literal("daily_quote")
 );
 export type OutreachIntent = Infer<typeof outreachIntentValidator>;
 
@@ -50,7 +52,10 @@ export const suppressedReasonValidator = v.union(
 	 * (answered, dismissed, gone; or ready or shown in the app).
 	 */
 	v.literal("card_closed"),
-	/** A missed-beat push whose moment the app showed before it went. */
+	/**
+	 * A missed-beat push whose moment the app showed before it went, or a
+	 * daily quote push whose quote was opened first.
+	 */
 	v.literal("moment_seen")
 );
 export type SuppressedReason = Infer<typeof suppressedReasonValidator>;
@@ -146,7 +151,9 @@ export const outreachMomentValidator = v.union(
 		achievementIds: v.array(v.id("user_achievements")),
 		kind: v.literal("badges"),
 	}),
-	v.object({ kind: v.literal("domain_unlock"), sessionId: v.id("sessions") })
+	v.object({ kind: v.literal("domain_unlock"), sessionId: v.id("sessions") }),
+	/** The daily quote a push carries (B19): opened first, the push stands down. */
+	v.object({ kind: v.literal("daily_quote"), quoteId: v.id("daily_quotes") })
 );
 export type OutreachMoment = Infer<typeof outreachMomentValidator>;
 
@@ -157,7 +164,17 @@ export const outreachContentValidator = v.object({
 });
 
 export const outreachVariantsValidator = v.object({
-	telegram: v.optional(v.object({ body: v.string() })),
+	telegram: v.optional(
+		v.object({
+			body: v.string(),
+			/**
+			 * Shown as a blockquote under `body` (B19's curated quote). Never
+			 * anything drawn from the person: Telegram's history outlives the
+			 * lock screen.
+			 */
+			quote: v.optional(v.string()),
+		})
+	),
 });
 
 export const reachValidator = v.union(

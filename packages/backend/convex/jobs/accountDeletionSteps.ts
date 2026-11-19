@@ -1,3 +1,4 @@
+import { deleteDailyQuotePush } from "../dailyQuotes/schedule";
 import { purgeReplyEntries } from "../episodicMemory";
 import { purgeSessions } from "../lib/sessionCascade";
 import { BATCH_SIZE, type DrainStep } from "./accountDeletionFinalize";
@@ -126,6 +127,8 @@ export const drainQuotes: DrainStep = async (ctx, profileId) => {
 	for (const quote of quotes) {
 		await ctx.db.delete("daily_quotes", quote._id);
 	}
+	// The daily quote push's schedule goes with them (B19).
+	await deleteDailyQuotePush(ctx, profileId);
 	return quotes.length === BATCH_SIZE;
 };
 

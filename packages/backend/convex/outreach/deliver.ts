@@ -7,6 +7,7 @@ import {
 	internalMutation,
 	type MutationCtx,
 } from "../_generated/server";
+import { quoteOpened } from "../dailyQuotes/opened";
 import { ADAPTERS, type ChannelAdapter, ChannelError } from "./adapters";
 import { captureDelivery } from "./analytics";
 import {
@@ -130,12 +131,16 @@ function failedAttempt(error: ChannelError): Attempt {
 /**
  * Whether the in-app moment a missed-beat push stands in for was shown (or
  * is gone): "a moment the app showed never pushes". A badge push stands down
- * once any badge it names was seen.
+ * once any badge it names was seen; a daily quote push once its quote is open.
  */
 async function momentSeen(
 	ctx: MutationCtx,
 	moment: OutreachMoment
 ): Promise<boolean> {
+	if (moment.kind === "daily_quote") {
+		const quote = await ctx.db.get("daily_quotes", moment.quoteId);
+		return !quote || quoteOpened(quote);
+	}
 	if (moment.kind === "domain_unlock") {
 		const session = await ctx.db.get("sessions", moment.sessionId);
 		const unlock = session?.domainUnlock;

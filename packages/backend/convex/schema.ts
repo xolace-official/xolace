@@ -2,6 +2,7 @@ import { vWorkflowId } from "@convex-dev/workflow";
 import { vWorkIdValidator } from "@convex-dev/workpool";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { dailyQuoteSettingValidator } from "./dailyQuotes/validators";
 import {
 	bandValidator,
 	lateRiskValidator,
@@ -558,6 +559,29 @@ export default defineSchema({
 		// Account deletion sweeps the rows a xolacer received.
 		.index("by_xolacer", ["xolacerProfileId"]),
 
+	// The daily quote push's schedule and backoff (B19), one row per profile
+	// while `preferences.notifications.dailyQuote.enabled`. The setting is the
+	// truth; this is kept in step with it by `updateNotificationPrefs`, so the
+	// sweep reads due rows by index instead of scanning preferences. No text:
+	// ids and times only.
+	daily_quote_pushes: defineTable({
+		// When the sweep next looks at this profile: the start of the next local
+		// slot hour, or a retry a few minutes on while today's quote is made.
+		dueAt: v.number(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		// Sends in a row that reached the person and whose quote they didn't
+		// open by the next slot. 5 → every other day; 10 → paused. Opening a
+		// quote sets it back to 0.
+		ignored: v.number(),
+		// The last send still to be settled as opened or ignored.
+		lastOutreachId: v.optional(v.id("outreach")),
+		lastQuoteId: v.optional(v.id("daily_quotes")),
+		// When the last quote went to the person, for every other day.
+		lastSentAt: v.optional(v.number()),
+	})
+		.index("by_profile", ["emotionalProfileId"])
+		.index("by_due", ["dueAt"]),
+
 	// ===========================================================
 	// 14. DAILY QUOTES
 	// ===========================================================
@@ -583,6 +607,12 @@ export default defineSchema({
 		// (S11). Set by `save`, cleared by `unsave`. A key the catalogue no longer
 		// lists is drawn as Poster by the app.
 		keptBackground: v.optional(v.string()),
+
+		// When the user first opened this quote (B19): the app's `markOpened`,
+		// a reaction, a save or a reply, or a tap on the daily quote push.
+		// Undefined on rows from before it. The daily quote push skips a day whose
+		// quote is already open, and counts an unopened one toward its backoff.
+		openedAt: v.optional(v.number()),
 
 		// User reaction. Null until the user reacts.
 		// DEPRECATED(remove-after: app >= 1.10.0): the "not_today" literal only —
@@ -2106,7 +2136,10 @@ export default defineSchema({
 			v.literal("domain_unlock"),
 			// Badges earned and the unlock moment went unseen (#700). Names the
 			// badge, never sparks; own daily bucket.
-			v.literal("achievement")
+			v.literal("achievement"),
+			// Today's quote, at the person's chosen time (B19). A curated quote's
+			// opening words; a personalised one's never leave the app.
+			v.literal("daily_quote")
 		),
 	})
 		// Check: have we already nudged this user recently?
@@ -2345,6 +2378,11 @@ export default defineSchema({
 			// means enabled — see `chatNotificationsAllowed`. One toggle for the
 			// whole feature; nobody wants to mute "accepted" but keep "new message".
 			chat: v.optional(v.boolean()),
+			// The daily quote push (B19) and its time. Absent = never chosen,
+			// which is off. Written only through `updateNotificationPrefs`, which
+			// keeps `daily_quote_pushes` in step. Supersedes
+			// `quotes.notificationEnabled` / `notificationTime`.
+			dailyQuote: v.optional(dailyQuoteSettingValidator),
 			enabled: v.boolean(),
 			gentleReturn: v.boolean(), // "It's been a while..."
 			// Letter pushes: one reached you, yours was received or acknowledged.
@@ -2398,9 +2436,13 @@ export default defineSchema({
 		// they have at least 1 session in the last 30 days.
 		quotes: v.optional(
 			v.object({
-				// Whether the user opted into daily quote notifications.
+				// Whether the user opted into the old on-device daily quote
+				// reminders. DEPRECATED(remove-after: app >= the first build that
+				// adopts them into `notifications.dailyQuote`, B19): read once, by
+				// `dailyQuotes/pushSettings.adoptLegacyReminders`. See DEPRECATIONS.md.
 				notificationEnabled: v.boolean(),
-				// "morning" | "afternoon" | "evening" | "none"
+				// "morning" | "afternoon" | "evening" | "none". Deprecated with
+				// `notificationEnabled`.
 				notificationTime: v.optional(v.string()),
 				// IDs of curated quotes already shown — avoids repeats for 6+ months.
 				shownQuoteIds: v.array(v.id("quotes")),

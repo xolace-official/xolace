@@ -17,6 +17,8 @@ const TARGETS = {
 	app: "",
 	/** The Xolace+ paywall, from the reply cap's upsell (#771). */
 	plus: "upgrade?surface=telegram_cap",
+	/** Quotes, from the daily quote (B19). */
+	quotes: "quotes",
 	/** The crisis resources screen. */
 	support: "crisis-resources?from=telegram",
 } as const;
