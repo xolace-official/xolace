@@ -23,3 +23,41 @@ export const SCRIM = {
 	locations: [0, 0.2, 0.46, 0.7, 1] as const,
 };
 export const SCRIM_CLEAR = 0.45;
+
+/**
+ * The scrim under dark ink: the paper white of the quote's light ink (#FFFDF8), at the light
+ * scrim's stops and about two thirds of its alpha, so a pale image softens behind the words and
+ * the bottom actions without a band.
+ */
+export const PAPER_SCRIM = {
+	colors: [
+		"rgba(255,253,248,0.24)",
+		"rgba(255,253,248,0.04)",
+		"rgba(255,253,248,0.16)",
+		"rgba(255,253,248,0.07)",
+		"rgba(255,253,248,0.34)",
+	] as const,
+	locations: SCRIM.locations,
+};
+
+/** A sheet tile's flat veil, the scrims' small cousin. */
+export const TILE_VEIL = {
+	dark: "rgba(255,253,248,0.12)",
+	light: "rgba(0,0,0,0.18)",
+} as const;
+
+type Scrimmed = { ink: "light" | "dark"; drawn?: "poster" | "night" };
+
+/** Poster is the one printed sheet: dark words straight on its wash, nothing between. */
+const bare = (b: Scrimmed) => b.ink === "dark" && b.drawn === "poster";
+
+/** The scrim behind a background's words: dark under light ink, paper under dark ink. */
+export const scrimOf = (b: Scrimmed) => {
+	if (bare(b)) {
+		return null;
+	}
+	return b.ink === "light" ? SCRIM : PAPER_SCRIM;
+};
+
+/** A sheet tile's veil, chosen the same way. */
+export const tileVeilOf = (b: Scrimmed) => (bare(b) ? null : TILE_VEIL[b.ink]);

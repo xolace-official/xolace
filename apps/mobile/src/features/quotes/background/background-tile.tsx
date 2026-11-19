@@ -4,6 +4,7 @@ import { QuoteIcon } from "../chrome/quote-icons";
 import { type InkPalette, useQuoteInk } from "../chrome/quote-ink";
 import { QUOTE_COPY } from "../copy";
 import type { QuoteBackground } from "../quotes-model";
+import { tileVeilOf } from "../quotes-palette";
 import { POSTER_SEMI } from "../stage/quote-type";
 import { BackgroundLayer } from "./background-layer";
 
@@ -27,6 +28,7 @@ export function BackgroundTile({
 }) {
 	const q = useQuoteInk();
 	const tileInk = q.inks[b.ink];
+	const veil = tileVeilOf(b);
 	return (
 		<Pressable
 			accessibilityLabel={
@@ -44,8 +46,11 @@ export function BackgroundTile({
 					style={{ borderRadius: TILE.radius, height: TILE.h, width: TILE.w }}
 				>
 					<BackgroundLayer background={b} play={play} />
-					{b.ink === "light" && (
-						<View className="absolute inset-0 bg-black/18" />
+					{veil && (
+						<View
+							className="absolute inset-0"
+							style={{ backgroundColor: veil }}
+						/>
 					)}
 					<View
 						className="absolute inset-0 border-[0.5px] border-white/18"

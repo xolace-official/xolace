@@ -23,7 +23,7 @@ import { LinearGradient } from "@/components/shared/styled";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { EASE, SOFT, slice, T, useQuoteMotion } from "../motion/quote-motion";
 import type { QuoteBackground as Background } from "../quotes-model";
-import { SCRIM, SCRIM_CLEAR } from "../quotes-palette";
+import { SCRIM_CLEAR, scrimOf } from "../quotes-palette";
 import { BackgroundLayer } from "./background-layer";
 
 // The package's class typings predate React 19's JSX types (as `today/band-blur.tsx`).
@@ -105,6 +105,7 @@ export function QuoteBackground({
 	const scrim = useAnimatedStyle(() => ({
 		opacity: SCRIM_CLEAR + (1 - SCRIM_CLEAR) * m.chrome.get(),
 	}));
+	const gradient = scrimOf(background);
 	const settled = () => {
 		setTop(null);
 		setSettling(false);
@@ -141,12 +142,12 @@ export function QuoteBackground({
 						<BackgroundLayer background={top} key={top.key} play={play} />
 					</MaskedView>
 				)}
-				{background.ink === "light" && (
+				{gradient && (
 					<Animated.View className="absolute inset-0" style={scrim}>
 						<LinearGradient
 							className="absolute inset-0"
-							colors={SCRIM.colors}
-							locations={SCRIM.locations}
+							colors={gradient.colors}
+							locations={gradient.locations}
 						/>
 					</Animated.View>
 				)}

@@ -8,7 +8,7 @@ import { textShadow, useQuoteInk } from "../chrome/quote-ink";
 import { QUOTE_COPY } from "../copy";
 import type { ShareFmt } from "../motion/quote-ui";
 import type { QuoteBackground } from "../quotes-model";
-import { SCRIM } from "../quotes-palette";
+import { scrimOf } from "../quotes-palette";
 import { POSTER_MEDIUM } from "../stage/quote-type";
 import { CARD_W, fitScale, QUOTE, WORDS } from "./share-fit";
 
@@ -41,6 +41,7 @@ export function ShareCard({
 }: Props) {
 	const q = useQuoteInk();
 	const ink = q.inks[background.ink];
+	const gradient = scrimOf(background);
 	const width = CARD_W * f;
 	const height = fmt === "story" ? width * STORY_RATIO : width;
 	const size = QUOTE.size * fitScale(text, fmt) * f;
@@ -52,11 +53,11 @@ export function ShareCard({
 			style={fill ? undefined : { height, width }}
 		>
 			<BackgroundLayer background={background} play={false} />
-			{background.ink === "light" && (
+			{gradient && (
 				<LinearGradient
 					className="absolute inset-0"
-					colors={SCRIM.colors}
-					locations={SCRIM.locations}
+					colors={gradient.colors}
+					locations={gradient.locations}
 				/>
 			)}
 			<View

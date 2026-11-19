@@ -14,7 +14,7 @@ import { textShadow, useQuoteInk } from "../chrome/quote-ink";
 import { QUOTE_COPY } from "../copy";
 import { EASE, T } from "../motion/quote-motion";
 import type { KeptCard as Card, QuoteBackground } from "../quotes-model";
-import { SCRIM } from "../quotes-palette";
+import { scrimOf } from "../quotes-palette";
 import { POSTER_MEDIUM } from "../stage/quote-type";
 
 export const CARD = { h: 430, radius: 30, w: 300 } as const;
@@ -44,6 +44,7 @@ export function KeptCard({
 }) {
 	const q = useQuoteInk();
 	const ink = q.inks[background.ink];
+	const gradient = scrimOf(background);
 	const pos = useSharedValue(d);
 	useEffect(() => {
 		pos.set(
@@ -107,11 +108,11 @@ export function KeptCard({
 				style={{ borderRadius: CARD.radius }}
 			>
 				<BackgroundLayer background={background} play={false} />
-				{background.ink === "light" && (
+				{gradient && (
 					<LinearGradient
 						className="absolute inset-0"
-						colors={SCRIM.colors}
-						locations={SCRIM.locations}
+						colors={gradient.colors}
+						locations={gradient.locations}
 					/>
 				)}
 				<QuoteGlass
