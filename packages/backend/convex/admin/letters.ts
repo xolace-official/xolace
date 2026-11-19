@@ -11,6 +11,7 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { auditClerkIdOf } from "../letters/erasure";
 import { ensureLetterProfile, letterProfileOf } from "../letters/profiles";
 import { DAY_MS, PAUSE_DAYS, STRIKE_WINDOW_DAYS } from "../letters/rules";
 import { addStrike } from "../letters/strikes";
@@ -143,13 +144,15 @@ async function senderClerkId(
 			q.eq("emotionalProfileId", senderProfileId)
 		)
 		.unique();
-	return user?.authProviderAccountId;
+	return auditClerkIdOf(user);
 }
 
 /**
  * One review's letter, words included. A mutation so every read writes its
  * audit row (which admin, whose words, which review, when). `null` once the
- * letter itself is gone.
+ * letter itself is gone. `closedBy` on a decided review: `"admin"` when a
+ * person decided it, `"account_deleted"` when its sender's deletion closed it
+ * as dismissed.
  */
 export const openReview = adminMutation({
 	args: { reviewId: v.id("letter_reviews") },
@@ -166,16 +169,24 @@ export const openReview = adminMutation({
 		if (!letter) {
 			return null;
 		}
+		let closedBy: "admin" | "account_deleted" | undefined;
+		if (review.state !== "open") {
+			closedBy = review.decidedBy ? "admin" : "account_deleted";
+		}
 		return {
 			kind: review.kind,
 			state: review.state,
 			text: letter.text,
+			...(closedBy && { closedBy }),
 			...(review.reason && { reason: review.reason }),
 		};
 	},
 	returns: v.union(
 		v.null(),
 		v.object({
+			closedBy: v.optional(
+				v.union(v.literal("admin"), v.literal("account_deleted"))
+			),
 			kind: reviewKindValidator,
 			reason: v.optional(reportReasonValidator),
 			state: v.union(

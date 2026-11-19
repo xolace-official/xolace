@@ -22,6 +22,19 @@ import { ERASE_BATCH as BATCH } from "./rules";
 
 type ProfileId = Id<"emotional_profiles">;
 
+/**
+ * The Clerk user id a `letter_viewed` audit row names, from the verified
+ * `tokenIdentifier` (`iss|sub`). Not `users.authProviderAccountId`: rows from
+ * before that field was server-set can hold a client placeholder (see
+ * `jobs/clerkUserDeletion.ts`). Writing and clearing the audit target both go
+ * through here, so they always agree.
+ */
+export function auditClerkIdOf(user: Doc<"users"> | null): string | undefined {
+	const token = user?.tokenIdentifier;
+	const subject = token?.slice(token.lastIndexOf("|") + 1);
+	return subject?.startsWith("user_") ? subject : undefined;
+}
+
 /** Delete a letter and every review of it. */
 export async function deleteLetter(
 	ctx: MutationCtx,
@@ -234,7 +247,7 @@ async function drainViewAudit(
 			q.eq("emotionalProfileId", profileId)
 		)
 		.unique();
-	const clerkId = user?.authProviderAccountId;
+	const clerkId = auditClerkIdOf(user);
 	if (!clerkId) {
 		return false;
 	}

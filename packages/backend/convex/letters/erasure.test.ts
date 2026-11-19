@@ -162,10 +162,13 @@ const wipe = (user: SeededUser) =>
 		emotionalProfileId: user.profileId,
 	});
 
-/** The Clerk id an audit row names, as `admin/letters.openReview` writes it. */
+/** The Clerk id an audit row names: the token's subject (`harness.helpers`). */
 const clerkIdOf = async (user: SeededUser) =>
-	(await user.root.run((ctx) => ctx.db.get("users", user.userId)))
-		?.authProviderAccountId ?? "";
+	(
+		await user.root.run((ctx) => ctx.db.get("users", user.userId))
+	)?.tokenIdentifier
+		.split("|")
+		.at(-1) ?? "";
 
 const audit = (
 	root: Root,
@@ -280,6 +283,12 @@ describe("account deletion", () => {
 		const closed = await get(root, "letter_reviews", open);
 		expect(closed).toMatchObject({ decidedAt: NOW, state: "dismissed" });
 		expect(closed?.senderProfileId).toBeUndefined();
+		// An admin can tell this from a person's dismissal.
+		expect(
+			await asAdmin(9, root).mutation(api.admin.letters.openReview, {
+				reviewId: open,
+			})
+		).toMatchObject({ closedBy: "account_deleted", state: "dismissed" });
 	});
 
 	it("clears the sender's Clerk id from letter_viewed audit rows, not outreach_viewed", async () => {
@@ -492,6 +501,40 @@ describe("a wipe and an open review", () => {
 		expect(await profileRow(root, sender.profileId)).toMatchObject({
 			pausedBy: "admin",
 		});
+		expect(
+			await admin.mutation(api.admin.letters.openReview, {
+				reviewId: reportReview,
+			})
+		).toMatchObject({ closedBy: "admin", state: "confirmed" });
+	});
+
+	it("dismissing a held review after a wipe takes back the sender's strike", async () => {
+		const { root, sender } = await pair();
+		const held = await letter(root, {
+			senderProfileId: sender.profileId,
+			status: "held",
+		});
+		const heldReview = await review(root, held, { kind: "held" });
+		const createdAt = (await get(root, "letter_reviews", heldReview))
+			?.createdAt;
+		await strike(root, sender.profileId, heldReview, createdAt);
+		const otherReview = await review(
+			root,
+			await letter(root, { senderProfileId: sender.profileId, status: "held" }),
+			{ kind: "held" }
+		);
+		await strike(root, sender.profileId, otherReview, createdAt);
+
+		await wipe(sender);
+		await asAdmin(9, root).mutation(api.admin.letters.decide, {
+			decision: "dismiss",
+			reviewId: heldReview,
+		});
+
+		// Only this review's strike goes; the wipe kept the sender's strikes.
+		expect(await allStrikes(root)).toMatchObject([
+			{ reviewId: otherReview, senderProfileId: sender.profileId },
+		]);
 	});
 });
 
