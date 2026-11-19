@@ -14,17 +14,17 @@ import { Icon, type IconName } from "@/components/shared/icon";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColors } from "@/lib/use-token-color";
 import { RowCheck } from "./row-check";
+import { useRowPress } from "./row-press";
 
 /** Board `.r`: 64 min, 12 vertical, gap 12; icon 38; title 15.5 / 600; sub 13; chevron 16. */
 const ROW = { chevron: 16, glyph: 18 } as const;
 const TITLE = { fontSize: 15.5, lineHeight: 19.4 } as const;
 const SUB = { lineHeight: 17 } as const;
-/** Board `icPop .45s .05s`, `draw .5s .15s (.4,0,.2,1)`, `swapIn .4s .1s` (5 pt), `press .22s` to .975, colour .3 s. */
+/** Board `icPop .45s .05s`, `draw .5s .15s (.4,0,.2,1)`, `swapIn .4s .1s` (5 pt), colour .3 s. */
 const T = {
 	color: 300,
 	draw: { delay: 150, ease: Easing.bezier(0.4, 0, 0.2, 1), ms: 500 },
 	pop: { at: 0.6, delay: 50, from: 0.7, ms: 450, peak: 1.12 },
-	press: { at: 0.4, ms: 220, scale: 0.975 },
 	sub: { delay: 100, ms: 400, rise: 5 },
 } as const;
 
@@ -68,7 +68,7 @@ export function GreetingRow({
 	const pop = useSharedValue(1);
 	const draw = useSharedValue(done ? 1 : 0);
 	const subIn = useSharedValue(1);
-	const press = useSharedValue(1);
+	const press = useRowPress(reduced);
 
 	const seen = useRef(tick);
 	useEffect(() => {
@@ -125,24 +125,13 @@ export function GreetingRow({
 		opacity: subIn.get(),
 		transform: [{ translateY: T.sub.rise * (1 - subIn.get()) }],
 	}));
-	const pressStyle = useAnimatedStyle(() => ({
-		transform: [{ scale: press.get() }],
-	}));
 
 	const tappable = !!onPress && !done;
 	const tap = () => {
 		if (!(tappable && onPress)) {
 			return;
 		}
-		const down = T.press.ms * T.press.at;
-		if (!reduced) {
-			press.set(
-				withSequence(
-					withTiming(T.press.scale, { duration: down, ...PLAY_AS_CHOSEN }),
-					withTiming(1, { duration: T.press.ms - down, ...PLAY_AS_CHOSEN })
-				)
-			);
-		}
+		press.play();
 		onPress();
 	};
 
@@ -158,7 +147,7 @@ export function GreetingRow({
 		>
 			<Animated.View
 				className="min-h-16 flex-row items-center gap-3 py-3"
-				style={pressStyle}
+				style={press.style}
 			>
 				<Animated.View
 					className="size-9.5 items-center justify-center rounded-full"

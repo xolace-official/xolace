@@ -174,7 +174,10 @@ export function useComingBackHost(): {
 
 	const setBlocking = useAppStore((s) => s.setHomeSheetBlocking);
 	const setOpen = useAppStore((s) => s.setHomeSheetOpen);
-	useEffect(() => setBlocking(due || ep.open), [due, ep.open, setBlocking]);
+	// A block body: the store's setter returns a value, which React would call as the cleanup.
+	useEffect(() => {
+		setBlocking(due || ep.open);
+	}, [due, ep.open, setBlocking]);
 	useEffect(() => {
 		setOpen(ep.open);
 		return () => setOpen(false);

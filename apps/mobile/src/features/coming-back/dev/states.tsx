@@ -5,18 +5,11 @@
  */
 import type { ComponentProps } from "react";
 import type { DevState } from "@/dev/dev-state";
-import { NO_OUTCOMES } from "@/features/coming-back/coming-back-model";
-import { FixtureCheckIn } from "@/features/coming-back/dev/fixture-check-in";
-import { FixtureGreeting } from "@/features/coming-back/dev/fixture-greeting";
-import {
-	FixtureBanner,
-	FixturePill,
-} from "@/features/coming-back/dev/fixture-pill";
-import {
-	FIXTURE_EVENT,
-	fixtureItems,
-	LIGHTER_DONE,
-} from "@/features/coming-back/dev/fixtures";
+import { NO_OUTCOMES } from "../coming-back-model";
+import { FixtureCheckIn } from "./fixture-check-in";
+import { FixtureGreeting } from "./fixture-greeting";
+import { FixtureBanner, FixturePill } from "./fixture-pill";
+import { FIXTURE_EVENT, fixtureItems, LIGHTER_DONE } from "./fixtures";
 
 const OPTIONS = { headerShown: false };
 
