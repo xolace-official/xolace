@@ -3,6 +3,7 @@ import { AppText } from "@/components/shared/app-text";
 import { type EaseProps, EaseView, NONE, REDUCED } from "@/design/ease";
 import { BODY_MAX_SCALE } from "@/design/type";
 import { CURVES } from "../today-motion";
+import { heldAtStart } from "../today-rise";
 
 /** 15 pt at line height 1.38. */
 const LINE = 20.7;
@@ -15,6 +16,8 @@ type Props = {
 	/** The count to roll, or none (the warming line has no number). */
 	value: number | null;
 	play: boolean;
+	/** The launch cover is still up: the roll holds at its start (`TodayFrameValue.waiting`). */
+	waiting: boolean;
 	reduced: boolean;
 	rest: string;
 	tail: string;
@@ -26,7 +29,14 @@ type Props = {
  * inline in a sentence that wraps, so the sentence keeps a clear copy of the
  * digits and the rolling digits sit in a clipped box over that spot.
  */
-export function RollingCount({ value, play, reduced, rest, tail }: Props) {
+export function RollingCount({
+	value,
+	play,
+	waiting,
+	reduced,
+	rest,
+	tail,
+}: Props) {
 	// The sentence grows with Dynamic Type, so the clipped box and the roll grow with it.
 	const line = LINE * Math.min(useWindowDimensions().fontScale, BODY_MAX_SCALE);
 	// The digits roll up from a line below (react-native-ease), each time the count changes while
@@ -75,7 +85,7 @@ export function RollingCount({ value, play, reduced, rest, tail }: Props) {
 				pointerEvents="none"
 				style={{ height: line }}
 			>
-				<EaseView key={value} {...roll}>
+				<EaseView key={value} {...heldAtStart(roll, waiting)}>
 					<AppText
 						className="tabular-nums"
 						color="emberInk"

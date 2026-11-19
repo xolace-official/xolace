@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { COPY } from "./copy";
 import {
+	campfireSettled,
 	cardA11yHint,
 	cardMode,
 	headerCopy,
@@ -12,7 +13,11 @@ import {
 	parseIntroDay,
 	parseSeenStreak,
 	streakStep,
+	TODAY_HOLD_MS,
+	type TodayFold,
+	todayHolds,
 	todayPhase,
+	todayReady,
 } from "./today-model";
 
 describe("cardA11yHint", () => {
@@ -252,5 +257,73 @@ describe("monthPromptOnCard", () => {
 		expect(
 			monthPromptOnCard({ carryUntil: NOW + 1, prompt: "  " }, NOW)
 		).toBeNull();
+	});
+});
+
+describe("todayReady", () => {
+	const drawn = {
+		campfireSettled: true,
+		kindling: null,
+		phase: "evening",
+		rail: undefined,
+		session: null,
+		summary: { currentStreak: 3, displayName: "Ama" },
+	} satisfies TodayFold;
+
+	it("waits for the greeting's name and the card's face", () => {
+		expect(todayReady(drawn)).toBe(true);
+		expect(todayReady({ ...drawn, summary: undefined })).toBe(false);
+		expect(todayReady({ ...drawn, session: undefined })).toBe(false);
+	});
+
+	it("by day, waits for the kindling and the campfire, not the rail", () => {
+		expect(todayReady({ ...drawn, kindling: undefined })).toBe(false);
+		expect(todayReady({ ...drawn, campfireSettled: false })).toBe(false);
+	});
+
+	it("late, waits for the rail instead: the page's only module", () => {
+		const late = { ...drawn, phase: "late" } satisfies TodayFold;
+		expect(todayReady(late)).toBe(false);
+		expect(
+			todayReady({
+				...late,
+				campfireSettled: false,
+				kindling: undefined,
+				rail: [],
+			})
+		).toBe(true);
+	});
+});
+
+describe("todayHolds", () => {
+	const loading = { offline: false, ready: false, waitedMs: 0 };
+
+	it("holds while Today's first screen loads, and lets go once it's drawn", () => {
+		expect(todayHolds(loading)).toBe(true);
+		expect(todayHolds({ ...loading, ready: true })).toBe(false);
+	});
+
+	it("lets go when its budget runs out, still loading", () => {
+		expect(todayHolds({ ...loading, waitedMs: TODAY_HOLD_MS - 1 })).toBe(true);
+		expect(todayHolds({ ...loading, waitedMs: TODAY_HOLD_MS })).toBe(false);
+	});
+
+	it("never holds offline: the reads wait for a socket that isn't coming", () => {
+		expect(todayHolds({ ...loading, offline: true })).toBe(false);
+	});
+});
+
+describe("campfireSettled", () => {
+	it("waits for the weekly card", () => {
+		expect(campfireSettled(undefined, true, true)).toBe(false);
+		expect(campfireSettled("count", undefined, false)).toBe(true);
+		expect(campfireSettled("warming", undefined, false)).toBe(true);
+	});
+
+	it("with no weekly number, waits for the intake's count only on a v2 intake", () => {
+		expect(campfireSettled("hidden", undefined, false)).toBe(false);
+		expect(campfireSettled("hidden", false, false)).toBe(true);
+		expect(campfireSettled("hidden", true, false)).toBe(false);
+		expect(campfireSettled("hidden", true, true)).toBe(true);
 	});
 });

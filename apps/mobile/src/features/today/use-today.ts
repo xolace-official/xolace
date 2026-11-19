@@ -24,6 +24,7 @@ import {
 	parseSeenStreak,
 	type StreakShown,
 	todayPhase,
+	todayReady,
 } from "./today-model";
 import { useTodayActions } from "./use-today-actions";
 import { useLowerModules, useModules } from "./use-today-modules";
@@ -163,7 +164,7 @@ export function useTodayData(): Today {
 	const streak = useStreak(summary?.currentStreak, day, userId);
 	const intro = useIntro(day, userId);
 	const monthPrompt = useMonthPrompt(now);
-	const { campfire, kindling } = useModules();
+	const { campfire, campfireSettled, kindling } = useModules();
 	// Reflect's open session, so the card can wait with your words or say the mirror is back.
 	const active = useQuery(api.sessions.getActive);
 	const lower = useLowerModules();
@@ -203,6 +204,14 @@ export function useTodayData(): Today {
 			intro,
 			kindling,
 			phase,
+			ready: todayReady({
+				campfireSettled,
+				kindling,
+				phase,
+				rail: lower.rail,
+				session: active,
+				summary,
+			}),
 			rekindle,
 			streak,
 		},

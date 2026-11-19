@@ -1,5 +1,10 @@
+import type { api } from "@xolace/backend/api";
+import type { FunctionReturnType } from "convex/server";
 import { type DayPhase, PHASE_HOURS, phaseForHour } from "@/lib/day-phase";
+import type { ProfileSummary } from "@/lib/profile-summary";
 import { COPY } from "./copy";
+import type { KindlingView } from "./kindling/kindling-model";
+import type { RailTile } from "./rail/rail-model";
 
 /** The hour Today keeps: its sky, its greeting and how much it shows. */
 export type TodayPhase = DayPhase;
@@ -111,6 +116,84 @@ export function monthPromptOnCard(
 	}
 	const prompt = carried.prompt.trim();
 	return prompt ? prompt : null;
+}
+
+/**
+ * What Today's first screen reads, each undefined while it loads. The campfire's own
+ * reads settle in `campfireSettled` (it waits on the intake's count only when it shows it).
+ */
+export type TodayFold = {
+	phase: TodayPhase;
+	/** The profile summary: the greeting's name and the streak chip. */
+	summary: Pick<ProfileSummary, "displayName" | "currentStreak"> | undefined;
+	/** Reflect's open session (null with none): the card's face. */
+	session:
+		| Pick<
+				NonNullable<FunctionReturnType<typeof api.sessions.getActive>>,
+				"state"
+		  >
+		| null
+		| undefined;
+	kindling: KindlingView | null | undefined;
+	campfireSettled: boolean;
+	/** The hub's New shelf: late, it is the page's only module. */
+	rail: RailTile[] | undefined;
+};
+
+/**
+ * Today is drawn above the fold, so the launch cover may leave onto it: the header and the
+ * card, then the kindling and the campfire (by day) or the late modules. The rail (by day),
+ * the moments and the word sit below the fold and keep their own loading states.
+ */
+export function todayReady(fold: TodayFold): boolean {
+	if (fold.summary === undefined || fold.session === undefined) {
+		return false;
+	}
+	if (fold.phase === "late") {
+		return fold.rail !== undefined;
+	}
+	return fold.kindling !== undefined && fold.campfireSettled;
+}
+
+/**
+ * How long Today may keep the launch cover up for its own reads, from Today's mount (the
+ * cover's 8 s cap counts from launch). Measured on three dev-client cold starts (iPhone 17
+ * simulator, machine load ~100, socket already up from the gate): the hold lasted 0.77–0.94 s
+ * and the last read landed 1.15 s after mount. 2.5 s is about twice that, room for a slow
+ * cellular round trip, and keeps fonts, gate (2.8–3.5 s there) and Today well inside 8 s.
+ */
+export const TODAY_HOLD_MS = 2500;
+
+/**
+ * Whether Today still keeps the launch cover up: until its first screen is drawn
+ * (`todayReady`), but never offline (its reads wait for a socket that isn't coming; Today
+ * has its own offline states) or past its budget (a slow read shows its own loading state).
+ */
+export function todayHolds(hold: {
+	ready: boolean;
+	offline: boolean;
+	waitedMs: number;
+}): boolean {
+	return !(hold.ready || hold.offline) && hold.waitedMs < TODAY_HOLD_MS;
+}
+
+/**
+ * Whether the campfire knows what it shows. With no weekly number (`hidden`) a v2 intake
+ * stands the intake's count in, so it also waits for the full context and that count
+ * (`statsSettled`: answered or failed).
+ */
+export function campfireSettled(
+	cohortStatus: string | undefined,
+	v2Intake: boolean | undefined,
+	statsSettled: boolean
+): boolean {
+	if (cohortStatus === undefined) {
+		return false;
+	}
+	if (cohortStatus !== "hidden") {
+		return true;
+	}
+	return v2Intake !== undefined && (!v2Intake || statsSettled);
 }
 
 /** The first open of the day plays once: the words, the rise, the ink. */

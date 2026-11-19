@@ -39,10 +39,16 @@ type Props = {
 	 * "How did you find Xolace?" (features meet in routes, not screens).
 	 */
 	finding?: ReactNode;
+	/**
+	 * The launch cover has started leaving (`useLaunchRevealed`, from the route). The page
+	 * draws under the cover; a first open of the day holds its entrance at the start until
+	 * then, so the rise and the greeting play under the cover's fade. Fixtures: always.
+	 */
+	revealed?: boolean;
 };
 
 /** Today: a sky that keeps the hour, the Reflect card as its horizon, then up to five quiet modules. */
-export function TodayScreen({ finding }: Props) {
+export function TodayScreen({ finding, revealed = true }: Props) {
 	const insets = useSafeAreaInsets();
 	const { height } = useWindowDimensions();
 	const { state } = useToday();
@@ -94,6 +100,7 @@ export function TodayScreen({ finding }: Props) {
 						key={state.day}
 						live={live}
 						reduced={reduced}
+						revealed={revealed}
 						scrollY={scrollY}
 						viewH={height}
 					/>
@@ -111,30 +118,33 @@ export function TodayScreen({ finding }: Props) {
 	);
 }
 
-type BodyProps = Omit<TodayFrameValue, "intro" | "low"> & {
+type BodyProps = Omit<TodayFrameValue, "intro" | "low" | "waiting"> & {
 	flameClock: SharedValue<number>;
 	finding: ReactNode;
+	revealed: boolean;
 };
 
 /** The page under the sky: the header, the hero and the modules for the hour. */
-function TodayBody({ flameClock, finding, ...frame }: BodyProps) {
+function TodayBody({ flameClock, finding, revealed, ...frame }: BodyProps) {
 	const { width } = useWindowDimensions();
 	const { state } = useToday();
 	// The first open of the day plays once: anything that mounts after this window
 	// (a phase change, a remount) shows at rest.
 	const [intro, setIntro] = useState(state.intro);
+	// Its entrance holds at the start while the launch cover is up; the window opens after.
+	const waiting = intro && !revealed;
 	useEffect(() => {
-		if (!intro) {
+		if (!intro || waiting) {
 			return;
 		}
 		const id = setTimeout(() => setIntro(false), INTRO_WINDOW_MS);
 		return () => clearTimeout(id);
-	}, [intro]);
-	const low = useQualityGate(intro);
+	}, [intro, waiting]);
+	const low = useQualityGate(intro && !waiting);
 	const late = state.phase === "late";
 
 	return (
-		<TodayFrame value={{ ...frame, intro, low }}>
+		<TodayFrame value={{ ...frame, intro, low, waiting }}>
 			<SkyCanvas phase={state.phase} width={width} />
 			<View className="mx-4">
 				<TodayHeader flameClock={flameClock} />

@@ -23,14 +23,20 @@ const RISE = 7;
 /** margin-right .24em at 34 pt: 8. */
 const WORD_GAP = "mr-2";
 
-type Props = { text: string; intro: boolean; reduced: boolean };
+type Props = {
+	text: string;
+	intro: boolean;
+	reduced: boolean;
+	/** The launch cover is still up: the words wait, hidden (`TodayFrameValue.waiting`). */
+	waiting: boolean;
+};
 
 /**
  * The greeting, word by word (gleam-line-intro's arrival): each word fades up
  * 7 pt out of a blur, 120 ms apart, and a warm gleam passes over it at 55%.
  * Real AppText per word, so the font and Dynamic Type still apply.
  */
-export function Greeting({ text, intro, reduced }: Props) {
+export function Greeting({ text, intro, reduced, waiting }: Props) {
 	const words = text.split(" ");
 	return (
 		<View
@@ -47,6 +53,7 @@ export function Greeting({ text, intro, reduced }: Props) {
 					key={i}
 					play={intro && !reduced}
 					text={w}
+					waiting={waiting}
 				/>
 			))}
 		</View>
@@ -57,18 +64,20 @@ function Word({
 	text,
 	index,
 	play,
+	waiting,
 	gap,
 }: {
 	text: string;
 	index: number;
 	play: boolean;
+	waiting: boolean;
 	gap: boolean;
 }) {
 	const [ink, gleam] = useTokenColors(["foreground", "today-gleam"]);
 	const p = useSharedValue(play ? 0 : 1);
 
 	useEffect(() => {
-		if (!play) {
+		if (!play || waiting) {
 			return;
 		}
 		p.set(
@@ -82,7 +91,7 @@ function Word({
 				PLAY_AS_CHOSEN.reduceMotion
 			)
 		);
-	}, [index, p, play]);
+	}, [index, p, play, waiting]);
 
 	// CSS keyframes 0 / 55 / 100%, the curve applied within each segment.
 	const wrap = useAnimatedStyle(() => ({

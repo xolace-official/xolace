@@ -21,6 +21,11 @@ export type TodayFrameValue = {
 	reduced: boolean;
 	/** First open of the day: modules rise, words gleam. */
 	intro: boolean;
+	/**
+	 * The first open is due but the launch cover is still up: its entrances hold at their
+	 * start (hidden), and play once the cover starts leaving.
+	 */
+	waiting: boolean;
 	/** The first-open quality gate failed: half the particles, no blurs. */
 	low: boolean;
 };

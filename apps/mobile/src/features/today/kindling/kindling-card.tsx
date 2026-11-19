@@ -26,7 +26,7 @@ type KindlingCardMode = "live" | "none";
 /** Today's kindling card: the steps from your last session, as a path you tend. */
 export function KindlingCard({ width }: { width: number }) {
 	const { state } = useToday();
-	const { reduced, intro } = useTodayFrame();
+	const { reduced, intro, waiting } = useTodayFrame();
 	const top = useSharedValue(0);
 	const onScreen = useOnScreen(top, CARD_H);
 	const { kindling } = state;
@@ -37,7 +37,7 @@ export function KindlingCard({ width }: { width: number }) {
 
 	return (
 		<EaseView
-			{...todayRiseProps(RISE_SLOT, intro, reduced)}
+			{...todayRiseProps(RISE_SLOT, intro, reduced, waiting)}
 			className="mx-4"
 			onLayout={(e) => top.set(e.nativeEvent.layout.y)}
 			style={{ marginTop: MODULE_GAP }}

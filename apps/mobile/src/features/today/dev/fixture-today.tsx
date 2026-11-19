@@ -136,8 +136,7 @@ function FixtureToday({
 		FIXTURE_WEEKDAY,
 		offline ? null : FIXTURE_NAME
 	);
-	// As the server sends it: tending the last step, or putting the kindling out, closes it,
-	// so it goes null; `paths.getLatest` then says how it ended.
+	// Tending the last step or putting it out closes it: null, and `paths.getLatest` says how.
 	let server: Today["state"]["kindling"] = null;
 	const last = FIXTURE_KINDLING.last;
 	if (kindling === "loading") {
@@ -171,6 +170,7 @@ function FixtureToday({
 		...(wordIn ? {} : { word: undefined }),
 		listenLocked: free,
 		phase,
+		ready: true,
 		rekindle:
 			rekindle && !offline ? { busy: false, streak: FIXTURE_STREAK } : null,
 		streak: offline
