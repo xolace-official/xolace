@@ -31,6 +31,11 @@ export type LettersWrite = {
 		/** A held letter's words: Send stays off until they change. */
 		held: string;
 		/**
+		 * An answer no screen has shown: it came while Write was closed, or for a check another
+		 * screen started. The screen plays it once (its line, or care), then calls `played`.
+		 */
+		late: SendAnswer | null;
+		/**
 		 * Why Write is off, if it is (the server's caps). `undefined` while the status loads:
 		 * Send stays off and no limit shows.
 		 */
@@ -40,8 +45,13 @@ export type LettersWrite = {
 	actions: {
 		setText: (text: string) => void;
 		setForWho: (forWho: LetterFor) => void;
-		/** The check reads it; a pass clears the draft, a held letter keeps its words. */
-		send: (draft: Draft) => Promise<SendAnswer>;
+		/**
+		 * The check reads it; a pass clears the draft, a held letter keeps its words. Null: another
+		 * check is running, and this one never started (its answer comes as `late`).
+		 */
+		send: (draft: Draft) => Promise<SendAnswer | null>;
+		/** The screen showed `late`: no other screen shows it again. */
+		played: () => void;
 	};
 };
 

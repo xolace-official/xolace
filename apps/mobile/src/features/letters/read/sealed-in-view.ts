@@ -1,4 +1,4 @@
-import { type ComponentRef, useRef } from "react";
+import { type ComponentRef, useEffect, useRef } from "react";
 import type { LayoutChangeEvent, ScrollView } from "react-native";
 
 /** Under the fold: the seal (34 pt) and the hint 40 pt below it, with room to read. */
@@ -8,7 +8,8 @@ type Frame = { y: number; height: number };
 /**
  * The sealed letter grows with Dynamic Type, and scrolling is off until it opens: at large sizes
  * its fold and seal could sit under the Open bar. While sealed, the reader scrolls its middle
- * third into view (the seal and the hint under it), never past the top of that third.
+ * third into view (the seal and the hint under it), never past the top of that third, and again
+ * when a failed Open seals it once more.
  */
 export function useSealedInView(sealed: boolean, top: number) {
 	const ref = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -24,6 +25,13 @@ export function useSealedInView(sealed: boolean, top: number) {
 		const y = Math.max(0, Math.min(need, l.y + third - top));
 		ref.current?.scrollTo({ animated: false, y });
 	};
+	const was = useRef(sealed);
+	useEffect(() => {
+		if (sealed && !was.current) {
+			place();
+		}
+		was.current = sealed;
+	});
 	return {
 		onLetter: (e: LayoutChangeEvent) => {
 			const { y, height } = e.nativeEvent.layout;

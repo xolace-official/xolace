@@ -20,6 +20,8 @@ export type WriteFixture = {
 	/** What the check answers at Send, after `checkMs`; none: it never answers. */
 	outcome?: SendOutcome;
 	checkMs?: number;
+	/** An answer that came while Write was closed: the screen plays it as it opens. */
+	late?: SendOutcome;
 };
 
 const WRITING: WriteOpens = {
@@ -41,8 +43,12 @@ export function WriteFixtureScreen({ fixture }: { fixture: WriteFixture }) {
 	const [text, setText] = useState(fixture.text ?? "");
 	const [forWho, setForWho] = useState<LetterFor>("Anyone");
 	const [held, setHeld] = useState(fixture.held ?? "");
+	const [late, setLate] = useState(
+		fixture.late ? answerOf(fixture.late) : null
+	);
 	const value: LettersWrite = {
 		actions: {
+			played: () => setLate(null),
 			send: (draft) =>
 				new Promise((resolve) => {
 					const { outcome } = fixture;
@@ -67,6 +73,7 @@ export function WriteFixtureScreen({ fixture }: { fixture: WriteFixture }) {
 			checking: false,
 			forWho,
 			held,
+			late,
 			limit: fixture.limit ?? null,
 			opens: { ...WRITING, ...fixture.opens },
 			text,

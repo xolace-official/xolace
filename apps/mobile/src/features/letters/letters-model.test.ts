@@ -17,6 +17,7 @@ import {
 	forYouRows,
 	heldAgain,
 	type LettersStatus,
+	lateMoves,
 	openingLine,
 	PHASE_OF,
 	type ReceivedLetter,
@@ -293,12 +294,10 @@ describe("the reader", () => {
 		expect(readerHidden(null, null)).toBe(false);
 	});
 
-	it("gives VoiceOver Open while sealed, Undo while one runs, else the acts", () => {
+	it("gives VoiceOver nothing while sealed (Open is its button), Undo while one runs, else the acts", () => {
 		const r = { acknowledged: false, hidden: false, sealed: false, undo: null };
-		expect(readerActions({ ...r, sealed: true })).toEqual(["activate"]);
-		expect(readerActions({ ...r, sealed: true, undo: "ack" })).toEqual([
-			"activate",
-		]);
+		expect(readerActions({ ...r, sealed: true })).toEqual([]);
+		expect(readerActions({ ...r, sealed: true, undo: "ack" })).toEqual([]);
 		expect(readerActions({ ...r, undo: "hide" })).toEqual(["undo"]);
 		expect(readerActions(r)).toEqual(["acknowledge", "hide", "report"]);
 		expect(readerActions({ ...r, acknowledged: true, hidden: true })).toEqual([
@@ -445,5 +444,33 @@ describe("draftAfter (W5, W6)", () => {
 			draftAfter({ next: "limit", reason: "three" }, FORTY, FORTY)
 		).toBeNull();
 		expect(draftAfter(null, FORTY, FORTY)).toBeNull();
+	});
+});
+
+describe("lateMoves", () => {
+	it("rests the letter and raises care for an at-risk answer a reopened Write missed", () => {
+		expect(lateMoves(answerOf({ kind: "risk" }))).toEqual({
+			announce: null,
+			care: true,
+			line: null,
+			stage: "rest",
+		});
+	});
+
+	it("shows a held or fixable line over the words, and says it", () => {
+		expect(lateMoves(answerOf({ kind: "held" }))).toEqual({
+			announce: LETTERS.check.held,
+			care: false,
+			line: LETTERS.check.held,
+			stage: "edit",
+		});
+		expect(
+			lateMoves(answerOf({ kind: "fixable", line: "Softer." }))?.line
+		).toBe("Softer.");
+	});
+
+	it("leaves a pass and a limit to the draft and the status", () => {
+		expect(lateMoves(answerOf({ kind: "pass" }))).toBeNull();
+		expect(lateMoves(answerOf({ kind: "limit", reason: "today" }))).toBeNull();
 	});
 });

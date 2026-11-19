@@ -157,4 +157,19 @@ export const devStates: readonly DevState[] = [
 		}),
 		title: "Send → another device wrote today's",
 	},
+	{
+		id: "write-late-care",
+		options: OPTIONS,
+		Screen: write({ late: { kind: "risk" }, text: DRAFTS.pass }),
+		title: "Reopened mid-check → at risk (care rises)",
+	},
+	{
+		id: "write-late-fixable",
+		options: OPTIONS,
+		Screen: write({
+			late: { kind: "fixable", line: FIXABLE_LINE },
+			text: DRAFTS.pass,
+		}),
+		title: "Reopened mid-check → fixable line",
+	},
 ];

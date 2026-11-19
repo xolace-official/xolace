@@ -129,6 +129,8 @@ export const LETTERS = {
 		/** Proposed (the prototype has no line): a letter that's gone, or not yours. */
 		notThere: "This letter isn’t here anymore.",
 		open: "Open",
+		/** Proposed: Open failed, and the letter sealed again. */
+		openFailed: "Couldn’t open it. Try again.",
 		report: "Report",
 		rowAcknowledged: "Received · you acknowledged it",
 		rowHidden: "Hidden",

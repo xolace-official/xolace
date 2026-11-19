@@ -8,11 +8,7 @@ import {
 	type TextInput,
 	View,
 } from "react-native";
-import Animated, {
-	useAnimatedScrollHandler,
-	useAnimatedStyle,
-	useSharedValue,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useHeaderOptions } from "@/lib/header-options";
 import {
 	useKeyboardLift,
@@ -29,6 +25,7 @@ import {
 	type WriteStage,
 } from "../letters-model";
 import { ForChips, StarterChips } from "./chips";
+import { SEND, useLetterLift } from "./letter-lift";
 import { LimitView } from "./limit-view";
 import { SendButton } from "./send-button";
 import { SentView } from "./sent-view";
@@ -43,9 +40,6 @@ import { useWriteStage } from "./write-stage";
 /** Above For: room for the check's line (three lines at most), so nothing moves when it shows. */
 const LINE_AREA = 96;
 const ROW_GAP = 18;
-const SEND = { height: 52, side: 16 };
-/** With the keyboard up, the count sits at least this far above Send. */
-const ABOVE_SEND = 8;
 /** Under the starters, room to scroll them clear of Send. */
 const UNDER_STARTERS = 12;
 
@@ -66,10 +60,12 @@ export function WriteScreen() {
 	const [height, setHeight] = useState(0);
 	const held = heldAgain(state.text, state.held);
 	const flow = useWriteStage({
+		late: state.late,
 		opens: {
 			...state.opens,
 			line: state.opens.line ?? (held ? LETTERS.check.held : null),
 		},
+		played: actions.played,
 		reduced,
 		send: actions.send,
 		text: state.text,
@@ -85,19 +81,12 @@ export function WriteScreen() {
 
 	// iOS draws the header over the screen; Android's is opaque, and the screen starts under it.
 	const top = Platform.OS === "ios" ? headerH : 0;
-	// The count's foot, measured: the check's line and the letter grow with Dynamic Type.
-	const countFoot = useSharedValue(0);
-	const scrollY = useSharedValue(0);
-	const onScroll = useAnimatedScrollHandler((e) => {
-		scrollY.set(e.contentOffset.y);
+	const { contentStyle, onCountFoot, onScroll } = useLetterLift({
+		height,
+		lift,
+		top,
 	});
 	const sendStyle = useLiftStyle(lift);
-	const contentStyle = useAnimatedStyle(() => {
-		const sendTop = height - lift.bottom.get() - SEND.height;
-		const foot = top + countFoot.get() - scrollY.get();
-		const over = Math.max(0, foot + ABOVE_SEND - sendTop);
-		return { transform: [{ translateY: lift.keyboard.get() > 0 ? -over : 0 }] };
-	});
 	const besideKeyboard = useAnimatedStyle(() => ({
 		opacity: 1 - lift.progress.get(),
 	}));
@@ -152,7 +141,7 @@ export function WriteScreen() {
 							<WriteCount
 								count={count}
 								on={editing}
-								onFoot={(y) => countFoot.set(y)}
+								onFoot={onCountFoot}
 								reduced={reduced}
 							/>
 							<Animated.View className="pt-3" style={besideKeyboard}>

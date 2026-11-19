@@ -77,6 +77,15 @@ describe("createUndoTimer", () => {
 		expect(commit).toHaveBeenCalledOnce();
 	});
 
+	it("leaves a held Hide up when Undo comes after it committed", () => {
+		const { timer, commit, after, shown } = setup();
+		timer.begin("hide", { after, commit, hold: true });
+		vi.advanceTimersByTime(MS);
+		timer.cancel();
+		expect(shown).toEqual(["hide"]);
+		expect(commit).toHaveBeenCalledOnce();
+	});
+
 	it("commits once, not again as the reader leaves after it", () => {
 		const { timer, commit, after } = setup();
 		timer.begin("ack", { after, commit });

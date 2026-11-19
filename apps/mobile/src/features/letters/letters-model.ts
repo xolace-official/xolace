@@ -270,16 +270,15 @@ export const readerHidden = (
 	undo: Undo | null
 ): boolean => (l?.hidden ?? false) && undo !== "hide";
 
-/** What VoiceOver can do on the letter; `activate` is Open. */
+/** What VoiceOver can do on the open letter (sealed, Open is its own button). */
 export type ReaderAction =
-	| "activate"
 	| "acknowledge"
 	| "hide"
 	| "unhide"
 	| "report"
 	| "undo";
 
-/** Sealed, Open. While an Undo runs, Undo. Else the acts, Acknowledge only until it's done. */
+/** Sealed, none. While an Undo runs, Undo. Else the acts, Acknowledge only until it's done. */
 export function readerActions(r: {
 	sealed: boolean;
 	undo: Undo | null;
@@ -287,7 +286,7 @@ export function readerActions(r: {
 	hidden: boolean;
 }): ReaderAction[] {
 	if (r.sealed) {
-		return ["activate"];
+		return [];
 	}
 	if (r.undo) {
 		return ["undo"];
@@ -463,6 +462,31 @@ export function draftAfter(
 	}
 	if (answer?.next === "back" && answer.held) {
 		return { held: sent.trim() };
+	}
+	return null;
+}
+
+/** What a writing screen shows for an answer it didn't wait for (`lateMoves`). */
+export type LateMoves = {
+	stage: "edit" | "rest";
+	line: string | null;
+	care: boolean;
+	announce: string | null;
+};
+
+/**
+ * An answer that came while Write was closed, or for a check another screen started, played once
+ * on the screen that's up: no fold or unfold (the letter never folded here), straight to where
+ * the answer leaves it. A line (fixable, held, not English) shows over the words; care rests the
+ * letter and raises the sheet. Only those are kept for later (`check-store.ts`).
+ */
+export function lateMoves(answer: SendAnswer): LateMoves | null {
+	if (answer.next === "care") {
+		return { announce: null, care: true, line: null, stage: "rest" };
+	}
+	if (answer.next === "back") {
+		const line = answer.line || null;
+		return { announce: line, care: false, line, stage: "edit" };
 	}
 	return null;
 }

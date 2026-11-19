@@ -44,7 +44,11 @@ export function createUndoTimer(
 			}, ms);
 			return true;
 		},
+		/** Undo. Nothing to undo once an act committed: a held Hide stays up while the reader leaves. */
 		cancel: () => {
+			if (!pending) {
+				return;
+			}
 			stop();
 			pending = null;
 			onChange(null);

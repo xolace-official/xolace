@@ -1,4 +1,6 @@
 import * as Sentry from "@sentry/react-native";
+import { toast } from "@/components/shared/toast";
+import { LETTERS } from "../copy";
 import { useLettersCalls, useReceivedLetter } from "../use-letters-data";
 import type { LetterReader } from "./read-data";
 
@@ -18,6 +20,8 @@ export function useReader(id: string): LetterReader {
 					() => true,
 					(error: unknown) => {
 						report(error);
+						// The letter seals again; the reader puts VoiceOver back on Open.
+						toast(LETTERS.read.openFailed);
 						return false;
 					}
 				),
