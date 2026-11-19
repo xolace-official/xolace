@@ -15,16 +15,15 @@ import {
 	asUnauthed,
 	type SeededUser,
 } from "../test/harness.helpers";
-import {
-	aggregatesMock,
-	posthogMock,
-	rateLimiterMock,
-} from "../test/mocks.helpers";
+import { aggregatesMock, rateLimiterMock } from "../test/mocks.helpers";
 import { FIXABLE_LINES } from "./lines";
-import { DAY_MS } from "./rules";
+import { DAY_MS, SENT_LIST_MAX, SENT_LIST_READ_MAX } from "./rules";
+
+type Captured = { event: string; properties: Record<string, unknown> };
 
 const stub = vi.hoisted(() => ({
 	classify: 0,
+	events: [] as Captured[],
 	limitOk: true,
 	safety: {
 		level: "none",
@@ -39,7 +38,13 @@ const stub = vi.hoisted(() => ({
 }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
-vi.mock("../posthog", () => posthogMock());
+vi.mock("../posthog", () => ({
+	posthog: {
+		capture: async (_ctx: unknown, event: Captured) => {
+			stub.events.push(event);
+		},
+	},
+}));
 vi.mock("../lib/rateLimits", async (orig) => ({
 	...(await orig<typeof import("../lib/rateLimits")>()),
 	...rateLimiterMock(() => ({ ok: stub.limitOk })),
@@ -69,6 +74,7 @@ beforeEach(() => {
 	vi.useFakeTimers();
 	vi.setSystemTime(NOW);
 	stub.classify = 0;
+	stub.events = [];
 	stub.limitOk = true;
 	stub.safety = { level: "none", resources: [], unavailable: false };
 	stub.verdict = {
@@ -111,6 +117,15 @@ const lettersOf = (user: SeededUser) =>
 	);
 
 const nextDay = () => vi.setSystemTime(Date.now() + DAY_MS);
+
+const sentEvents = () =>
+	stub.events.filter((e) => e.event === "letter_sent").map((e) => e.properties);
+
+const HOSTILE: LetterVerdict = {
+	fixable: null,
+	hostile: true,
+	language: "en",
+};
 
 /** Places `letterId` with `recipient`, as matching will (slice 3). */
 const place = (
@@ -288,12 +303,45 @@ describe("letters.send outcomes", () => {
 		await send(user);
 		stub.classify = 0;
 
+		nextDay();
 		expect(await send(user, `  ${KIND_LETTER}  `)).toEqual({ kind: "held" });
 		expect(stub.classify).toBe(0);
 		const strikes = await user.root.run((ctx) =>
 			ctx.db.query("letter_strikes").collect()
 		);
 		expect(strikes).toHaveLength(1);
+		// The repeat isn't a new held in analytics either.
+		expect(sentEvents()).toEqual([{ outcome: "held" }]);
+	});
+
+	it("the same held words stored twice at once are one row and one strike", async () => {
+		const user = await writer();
+		const storeHeld = () =>
+			user.root.mutation(internal.letters.send.store, {
+				language: "en",
+				profileId: user.profileId,
+				status: "held",
+				text: KIND_LETTER,
+				textHash: "same-words",
+			});
+		await Promise.all([storeHeld(), storeHeld()]);
+		const { letters, reviews, row, strikes } = await user.root.run(
+			async (ctx) => ({
+				letters: await ctx.db.query("letters").collect(),
+				reviews: await ctx.db.query("letter_reviews").collect(),
+				row: await ctx.db
+					.query("letter_profiles")
+					.withIndex("by_profile", (q) =>
+						q.eq("emotionalProfileId", user.profileId)
+					)
+					.unique(),
+				strikes: await ctx.db.query("letter_strikes").collect(),
+			})
+		);
+		expect(letters).toHaveLength(1);
+		expect(reviews).toHaveLength(1);
+		expect(strikes).toHaveLength(1);
+		expect(row?.pausedUntil).toBeUndefined();
 	});
 
 	it("stores an unchecked letter when a half couldn't finish; it reads as waiting", async () => {
@@ -355,7 +403,7 @@ describe("letters caps", () => {
 		);
 	});
 
-	it("a race between two devices answers limit once", async () => {
+	it("of two stores for the last slot, the second answers limit and stores nothing", async () => {
 		const user = await writer();
 		const store = () =>
 			user.root.mutation(internal.letters.send.store, {
@@ -370,30 +418,71 @@ describe("letters caps", () => {
 		expect(await lettersOf(user)).toHaveLength(1);
 	});
 
-	it("a held letter doesn't use the day", async () => {
+	it("a held letter uses the day, so one held letter a day at most reaches review", async () => {
 		const user = await writer();
-		stub.verdict = {
-			fixable: null,
-			hostile: true,
-			language: "en",
-		};
+		stub.verdict = HOSTILE;
 		await send(user);
-		stub.verdict = {
-			fixable: null,
-			hostile: false,
-			language: "en",
-		};
+		expect(await send(user, OTHER_LETTER)).toEqual({
+			kind: "limit",
+			reason: "today",
+		});
+		expect(stub.classify).toBe(1);
+		const reviews = await user.root.run((ctx) =>
+			ctx.db.query("letter_reviews").collect()
+		);
+		expect(reviews).toHaveLength(1);
+		// A held letter doesn't hold a waiting slot.
+		nextDay();
+		stub.verdict = { ...HOSTILE, hostile: false };
 		expect(await send(user, OTHER_LETTER)).toEqual({ kind: "pass" });
+	});
+
+	it("a paused sender meets the same limit as anyone, and nothing else", async () => {
+		const user = await writer();
+		await user.root.run(async (ctx) => {
+			await ctx.db.insert("letter_profiles", {
+				emotionalProfileId: user.profileId,
+				lastReceivedAt: 0,
+				pausedBy: "strikes",
+				pausedUntil: Date.now() + 30 * DAY_MS,
+				pool: "out",
+				tiebreak: 0.5,
+			});
+		});
+		expect(await send(user)).toEqual({ kind: "pass" });
+		expect(await send(user, OTHER_LETTER)).toEqual({
+			kind: "limit",
+			reason: "today",
+		});
+	});
+
+	it("counts a limit in analytics, with its reason", async () => {
+		const user = await writer();
+		await send(user);
+		await send(user, OTHER_LETTER);
+		expect(sentEvents()).toEqual([
+			{ outcome: "pass" },
+			{ outcome: "limit", reason: "today" },
+		]);
+	});
+
+	it("status reports the last day sent, for the client to lift today at midnight", async () => {
+		const user = await writer();
+		expect(
+			(await user.t.query(api.letters.status.get, {})).lastSentDay
+		).toBeNull();
+		await send(user);
+		const status = await user.t.query(api.letters.status.get, {});
+		expect(status).toMatchObject({
+			lastSentDay: "2026-11-19",
+			writeLimit: "today",
+		});
 	});
 });
 
 describe("letters strikes", () => {
 	const holdTwo = async (user: SeededUser, gapDays: number) => {
-		stub.verdict = {
-			fixable: null,
-			hostile: true,
-			language: "en",
-		};
+		stub.verdict = HOSTILE;
 		await send(user);
 		vi.setSystemTime(Date.now() + gapDays * DAY_MS);
 		await send(user, OTHER_LETTER);
@@ -414,6 +503,7 @@ describe("letters strikes", () => {
 			pausedBy: "strikes",
 			pausedUntil: Date.now() + 30 * DAY_MS,
 		});
+		nextDay();
 		expect((await user.t.query(api.letters.status.get, {})).writeLimit).toBe(
 			null
 		);
@@ -427,6 +517,33 @@ describe("letters strikes", () => {
 });
 
 describe("letters.sent", () => {
+	it("reads a bounded number of rows past held ones", async () => {
+		const user = await writer();
+		await user.root.run(async (ctx) => {
+			const at = Date.now();
+			await ctx.db.insert("letters", {
+				checkedAt: at,
+				createdAt: at - DAY_MS,
+				language: "en",
+				senderProfileId: user.profileId,
+				status: "waiting",
+				text: KIND_LETTER,
+			});
+			for (let i = 0; i < SENT_LIST_READ_MAX; i++) {
+				await ctx.db.insert("letters", {
+					createdAt: at + i,
+					language: "en",
+					senderProfileId: user.profileId,
+					status: "held",
+					text: KIND_LETTER,
+					textHash: `held-${i}`,
+				});
+			}
+		});
+		expect(await user.t.query(api.letters.sent.list, {})).toEqual([]);
+		expect(SENT_LIST_READ_MAX).toBeGreaterThan(SENT_LIST_MAX);
+	});
+
 	it("lists the caller's letters newest first with a cut line, never the whole text", async () => {
 		const user = await writer();
 		await send(user);
@@ -626,10 +743,39 @@ describe("letters.optIn", () => {
 		const user = await asNewUser();
 		expect(await user.t.query(api.letters.status.get, {})).toEqual({
 			invite: true,
+			lastSentDay: null,
 			optIn: "unset",
 			unopenedId: null,
 			writeLimit: null,
 		});
+	});
+
+	it("a first No consents to nothing, so it records nothing", async () => {
+		const user = await asNewUser();
+		await optIn(user, "no");
+		expect(await consents(user)).toEqual([]);
+	});
+
+	it("generic consent.grant and consent.revoke refuse letters_receive", async () => {
+		// Only `optIn.set` writes it: `consentTypeValidator` leaves it out, so
+		// a revoke can't record a withdrawal while optIn stays yes.
+		const user = await writer();
+		await expect(
+			user.t.mutation(api.consent.grant, {
+				consentLanguageVersion: "1.0",
+				// @ts-expect-error: the generic mutations don't take letters_receive.
+				consentType: "letters_receive",
+			})
+		).rejects.toThrow(/Validator error/);
+		await optIn(user, "yes");
+		await expect(
+			user.t.mutation(api.consent.revoke, {
+				// @ts-expect-error: the generic mutations don't take letters_receive.
+				consentType: "letters_receive",
+			})
+		).rejects.toThrow(/Validator error/);
+		expect((await consents(user)).map((c) => c.status)).toEqual(["granted"]);
+		expect((await user.t.query(api.letters.status.get, {})).optIn).toBe("yes");
 	});
 
 	it("Yes needs an adult; No doesn't", async () => {
@@ -730,5 +876,73 @@ describe("letters.settings", () => {
 		expect(await user.t.query(api.letters.settings.getPush, {})).toBe(false);
 		await user.t.mutation(api.letters.settings.setPush, { on: true });
 		expect(await user.t.query(api.letters.settings.getPush, {})).toBe(true);
+	});
+
+	it("the push switch says so when the account has no preferences row", async () => {
+		const user = await asNewUser();
+		await user.root.run(async (ctx) => {
+			const row = await ctx.db
+				.query("preferences")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.unique();
+			if (row) {
+				await ctx.db.delete("preferences", row._id);
+			}
+		});
+		await expectCode(
+			() => user.t.mutation(api.letters.settings.setPush, { on: false }),
+			"preferences_not_found"
+		);
+	});
+});
+
+describe("letters functions refuse a caller who isn't signed in", () => {
+	const anon = asUnauthed;
+	const letterId = async () => {
+		const user = await writer(9);
+		await send(user);
+		const [letter] = await lettersOf(user);
+		if (!letter) {
+			throw new Error("no letter");
+		}
+		return letter._id;
+	};
+
+	it.each([
+		["status.get", () => anon().query(api.letters.status.get, {})],
+		["sent.list", () => anon().query(api.letters.sent.list, {})],
+		["settings.getPush", () => anon().query(api.letters.settings.getPush, {})],
+		[
+			"settings.setPush",
+			() => anon().mutation(api.letters.settings.setPush, { on: false }),
+		],
+		[
+			"optIn.set",
+			() =>
+				anon().mutation(api.letters.optIn.set, {
+					choice: "no",
+					promptVersion: "letters_offer.v1",
+				}),
+		],
+	])("%s", async (_name, call) => {
+		await expectCode(call, "not_authenticated");
+	});
+
+	it.each([
+		["sent.withdraw", api.letters.sent.withdraw],
+		["sent.dismiss", api.letters.sent.dismiss],
+	] as const)("%s", async (_name, fn) => {
+		const id = await letterId();
+		await expectCode(() => anon().mutation(fn, { id }), "not_authenticated");
+	});
+
+	it("sent.markSeen", async () => {
+		const id = await letterId();
+		await expectCode(
+			() => anon().mutation(api.letters.sent.markSeen, { ids: [id] }),
+			"not_authenticated"
+		);
 	});
 });

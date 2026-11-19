@@ -15,6 +15,14 @@ export const WAITING_MAX = 3;
 /** The most Sent rows a list returns. */
 export const SENT_LIST_MAX = 50;
 
+/**
+ * Rows `sent.list` reads to fill it: held letters are read and skipped, so a
+ * sender with more held letters than the difference among their newest rows
+ * sees a shorter list, never an unbounded read. Held letters use the day, so
+ * that takes months of them.
+ */
+export const SENT_LIST_READ_MAX = SENT_LIST_MAX * 4;
+
 /** The most received letters a list returns. */
 export const RECEIVED_LIST_MAX = 100;
 

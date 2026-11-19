@@ -43,7 +43,11 @@ const limitReasonValidator = v.union(v.literal("today"), v.literal("three"));
 
 const gateResultValidator = v.union(
 	v.object({ kind: v.literal("open"), profileId: v.id("emotional_profiles") }),
-	v.object({ kind: v.literal("limit"), reason: limitReasonValidator }),
+	v.object({
+		kind: v.literal("limit"),
+		profileId: v.id("emotional_profiles"),
+		reason: limitReasonValidator,
+	}),
 	v.object({ kind: v.literal("held"), profileId: v.id("emotional_profiles") })
 );
 
@@ -78,17 +82,20 @@ export const gate = internalQuery({
 			await letterProfileOf(ctx, profile._id)
 		);
 		return reason
-			? { kind: "limit", reason }
+			? { kind: "limit", profileId: profile._id, reason }
 			: { kind: "open", profileId: profile._id };
 	},
 	returns: gateResultValidator,
 });
 
 /**
- * Stores a checked letter. Waiting and unchecked letters re-check the caps
- * (two devices can't both use the last slot: the loser answers `limit`) and
- * use the day. A held letter skips the caps: it isn't a sent letter, it's
- * kept for review and counts as a strike.
+ * Stores a checked letter, and uses the sender's day. Waiting and unchecked
+ * letters re-check the caps first (two devices can't both use the last slot:
+ * the loser answers `limit`). A held letter skips the caps, since it's kept
+ * for review whatever else was sent, but still uses the day, so a sender
+ * (paused or not) adds at most one held letter a day to the review queue and
+ * then meets the same `limit: today` as anyone. The same held words twice,
+ * even from two devices at once, are one row and one strike (spec §3 step 2).
  */
 export const store = internalMutation({
 	args: {
@@ -105,7 +112,26 @@ export const store = internalMutation({
 	},
 	handler: async (ctx, args) => {
 		const now = Date.now();
+		const profile = await ctx.db.get("emotional_profiles", args.profileId);
+		if (!profile) {
+			throw new ConvexError({ code: "profile_not_found" });
+		}
+		const sender = await ensureLetterProfile(ctx, args.profileId);
+		const spendTheDay = async () =>
+			await ctx.db.patch("letter_profiles", sender._id, {
+				lastSentDay: await senderToday(ctx, profile),
+			});
+
 		if (args.status === "held") {
+			const heldBefore = await ctx.db
+				.query("letters")
+				.withIndex("by_sender_hash", (q) =>
+					q.eq("senderProfileId", args.profileId).eq("textHash", args.textHash)
+				)
+				.first();
+			if (heldBefore?.status === "held") {
+				return null;
+			}
 			const letterId = await ctx.db.insert("letters", {
 				createdAt: now,
 				language: args.language,
@@ -127,14 +153,10 @@ export const store = internalMutation({
 				reviewId,
 				senderProfileId: args.profileId,
 			});
+			await spendTheDay();
 			return null;
 		}
 
-		const profile = await ctx.db.get("emotional_profiles", args.profileId);
-		if (!profile) {
-			throw new ConvexError({ code: "profile_not_found" });
-		}
-		const sender = await ensureLetterProfile(ctx, args.profileId);
 		const reason = await writeLimitOf(ctx, profile, sender);
 		if (reason) {
 			return reason;
@@ -148,9 +170,7 @@ export const store = internalMutation({
 			...(args.status === "waiting" && { checkedAt: now }),
 			...(args.aim && { aim: args.aim }),
 		});
-		await ctx.db.patch("letter_profiles", sender._id, {
-			lastSentDay: await senderToday(ctx, profile),
-		});
+		await spendTheDay();
 		return null;
 	},
 	returns: v.union(v.null(), limitReasonValidator),
@@ -187,14 +207,17 @@ export const raiseRisk = internalMutation({
 async function captureSent(
 	ctx: ActionCtx,
 	profileId: Id<"emotional_profiles">,
-	outcome: SendOutcome["kind"]
+	outcome: SendOutcome
 ): Promise<void> {
 	// Swallowed: a lost event must never fail a send. No text, no letter id.
 	try {
 		await posthog.capture(ctx, {
 			distinctId: profileId,
 			event: "letter_sent",
-			properties: { outcome },
+			properties: {
+				outcome: outcome.kind,
+				...(outcome.kind === "limit" && { reason: outcome.reason }),
+			},
 		});
 	} catch (error) {
 		console.error("letter_sent capture failed", error);
@@ -226,12 +249,14 @@ export const send = action({
 			internal.letters.send.gate,
 			{ textHash }
 		);
-		if (gated.kind === "limit") {
-			return { kind: "limit", reason: gated.reason };
-		}
 		const { profileId } = gated;
+		if (gated.kind === "limit") {
+			const outcome = { kind: "limit", reason: gated.reason } as const;
+			await captureSent(ctx, profileId, outcome);
+			return outcome;
+		}
 		if (gated.kind === "held") {
-			await captureSent(ctx, profileId, "held");
+			// The same held words again: answered, not counted as a new held.
 			return { kind: "held" };
 		}
 
@@ -251,7 +276,7 @@ export const send = action({
 			text,
 			textHash,
 		});
-		await captureSent(ctx, profileId, outcome.kind);
+		await captureSent(ctx, profileId, outcome);
 		return outcome;
 	},
 	returns: sendOutcomeValidator,

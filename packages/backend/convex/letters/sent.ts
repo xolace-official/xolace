@@ -13,6 +13,7 @@ import {
 	MARK_SEEN_MAX,
 	openingLine,
 	SENT_LIST_MAX,
+	SENT_LIST_READ_MAX,
 	sentSeen,
 	sentStatusOf,
 } from "./rules";
@@ -28,18 +29,23 @@ async function ownLetter(
 	return letter?.senderProfileId === senderProfileId ? letter : null;
 }
 
-/** Newest first, at most 50. Held letters never show (the sender kept their words). */
+/**
+ * Newest first, at most 50, from the newest {@link SENT_LIST_READ_MAX} rows.
+ * Held letters never show (the sender kept their words).
+ */
 export const list = query({
 	args: {},
 	handler: async (ctx) => {
 		const { profile } = await requireAuth(ctx);
 		const rows = [];
-		for await (const letter of ctx.db
+		const newest = await ctx.db
 			.query("letters")
 			.withIndex("by_sender_created", (q) =>
 				q.eq("senderProfileId", profile._id)
 			)
-			.order("desc")) {
+			.order("desc")
+			.take(SENT_LIST_READ_MAX);
+		for (const letter of newest) {
 			const status = sentStatusOf(letter);
 			if (status === null) {
 				continue;

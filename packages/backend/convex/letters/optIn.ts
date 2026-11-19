@@ -22,7 +22,9 @@ function languageOfLocale(locale: string | undefined): string | undefined {
  * Answer the offer. Yes needs an adult (`age_required` / `age_restricted`);
  * No needs nothing. Saying No after Yes takes the caller out of matching at
  * once and clears what was copied from their sessions; letters already
- * received stay. Repeating the current answer changes nothing.
+ * received stay. Repeating the current answer changes nothing. A consent
+ * record is written for Yes, and for a No only when it withdraws a Yes: a
+ * first No consents to nothing, so there's nothing to revoke.
  */
 export const set = mutation({
 	args: {
@@ -44,6 +46,7 @@ export const set = mutation({
 		}
 		const now = Date.now();
 		const language = languageOfLocale(args.locale);
+		const withdrawsYes = row.optIn === "yes";
 
 		if (args.choice === "yes") {
 			await ctx.db.patch("letter_profiles", row._id, {
@@ -65,14 +68,16 @@ export const set = mutation({
 			});
 		}
 
-		await ctx.db.insert("consent_records", {
-			consentLanguageVersion: args.promptVersion,
-			consentType: "letters_receive",
-			createdAt: now,
-			emotionalProfileId: profile._id,
-			status: args.choice === "yes" ? "granted" : "revoked",
-			...(args.choice === "yes" ? { grantedAt: now } : { revokedAt: now }),
-		});
+		if (args.choice === "yes" || withdrawsYes) {
+			await ctx.db.insert("consent_records", {
+				consentLanguageVersion: args.promptVersion,
+				consentType: "letters_receive",
+				createdAt: now,
+				emotionalProfileId: profile._id,
+				status: args.choice === "yes" ? "granted" : "revoked",
+				...(args.choice === "yes" ? { grantedAt: now } : { revokedAt: now }),
+			});
+		}
 		try {
 			await posthog.capture(ctx, {
 				distinctId: profile._id,
