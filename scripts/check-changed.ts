@@ -1,13 +1,20 @@
 /**
- * Checks only what changed since the merge-base with main (or `--base <ref>`):
+ * Checks only what changed since the merge-base with dev (or `--base <ref>`):
  *   1. Biome on changed files Biome understands.
- *   2. `turbo run check-types lint` for the packages that own changed files,
- *      plus everything that depends on them (`--filter=...<pkg>`).
+ *   2. `turbo run check-types` for the packages that own changed files, plus
+ *      everything that depends on them (`--filter=...<pkg>`): a backend change
+ *      typechecks its clients, which is what guards the Convex contract.
+ *   2b. `turbo run lint` only where step 1 doesn't already cover it: a package
+ *      whose lint does more than `biome check .` (backend's eslint), or whose
+ *      own package.json / biome.json changed. A root config change lints all.
  *   3. Test files that sit next to changed source (`foo.ts` -> `foo.test.ts`)
  *      and changed test files, run through the owning package's runner.
  *   4. A warning (never a failure) for changed `.tsx` files over 200 lines.
  *
  * Usage: bun run check:changed [--base <ref>] [--list]
+ *   --base  compare against the merge-base with this ref instead. Default: the
+ *           first of origin/dev, dev, origin/main, main that exists. Work
+ *           branches off dev, and dev runs far ahead of main between releases.
  *   --list  print the plan and exit without running anything.
  */
 import { spawn } from "node:child_process";
@@ -21,11 +28,30 @@ import {
 	type WorkspacePackage,
 } from "./lib/workspace";
 
-const DEFAULT_BASE_CANDIDATES = ["main", "origin/main"] as const;
+/**
+ * Every branch is cut from dev, so dev is the base; main only as a last resort
+ * (a clone without dev). origin/dev first: it is what the PR is compared with.
+ */
+const DEFAULT_BASE_CANDIDATES = [
+	"origin/dev",
+	"dev",
+	"origin/main",
+	"main",
+] as const;
 
 /** Paths that never affect typecheck or tests. Biome still sees them. */
 const INERT_PREFIXES = [".agents/", "docs/"] as const;
 const INERT_EXTENSIONS = [".md"] as const;
+
+/** Root Biome config: changes what every file lints as, so it lints every package. */
+const ROOT_BIOME_FILES = new Set(["biome.json", "biome.jsonc"]);
+
+/** A package's own files that change how all of its files lint. */
+const PACKAGE_LINT_FILES = [
+	"package.json",
+	"biome.json",
+	"biome.jsonc",
+] as const;
 
 /** Root files that change how every package builds; they widen to "all". */
 const GLOBAL_FILES = new Set([
@@ -61,6 +87,7 @@ const LONG_FILE_LINES = 200;
 /** Everything a passing local run still does not prove. Printed at the end. */
 const CI_ONLY = [
 	"typecheck/lint/test of packages not affected by your diff",
+	"`biome check .` over files you did not change (Biome ran on the changed ones)",
 	"tests that are not siblings of a changed file (full `turbo run test`)",
 	"Convex codegen drift (`convex codegen` + `git diff --exit-code`)",
 	"production builds (next build, expo/EAS, tauri)",
@@ -173,9 +200,24 @@ export interface CheckPlan {
 	affectedPackages: string[];
 	biomeFiles: string[];
 	inertOnly: boolean;
+	/** Run `lint` in every package (a root config or the root Biome config changed). */
+	lintAll: boolean;
+	/** Packages whose package-wide `lint` still has to run (no dependents). */
+	lintPackages: string[];
 	runAllPackages: boolean;
 	testGroups: TestGroup[];
 }
+
+/**
+ * A package's `lint` adds nothing to Biome-on-changed-files when it is only
+ * `biome check .` and nothing changed that affects how its other files lint.
+ */
+const needsPackageLint = (
+	pkg: WorkspacePackage,
+	changed: ReadonlySet<string>
+): boolean =>
+	!pkg.biomeOnlyLint ||
+	PACKAGE_LINT_FILES.some((file) => changed.has(`${pkg.dir}/${file}`));
 
 const ROOT_GROUP = "";
 
@@ -215,17 +257,25 @@ export const planChecks = (
 	const biomeFiles = live.filter(isBiomeSupported);
 	const relevant = changed.filter((file) => !isInertPath(file));
 	const runAllPackages = relevant.some(isGlobalFile);
+	const changedSet = new Set(changed);
 	const affected = new Set<string>();
+	const lint = new Set<string>();
 	for (const file of relevant) {
 		const pkg = findOwningPackage(file, packages);
 		if (pkg) {
 			affected.add(pkg.name);
+			if (needsPackageLint(pkg, changedSet)) {
+				lint.add(pkg.name);
+			}
 		}
 	}
 	return {
 		affectedPackages: [...affected].sort(),
 		biomeFiles,
 		inertOnly: changed.length > 0 && relevant.length === 0,
+		lintAll:
+			runAllPackages || relevant.some((file) => ROOT_BIOME_FILES.has(file)),
+		lintPackages: [...lint].sort(),
 		runAllPackages,
 		testGroups: groupTestsByPackage(
 			resolveTestFiles(changed, exists),
@@ -234,6 +284,13 @@ export const planChecks = (
 	};
 };
 
+const TURBO_FLAGS = [
+	"--continue",
+	"--output-logs=errors-only",
+	"--ui=stream",
+] as const;
+
+/** `check-types` for affected packages and everything that depends on them. */
 export const turboArgs = (plan: CheckPlan): string[] | null => {
 	if (!plan.runAllPackages && plan.affectedPackages.length === 0) {
 		return null;
@@ -241,15 +298,18 @@ export const turboArgs = (plan: CheckPlan): string[] | null => {
 	const filters = plan.runAllPackages
 		? []
 		: plan.affectedPackages.map((name) => `--filter=...${name}`);
-	return [
-		"run",
-		"check-types",
-		"lint",
-		...filters,
-		"--continue",
-		"--output-logs=errors-only",
-		"--ui=stream",
-	];
+	return ["run", "check-types", ...filters, ...TURBO_FLAGS];
+};
+
+/** Package-wide `lint`, only where Biome on the changed files isn't enough. */
+export const turboLintArgs = (plan: CheckPlan): string[] | null => {
+	if (!plan.lintAll && plan.lintPackages.length === 0) {
+		return null;
+	}
+	const filters = plan.lintAll
+		? []
+		: plan.lintPackages.map((name) => `--filter=${name}`);
+	return ["run", "lint", ...filters, ...TURBO_FLAGS];
 };
 
 const TURBO_FAILED_LINE = /^\s*Failed:\s+(\S+)/;
@@ -276,7 +336,7 @@ export const parseArgs = (
 	const baseIndex = argv.indexOf("--base");
 	const base = baseIndex === -1 ? undefined : argv[baseIndex + 1];
 	if (baseIndex !== -1 && !base) {
-		throw new Error("--base needs a git ref, e.g. --base origin/main");
+		throw new Error("--base needs a git ref, e.g. --base origin/dev");
 	}
 	return { base, listOnly: argv.includes("--list") };
 };
@@ -290,16 +350,27 @@ const refExists = (ref: string, root: string): boolean => {
 	}
 };
 
-const resolveBase = (root: string, requested?: string): string => {
+/** The ref to diff against: `--base` if given, else the first default that exists. */
+export const pickBaseRef = (
+	exists: (ref: string) => boolean,
+	requested?: string
+): string => {
 	const candidates = requested ? [requested] : DEFAULT_BASE_CANDIDATES;
-	for (const ref of candidates) {
-		if (refExists(ref, root)) {
-			return git(["merge-base", "HEAD", ref], root);
-		}
+	const ref = candidates.find(exists);
+	if (!ref) {
+		throw new Error(
+			`No base ref found (tried ${candidates.join(", ")}). Pass --base <ref>.`
+		);
 	}
-	throw new Error(
-		`No base ref found (tried ${candidates.join(", ")}). Pass --base <ref>.`
-	);
+	return ref;
+};
+
+const resolveBase = (
+	root: string,
+	requested?: string
+): { ref: string; sha: string } => {
+	const ref = pickBaseRef((candidate) => refExists(candidate, root), requested);
+	return { ref, sha: git(["merge-base", "HEAD", ref], root) };
 };
 
 const splitLines = (text: string): string[] =>
@@ -397,14 +468,12 @@ const runBiome = (root: string, files: string[]): Promise<StepResult> =>
 
 const runTurbo = (
 	root: string,
-	plan: CheckPlan,
+	name: string,
+	scope: string,
 	args: string[]
 ): Promise<StepResult> =>
-	timed("turbo check-types + lint (affected + dependents)", async () => {
+	timed(name, async () => {
 		const { code, output } = await runCommand("bunx", ["turbo", ...args], root);
-		const scope = plan.runAllPackages
-			? "all packages (a root config file changed)"
-			: plan.affectedPackages.join(", ");
 		if (code === 0) {
 			return { detail: scope, status: "pass" };
 		}
@@ -436,8 +505,14 @@ const runTestGroup = (root: string, group: TestGroup): Promise<StepResult> => {
 	});
 };
 
-const printPlan = (base: string, changed: string[], plan: CheckPlan) => {
-	process.stdout.write(`base: ${base.slice(0, 12)}\n`);
+const printPlan = (
+	base: { ref: string; sha: string },
+	changed: string[],
+	plan: CheckPlan
+) => {
+	process.stdout.write(
+		`base: ${base.sha.slice(0, 12)} (merge-base with ${base.ref})\n`
+	);
 	process.stdout.write(`changed files: ${changed.length}\n`);
 	process.stdout.write(`biome files: ${plan.biomeFiles.length}\n`);
 	let packagesLine = plan.affectedPackages.join(", ") || "(none)";
@@ -445,6 +520,7 @@ const printPlan = (base: string, changed: string[], plan: CheckPlan) => {
 		packagesLine = "ALL (root config changed)";
 	}
 	process.stdout.write(`affected packages: ${packagesLine}\n`);
+	process.stdout.write(`package-wide lint: ${lintScope(plan)}\n`);
 	const tests = plan.testGroups.flatMap((group) =>
 		group.files.map((file) => `${group.dir ? `${group.dir}/` : ""}${file}`)
 	);
@@ -452,6 +528,20 @@ const printPlan = (base: string, changed: string[], plan: CheckPlan) => {
 	if (plan.inertOnly) {
 		process.stdout.write("only inert paths changed (docs, .agents, *.md)\n");
 	}
+};
+
+const typecheckScope = (plan: CheckPlan): string =>
+	plan.runAllPackages
+		? "all packages (a root config file changed)"
+		: `${plan.affectedPackages.join(", ")} + dependents`;
+
+const lintScope = (plan: CheckPlan): string => {
+	if (plan.lintAll) {
+		return "all packages (a root or Biome config changed)";
+	}
+	return (
+		plan.lintPackages.join(", ") || "(none; Biome on changed files covers it)"
+	);
 };
 
 const STATUS_LABEL = {
@@ -508,7 +598,7 @@ const main = async (): Promise<number> => {
 	const options = parseArgs(process.argv.slice(2));
 	const root = findRepoRoot(process.cwd());
 	const base = resolveBase(root, options.base);
-	const changed = listChangedFiles(root, base);
+	const changed = listChangedFiles(root, base.sha);
 	const packages = listWorkspacePackages(root);
 	const exists = (file: string) => existsSync(join(root, file));
 	const plan = planChecks(changed, packages, exists);
@@ -532,8 +622,20 @@ const main = async (): Promise<number> => {
 	const turbo = turboArgs(plan);
 	steps.push(
 		turbo
-			? await runTurbo(root, plan, turbo)
-			: skip("turbo check-types + lint", "no workspace package changed")
+			? await runTurbo(
+					root,
+					"turbo check-types (affected + dependents)",
+					typecheckScope(plan),
+					turbo
+				)
+			: skip("turbo check-types", "no workspace package changed")
+	);
+
+	const lint = turboLintArgs(plan);
+	steps.push(
+		lint
+			? await runTurbo(root, "turbo lint (package-wide)", lintScope(plan), lint)
+			: skip("turbo lint", lintScope(plan))
 	);
 
 	if (plan.testGroups.length === 0) {

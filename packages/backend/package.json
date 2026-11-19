@@ -20,7 +20,7 @@
   },
   "scripts": {
     "badges:upload": "bun scripts/badges/upload.ts",
-    "check-types": "tsc --noEmit -p convex && tsc --noEmit -p tsconfig.json",
+    "check-types": "tsc --noEmit -p convex --incremental --tsBuildInfoFile node_modules/.cache/tsc/convex.tsbuildinfo && tsc --noEmit -p tsconfig.json",
     "codegen": "node scripts/codegen.mjs",
     "dev": "convex dev",
     "dev:setup": "convex dev --configure --until-success",
