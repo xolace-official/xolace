@@ -199,5 +199,26 @@ export function chainFilter(count: number, crossfade: number): string {
 	return steps.join(";");
 }
 
+/**
+ * The art file for `key` among a folder's `files`, trying `exts` in order. The
+ * extension matches in any case (the owner's camera exports `.MP4`), and the
+ * name comes back as it is on disk, so nothing is renamed.
+ */
+export function artFileName(
+	files: readonly string[],
+	key: string,
+	exts: readonly string[]
+): string | undefined {
+	for (const ext of exts) {
+		const hit = files.find(
+			(file) => file.toLowerCase() === `${key}.${ext}`.toLowerCase()
+		);
+		if (hit) {
+			return hit;
+		}
+	}
+	return undefined;
+}
+
 /** The WebP quality to try next when a still came out too big. */
 export const nextStillQuality = (quality: number) => quality - 8;

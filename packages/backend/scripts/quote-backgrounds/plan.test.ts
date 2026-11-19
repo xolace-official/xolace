@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
 	AAC_FRAME,
 	AUDIO,
+	artFileName,
 	audioPlan,
 	chainFilter,
 	gainDb,
@@ -110,5 +111,23 @@ describe("the ambient track", () => {
 		expect(gainDb({ loudness: -30, truePeak: -12 })).toBe(6);
 		expect(gainDb({ loudness: -30, truePeak: -3 })).toBe(1);
 		expect(gainDb({ loudness: -16.7, truePeak: -4 })).toBe(-7.3);
+	});
+});
+
+describe("finding the art", () => {
+	const files = ["forest-rain.MP4", "hearth.mp4", "silk.JPEG", "notes.txt"];
+
+	it("matches the extension in any case and keeps the name as it is on disk", () => {
+		expect(artFileName(files, "forest-rain", ["mp4", "mov"])).toBe(
+			"forest-rain.MP4"
+		);
+		expect(artFileName(files, "silk", ["png", "jpg", "jpeg"])).toBe(
+			"silk.JPEG"
+		);
+	});
+
+	it("tries the extensions in order and finds nothing for a key with no file", () => {
+		expect(artFileName(["a.mov", "a.mp4"], "a", ["mp4", "mov"])).toBe("a.mp4");
+		expect(artFileName(files, "shoreline", ["mp4", "mov"])).toBeUndefined();
 	});
 });
