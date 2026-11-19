@@ -80,6 +80,10 @@ describe("the committed manifest", () => {
 
 	it("gives the pale art dark ink, and everything else light", () => {
 		const dark = list.filter((e) => e.ink === "dark").map((e) => e.key);
-		expect(dark).toEqual(["poster", "ink-wash", "watercolour"]);
+		expect(dark).toEqual(["poster", "snowfield", "ink-wash", "watercolour"]);
+	});
+
+	it("draws Snowfield's words in dark ink: the still is almost all white", () => {
+		expect(list.find((e) => e.key === "snowfield")?.ink).toBe("dark");
 	});
 });
