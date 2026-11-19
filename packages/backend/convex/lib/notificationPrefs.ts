@@ -30,7 +30,10 @@ export async function updateNotificationPrefs(
 		return;
 	}
 
-	const notifications = { ...preferences.notifications, ...partial };
+	const notifications = withPushOn(
+		{ ...preferences.notifications, ...partial },
+		partial
+	);
 	await ctx.db.patch("preferences", preferences._id, { notifications });
 
 	const movedZone =
@@ -39,4 +42,26 @@ export async function updateNotificationPrefs(
 	if ("dailyQuote" in partial || movedZone) {
 		await syncDailyQuoteSchedule(ctx, emotionalProfileId, notifications);
 	}
+}
+
+/**
+ * Turning the daily quote on turns push on with it: `enabled` is push's
+ * switch for every intent (#760), and the app's master means "at least one
+ * kind of notification wants delivery". Someone who had only the old
+ * on-device quote reminders has it off, so without this the push they chose
+ * would never reach them. `chat` is pinned off when it was never chosen
+ * (absent means on), so the master coming on wakes nothing they didn't pick.
+ */
+function withPushOn(
+	notifications: NotificationPrefs,
+	partial: Partial<NotificationPrefs>
+): NotificationPrefs {
+	if (!(partial.dailyQuote?.enabled && !notifications.enabled)) {
+		return notifications;
+	}
+	return {
+		...notifications,
+		chat: notifications.chat ?? false,
+		enabled: true,
+	};
 }

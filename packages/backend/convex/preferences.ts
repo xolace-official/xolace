@@ -172,7 +172,7 @@ const updateArgs = {
 			channelOrder: v.optional(v.array(outreachChannelValidator)),
 			chat: v.optional(v.boolean()),
 			// Accepted so a client echoing what `get` returned never fails
-			// validation; set it with `notificationDailyQuote`.
+			// validation, then dropped; set it with `notificationDailyQuote`.
 			dailyQuote: v.optional(dailyQuoteSettingValidator),
 			enabled: v.boolean(),
 			gentleReturn: v.boolean(),
@@ -360,7 +360,13 @@ export async function updatePreferences(
 	// toggle. Absent-means-enabled makes that erasure fail open, which is the
 	// worse direction: someone who muted chat would start being pushed again.
 	if (args.notifications !== undefined) {
-		const { channelOrder: _ignored, ...notifications } = args.notifications;
+		// The daily quote is set only through `notificationDailyQuote`: an
+		// echo read before the backoff paused it would turn it back on.
+		const {
+			channelOrder: _ignored,
+			dailyQuote: _echoed,
+			...notifications
+		} = args.notifications;
 		await updateNotificationPrefs(
 			ctx,
 			preferences.emotionalProfileId,

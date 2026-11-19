@@ -181,17 +181,21 @@ async function settleSignup(user: SeededUser): Promise<void> {
 	vi.setSystemTime(START);
 }
 
-/** Push on (UTC, no quiet window), and the daily quote on at `slot`. */
-async function subscribed(
-	slot: "morning" | "afternoon" | "evening" = "morning"
-): Promise<SeededUser> {
-	const user = await asNewUser();
+function register(user: SeededUser): void {
 	user.root.registerComponent(
 		"rateLimiter",
 		rateLimiterSchema,
 		rateLimiterModules
 	);
 	workpoolTest.register(user.root, "outreachPush");
+}
+
+/** Push on (UTC, no quiet window), and the daily quote on at `slot`. */
+async function subscribed(
+	slot: "morning" | "afternoon" | "evening" = "morning"
+): Promise<SeededUser> {
+	const user = await asNewUser();
+	register(user);
 	await settleSignup(user);
 	await setNotifications(user, { enabled: true, timezone: "UTC" });
 	await user.t.mutation(api.preferences.update, {
@@ -574,6 +578,48 @@ describe("the setting", () => {
 		expect((await rowOf(user))?.dueAt).toBe(dayStart(0) + 23 * HOUR);
 	});
 
+	it("an echo read before the backoff paused it doesn't turn it back on", async () => {
+		const user = await subscribed();
+		const { notifications: stale } = await prefsOf(user);
+		await setNotifications(user, {
+			dailyQuote: { enabled: false, pausedAt: 1, slot: "morning" },
+		});
+		await user.t.mutation(api.preferences.update, { notifications: stale });
+		expect((await prefsOf(user)).notifications.dailyQuote).toEqual({
+			enabled: false,
+			pausedAt: 1,
+			slot: "morning",
+		});
+	});
+
+	it("turning it on turns push on, and wakes nothing else", async () => {
+		const user = await asNewUser();
+		register(user);
+		await settleSignup(user);
+		await setNotifications(user, { timezone: "UTC" });
+		await user.t.mutation(api.preferences.update, {
+			notificationDailyQuote: { enabled: true, slot: "morning" },
+		});
+		expect((await prefsOf(user)).notifications).toMatchObject({
+			chat: false,
+			enabled: true,
+			gentleReturn: false,
+			milestone: false,
+			patternNudge: false,
+		});
+		expect((await morning(user, 0)).pushes).toBe(1);
+	});
+
+	it("leaves a chat choice alone when push was already on", async () => {
+		const user = await asNewUser();
+		await settleSignup(user);
+		await setNotifications(user, { enabled: true });
+		await user.t.mutation(api.preferences.update, {
+			notificationDailyQuote: { enabled: true, slot: "morning" },
+		});
+		expect((await prefsOf(user)).notifications.chat).toBeUndefined();
+	});
+
 	it("an old client echoing its notifications back keeps the setting", async () => {
 		const user = await subscribed();
 		const { notifications } = await prefsOf(user);
@@ -644,6 +690,22 @@ describe("migration from the on-device reminders", () => {
 				{}
 			)
 		).toEqual({ enabled: true, slot: "evening" });
+	});
+
+	it("reaches someone who had only the on-device reminders, with push off", async () => {
+		const user = await legacy({ notificationTime: "morning" });
+		register(user);
+		await setNotifications(user, { enabled: false });
+		await user.t.mutation(
+			api.dailyQuotes.pushSettings.adoptLegacyReminders,
+			{}
+		);
+		expect((await prefsOf(user)).notifications).toMatchObject({
+			chat: false,
+			enabled: true,
+			gentleReturn: false,
+		});
+		expect((await morning(user, 0)).pushes).toBe(1);
 	});
 
 	it("leaves off whoever had them off, at no time, or never set them", async () => {
