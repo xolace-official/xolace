@@ -73,6 +73,31 @@ describe("tends played on return", () => {
 		expect(played).toEqual([0, 1, 2, 3]);
 		expect(moveCard).not.toHaveBeenCalled();
 	});
+
+	it("found again after a choice (a skip, an Undo), the plays not started keep the batch's ticket", () => {
+		const { moveCard, played, s } = setup();
+		const cancel = s.playBatch([0, 1, 2, 3]);
+		vi.advanceTimersByTime(SETTLE_MS + STAGGER_MS / 2);
+		expect(played).toEqual([0]);
+		// Not for me on stop 2: the states change, so the effect cancels and finds the rest again.
+		s.choose();
+		cancel();
+		s.playBatch([1, 2, 3]);
+		vi.runAllTimers();
+		expect(played).toEqual([0, 1, 2, 3]);
+		expect(moveCard).not.toHaveBeenCalled();
+	});
+
+	it("a tend first found after the choice takes a new ticket, and moves the card", () => {
+		const { moveCard, s } = setup();
+		const cancel = s.playBatch([0]);
+		vi.advanceTimersByTime(SETTLE_MS + STAGGER_MS / 2);
+		s.choose();
+		cancel();
+		s.playBatch([3]);
+		vi.runAllTimers();
+		expect(moveCard).toHaveBeenCalledOnce();
+	});
 });
 
 describe("I did this", () => {

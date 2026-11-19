@@ -114,11 +114,12 @@ export function useTrail(
 	// Move-ons, and tends played after the press or on return (`trail-schedule.ts`).
 	const [schedule] = useState(() =>
 		trailSchedule({
-			clearTimeout,
+			// Called as plain functions: the browser's timers throw when called as a method.
+			clearTimeout: (id) => clearTimeout(id),
 			moveCard: () => setOpen(restingCard(latest.current.now)),
 			play: (i, last, landed) => playRef.current(i, last, landed),
 			resetTend: () => tendRef.current.reset(),
-			setTimeout,
+			setTimeout: (fn, ms) => setTimeout(fn, ms),
 		})
 	);
 	// A new kindling: the old one's undo window closes without sending (its twig is gone), and

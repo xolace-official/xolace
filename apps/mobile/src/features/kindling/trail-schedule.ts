@@ -36,6 +36,8 @@ export type ScheduleDeps = {
 export function trailSchedule(deps: ScheduleDeps) {
 	let timers: Handle[] = [];
 	let choices: Choices = NO_CHOICES;
+	// Tends found on return that haven't started, with the ticket of the batch that found them.
+	let queued = new Map<number, Choices>();
 	const later = (ms: number, fn: () => void) => {
 		timers.push(deps.setTimeout(fn, ms));
 	};
@@ -65,21 +67,29 @@ export function trailSchedule(deps: ScheduleDeps) {
 		/** A new kindling replaced this one: nothing still pending for the old one runs. */
 		newKindling: () => {
 			clear();
+			queued = new Map();
 			choices = chosen(choices);
 			deps.resetTend();
 		},
 		/**
 		 * Coming back: what was tended elsewhere plays in trail order, 450 ms in, 300 ms apart (§7),
-		 * on one ticket. Returns the cancel for the plays not started yet.
+		 * on one ticket. A batch is found again whenever the states change (a skip, an Undo), which
+		 * cancels the plays not started yet: those keep the ticket they were found with, and only
+		 * tends found now take a new one, so a choice made mid-batch still holds. Returns the cancel.
 		 */
 		playBatch: (fresh: readonly number[]) => {
-			const ticket = choices;
-			const ids = fresh.map((i, n) =>
-				deps.setTimeout(
-					() => start(i, n === fresh.length - 1, ticket),
+			const kept = queued;
+			queued = new Map(fresh.map((i) => [i, kept.get(i) ?? choices]));
+			const ids = fresh.map((i, n) => {
+				const ticket = queued.get(i) ?? choices;
+				return deps.setTimeout(
+					() => {
+						queued.delete(i);
+						start(i, n === fresh.length - 1, ticket);
+					},
 					SETTLE_MS + n * STAGGER_MS
-				)
-			);
+				);
+			});
 			return () => {
 				for (const id of ids) {
 					deps.clearTimeout(id);
