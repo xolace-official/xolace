@@ -1,10 +1,13 @@
 import { Skia, type SkPath } from "@shopify/react-native-skia";
+import { type LegRun, sampleLeg } from "./leg-samples";
 import { DESIGN_W, type TrailPoints, trailPoints } from "./trail-points";
 
 export type Trail = TrailPoints & {
 	width: number;
 	/** One Skia path per leg, in the order of `legs`, with a key to draw it by. */
 	roads: { key: string; path: SkPath }[];
+	/** Each leg sampled by length, for the burn (`burn.ts`). */
+	runs: LegRun[];
 };
 
 const cache = new Map<string, Trail>();
@@ -26,7 +29,10 @@ export function trailGeometry(width: number, count: number): Trail {
 			.cubicTo(b[0], b[1], c[0], c[1], d[0], d[1])
 			.build(),
 	}));
-	const trail = { ...points, roads, width };
+	const runs = points.legs.map((leg, j) =>
+		sampleLeg(leg, points.stops[j] ?? leg[0], points.stops[j + 1] ?? null)
+	);
+	const trail = { ...points, roads, runs, width };
 	cache.set(key, trail);
 	return trail;
 }

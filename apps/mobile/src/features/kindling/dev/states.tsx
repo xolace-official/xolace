@@ -15,8 +15,13 @@ const ALL = viewOf(BOARD, ["done", "done", "done", "done"]);
 const SOME = viewOf(BOARD, ["done", "passed", "done", "done"]);
 const NONE_TENDED = viewOf(BOARD, ["passed", "passed", "passed", "passed"]);
 const TRAIL = viewOf(BOARD);
+const NONE_YET = viewOf(BOARD, ["wait", "wait", "wait", "wait"]);
+/** One left waiting, the second: its tend rides on into the fire, or passing it catches in place. */
+const ONE_LEFT = viewOf(BOARD, ["done", "wait", "done", "done"]);
 const ARRIVE_FIRST = [0] as const;
+const ARRIVE_SECOND = [1] as const;
 const ARRIVE_TWO = [0, 2] as const;
+const ARRIVE_ALL = [0, 1, 2, 3] as const;
 const XOLACER = 1;
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
@@ -47,6 +52,26 @@ export const devStates: readonly DevState[] = [
 		...kindling({ arrive: ARRIVE_TWO, view: TRAIL }),
 	},
 	{
+		id: "four-on-return",
+		title: "Four tends play, the last into the fire",
+		...kindling({ arrive: ARRIVE_ALL, view: NONE_YET }),
+	},
+	{
+		id: "into-the-fire",
+		title: "The last tend rides into the fire",
+		...kindling({ arrive: ARRIVE_SECOND, view: ONE_LEFT }),
+	},
+	{
+		id: "into-the-fire-light",
+		title: "Into the fire, Daylight",
+		...kindling({ ...LIGHT, arrive: ARRIVE_SECOND, view: ONE_LEFT }),
+	},
+	{
+		id: "one-left",
+		title: "One left (Begin rides into the fire, Not for me catches in place)",
+		...kindling({ view: ONE_LEFT }),
+	},
+	{
 		id: "tended",
 		title: "03–04 First tended, card moved on",
 		...kindling({ view: FIRST_TENDED }),
@@ -67,6 +92,11 @@ export const devStates: readonly DevState[] = [
 		...kindling({ ...LIGHT, view: LAST_TENDED }),
 	},
 	{ id: "passed", title: "08 Passed by", ...kindling({ view: PASSED }) },
+	{
+		id: "refused",
+		title: "I did this, refused mid-burn",
+		...kindling({ refuses: true, view: PASSED }),
+	},
 	{
 		id: "passed-light",
 		title: "08 Passed by, Daylight",

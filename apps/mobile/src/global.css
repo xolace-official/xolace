@@ -545,6 +545,21 @@
 	--color-kindling-try-dark: #1a2633;
 	--color-kindling-fire: #fff1dc;
 	--color-kindling-fire-dark: #2e2216;
+	/* The tend's light on the kindling screen (handoff kindling.md §4, fuse-burn's layers): the
+     * spark's glow (centre to edge) and white core, thrown sparks hot and warm, the ember behind
+     * the spark, a disc's flash, the fire's rising embers, and the smoke (Daylight, -dark Dusk). */
+	--color-kindling-fx-glow: #fff6e0;
+	--color-kindling-fx-glow-warm: #ffd27a;
+	--color-kindling-fx-glow-edge: rgba(255, 106, 46, 0.45);
+	--color-kindling-fx-glow-clear: rgba(255, 106, 46, 0);
+	--color-kindling-fx-core: #fffaf0;
+	--color-kindling-fx-hot: #fff0c2;
+	--color-kindling-fx-warm: #ff9a3c;
+	--color-kindling-fx-ember: #ff6a2e;
+	--color-kindling-fx-flash: #fff4dc;
+	--color-kindling-fx-fire-ember: #ffc27a;
+	--color-kindling-fx-smoke: #b9b2c9;
+	--color-kindling-fx-smoke-dark: #9aa3c4;
 	/* A moment card's soft halo (production's 0 0 5px at 5%) and a rail tile's art lifting
      * under a held finger: shadows, the same on every page. */
 	--color-today-moment-shadow: rgba(20, 16, 40, 0.05);

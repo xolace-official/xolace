@@ -9,6 +9,7 @@ import {
 	vec,
 } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import { type Burn, goldEnd, legBurning } from "./burn";
 import type { KindlingColours } from "./kindling-colours";
 import type { Trail } from "./trail-geometry";
 
@@ -38,6 +39,12 @@ type Props = {
 	/** The dashes' phase (0 → −16 every 530 ms), on the UI thread. */
 	march: SharedValue<number>;
 	fade: TendFade;
+	/**
+	 * The burns in flight and their clock (still while nothing burns): a burning leg's gold runs
+	 * behind its spark.
+	 */
+	burns: SharedValue<Burn[]>;
+	time: SharedValue<number>;
 	fireGlow: SharedValue<number>;
 	c: KindlingColours;
 };
@@ -49,6 +56,8 @@ export function KindlingRoad({
 	passed,
 	march,
 	fade,
+	burns,
+	time,
 	fireGlow,
 	c,
 }: Props) {
@@ -74,6 +83,7 @@ export function KindlingRoad({
 			</Circle>
 			{trail.roads.map((road, j) => (
 				<RoadLeg
+					burns={burns}
 					c={c}
 					fade={fade}
 					j={j}
@@ -82,6 +92,8 @@ export function KindlingRoad({
 					march={march}
 					passed={passed[j] ?? false}
 					path={road.path}
+					time={time}
+					trail={trail}
 				/>
 			))}
 		</Canvas>
@@ -91,26 +103,48 @@ export function KindlingRoad({
 type LegProps = {
 	j: number;
 	path: SkPath;
+	trail: Trail;
 	lit: boolean;
 	passed: boolean;
 	march: SharedValue<number>;
 	fade: TendFade;
+	burns: SharedValue<Burn[]>;
+	time: SharedValue<number>;
 	c: KindlingColours;
 };
 
-function RoadLeg({ j, path, lit, passed, march, fade, c }: LegProps) {
+/** Below this the gold has no length yet. */
+const NO_GOLD = 0.001;
+
+function RoadLeg({
+	j,
+	path,
+	trail,
+	lit,
+	passed,
+	march,
+	fade,
+	burns,
+	time,
+	c,
+}: LegProps) {
 	const glowOpacity = c.day ? ROAD.glow.day : ROAD.glow.dusk;
+	// How far the gold reaches: the burn's head while it runs, else all of a lit leg.
+	const end = useDerivedValue(() =>
+		goldEnd(trail, burns.get(), lit ? 1 : 0, j, time.get())
+	);
 	const gold = useDerivedValue(() => {
-		if (!lit) {
+		if (end.get() <= NO_GOLD) {
 			return 0;
 		}
 		return fade.leg.get() === j ? fade.t.get() : 1;
 	});
 	const glow = useDerivedValue(() => gold.get() * glowOpacity);
-	// A lit leg's dashes go as its gold comes; a passed leg's stop, at .3.
+	// A lit leg's dashes go once the burn has passed (or as Reduce Motion's gold comes); a passed
+	// leg's stop, at .3.
 	const dashes = useDerivedValue(() => {
-		if (lit) {
-			return 1 - gold.get();
+		if (lit && !legBurning(burns.get(), j, time.get())) {
+			return fade.leg.get() === j ? 1 - fade.t.get() : 0;
 		}
 		return passed ? ROAD.passedDash : 1;
 	});
@@ -136,6 +170,7 @@ function RoadLeg({ j, path, lit, passed, march, fade, c }: LegProps) {
 			</Path>
 			<Path
 				color={c.ember}
+				end={end}
 				opacity={glow}
 				path={path}
 				strokeCap="round"
@@ -146,6 +181,7 @@ function RoadLeg({ j, path, lit, passed, march, fade, c }: LegProps) {
 			</Path>
 			<Path
 				color={c.ember}
+				end={end}
 				opacity={gold}
 				path={path}
 				strokeCap="round"

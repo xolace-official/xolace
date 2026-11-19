@@ -13,7 +13,7 @@ import { COPY } from "./copy";
 import { KindlingHeader } from "./header/kindling-header";
 import { KindlingMenu } from "./header/kindling-menu";
 import { useKindling } from "./kindling-data";
-import { caught as hasCaught, settled, type TrailView } from "./kindling-model";
+import { settled, type TrailView } from "./kindling-model";
 import { KindlingStatus } from "./kindling-status";
 import { useKindlingColours } from "./trail/kindling-colours";
 import { KindlingTrail } from "./trail/kindling-trail";
@@ -67,8 +67,7 @@ function KindlingBody({ view: ready }: { view: TrailView | null }) {
 	const live = useLive(reduced);
 	const c = useKindlingColours();
 	const trail = trailGeometry(width, view.twigs.length);
-	const k = useTrail(view, actions, reduced);
-	const caught = hasCaught(k.shown);
+	const k = useTrail(view, actions, { live, reduced, trail });
 	const bottom = Math.max(
 		CARD_MIN_BOTTOM,
 		CARD_GAP + insets.bottom - BOARD_BOTTOM
@@ -77,7 +76,7 @@ function KindlingBody({ view: ready }: { view: TrailView | null }) {
 	const s = useTrailScroll({
 		bottom,
 		cardH,
-		caught,
+		caught: k.bound,
 		open: k.open,
 		reduced,
 		stops: trail.stops,
@@ -126,13 +125,14 @@ function KindlingBody({ view: ready }: { view: TrailView | null }) {
 						>
 							<KindlingTrail
 								c={c}
-								caught={caught}
-								fade={k.fade}
+								caught={k.caught}
+								hold={k.hold}
 								live={live}
 								onOpen={k.actions.openStop}
 								open={k.open}
 								reduced={reduced}
 								shown={k.shown}
+								tend={k.tend}
 								trail={trail}
 								twigs={view.twigs}
 							/>
