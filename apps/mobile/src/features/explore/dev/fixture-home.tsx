@@ -89,7 +89,10 @@ export function FixtureHome({
 	};
 	return (
 		<HomeProvider value={{ actions, state }}>
-			<Stack.SearchBar placeholder="Search audio, music and Lantern" />
+			<Stack.SearchBar
+				hideWhenScrolling={false}
+				placeholder="Search audio, music and Lantern"
+			/>
 			<HomeScreen />
 		</HomeProvider>
 	);

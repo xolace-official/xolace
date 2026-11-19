@@ -155,7 +155,9 @@ export function BrowseHome({ children }: { children: ReactNode }) {
 
 	return (
 		<>
+			{/* Always shown under the title, as the handoff draws it (explore.md). */}
 			<Stack.SearchBar
+				hideWhenScrolling={false}
 				onCancelButtonPress={() => setText("")}
 				onChangeText={(e) => setText(e.nativeEvent.text)}
 				onClose={() => setText("")}
