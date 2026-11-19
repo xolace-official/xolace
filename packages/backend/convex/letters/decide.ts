@@ -22,7 +22,10 @@ export const LETTER_LANGUAGES: readonly string[] = ["en"];
 export type LetterCheck =
 	/** The sender may be at risk: care, an escalation, nothing stored. */
 	| { kind: "risk"; peak: TalkPeak | null }
-	/** Hostile: stored for review, a strike, never placed. */
+	/**
+	 * Hostile, by the classifier or by moderation's content-policy rejection:
+	 * stored for review, a strike, never placed.
+	 */
 	| { kind: "held" }
 	/** Not in `LETTER_LANGUAGES`: returned, nothing stored. */
 	| { kind: "lang"; language: string }
@@ -34,9 +37,15 @@ export type LetterCheck =
 	| { kind: "pass" };
 
 export type LetterCheckDeps = {
-	/** The sender's safety: intake's `checkWordsSafety`. Never rejects. */
+	/**
+	 * The sender's safety: intake's `checkWordsSafety`. Shouldn't reject; if it
+	 * does, `checkLetterText` reads that as this half unavailable.
+	 */
 	safety: (text: string) => Promise<WordsVerdict>;
-	/** The letters classifier; `null` when it couldn't answer. Never rejects. */
+	/**
+	 * The letters classifier; `null` when it couldn't answer. Shouldn't reject;
+	 * if it does, `checkLetterText` reads that as `null`.
+	 */
 	classify: (text: string) => Promise<LetterVerdict | null>;
 };
 
@@ -53,8 +62,9 @@ export function patternCategory(text: string): FixableCategory | null {
 
 /**
  * The decision, first that applies: risk, held, lang, fixable, unavailable,
- * pass. `verdict` is `null` when the classifier couldn't answer, or wasn't asked
- * because `pattern` already found something to fix.
+ * pass. `verdict` is `null` when the classifier couldn't answer. A pattern hit
+ * doesn't skip it: a hostile letter with a phone number in it is held, not
+ * handed back to be fixed.
  *
  * Unavailable when either half couldn't finish, not only both: the safety half
  * guards the sender and the classifier guards the reader, and #750 places
@@ -70,7 +80,7 @@ export function decideLetterCheck(input: {
 	if (safety.level === "elevated" || safety.level === "crisis") {
 		return { kind: "risk", peak: safety.peak ?? null };
 	}
-	if (verdict?.hostile) {
+	if (verdict?.hostile || safety.rejected) {
 		return { kind: "held" };
 	}
 	if (
@@ -90,11 +100,17 @@ export function decideLetterCheck(input: {
 	return { kind: "pass" };
 }
 
+/** The safety half when its call threw: no answer, so unavailable. */
+const SAFETY_THREW: WordsVerdict = {
+	level: "none",
+	resources: [],
+	unavailable: true,
+};
+
 /**
- * The whole check over a letter's words. The safety half always runs, so a
- * phone number never hides a sender at risk; the classifier is skipped when the
- * patterns already found something to fix, since the letter is coming back
- * either way and its resend is checked in full.
+ * The whole check over a letter's words. Both halves always run, so a phone
+ * number never hides a sender at risk or a hostile letter. Never rejects: a
+ * half that throws counts as unavailable.
  */
 export async function checkLetterText(
 	text: string,
@@ -102,8 +118,8 @@ export async function checkLetterText(
 ): Promise<LetterCheck> {
 	const pattern = patternCategory(text);
 	const [safety, verdict] = await Promise.all([
-		deps.safety(text),
-		pattern ? null : deps.classify(text),
+		deps.safety(text).catch(() => SAFETY_THREW),
+		deps.classify(text).catch(() => null),
 	]);
 	return decideLetterCheck({ pattern, safety, verdict });
 }

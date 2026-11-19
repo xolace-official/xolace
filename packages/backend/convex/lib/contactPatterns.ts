@@ -19,10 +19,18 @@ export type ContactPattern = {
 	 * range, not a phone). Stream can't count, so its list leaves this out.
 	 */
 	minDigits?: number;
+	/**
+	 * A match whose digits average fewer per group than this is not a hit here:
+	 * "1 2 3 4 5 6 7 8 9 10 steps" counts, it doesn't dial. Letters only, like
+	 * `minDigits`.
+	 */
+	minDigitsPerGroup?: number;
 };
 
 /** The digits a phone number needs before it's one. */
 const PHONE_MIN_DIGITS = 9;
+/** Real numbers come in runs ("0244 123 4567"), not one digit at a time. */
+const PHONE_MIN_DIGITS_PER_GROUP = 2;
 
 /** Shared with Stream's `contact_leak` blocklist, in its order. */
 export const CONTACT_PATTERNS: readonly ContactPattern[] = [
@@ -30,6 +38,7 @@ export const CONTACT_PATTERNS: readonly ContactPattern[] = [
 	{
 		flags: "",
 		minDigits: PHONE_MIN_DIGITS,
+		minDigitsPerGroup: PHONE_MIN_DIGITS_PER_GROUP,
 		source: String.raw`\+?\d[\d\s().-]{7,}\d`,
 	},
 	// @handle
@@ -54,12 +63,22 @@ const EMAIL_PATTERN: ContactPattern = {
 };
 
 /**
- * A link: a scheme, `www.`, or a bare domain on a common TLD. Stream has its
- * own (`url_detection_v1`), so only letters read this one.
+ * A link: a scheme or `www.`, any case. Stream has its own
+ * (`url_detection_v1`), so only letters read these.
  */
 const URL_PATTERN: ContactPattern = {
 	flags: "i",
-	source: String.raw`(\bhttps?://|\bwww\.)\S+|\b[a-z0-9-]+\.(com|net|org|io|co|me|app|ly|gg|link|xyz|info|tv)\b`,
+	source: String.raw`(\bhttps?://|\bwww\.)\S+`,
+};
+
+/**
+ * A bare domain on a common TLD, the TLD in lowercase: a missing space after a
+ * full stop ("home.Co workers", "she said.Me too") starts a sentence, and
+ * sentences start with a capital.
+ */
+const BARE_DOMAIN_PATTERN: ContactPattern = {
+	flags: "",
+	source: String.raw`\b[A-Za-z0-9-]+\.(com|net|org|io|co|me|app|ly|gg|link|xyz|info|tv)\b`,
 };
 
 /** The pattern as Stream's blocklist takes it: the case flag inline. */
@@ -71,7 +90,11 @@ function hits(pattern: ContactPattern, text: string): boolean {
 	const re = new RegExp(pattern.source, `${pattern.flags}g`);
 	for (const match of text.matchAll(re)) {
 		const digits = match[0].replace(/\D/g, "").length;
-		if (digits >= (pattern.minDigits ?? 0)) {
+		const groups = match[0].match(/\d+/g)?.length ?? 1;
+		if (
+			digits >= (pattern.minDigits ?? 0) &&
+			digits / groups >= (pattern.minDigitsPerGroup ?? 0)
+		) {
 			return true;
 		}
 	}
@@ -87,5 +110,5 @@ export function contactLeakIn(text: string): boolean {
 
 /** A link in `text`. */
 export function urlIn(text: string): boolean {
-	return hits(URL_PATTERN, text);
+	return hits(URL_PATTERN, text) || hits(BARE_DOMAIN_PATTERN, text);
 }

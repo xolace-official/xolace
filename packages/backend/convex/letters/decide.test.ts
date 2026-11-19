@@ -18,7 +18,6 @@ const PEAK: TalkPeak = {
 	triggerType: "explicit_crisis_language",
 };
 const KIND: LetterVerdict = {
-	confidence: 0.9,
 	fixable: null,
 	hostile: false,
 	language: "en",
@@ -69,6 +68,29 @@ describe("decideLetterCheck", () => {
 		).toEqual({ kind: "held" });
 	});
 
+	it("holds a letter moderation rejects, even when the classifier passed it", () => {
+		expect(decide({ ...SAFE, rejected: true }, KIND)).toEqual({ kind: "held" });
+		expect(decide({ ...SAFE, rejected: true }, null)).toEqual({
+			kind: "held",
+		});
+	});
+
+	it("holds a hostile letter rather than returning its contact details", () => {
+		expect(decide(SAFE, { ...KIND, hostile: true }, "contact")).toEqual({
+			kind: "held",
+		});
+		expect(decide({ ...SAFE, rejected: true }, KIND, "link")).toEqual({
+			kind: "held",
+		});
+	});
+
+	it("a crisis still comes before a rejection", () => {
+		expect(
+			decide({ ...SAFE, level: "crisis", peak: PEAK, rejected: true }, KIND)
+				.kind
+		).toBe("risk");
+	});
+
 	it("holds a hostile letter even when the safety half is down", () => {
 		expect(decide(SAFETY_DOWN, { ...KIND, hostile: true })).toEqual({
 			kind: "held",
@@ -95,7 +117,7 @@ describe("decideLetterCheck", () => {
 		});
 	});
 
-	it("a pattern hit is fixable without the classifier", () => {
+	it("a pattern hit is fixable even when the classifier is down", () => {
 		expect(decide(SAFE, null, "link")).toEqual({
 			category: "link",
 			kind: "fixable",
@@ -124,13 +146,44 @@ describe("checkLetterText", () => {
 		expect(d.classify).toHaveBeenCalledOnce();
 	});
 
-	it("skips the classifier when the patterns find contact details", async () => {
+	it("still asks the classifier when the patterns find contact details", async () => {
 		const d = deps(KIND);
 		expect(await checkLetterText("text me on 0244 123 4567", d)).toEqual({
 			category: "contact",
 			kind: "fixable",
 		});
-		expect(d.classify).not.toHaveBeenCalled();
+		expect(d.classify).toHaveBeenCalledOnce();
+	});
+
+	it("holds a hostile letter the patterns also caught", async () => {
+		const d = deps({ ...KIND, hostile: true });
+		expect(
+			await checkLetterText("you're pathetic, text me 0244 123 4567", d)
+		).toEqual({ kind: "held" });
+	});
+
+	it("reads a classifier that throws as unavailable, never a pass", async () => {
+		const d = {
+			classify: vi.fn(async () => {
+				throw new Error("down");
+			}),
+			safety: vi.fn(async () => SAFE),
+		};
+		expect(await checkLetterText("You are not alone tonight.", d)).toEqual({
+			kind: "unavailable",
+		});
+	});
+
+	it("reads a safety half that throws as unavailable", async () => {
+		const d = {
+			classify: vi.fn(async () => KIND),
+			safety: vi.fn(async () => {
+				throw new Error("down");
+			}),
+		};
+		expect(await checkLetterText("You are not alone tonight.", d)).toEqual({
+			kind: "unavailable",
+		});
 	});
 
 	it("still checks the sender's safety when the patterns find something", async () => {
@@ -141,12 +194,11 @@ describe("checkLetterText", () => {
 		expect(d.safety).toHaveBeenCalledOnce();
 	});
 
-	it("finds a link before the classifier", async () => {
+	it("returns a link the classifier missed", async () => {
 		const d = deps(KIND);
 		expect(
-			(await checkLetterText("this helped: https://example.org", d)).kind
-		).toBe("fixable");
-		expect(d.classify).not.toHaveBeenCalled();
+			await checkLetterText("this helped: https://example.org", d)
+		).toEqual({ category: "link", kind: "fixable" });
 	});
 });
 

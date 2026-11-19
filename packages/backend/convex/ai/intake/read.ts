@@ -117,7 +117,15 @@ export async function within<T>(
  * escalation event (#772): categories only, never their words.
  */
 type RaisedVerdict = SafetyVerdict & { peak?: TalkPeak };
-export type WordsVerdict = RaisedVerdict & { unavailable: boolean };
+export type WordsVerdict = RaisedVerdict & {
+	unavailable: boolean;
+	/**
+	 * The engine would reject these words on content policy (sexual content
+	 * involving minors, threatening hate, violent harassment). Intake and
+	 * Telegram ignore it; the letters check holds the letter on it (#750).
+	 */
+	rejected?: true;
+};
 
 /**
  * Moderation and the classifier through the safeguard engine. Never rejects, and
@@ -156,9 +164,10 @@ async function engineVerdict(words: string): Promise<WordsVerdict> {
 	const unavailable =
 		moderation === MODERATION_UNAVAILABLE && classification === UNCLASSIFIED;
 	const verdict = evaluateSafeguard(classification, moderation, []);
-	// A content-policy rejection turns a mirror away; here it just means no escalation.
+	// A content-policy rejection turns a mirror away; here it means no
+	// escalation, and a flag for a caller that holds such words (letters).
 	if (verdict.shouldReject) {
-		return { level: "none", resources: [], unavailable };
+		return { level: "none", rejected: true, resources: [], unavailable };
 	}
 	const peak = peakOf(verdict);
 	return {
@@ -185,7 +194,11 @@ export async function checkWordsSafety(words: string): Promise<WordsVerdict> {
 	}
 	const engine = engineVerdict(words).then((verdict) =>
 		levelAbove(floor.level, verdict.level)
-			? { ...floor, unavailable: verdict.unavailable }
+			? {
+					...floor,
+					unavailable: verdict.unavailable,
+					...(verdict.rejected && { rejected: verdict.rejected }),
+				}
 			: verdict
 	);
 	if (floor.level === "none") {

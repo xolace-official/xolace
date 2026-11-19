@@ -10,6 +10,7 @@
  * attempts the regexes miss. The sender's own safety is intake's safeguard,
  * evaluated with intake, so no case here is about it.
  */
+import { LETTER_LANGUAGES } from "../../../letters/decide";
 import type { FixableCategory } from "../../../letters/lines";
 import {
 	buildLetterCheckPrompt,
@@ -213,7 +214,10 @@ function label(raw: string): Label {
 	if (verdict.hostile) {
 		return "hostile";
 	}
-	if (verdict.language !== "en" && verdict.language !== "und") {
+	if (
+		verdict.language !== "und" &&
+		!LETTER_LANGUAGES.includes(verdict.language)
+	) {
 		return "lang";
 	}
 	return verdict.fixable ?? "pass";

@@ -16,6 +16,7 @@ describe("contactLeakIn", () => {
 	it.each([
 		["a year range", "the years 2019-2023 were the hardest of my life"],
 		["a short number", "it took me 3 years and 200 tries"],
+		["counting", "1 2 3 4 5 6 7 8 9 10 steps, then breathe"],
 		["the word signal", "that was the signal I needed to rest"],
 		["an @ inside a word", "meet me there@noon, I mean"],
 		["a kind letter", "You are not alone. It gets lighter, slowly."],
@@ -36,6 +37,8 @@ describe("urlIn", () => {
 	it.each([
 		["an abbreviation", "e.g. a walk, a nap, a cup of tea"],
 		["a sentence break", "I tried.Then I tried again."],
+		["a sentence break before Me", "she said.Me too, I said."],
+		["a sentence break before Co", "I stayed home.Co workers called."],
 		["a plain letter", "Some nights are long. This one will end."],
 	])("leaves %s", (_label, text) => {
 		expect(urlIn(text)).toBe(false);
