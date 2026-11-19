@@ -31,6 +31,7 @@ const stub = vi.hoisted(() => ({
 		unavailable: false,
 	} as WordsVerdict,
 	verdict: {
+		crisisMention: "none",
 		fixable: null,
 		hostile: false,
 		language: "en",
@@ -78,6 +79,7 @@ beforeEach(() => {
 	stub.limitOk = true;
 	stub.safety = { level: "none", resources: [], unavailable: false };
 	stub.verdict = {
+		crisisMention: "none",
 		fixable: null,
 		hostile: false,
 		language: "en",
@@ -122,6 +124,7 @@ const sentEvents = () =>
 	stub.events.filter((e) => e.event === "letter_sent").map((e) => e.properties);
 
 const HOSTILE: LetterVerdict = {
+	crisisMention: "none",
 	fixable: null,
 	hostile: true,
 	language: "en",
@@ -204,6 +207,7 @@ describe("letters.send outcomes", () => {
 	it("returns a fixable letter with its fixed line and stores nothing", async () => {
 		const user = await writer();
 		stub.verdict = {
+			crisisMention: "none",
 			fixable: "medical",
 			hostile: false,
 			language: "en",
@@ -227,6 +231,7 @@ describe("letters.send outcomes", () => {
 	it("returns a letter in another language and stores nothing", async () => {
 		const user = await writer();
 		stub.verdict = {
+			crisisMention: "none",
 			fixable: null,
 			hostile: false,
 			language: "fr",
@@ -273,6 +278,7 @@ describe("letters.send outcomes", () => {
 	it("holds a hostile letter for review with a strike, never in Sent", async () => {
 		const user = await writer();
 		stub.verdict = {
+			crisisMention: "none",
 			fixable: null,
 			hostile: true,
 			language: "en",
@@ -296,6 +302,7 @@ describe("letters.send outcomes", () => {
 	it("refuses the same held words again with no model call and no second strike", async () => {
 		const user = await writer();
 		stub.verdict = {
+			crisisMention: "none",
 			fixable: null,
 			hostile: true,
 			language: "en",
@@ -386,6 +393,7 @@ describe("letters caps", () => {
 		stub.verdict = null;
 		await send(user, OTHER_LETTER);
 		stub.verdict = {
+			crisisMention: "none",
 			fixable: null,
 			hostile: false,
 			language: "en",

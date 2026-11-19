@@ -160,13 +160,18 @@ describe("decideLetterCheck", () => {
 			(crisisMention) => {
 				expect(cut({ ...KIND, crisisMention })).toEqual({
 					kind: "risk",
+					level: "crisis",
 					peak: PEAK,
 				});
 			}
 		);
 
 		it("is risk, never pass or unavailable, when the classifier is silent", () => {
-			expect(cut(null)).toEqual({ kind: "risk", peak: PEAK });
+			expect(cut(null)).toEqual({
+				kind: "risk",
+				level: "crisis",
+				peak: PEAK,
+			});
 		});
 
 		it("comes before a hostile verdict or a pattern hit", () => {

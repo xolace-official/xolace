@@ -204,9 +204,11 @@ describe("the letters check with its floor", () => {
 	it.each(MENTIONS)(
 		"routes a cut mention to risk when the classifier is silent: %s",
 		async (text) => {
+			const peak = phrasePeak(text);
 			expect(await check(text, null)).toEqual({
 				kind: "risk",
-				peak: phrasePeak(text),
+				level: peak?.level,
+				peak,
 			});
 		}
 	);
