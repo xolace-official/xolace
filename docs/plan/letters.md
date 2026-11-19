@@ -232,7 +232,7 @@ that doesn't exist.
 | `letters.sent.withdraw` | mutation | `{ id }` | `"ok" \| "received"` (a letter already gone reads `"ok"`) |
 | `letters.sent.markSeen` | mutation | `{ ids }` (≤ 50) | `null` |
 | `letters.received.list` | query | — | `{ id, text, opened, acknowledged, hidden }[]`, newest first, at most 100, hidden included, reported never |
-| `letters.received.get` | query | `{ id }` | the same shape, or `null` when gone or not the caller's |
+| `letters.received.get` | query | `{ id: string }` | the same shape, or `null` when gone, not the caller's, or not a letter id (the server normalizes it) |
 | `letters.received.open` | mutation | `{ id }` | `null`; clears `unopenedLetterId`, idempotent |
 | `letters.received.acknowledge` | mutation | `{ id }` | `null`; once only, idempotent; pushes the sender |
 | `letters.received.hide` / `unhide` | mutation | `{ id }` | `null`; hide also writes the block |
@@ -425,7 +425,7 @@ hook names, returns and call signatures stay, except where marked.
 | `useLettersStatus` | `letters.status.get` | `unopenedId` is an `Id<"letters">` (a string on the client) |
 | `useSentLetters` | `letters.sent.list` | — |
 | `useReceivedLetters` | `letters.received.list` | — |
-| `useReceivedLetter(id)` | `letters.received.get` | The route param must be validated as an id before the call (a bad id reads `null`) |
+| `useReceivedLetter(id)` | `letters.received.get` | Pass the route param as it is: the server normalizes it, and a bad id reads `null` |
 | `useLettersPush` / `setPush` | `letters.settings.getPush` / `setPush` | — |
 | `send(draft)` | `letters.send.send` | `forWho: LetterFor` becomes `aim?: letterAim` (Anyone → absent); the UI's "For" list takes the contract's keys and labels. A network error or `rate_limited` throws (keep the words, Try again) |
 | `withdraw`, `markSeen`, `open`, `acknowledge`, `hide`, `unhide` | the mutations above | — |
@@ -498,7 +498,7 @@ recipient's letter disappears from their list without explanation.
 - **More letters than recipients** (likely at launch: receiving is off by default, and a
   recipient gets one a week): `letters.status.get` gains an optional `invite: boolean`,
   false while the waiting pool is more than `INVITE_BACKLOG_DAYS` (7) of recent
-  placements, and the session-end write card (not Connect's Write) stays away while it's
+  placements (always `true` until matching ships in slice 3), and the session-end write card (not Connect's Write) stays away while it's
   false. Xolace stops asking for letters nobody will receive, and writing stays open.
 - **More recipients than letters:** recipients wait; nothing promised them a letter.
 - **No seeding:** Xolace never writes letters, and never with AI (Koko, #744). Before
