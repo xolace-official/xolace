@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import appConfig from "../../../app.config";
+import { NATIVE_SPLASH } from "../../../native-splash";
 import {
 	COVER_CLASS,
 	coverMayLeave,
@@ -17,20 +17,12 @@ import {
 const ROOT = join(import.meta.dirname, "../../..");
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
 
-type Splash = {
-	android: { imageWidth: number };
-	backgroundColor: string;
-	dark: { backgroundColor: string; image: string };
-	image: string;
-	imageWidth: number;
-};
-
-function splash(): Splash {
-	const config = appConfig({ config: {} } as never);
-	const entry = config.plugins?.find(
-		(p) => Array.isArray(p) && p[0] === "expo-splash-screen"
+/** The splash options, after checking app.config.ts passes them to the plugin as they are. */
+function splash() {
+	expect(read("app.config.ts")).toMatch(
+		/"expo-splash-screen",\s*NATIVE_SPLASH\]/
 	);
-	return (entry as [string, Splash])[1];
+	return NATIVE_SPLASH;
 }
 
 /** `--color-launch-<scheme>` in global.css. */

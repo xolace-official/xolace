@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { NATIVE_SPLASH } from "./native-splash.ts";
 import { assertProductionEnvironment } from "./release/production-guard.ts";
 
 function requireEnv(name: string, value: string | undefined): string {
@@ -247,23 +248,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			},
 		],
 		"expo-router",
-		[
-			"expo-splash-screen",
-			// The Default theme's backgrounds, light and dark following the phone, so the launch cover
-			// (src/features/launch) takes over on the same colour. launch-model.test.ts holds these,
-			// the cover and the theme together.
-			{
-				// Android 12+ draws the logo in the icon's 288 dp canvas; 76 dp fits its circle.
-				android: { imageWidth: 76 },
-				backgroundColor: "#F7F5FB",
-				dark: {
-					backgroundColor: "#0E0C15",
-					image: "./assets/images/icons/splash-icon.png",
-				},
-				image: "./assets/images/icons/splash-icon.png",
-				imageWidth: 200,
-			},
-		],
+		["expo-splash-screen", NATIVE_SPLASH],
 		[
 			"expo-font",
 			{

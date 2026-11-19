@@ -212,8 +212,8 @@ the cover leaves. `src/lib/native-appearance.ts` is the only writer of the theme
 appearance (`applyTheme`, behind `setThemeWithFonts`; `setNativeAppearance`): it holds every
 write back, Uniwind's own included, and applies the last one when the cover leaves.
 `theme-switch.test.ts` fails if another file calls `Uniwind.setTheme` or
-`Appearance.setColorScheme`. The splash colours live
-in `app.config.ts` and `--color-launch-*`; `launch-model.test.ts` keeps them equal to the Default
+`Appearance.setColorScheme`. The splash's options live
+in `native-splash.ts` (which `app.config.ts` passes to `expo-splash-screen`) and its colours in `--color-launch-*`; `launch-model.test.ts` keeps them equal to the Default
 theme's backgrounds. Replay each launch path in a dev build: `xolace://dev/launch/<state>`.
 
 ## Tabs and the root seams
