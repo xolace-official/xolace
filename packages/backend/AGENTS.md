@@ -96,3 +96,7 @@ The backend deploys before app-store review clears, so the *old* app runs agains
   until `bun run quote-backgrounds:upload` has run there, `catalogue.list` is empty and
   the app shows only what it draws in code. The art goes through
   `quote-backgrounds:process` first; both scripts' headers say how.
+- The daily quote push (`convex/dailyQuotes/push.ts`, B19) is swept every 15 minutes
+  from `daily_quote_pushes`, one row per person who has it on, keyed by the next
+  local slot. Change `notifications.dailyQuote` or the time zone only through
+  `updateNotificationPrefs`, which keeps that row in step.

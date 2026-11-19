@@ -6,6 +6,10 @@ import {
 	mutation,
 	query,
 } from "./_generated/server";
+import {
+	dailyQuoteChoiceValidator,
+	dailyQuoteSettingValidator,
+} from "./dailyQuotes/validators";
 import { requireAuth } from "./lib/auth";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
 import { hasPremium, requirePremium } from "./lib/premium";
@@ -56,7 +60,14 @@ export const getQuotePreferences = query({
  */
 export const updateQuotePreferences = mutation({
 	args: {
+		/**
+		 * @deprecated The daily quote is a server push now (B19):
+		 * `notifications.dailyQuote`, set through `update`'s
+		 * `notificationDailyQuote`.
+		 */
+		// DEPRECATED(remove-after: app >= first version with the daily quote push, B19): kept for builds that still schedule the on-device reminders; `dailyQuotes/pushSettings.adoptLegacyReminders` carries the value over once.
 		notificationEnabled: v.boolean(),
+		/** @deprecated See `notificationEnabled`. */
 		notificationTime: v.optional(v.string()),
 		themes: v.array(v.string()),
 	},
@@ -135,6 +146,11 @@ const updateArgs = {
 	mirrorTone: v.optional(mirrorToneValidator),
 	// Tri-state motion preference. Source of truth going forward.
 	motionPreference: v.optional(motionPreferenceValidator),
+	/**
+	 * The daily quote push (B19): on or off, and when. Clears a backoff
+	 * pause. The Settings switch and the Quotes screen's one-time offer write it.
+	 */
+	notificationDailyQuote: v.optional(dailyQuoteChoiceValidator),
 	notificationQuietWindow: v.optional(
 		v.union(
 			v.object({ dontReachAfter: v.number(), dontReachBefore: v.number() }),
@@ -155,6 +171,9 @@ const updateArgs = {
 			// written only by linking and "Try this first" (convex/outreach).
 			channelOrder: v.optional(v.array(outreachChannelValidator)),
 			chat: v.optional(v.boolean()),
+			// Accepted so a client echoing what `get` returned never fails
+			// validation; set it with `notificationDailyQuote`.
+			dailyQuote: v.optional(dailyQuoteSettingValidator),
 			enabled: v.boolean(),
 			gentleReturn: v.boolean(),
 			// The letters push (absent = on). Merged like the flags above; the
@@ -350,6 +369,15 @@ export async function updatePreferences(
 	}
 
 	// Sub-field merges run last so they win over the whole-object form above.
+	if (args.notificationDailyQuote !== undefined) {
+		await updateNotificationPrefs(ctx, preferences.emotionalProfileId, {
+			dailyQuote: {
+				enabled: args.notificationDailyQuote.enabled,
+				slot: args.notificationDailyQuote.slot,
+			},
+		});
+	}
+
 	if (
 		args.notificationReach !== undefined ||
 		args.notificationQuietWindow !== undefined ||

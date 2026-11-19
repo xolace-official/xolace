@@ -1,6 +1,7 @@
 import { internal } from "../../_generated/api";
 import type { Doc, Id } from "../../_generated/dataModel";
 import type { ActionCtx, MutationCtx } from "../../_generated/server";
+import { DAILY_QUOTE_COPY } from "../../dailyQuotes/copy";
 import { type ActionAdapter, ChannelError } from "../adapters";
 import { quietWindowEndsAt } from "../quietWindow";
 import { appLink } from "./appLinks";
@@ -43,6 +44,7 @@ const SERVER_ERROR = 500;
 type TelegramSend = {
 	chat_id: string;
 	disable_notification?: boolean;
+	entities?: { length: number; offset: number; type: "blockquote" }[];
 	protect_content: true;
 	reply_markup: { inline_keyboard: Keyboard };
 	text: string;
@@ -75,6 +77,10 @@ async function prepare(
 	}
 	const base = { chat_id: identity.externalId, protect_content: true as const };
 
+	if (outreach.intent === "daily_quote") {
+		return { ...base, ...dailyQuoteMessage(outreach) };
+	}
+
 	if (outreach.intent !== "nudge") {
 		return {
 			...base,
@@ -105,6 +111,44 @@ async function prepare(
 		reply_markup: { inline_keyboard: message.keyboard },
 		text: message.text,
 		...(silent && { disable_notification: true }),
+	};
+}
+
+/**
+ * The daily quote (B19): a general first line, the curated quote under it as
+ * a blockquote, and a button to Quotes. A personalised quote's variant has no
+ * `quote`, so only the line goes. The backoff's last line has no moment and
+ * opens the app.
+ */
+export function dailyQuoteMessage(
+	outreach: Doc<"outreach">
+): Pick<TelegramSend, "entities" | "reply_markup" | "text"> {
+	const variant = outreach.variants?.telegram;
+	const firstLine = variant?.body ?? outreach.content.body;
+	const opensQuote = outreach.moment?.kind === "daily_quote";
+	const reply_markup = {
+		inline_keyboard: [
+			[
+				opensQuote
+					? { text: DAILY_QUOTE_COPY.telegramButton, url: appLink("quotes") }
+					: { text: OPEN_XOLACE_BUTTON, url: appLink("app") },
+			],
+		],
+	};
+	if (!variant?.quote) {
+		return { reply_markup, text: firstLine };
+	}
+	// Offsets are UTF-16 code units, as JS strings count them.
+	return {
+		entities: [
+			{
+				length: variant.quote.length,
+				offset: firstLine.length + 2,
+				type: "blockquote",
+			},
+		],
+		reply_markup,
+		text: `${firstLine}\n\n${variant.quote}`,
 	};
 }
 

@@ -32,6 +32,8 @@ export const SESSION_CASCADE_TABLES = [
 
 /** Tables carrying a sessionId that intentionally outlive their session. */
 export const SESSION_ID_EXEMPT = {
+	daily_quote_pushes:
+		"The daily quote push's schedule (B19), no text: reaches a session only through the ids of its last send. A data wipe clears those; a dangling one is skipped when the send is settled.",
 	escalation_events:
 		"Safety-audit tombstone — retained (profileId stripped) even past account deletion; holds no user text by policy.",
 	feedback:

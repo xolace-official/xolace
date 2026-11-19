@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { dailyQuoteSettingValidator } from "../dailyQuotes/validators";
 import { outreachChannelValidator } from "../outreach/validators";
 import { DOMAINS } from "./understandingVocab";
 import {
@@ -521,6 +522,7 @@ export const preferencesDocValidator = v.object({
 		achievement: v.optional(v.boolean()),
 		channelOrder: v.optional(v.array(outreachChannelValidator)),
 		chat: v.optional(v.boolean()),
+		dailyQuote: v.optional(dailyQuoteSettingValidator),
 		enabled: v.boolean(),
 		gentleReturn: v.boolean(),
 		letters: v.optional(v.boolean()),

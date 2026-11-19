@@ -7,6 +7,7 @@ import {
 	mutation,
 	query,
 } from "./_generated/server";
+import { noteQuoteOpened } from "./dailyQuotes/opened";
 import { requireAuth } from "./lib/auth";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
 import { reconcilePushDevice } from "./lib/pushDevices";
@@ -68,7 +69,8 @@ const notificationLogDocValidator = v.object({
 		v.literal("kindling_ready"),
 		v.literal("streak_milestone"),
 		v.literal("domain_unlock"),
-		v.literal("achievement")
+		v.literal("achievement"),
+		v.literal("daily_quote")
 	),
 });
 
@@ -77,7 +79,8 @@ const notificationLogDocValidator = v.object({
  * push payload, is `legacyNotificationType` in outreach/push.ts.
  */
 const LEGACY_TYPE_INTENT: Record<
-	Exclude<Doc<"notification_log">["type"], "streak_milestone">,
+	// `daily_quote` is outreach-only (B19): `schedule` never sent it.
+	Exclude<Doc<"notification_log">["type"], "streak_milestone" | "daily_quote">,
 	OutreachIntent
 > = {
 	achievement: "achievement",
@@ -338,6 +341,16 @@ export const markResultedInSession = mutation({
 			await ctx.db.patch("outreach", log.outreachId, {
 				resultedInSession: true,
 			});
+			// A tapped daily quote push opened its quote (B19); shipped builds
+			// make this call, so it counts before they call `markOpened`.
+			const outreach = await ctx.db.get("outreach", log.outreachId);
+			const quote =
+				outreach?.moment?.kind === "daily_quote"
+					? await ctx.db.get("daily_quotes", outreach.moment.quoteId)
+					: null;
+			if (quote) {
+				await noteQuoteOpened(ctx, quote);
+			}
 		}
 		return null;
 	},

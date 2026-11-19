@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
+import { forgetDailyQuotePushHistory } from "../dailyQuotes/schedule";
 import { purgeReplyEntries } from "../episodicMemory";
 import { wipeLetters } from "../letters/erasure";
 import { rankReplace } from "../lib/aggregates";
@@ -125,6 +126,9 @@ export const wipe = internalMutation({
 		for (const q of quotes) {
 			await ctx.db.delete("daily_quotes", q._id);
 		}
+		// The push's backoff points at quotes just deleted and records what was
+		// opened: it starts over. The setting itself is a preference, and stays.
+		await forgetDailyQuotePushHistory(ctx, emotionalProfileId);
 
 		// ── Delete Library reads ─────────────────────────────────────
 		// Private rows only; the public totals stay up (ADR 0016).

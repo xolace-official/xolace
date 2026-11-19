@@ -1,5 +1,6 @@
 import { cronJobs } from "convex/server";
 import { internal } from "./_generated/api";
+import { SWEEP_EVERY_MINUTES } from "./dailyQuotes/schedule";
 import { RETENTION_EVERY_HOURS, SWEEP_EVERY_HOURS } from "./letters/rules";
 import { retentionRunIntervalHours } from "./privacy/retentionCutoff";
 
@@ -146,6 +147,15 @@ crons.cron(
 	"0 0 * * *",
 	internal.jobs.quotesGenerator.generateForNextBatch,
 	{ cursor: null }
+);
+
+// The daily quote push (B19): profiles whose local slot has come. Mostly an
+// empty index read; a quarter hour is how late a slot can be picked up.
+crons.interval(
+	"send daily quote pushes",
+	{ minutes: SWEEP_EVERY_MINUTES },
+	internal.dailyQuotes.push.sweep,
+	{}
 );
 
 // Telegram webhook drift (#765): logs an error when the bot points elsewhere,

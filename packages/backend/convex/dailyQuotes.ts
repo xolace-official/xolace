@@ -15,6 +15,7 @@ import {
 	MODERATION_UNAVAILABLE,
 	moderateInput,
 } from "./ai/providers/moderation";
+import { noteQuoteOpened } from "./dailyQuotes/opened";
 import { requireAuth } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
 import { rateLimiter } from "./lib/rateLimits";
@@ -33,6 +34,7 @@ const quoteValidator = v.object({
 	emotionalProfileId: v.id("emotional_profiles"),
 	isPremium: v.boolean(),
 	keptBackground: v.optional(v.string()),
+	openedAt: v.optional(v.number()),
 	reaction: v.optional(v.union(v.literal("resonates"), v.literal("not_today"))),
 	repliedAt: v.optional(v.number()),
 	reply: v.optional(v.string()),
@@ -202,10 +204,11 @@ export const react = mutation({
 		reaction: v.union(v.literal("resonates"), v.literal("not_today")),
 	},
 	handler: async (ctx, args) => {
-		const { profile } = await requireOwnQuote(ctx, args.quoteId);
+		const { profile, quote } = await requireOwnQuote(ctx, args.quoteId);
 		await ctx.db.patch("daily_quotes", args.quoteId, {
 			reaction: args.reaction,
 		});
+		await noteQuoteOpened(ctx, quote);
 		// Zero weight: logged as history, never extends a streak on its own.
 		await recordActivity(ctx, {
 			actionType: "quotes",
@@ -247,6 +250,7 @@ export const save = mutation({
 	handler: async (ctx, args) => {
 		const { profile, quote } = await requireOwnQuote(ctx, args.quoteId);
 		await requirePremium(ctx, profile, "saving quotes");
+		await noteQuoteOpened(ctx, quote);
 		if (quote.savedAt !== undefined) {
 			return null;
 		}
@@ -398,7 +402,8 @@ export const writeReply = internalMutation({
 		text: v.string(),
 	},
 	handler: async (ctx, args) => {
-		await requireOwnQuote(ctx, args.quoteId);
+		const { quote } = await requireOwnQuote(ctx, args.quoteId);
+		await noteQuoteOpened(ctx, quote);
 		await ctx.db.patch("daily_quotes", args.quoteId, {
 			repliedAt: Date.now(),
 			reply: args.text,

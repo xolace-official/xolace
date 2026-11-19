@@ -42,7 +42,11 @@ const UNRESOLVED_CARD_STATUSES = [
 	"superseded",
 ] as const;
 
-/** Intents a 30-day silence suppresses. */
+/**
+ * Intents a 30-day silence suppresses. Not `daily_quote`: someone can read the
+ * quote every day without starting a session, and they asked for it. Its own
+ * backoff (`dailyQuotes/push.ts`) is what stops it when it goes unread.
+ */
 const DORMANCY_INTENTS: ReadonlySet<OutreachIntent> = new Set([
 	"gentle_return",
 	"pattern_nudge",
@@ -269,9 +273,22 @@ export function intentAllowed(
 			return achievementToggle(notifications);
 		case "kindling_ready":
 			return true;
+		case "daily_quote":
+			return dailyQuoteAllowed(notifications);
 		default:
 			return false;
 	}
+}
+
+/**
+ * On, or paused by the backoff a moment ago: its last line ("I'll stop the
+ * daily quote for now") goes out after the pause and may wait out a quiet
+ * window. The schedule row is gone once paused, so nothing else is sent.
+ * Turned off by hand clears `pausedAt`, which stands any deferred push down.
+ */
+function dailyQuoteAllowed(notifications: Notifications): boolean {
+	const setting = notifications.dailyQuote;
+	return setting?.enabled === true || setting?.pausedAt !== undefined;
 }
 
 /**
@@ -292,6 +309,8 @@ export function typeBucket(
 			return "domainUnlock";
 		case "kindling_ready":
 			return "kindlingReady";
+		case "daily_quote":
+			return "dailyQuote";
 		default:
 			return "notification";
 	}
