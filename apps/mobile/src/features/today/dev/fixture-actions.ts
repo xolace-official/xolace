@@ -10,10 +10,10 @@ const DOOR_HREF = {
 } as const;
 
 /**
- * Today's actions in a dev state. Talk, Vent, Get help, the kindling and You open their real
+ * Today's actions in a dev state. Talk (a door, or the kindling card's), Vent, Get help, the kindling and You open their real
  * screens. The card zooms into a Reflect dev state (`reflectState`, in `fixtures.ts`); Sit opens its
- * `today` dev state (the `from=today` flow, no session). The catalogue, Moments and Quotes
- * do nothing here: those reads would reach the backend.
+ * `today` dev state (the `from=today` flow, no session). The catalogue, Moments, Quotes and
+ * the kindling card's See how (the paywall) do nothing here: those reads would reach the backend.
  */
 export const FIXTURE_ACTIONS: Today["actions"] = {
 	openDoor: (door) => router.push(DOOR_HREF[door]),
@@ -27,4 +27,6 @@ export const FIXTURE_ACTIONS: Today["actions"] = {
 	openTrack: () => undefined,
 	pressReflect: () => undefined,
 	rekindle: () => undefined,
+	seeKindlingPlus: () => undefined,
+	talkForKindling: () => router.push(DOOR_HREF.talk),
 };

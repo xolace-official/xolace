@@ -264,6 +264,7 @@ describe("todayReady", () => {
 	const drawn = {
 		campfireSettled: true,
 		kindling: null,
+		kindlingEmpty: "plus",
 		phase: "evening",
 		rail: undefined,
 		session: null,
@@ -281,6 +282,11 @@ describe("todayReady", () => {
 		expect(todayReady({ ...drawn, campfireSettled: false })).toBe(false);
 	});
 
+	it("with no kindling, waits for what the card shows instead", () => {
+		expect(todayReady({ ...drawn, kindlingEmpty: undefined })).toBe(false);
+		expect(todayReady({ ...drawn, kindlingEmpty: "setting-up" })).toBe(true);
+	});
+
 	it("late, waits for the rail instead: the page's only module", () => {
 		const late = { ...drawn, phase: "late" } satisfies TodayFold;
 		expect(todayReady(late)).toBe(false);
@@ -289,6 +295,7 @@ describe("todayReady", () => {
 				...late,
 				campfireSettled: false,
 				kindling: undefined,
+				kindlingEmpty: undefined,
 				rail: [],
 			})
 		).toBe(true);

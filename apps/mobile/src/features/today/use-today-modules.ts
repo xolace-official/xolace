@@ -12,6 +12,7 @@ import {
 	useNowPlayingIsPlaying,
 } from "@/lib/now-playing/now-playing-store";
 import { campfireView } from "./campfire/campfire-model";
+import { kindlingEmptyMode } from "./kindling/card-mode";
 import { kindlingView } from "./kindling/kindling-model";
 import { useKeptKindling } from "./kindling/use-kept-kindling";
 import { momentView } from "./moments/moments-model";
@@ -60,12 +61,20 @@ function useCampfireStatsOnce(wanted: boolean): {
 	return read;
 }
 
-/** Your kindling (`withRead`/`withTry`: this client draws every kind of step) and the campfire. */
+/**
+ * Your kindling (`withRead`/`withTry`: this client draws every kind of step), what the card
+ * shows without one, and the campfire.
+ */
 export function useModules() {
 	const active = useQuery(api.paths.getActive, {
 		withRead: true,
 		withTry: true,
 	});
+	const { isPlus, isLoading } = usePlusEntitlement();
+	// Only Xolace+ can have one set up (the server answers null for free anyway). It's null
+	// whenever `getActive` has one, and the server clears a stuck mark itself (B13): the card
+	// shows setting up only while this says so.
+	const settingUp = useQuery(api.paths.settingUp.get, isPlus ? {} : "skip");
 	const cohort = useQuery(api.cohort.getWeeklyCohortCard);
 	// v2 cut the intake's campfire count; it stands in for the cohort until there's a
 	// weekly number of their own (#712), as on production's Discovery.
@@ -86,6 +95,7 @@ export function useModules() {
 			settled
 		),
 		kindling,
+		kindlingEmpty: kindlingEmptyMode({ isLoading, isPlus, settingUp }),
 	};
 }
 

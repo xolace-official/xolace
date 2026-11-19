@@ -3,6 +3,7 @@ import type { FunctionReturnType } from "convex/server";
 import { type DayPhase, PHASE_HOURS, phaseForHour } from "@/lib/day-phase";
 import type { ProfileSummary } from "@/lib/profile-summary";
 import { COPY } from "./copy";
+import { type KindlingEmptyMode, kindlingCardMode } from "./kindling/card-mode";
 import type { KindlingView } from "./kindling/kindling-model";
 import type { RailTile } from "./rail/rail-model";
 
@@ -135,6 +136,8 @@ export type TodayFold = {
 		| null
 		| undefined;
 	kindling: KindlingView | null | undefined;
+	/** What the kindling card shows with none; undefined while it loads. */
+	kindlingEmpty: KindlingEmptyMode | undefined;
 	campfireSettled: boolean;
 	/** The hub's New shelf: late, it is the page's only module. */
 	rail: RailTile[] | undefined;
@@ -152,7 +155,10 @@ export function todayReady(fold: TodayFold): boolean {
 	if (fold.phase === "late") {
 		return fold.rail !== undefined;
 	}
-	return fold.kindling !== undefined && fold.campfireSettled;
+	return (
+		kindlingCardMode(fold.kindling, fold.kindlingEmpty) !== undefined &&
+		fold.campfireSettled
+	);
 }
 
 /**

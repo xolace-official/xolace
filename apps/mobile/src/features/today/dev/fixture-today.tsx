@@ -3,18 +3,16 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScopedTheme } from "uniwind";
 import { NIGHT_VARIANT, type ThemeMode, themeVariant } from "@/design/themes";
-import type { KindlingOutcome } from "../kindling/kindling-model";
-import { useKeptKindling } from "../kindling/use-kept-kindling";
 import { type Today, TodayProvider } from "../today-data";
 import { type CardMode, headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
 import { useFixtureCovers } from "./covers";
 import { FIXTURE_ACTIONS } from "./fixture-actions";
 import { FixtureFinding } from "./fixture-finding";
+import { type FixtureKindling, useFixtureKindling } from "./fixture-kindling";
 import {
 	FIXTURE_CAMPFIRE,
 	FIXTURE_DAY,
-	FIXTURE_KINDLING,
 	FIXTURE_MONTH_PROMPT,
 	FIXTURE_NAME,
 	FIXTURE_STREAK,
@@ -28,8 +26,6 @@ import {
 const WORD_AFTER_MS = 1200;
 /** Let the screen land before the streak grows, as coming back to Today does. */
 const IGNITE_AFTER_MS = 600;
-/** As if back from the kindling's step: the card has landed before the step counts. */
-const TEND_AFTER_MS = 900;
 /** Long enough for each swap to finish and rest (the night front takes 1.6 s). */
 const CYCLE_MS = 4000;
 const PHASES: readonly TodayPhase[] = ["dawn", "day", "evening", "late"];
@@ -50,7 +46,7 @@ function usePhase(start: TodayPhase, cycle: boolean): TodayPhase {
 	return PHASES[index] ?? start;
 }
 
-export type FixtureProps = {
+export type FixtureProps = FixtureKindling & {
 	phase: TodayPhase;
 	/** Default's light or dark; late is always night mode's theme. */
 	theme?: ThemeMode;
@@ -68,12 +64,6 @@ export type FixtureProps = {
 	monthPrompt?: boolean;
 	/** Your words with the mirror, or the mirror back: the card's face (and the state it zooms to). */
 	reflect?: CardMode;
-	/** The kindling: the board's, or none (S16 draws that), or still loading. */
-	kindling?: keyof typeof FIXTURE_KINDLING | "none" | "loading";
-	/** A step is tended a moment after the screen opens: the completion plays. */
-	tend?: boolean;
-	/** With `kindling: "last"`: the kindling is put out instead, so the card goes. */
-	putOut?: boolean;
 	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
 	/** A free member: the rail's tracks show the lock and open Xolace+. */
 	free?: boolean;
@@ -94,15 +84,13 @@ function FixtureToday({
 	cycle = false,
 	monthPrompt = false,
 	reflect = "idle",
-	kindling = "board",
-	tend = false,
-	putOut = false,
 	campfire = "count",
 	modules = "board",
 	finding = false,
 	lateWord = false,
 	free = false,
 	rekindle = false,
+	...kindlingProps
 }: FixtureProps) {
 	const covers = useFixtureCovers();
 	const [wordIn, setWordIn] = useState(!lateWord);
@@ -115,14 +103,6 @@ function FixtureToday({
 	}, [wordIn]);
 	const phase = usePhase(start, cycle);
 	const [grown, setGrown] = useState(false);
-	const [tended, setTended] = useState(false);
-	useEffect(() => {
-		if (!tend) {
-			return;
-		}
-		const id = setTimeout(() => setTended(true), TEND_AFTER_MS);
-		return () => clearTimeout(id);
-	}, [tend]);
 	useEffect(() => {
 		if (!ignite) {
 			return;
@@ -136,24 +116,7 @@ function FixtureToday({
 		FIXTURE_WEEKDAY,
 		offline ? null : FIXTURE_NAME
 	);
-	// Tending the last step or putting it out closes it: null, and `paths.getLatest` says how.
-	let server: Today["state"]["kindling"] = null;
-	const last = FIXTURE_KINDLING.last;
-	if (kindling === "loading") {
-		server = undefined;
-	} else if (kindling === "last") {
-		server = tended ? null : last;
-	} else if (kindling !== "none") {
-		server = FIXTURE_KINDLING[tended ? "tended" : kindling];
-	}
-	const outcome: KindlingOutcome = {
-		completed: !putOut,
-		id: last.id,
-		states: Object.fromEntries(
-			last.twigs.map((t) => [t.id, putOut ? t.state : "done"])
-		),
-	};
-	const kindlingView = useKeptKindling(server, outcome);
+	const kindling = useFixtureKindling(kindlingProps);
 	const state: Today["state"] = {
 		campfire: campfire === "none" ? null : FIXTURE_CAMPFIRE[campfire],
 		card: {
@@ -165,7 +128,7 @@ function FixtureToday({
 		eyebrow,
 		greeting,
 		intro,
-		kindling: kindlingView,
+		...kindling,
 		...lowerModules(offline ? "loading" : modules, covers),
 		...(wordIn ? {} : { word: undefined }),
 		listenLocked: free,

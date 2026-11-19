@@ -113,7 +113,8 @@ export const devStates: readonly DevState[] = [
 	},
 	{
 		id: "kindling-put-out",
-		title: "Kindling: put out (the card goes, nothing celebrates)",
+		title:
+			"Kindling: put out (the card swaps to none right now, nothing celebrates)",
 		...today({ kindling: "last", phase: "evening", putOut: true, tend: true }),
 	},
 	{
@@ -133,8 +134,43 @@ export const devStates: readonly DevState[] = [
 	},
 	{
 		id: "no-kindling",
-		title: "No kindling (S16 fills this frame)",
-		...today({ kindling: "none", phase: "evening" }),
+		title: "No kindling, Xolace+: none right now (Talk)",
+		...today({ empty: "plus", kindling: "none", phase: "day" }),
+	},
+	{
+		id: "no-kindling-dark",
+		title: "No kindling, Xolace+, dark",
+		...today({ empty: "plus", kindling: "none", phase: "day", theme: "dark" }),
+	},
+	{
+		id: "kindling-free",
+		title: "No kindling, free: part of Xolace+ (See how)",
+		...today({ empty: "free", kindling: "none", phase: "day" }),
+	},
+	{
+		id: "kindling-free-dark",
+		title: "No kindling, free, dark",
+		...today({ empty: "free", kindling: "none", phase: "day", theme: "dark" }),
+	},
+	{
+		id: "kindling-setting-up",
+		title: "Kindling setting up (the first node breathes)",
+		...today({ empty: "setting-up", kindling: "none", phase: "day" }),
+	},
+	{
+		id: "kindling-setting-up-dark",
+		title: "Kindling setting up, dark",
+		...today({
+			empty: "setting-up",
+			kindling: "none",
+			phase: "day",
+			theme: "dark",
+		}),
+	},
+	{
+		id: "kindling-arrives",
+		title: "Kindling arrives: setting up, then it lands 3 s in",
+		...today({ arrives: true, phase: "day" }),
 	},
 	{
 		id: "kindling-loading",
