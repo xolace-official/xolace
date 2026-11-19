@@ -28,10 +28,15 @@ const MS_PER_S = 1000;
  * End of track stops at this play's natural end, even on Repeat. No haptic or sound when it
  * ends: someone may be asleep.
  */
-export function useNowPlayingAudio(slug: string, stepId?: Id<"path_steps">) {
+export function useNowPlayingAudio(
+	slug: string,
+	stepId?: Id<"path_steps">,
+	preview = false
+) {
 	const timer = useSleepTimerState();
 	const p = useTrackPlayback(slug, {
 		gain: sleepGain(timer),
+		preview,
 		stepId,
 		stopAtEnd: timer.choice === "end",
 	});
@@ -41,18 +46,19 @@ export function useNowPlayingAudio(slug: string, stepId?: Id<"path_steps">) {
 	useEffect(() => () => publishPlayback(null), []);
 
 	// Asked to play with the load: once minted, play (a toggle before it's loaded queues). From a
-	// saved place, it waits for the player to load, moves there, then plays.
-	const startAt = useRef<number | null>(null);
+	// saved place, it waits for the player to load, moves there, then plays if it was asked to
+	// (a track put back paused after a preview waits there).
+	const startAt = useRef<{ at: number; play: boolean } | null>(null);
 	useEffect(() => {
 		if (!p.track) {
 			return;
 		}
 		const { asked, at } = consumePlayOnLoad(slug);
-		if (!asked) {
+		if (at > 0) {
+			startAt.current = { at, play: asked };
 			return;
 		}
-		if (at > 0) {
-			startAt.current = at;
+		if (!asked) {
 			return;
 		}
 		togglePlayback(p, posthog);
@@ -60,13 +66,17 @@ export function useNowPlayingAudio(slug: string, stepId?: Id<"path_steps">) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [p.track, slug]);
 	useEffect(() => {
-		const at = startAt.current;
-		if (at === null || !p.isLoaded) {
+		const start = startAt.current;
+		if (start === null || !p.isLoaded) {
 			return;
 		}
 		startAt.current = null;
-		p.seekTo(at)
-			.then(() => togglePlayback(nowPlayingPlayback(), posthog))
+		p.seekTo(start.at)
+			.then(() => {
+				if (start.play) {
+					togglePlayback(nowPlayingPlayback(), posthog);
+				}
+			})
 			.catch((e) => console.error("[useNowPlayingAudio] resume failed:", e));
 		// On the load only, as above.
 		// eslint-disable-next-line react-hooks/exhaustive-deps

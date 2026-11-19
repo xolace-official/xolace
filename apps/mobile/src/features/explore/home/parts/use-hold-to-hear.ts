@@ -22,19 +22,21 @@ export type Hold = {
 /**
  * Hold to hear (handoff §13): 350 ms held starts a preview, letting go ends it, 8 s at most. A
  * press under 350 ms is a tap and opens. A drag hands the touch to the scroll view, which ends the
- * press like a release. `enabled` is false for Lantern covers, rows that only open, and while the
- * app has no preview to play (`canPreview`).
+ * press like a release. `slug` is the held track's, null for Lantern covers and rows that only
+ * open; a free listener has no preview (`canPreview`).
  */
 export function useHoldToHear(
 	key: string,
-	enabled: boolean,
+	slug: string | null,
 	open: () => void
 ): Hold {
 	const { state, actions } = useHome();
 	const reduced = useEffectiveReducedMotion();
 	const pressed = useSharedValue(0);
 	const cap = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const on = enabled && state.canPreview;
+	const on = slug !== null && state.canPreview;
+	// The latest end, for the unmount below: a cover scrolled away mid-hold still ends it.
+	const ending = useRef<() => void>(() => undefined);
 
 	const end = () => {
 		if (cap.current) {
@@ -43,9 +45,15 @@ export function useHoldToHear(
 		}
 		actions.hearEnd(key);
 	};
+	useEffect(() => {
+		ending.current = end;
+	});
 	const start = () => {
+		if (slug === null) {
+			return;
+		}
 		tap();
-		actions.hearStart(key);
+		actions.hearStart(key, slug);
 		if (cap.current) {
 			clearTimeout(cap.current);
 		}
@@ -54,7 +62,7 @@ export function useHoldToHear(
 	useEffect(
 		() => () => {
 			if (cap.current) {
-				clearTimeout(cap.current);
+				ending.current();
 			}
 		},
 		[]

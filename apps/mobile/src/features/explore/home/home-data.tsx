@@ -32,9 +32,9 @@ export type HomeState = {
 	nowPlaying: string | null;
 	playing: boolean;
 	/**
-	 * Hold to hear (handoff §13) needs a preview the free tier can play and a start point
-	 * (`previewStartSec`); neither is served yet, so the app leaves the hold off. Dev states turn it
-	 * on to show the gesture.
+	 * Hold to hear (handoff §13): Xolace+ only, through the now-playing track. A free listener has
+	 * no preview to hear yet (that needs a free preview clip from the backend), so the hold does
+	 * nothing for them and a tap opens Xolace+.
 	 */
 	canPreview: boolean;
 	/** The cover being heard, as `${section}:${id}`. */
@@ -53,7 +53,8 @@ export type HomeActions = {
 	removeContinue: (c: ContinueCard) => void;
 	stopUsingSessions: () => void;
 	door: (id: DoorId) => void;
-	hearStart: (key: string) => void;
+	/** `key` is the cover held, `slug` its track. */
+	hearStart: (key: string, slug: string) => void;
 	hearEnd: (key: string) => void;
 };
 

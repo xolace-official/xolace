@@ -2,7 +2,7 @@ import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { HOME } from "@/features/explore/copy";
 import type {
@@ -16,9 +16,11 @@ import { useTodayPhase } from "@/lib/day-clock";
 import { playSoftPress, tap } from "@/lib/haptics";
 import type { ReaderFrom } from "@/lib/library-analytics";
 import {
+	endPreview,
 	nowPlayingPlayback,
 	retryNowPlaying,
 	setNowPlaying,
+	startPreview,
 	togglePlayback,
 } from "@/lib/now-playing/now-playing-store";
 import { mintOf, playStep } from "@/lib/now-playing/play-on-load";
@@ -72,6 +74,19 @@ export function useExploreHome(): Home {
 		}
 	});
 	const listen = useListen("explore-hour");
+	// The cover being heard. A ref too: a hold's end can come from a stale render (the cap's timer,
+	// an unmount), and only the hold that started the preview ends it.
+	const [hearing, setHearing] = useState<string | null>(null);
+	const heard = useRef<string | null>(null);
+	useEffect(
+		() => () => {
+			if (heard.current) {
+				heard.current = null;
+				endPreview();
+			}
+		},
+		[]
+	);
 
 	useEffect(() => {
 		posthog.capture("browse_opened");
@@ -115,12 +130,13 @@ export function useExploreHome(): Home {
 	};
 
 	const state: HomeState = {
-		canPreview: false,
+		// Xolace+ hears the full track's opening through the now-playing track; free has no preview.
+		canPreview: !listen.locked,
 		cont,
 		featured,
 		forYou,
 		fresh,
-		hearing: null,
+		hearing,
 		hour,
 		locked: listen.locked,
 		nowPlaying: listen.nowPlaying,
@@ -135,8 +151,21 @@ export function useExploreHome(): Home {
 				playSoftPress();
 				pushOnce(() => router.push(DOOR_HREF[id]));
 			},
-			hearEnd: () => undefined,
-			hearStart: () => undefined,
+			hearEnd: (key) => {
+				if (heard.current !== key) {
+					return;
+				}
+				heard.current = null;
+				setHearing(null);
+				endPreview();
+			},
+			hearStart: (key, slug) => {
+				if (listen.locked || !startPreview(slug)) {
+					return;
+				}
+				heard.current = key;
+				setHearing(key);
+			},
 			open,
 			playHere: (t, from, at) => {
 				tap();

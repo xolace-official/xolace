@@ -41,6 +41,8 @@ export function useTrackPlayback(
 		gain?: number;
 		/** The sleep timer's End of track: stop at this play's end, even on Repeat. */
 		stopAtEnd?: boolean;
+		/** Hold to hear: not a listen, and no place for Continue. */
+		preview?: boolean;
 	} = {}
 ): PlaybackReturn<BoundTrack> {
 	const convex = useConvex();
@@ -93,7 +95,7 @@ export function useTrackPlayback(
 		listen.current = next.tracker;
 		const trackId = p.track?.trackId;
 		const heardBy = currentAccount();
-		if (!(next.logNow && trackId && heardBy)) {
+		if (!(next.logNow && trackId && heardBy) || options.preview) {
 			return;
 		}
 		sendListen(
@@ -108,6 +110,7 @@ export function useTrackPlayback(
 		p.duration,
 		p.track?.trackId,
 		recordListen,
+		options.preview,
 	]);
 
 	// Where a support track was left, for Explore's Pick up where you left off (B6).
@@ -127,7 +130,7 @@ export function useTrackPlayback(
 			playing: p.isPlaying,
 		});
 		progress.current = next.tracker;
-		if (next.write && trackId) {
+		if (next.write && trackId && !options.preview) {
 			sendProgress(recordProgress, trackId, next.write);
 		}
 	}, [
@@ -138,17 +141,19 @@ export function useTrackPlayback(
 		family,
 		trackId,
 		recordProgress,
+		options.preview,
 	]);
 	// The host unmounts this when the track changes or the player clears: a play still going
 	// writes where it got to.
+	const preview = options.preview === true;
 	useEffect(
 		() => () => {
 			const at = flushProgress(progress.current, family);
-			if (at && trackId) {
+			if (at && trackId && !preview) {
 				sendProgress(recordProgress, trackId, at);
 			}
 		},
-		[family, trackId, recordProgress]
+		[family, trackId, recordProgress, preview]
 	);
 
 	return p;

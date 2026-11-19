@@ -42,7 +42,7 @@ export function ItemRow({
 	const reduced = useEffectiveReducedMotion();
 	const h = useHoldToHear(
 		`${slot}:${it.key}`,
-		hold && it.kind === "track",
+		hold && it.kind === "track" ? it.track.slug : null,
 		() => actions.open(it, from)
 	);
 	const meta = itemMeta(it);
@@ -102,8 +102,10 @@ export function ItemTile({
 }) {
 	const { state, actions } = useHome();
 	const T = HOME_S.tile;
-	const h = useHoldToHear(`${slot}:${it.key}`, it.kind === "track", () =>
-		actions.open(it, from)
+	const h = useHoldToHear(
+		`${slot}:${it.key}`,
+		it.kind === "track" ? it.track.slug : null,
+		() => actions.open(it, from)
 	);
 	const meta = tileMeta(it);
 	return (

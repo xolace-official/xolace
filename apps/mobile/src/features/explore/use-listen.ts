@@ -21,7 +21,9 @@ export function useListen(screen: BrowseFrom): Listen {
 	const pushOnce = usePushOnce();
 	const { isPlus, isLoading } = usePlusEntitlement();
 	const locked = !(isLoading || isPlus);
-	const nowPlaying = useNowPlaying()?.slug ?? null;
+	const np = useNowPlaying();
+	// A preview isn't what's playing: its cover says "Hearing a preview" instead.
+	const nowPlaying = np && !np.preview ? np.slug : null;
 	// A boolean snapshot: rows don't re-render on every status tick.
 	const playing = useNowPlayingIsPlaying();
 
