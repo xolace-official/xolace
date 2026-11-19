@@ -527,6 +527,33 @@ describe("letters.match.place", () => {
 		expect(await place(root, await waitingLetter(sender))).toBe(false);
 	});
 
+	it("a hide after the sender's wipe still keeps them from this recipient", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const reader = await recipient(2, root);
+		const first = await waitingLetter(sender);
+		expect(await place(root, first)).toBe(true);
+
+		await root.mutation(internal.jobs.dataWipe.wipe, {
+			emotionalProfileId: sender.profileId,
+		});
+		// The letter no longer names its sender anywhere a client reads.
+		expect((await letter(root, first))?.senderProfileId).toBeUndefined();
+		expect(
+			JSON.stringify(await reader.t.query(api.letters.received.list, {}))
+		).not.toContain(sender.profileId);
+		await reader.t.mutation(api.letters.received.hide, { id: first });
+
+		// Past the reader's week of rest, they're ready again, but never for
+		// this sender.
+		vi.setSystemTime(NOW + 8 * DAY_MS);
+		await refresh(reader);
+		expect((await rowOf(reader))?.pool).toBe("ready");
+		expect(await place(root, await waitingLetter(sender))).toBe(false);
+		const other = await adult(3, root);
+		expect(await place(root, await waitingLetter(other))).toBe(true);
+	});
+
 	it("skips, without reserving, a recipient inside their quiet window", async () => {
 		const root = asUnauthed();
 		const sender = await adult(1, root);

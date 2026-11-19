@@ -115,6 +115,13 @@ async function releaseUnopened(
 	await refreshPool(ctx, profileId, now);
 }
 
+/**
+ * The sender behind a received letter, for `block` and `report` only: after
+ * their wipe, the server-only link it left. Never returned to anyone.
+ */
+const senderForBlock = (letter: Doc<"letters">) =>
+	letter.senderProfileId ?? letter.wipedSenderProfileId;
+
 /** That sender is never matched to this recipient again (#750). */
 async function block(
 	ctx: MutationCtx,
@@ -123,7 +130,7 @@ async function block(
 	cause: "hide" | "report",
 	now: number
 ): Promise<void> {
-	const senderProfileId = letter.senderProfileId;
+	const senderProfileId = senderForBlock(letter);
 	if (!senderProfileId) {
 		return;
 	}
@@ -246,6 +253,12 @@ export const report = mutation({
 		const now = Date.now();
 		await ctx.db.patch("letters", args.id, { reportedAt: now });
 		await block(ctx, letter, profileId, "report", now);
+		// After the sender's wipe the letter no longer names them: the review
+		// does, as a wipe's open reviews do, so a confirm can still strike.
+		const wiped =
+			letter.senderProfileId === undefined
+				? letter.wipedSenderProfileId
+				: undefined;
 		await ctx.db.insert("letter_reviews", {
 			createdAt: now,
 			kind: "report",
@@ -253,6 +266,7 @@ export const report = mutation({
 			reason: args.reason,
 			reporterProfileId: profileId,
 			state: "open",
+			...(wiped && { senderProfileId: wiped }),
 		});
 		await releaseUnopened(ctx, profileId, args.id, now);
 		await captureLetterEvent(ctx, profileId, {

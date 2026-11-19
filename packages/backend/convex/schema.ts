@@ -1633,7 +1633,8 @@ export default defineSchema({
 		// Cut when the reporter deletes their account (decision B).
 		reporterProfileId: v.optional(v.id("emotional_profiles")),
 		// The sender, once a wipe or their retention setting cut them from the
-		// letter while this review was open, so a decision can still strike
+		// letter while this review was open (or a report came after their wipe,
+		// from `letters.wipedSenderProfileId`), so a decision can still strike
 		// them. Cleared when they delete their account.
 		senderProfileId: v.optional(v.id("emotional_profiles")),
 		state: v.union(
@@ -1718,6 +1719,11 @@ export default defineSchema({
 		// Held letters only: SHA-256 of the trimmed text, so the same words are
 		// refused again without a model call or a second strike.
 		textHash: v.optional(v.string()),
+		// Server-only: the sender of a received letter their data wipe cut from
+		// it (owner, 19 Nov 2026). Read only by the recipient's hide and report,
+		// so the block is still written and a confirmed report still strikes.
+		// Never returned, thrown or pushed; cleared on the sender's deletion.
+		wipedSenderProfileId: v.optional(v.id("emotional_profiles")),
 	})
 		.index("by_sender_created", ["senderProfileId", "createdAt"])
 		.index("by_sender_status", ["senderProfileId", "status"])
@@ -1725,7 +1731,9 @@ export default defineSchema({
 		.index("by_recipient_received", ["recipientProfileId", "receivedAt"])
 		.index("by_status_checked", ["status", "checkedAt"])
 		// Recent placements, for the invite backlog (§9).
-		.index("by_received", ["receivedAt"]),
+		.index("by_received", ["receivedAt"])
+		// A sender's deletion clears the link their wipe left (decision B).
+		.index("by_wiped_sender", ["wipedSenderProfileId"]),
 
 	library_entries: defineTable({
 		active: v.boolean(),

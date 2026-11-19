@@ -14,6 +14,7 @@ import {
 	type SeededUser,
 } from "../test/harness.helpers";
 import { aggregatesMock, posthogMock } from "../test/mocks.helpers";
+import { releaseAsSender } from "./erasure";
 import { DAY_MS, ERASE_BATCH } from "./rules";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -535,6 +536,83 @@ describe("a wipe and an open review", () => {
 		expect(await allStrikes(root)).toMatchObject([
 			{ reviewId: otherReview, senderProfileId: sender.profileId },
 		]);
+	});
+});
+
+describe("a wipe and the recipient's hide or report", () => {
+	it("a report after the sender's wipe blocks them, and a confirm strikes them", async () => {
+		const { reader, root, sender } = await pair();
+		const received = await letter(root, {
+			recipientProfileId: reader.profileId,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		await wipe(sender);
+		expect(await get(root, "letters", received)).toMatchObject({
+			wipedSenderProfileId: sender.profileId,
+		});
+		expect((await ends(root, received))?.sender).toBeUndefined();
+
+		await reader.t.mutation(api.letters.received.report, {
+			id: received,
+			reason: "unkind",
+		});
+		expect(await allBlocks(root)).toMatchObject([
+			{
+				recipientProfileId: reader.profileId,
+				senderProfileId: sender.profileId,
+			},
+		]);
+		const [reportReview] = await root.run((ctx) =>
+			ctx.db.query("letter_reviews").take(5)
+		);
+		if (!reportReview) {
+			throw new Error("no review");
+		}
+		await asAdmin(9, root).mutation(api.admin.letters.decide, {
+			decision: "confirm",
+			reviewId: reportReview._id,
+		});
+		expect(await allStrikes(root)).toMatchObject([
+			{ cause: "report", senderProfileId: sender.profileId },
+		]);
+	});
+
+	it("account deletion removes the link a wipe left", async () => {
+		const { reader, root, sender } = await pair();
+		const received = await letter(root, {
+			recipientProfileId: reader.profileId,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		await wipe(sender);
+		await deleteAccount(sender);
+
+		const row = await get(root, "letters", received);
+		expect(row?.recipientProfileId).toBe(reader.profileId);
+		expect(row?.senderProfileId).toBeUndefined();
+		expect(row?.wipedSenderProfileId).toBeUndefined();
+		// A hide now blocks no one: the sender is unreachable.
+		await reader.t.mutation(api.letters.received.hide, { id: received });
+		expect(await allBlocks(root)).toEqual([]);
+	});
+
+	it("the retention setting leaves no link", async () => {
+		const { reader, root, sender } = await pair();
+		const received = await letter(root, {
+			recipientProfileId: reader.profileId,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		await root.run(async (ctx) => {
+			const row = await ctx.db.get("letters", received);
+			if (row) {
+				await releaseAsSender(ctx, row, "retention");
+			}
+		});
+		expect(
+			(await get(root, "letters", received))?.wipedSenderProfileId
+		).toBeUndefined();
 	});
 });
 

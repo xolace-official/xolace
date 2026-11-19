@@ -9,7 +9,9 @@
  * 19 Nov 2026): a wipe or the retention setting moves the sender onto the
  * review, so a person can still strike or clear them; account deletion
  * closes the review as dismissed, and the text then goes on the decided
- * clock (`retention.ts`).
+ * clock (`retention.ts`). A wipe also leaves a server-only link on the
+ * letters its recipients keep (`wipedSenderProfileId`), so their hide or
+ * report still blocks and can strike; deletion removes it.
  *
  * Every drain removes one bounded batch and says whether it was full, the
  * shape `jobs/accountDeletion.ts` calls each step in.
@@ -85,10 +87,11 @@ async function dismissForDeletion(
 }
 
 /**
- * How a sender lets go: `"deletion"` (their account is going) or `"keep"` (a
- * wipe or their retention setting; they stay a sender a person may strike).
+ * How a sender lets go: `"deletion"` (their account is going), `"wipe"` (a
+ * data wipe) or `"retention"` (their retention setting). On a wipe or
+ * retention they stay a sender a person may strike.
  */
-type SenderRelease = "deletion" | "keep";
+type SenderRelease = "deletion" | "wipe" | "retention";
 
 /**
  * The sender lets go of a letter. A received letter its recipient can still
@@ -97,6 +100,10 @@ type SenderRelease = "deletion" | "keep";
  * retention the review keeps the sender, on deletion it closes as dismissed.
  * Anything else is the sender's alone (waiting, unchecked, returned, held, or
  * reported and so gone from the recipient) and is deleted, with its reviews.
+ *
+ * On a wipe, a letter its recipient keeps holds the sender in
+ * `wipedSenderProfileId`, server-only, so the recipient's hide or report still
+ * blocks and can still lead to a strike (owner, 19 Nov 2026).
  */
 export async function releaseAsSender(
 	ctx: MutationCtx,
@@ -109,6 +116,7 @@ export async function releaseAsSender(
 		if (how === "deletion") {
 			await dismissForDeletion(ctx, review, now);
 		} else if (letter.senderProfileId) {
+			// A wipe or retention: the review keeps them.
 			await ctx.db.patch("letter_reviews", review._id, {
 				senderProfileId: letter.senderProfileId,
 			});
@@ -119,7 +127,11 @@ export async function releaseAsSender(
 		letter.recipientProfileId !== undefined &&
 		letter.reportedAt === undefined;
 	if (recipientKeeps || open.length > 0) {
-		await ctx.db.patch("letters", letter._id, { senderProfileId: undefined });
+		await ctx.db.patch("letters", letter._id, {
+			senderProfileId: undefined,
+			...(how === "wipe" &&
+				recipientKeeps && { wipedSenderProfileId: letter.senderProfileId }),
+		});
 		return;
 	}
 	await deleteLetter(ctx, letter._id);
@@ -232,6 +244,25 @@ async function drainReviewsOfSender(
 	return reviews.length === BATCH;
 }
 
+/** Received letters their wipe left linked to them, server-only: unlinked. */
+async function drainWipedLinks(
+	ctx: MutationCtx,
+	profileId: ProfileId
+): Promise<boolean> {
+	const letters = await ctx.db
+		.query("letters")
+		.withIndex("by_wiped_sender", (q) =>
+			q.eq("wipedSenderProfileId", profileId)
+		)
+		.take(BATCH);
+	for (const letter of letters) {
+		await ctx.db.patch("letters", letter._id, {
+			wipedSenderProfileId: undefined,
+		});
+	}
+	return letters.length === BATCH;
+}
+
 /**
  * `letter_viewed` audit rows keep which admin read which review, but not whose
  * words once the sender's account is gone: their Clerk id is cleared.
@@ -337,6 +368,7 @@ export async function drainLettersForDeletion(
 ): Promise<boolean> {
 	const more = await drainAll([
 		() => drainSent(ctx, profileId, "deletion"),
+		() => drainWipedLinks(ctx, profileId),
 		() => drainReviewsOfSender(ctx, profileId),
 		() => drainReceived(ctx, profileId),
 		() => drainReports(ctx, profileId),
@@ -376,7 +408,7 @@ export async function wipeLetters(
 	profileId: ProfileId
 ): Promise<boolean> {
 	const more = await drainAll([
-		() => drainSent(ctx, profileId, "keep"),
+		() => drainSent(ctx, profileId, "wipe"),
 		() => drainReceived(ctx, profileId),
 		() => drainReports(ctx, profileId),
 	]);

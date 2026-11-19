@@ -39,7 +39,7 @@ export async function purgeLettersPastCutoff(
 	cutoff: number,
 	now: number
 ): Promise<boolean> {
-	const moreSent = await drainSent(ctx, profileId, "keep", cutoff);
+	const moreSent = await drainSent(ctx, profileId, "retention", cutoff);
 	const moreReceived = await drainReceived(ctx, profileId, cutoff);
 	const row = await letterProfileOf(ctx, profileId);
 	if (row?.unopenedLetterId) {
