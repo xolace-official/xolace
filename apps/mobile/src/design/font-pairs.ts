@@ -95,35 +95,17 @@ export const FIXED_FACES = {
 } as const;
 export type FixedFace = keyof typeof FIXED_FACES;
 
-/**
- * Space Grotesk faces production's old screens draw without loading them:
- * the old quote poster (`font-poster-body` / `font-poster-display`, by
- * PostScript name on iOS; the archive card's `font-poster-semi`). Loaded at
- * launch until the redesign replaces those screens; then delete this list.
- */
-export const LEGACY_FACES = [
-	"SpaceGrotesk_400Regular",
-	"SpaceGrotesk_600SemiBold",
-	"SpaceGrotesk_700Bold",
-] as const;
-
 /** A pair's faces, each once (Space Grotesk's display and display-bold are one). */
 export const pairFaces = (id: FontPairId): string[] => [
 	...new Set(Object.values(FONT_PAIRS[id])),
 ];
 
 /**
- * Every face the launch gate waits for, with `pair` the active theme's: the
- * legacy faces, Default's pair (night uses it too, so switching to night
+ * Every face the launch gate waits for, with `pair` the active theme's:
+ * Default's pair (night uses it too, so switching to night
  * never waits) and the active pair. Fixed faces load where they're drawn
  * (`useFixedFaces` in src/design/fonts.ts).
  */
 export function launchFaces(pair: FontPairId): string[] {
-	return [
-		...new Set([
-			...LEGACY_FACES,
-			...pairFaces(DEFAULT_FONT_PAIR),
-			...pairFaces(pair),
-		]),
-	];
+	return [...new Set([...pairFaces(DEFAULT_FONT_PAIR), ...pairFaces(pair)])];
 }

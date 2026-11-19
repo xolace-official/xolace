@@ -49,9 +49,9 @@ export const TYPE_NAMES = Object.values(TYPE_CLASS).map((c) =>
 
 /**
  * Production's own font names in global.css, kept until the old screens that
- * use them go (`font-poppins-medium`, the old poster's two faces).
+ * use them go (`font-poppins-medium`).
  */
-const LEGACY_FONT_NAMES = ["poppins-medium", "poster-display", "poster-body"];
+const LEGACY_FONT_NAMES = ["poppins-medium"];
 
 /** Every `font-<x>` here is a family: the theme's roles, the fixed faces and the legacy names. */
 export const FONT_NAMES = [

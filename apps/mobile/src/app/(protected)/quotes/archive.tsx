@@ -1,5 +1,6 @@
-import { ArchiveScreen } from "@/features/quotes/components/archive/archive-screen";
+import { ReturnTo } from "@/lib/return-to";
 
+/** The old archive: Words you kept is on the quote screen now. */
 export default function QuotesArchiveRoute() {
-	return <ArchiveScreen />;
+	return <ReturnTo href="/quotes?view=kept" />;
 }

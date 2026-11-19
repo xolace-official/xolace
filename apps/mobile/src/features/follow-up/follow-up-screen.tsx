@@ -31,10 +31,10 @@ import {
 	OptionCard,
 } from "@/features/follow-up/stack-cards";
 import { StillHereStep } from "@/features/follow-up/still-here-step";
-import { removeEmDash } from "@/features/quotes/utils/text-utils";
 import { TelegramOfferCard } from "@/features/reach-me-on/components/telegram-offer-card";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { playFollowUpEntrance } from "@/lib/haptics";
+import { removeEmDash } from "@/lib/text/plain-dashes";
 import { cn } from "@/lib/utils";
 
 // Dev/preview storage buckets differ from prod (Convex deploys are per-env).

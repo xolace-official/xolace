@@ -63,3 +63,21 @@ export function claimAudioSession(
 	claimAudioFocus(owner, pause);
 	return setAudioModeAsync(AUDIO_SESSION);
 }
+
+/** Quotes' ambient sound (S11): under whatever else plays, silent with the ring/silent switch,
+ * never in the background. */
+const AMBIENT_SESSION = {
+	interruptionMode: "mixWithOthers",
+	playsInSilentMode: false,
+	shouldPlayInBackground: false,
+} as const;
+
+/** An ambient player calls this right before `play()`: it takes focus like any other sound (so a
+ * meditation or a voice note that starts later pauses it) but mixes with other apps' audio. */
+export function claimAmbientSession(
+	owner: RefObject<unknown>,
+	pause: () => void
+) {
+	claimAudioFocus(owner, pause);
+	return setAudioModeAsync(AMBIENT_SESSION);
+}
