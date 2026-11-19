@@ -123,8 +123,9 @@ export const markSeen = mutation({
 
 /**
  * A returned letter leaves Sent: its row is deleted (decision C). A late-held
- * one leaves Sent too, and its row stays for its review; one with no review
- * (the same words were already held, so it carries no second one) is deleted.
+ * one leaves Sent too, and its row stays for its review. A late-held row with
+ * no review is deleted: none is written now (a late copy of words already
+ * held is deleted at the re-check), but a row from before that may remain.
  */
 export const dismiss = mutation({
 	args: { id: v.id("letters") },

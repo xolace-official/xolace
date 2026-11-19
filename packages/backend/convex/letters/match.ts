@@ -20,6 +20,7 @@ import {
 	AIM_WINDOW_MS,
 	CANDIDATES_TRIED_MAX,
 	PLACE_BUDGET_RESERVE,
+	REFRESH_BUDGET,
 	recipientPushDelay,
 } from "./rules";
 
@@ -145,12 +146,21 @@ async function give(
 	});
 }
 
-/** Whether this transaction is down to the reserve it keeps for its writes. */
-async function nearBudget(ctx: MutationCtx): Promise<boolean> {
+/**
+ * Whether this transaction is down to the reserve it keeps for its writes and
+ * the `refreshes` it still owes after the walk.
+ */
+async function nearBudget(
+	ctx: MutationCtx,
+	refreshes: number
+): Promise<boolean> {
 	const metrics = await ctx.meta.getTransactionMetrics();
 	return (
-		metrics.databaseQueries.remaining <= PLACE_BUDGET_RESERVE.queries ||
-		metrics.documentsRead.remaining <= PLACE_BUDGET_RESERVE.documentsRead
+		metrics.databaseQueries.remaining <=
+			PLACE_BUDGET_RESERVE.queries + refreshes * REFRESH_BUDGET.queries ||
+		metrics.documentsRead.remaining <=
+			PLACE_BUDGET_RESERVE.documentsRead +
+				refreshes * REFRESH_BUDGET.documentsRead
 	);
 }
 
@@ -187,7 +197,11 @@ export async function placeLetter(
 			band,
 			inAimWindow
 		)) {
-			if (tried >= CANDIDATES_TRIED_MAX || (await nearBudget(ctx))) {
+			// Room for this try's refresh too, should it turn them away.
+			if (
+				tried >= CANDIDATES_TRIED_MAX ||
+				(await nearBudget(ctx, away.length + 1))
+			) {
 				anyone = false;
 				break;
 			}

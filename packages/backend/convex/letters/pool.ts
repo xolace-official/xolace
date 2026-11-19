@@ -88,11 +88,13 @@ export async function mayReceive(
 
 /**
  * An open acute or escalation-derived follow-up: no letter now (#749).
- * Escalation-derived cards have their own index, so that half is exact. Acute
- * ones are looked for among the newest {@link FOLLOW_UP_PROBE_MAX} open cards
- * per status: a card is only superseded by one at least as heavy, so an open
- * acute card is never buried under lighter ones that replaced it, and old
- * superseded cards can pile up without making every placement read them.
+ * Escalation-derived cards have their own index, so that half is exact for
+ * every open status, superseded included. Acute ones are looked for among the
+ * newest {@link FOLLOW_UP_PROBE_MAX} cards per status, so that half is a
+ * bound, not a guarantee: an acute card with more than that many newer cards
+ * of the same status is missed, most likely a superseded one, since those
+ * pile up. Accepted so a placement's reads stay bounded; an index with the
+ * tier would make it exact.
  */
 async function hasOpenHardFollowUp(
 	ctx: MutationCtx,

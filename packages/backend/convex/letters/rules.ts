@@ -56,15 +56,24 @@ export const AIM_WINDOW_HOURS = 72;
  * past; those turned away for themselves (quiet hours, an open hard follow-up)
  * are refreshed out of it. A try is at most about 15 index reads (the block,
  * the person's account and age, quiet hours, and the follow-up probe, bounded
- * by {@link FOLLOW_UP_PROBE_MAX}), so two bands of 50 stay well inside
- * Convex's 4,096 queries a transaction. `placeLetter` also stops early once
- * the transaction's own remaining budget falls to {@link PLACE_BUDGET_RESERVE}.
+ * by {@link FOLLOW_UP_PROBE_MAX}). Each one turned away for themselves is
+ * refreshed after the walk, which costs about as much again
+ * ({@link REFRESH_BUDGET}), so `placeLetter` stops the walk once the
+ * transaction's remaining budget falls to {@link PLACE_BUDGET_RESERVE} plus
+ * the refreshes still owed, whatever these caps allow.
  */
 export const CANDIDATES_TRIED_MAX = 50;
 /** Open follow-up cards read per status, newest first, looking for a hard one. */
 export const FOLLOW_UP_PROBE_MAX = 20;
 /** Queries and documents a placement leaves unused for its own writes. */
 export const PLACE_BUDGET_RESERVE = { documentsRead: 2000, queries: 200 };
+/**
+ * What one pool refresh may read, rounded up: the row, metadata, session,
+ * account, age and quiet hours (about 8 queries), and the follow-up probe's
+ * one exact and one bounded read per open status (8 queries, up to
+ * 4 x {@link FOLLOW_UP_PROBE_MAX} cards).
+ */
+export const REFRESH_BUDGET = { documentsRead: 100, queries: 20 };
 /**
  * How long after the hourly sweep starts it places waiting letters, so the
  * pool refresh it starts at the same time has usually run first (§5.3).

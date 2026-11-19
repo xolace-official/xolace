@@ -136,6 +136,9 @@ export const apply = internalMutation({
 			case "held": {
 				// The same words already held (resent and held at send while
 				// this one waited): one review and one strike (spec §3 step 2).
+				// That copy stands for both, so this one is deleted: no second
+				// copy of hostile words outside a review, and nothing left in
+				// Sent once the review is decided.
 				const heldBefore = sender
 					? await ctx.db
 							.query("letters")
@@ -144,13 +147,17 @@ export const apply = internalMutation({
 							)
 							.first()
 					: null;
+				if (heldBefore?.status === "held") {
+					await ctx.db.delete("letters", letterId);
+					break;
+				}
 				await ctx.db.patch("letters", letterId, {
 					heldLate: true,
 					recheckCount,
 					status: "held",
 					textHash: outcome.textHash,
 				});
-				if (sender && heldBefore?.status !== "held") {
+				if (sender) {
 					await holdForReview(ctx, letterId, sender, now);
 				}
 				break;

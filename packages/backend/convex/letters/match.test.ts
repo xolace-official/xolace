@@ -9,6 +9,7 @@ import type { WorkflowId } from "@convex-dev/workflow";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
+import type { MutationCtx } from "../_generated/server";
 import type { WordsVerdict } from "../ai/intake/read";
 import type { LetterVerdict } from "../ai/letters/check";
 import {
@@ -25,16 +26,19 @@ import {
 import { aggregatesMock, rateLimiterMock } from "../test/mocks.helpers";
 import { letterAimOf } from "./aims";
 import { waitBucketOf } from "./analytics";
+import { placeLetter } from "./match";
 import {
 	CANDIDATES_TRIED_MAX,
 	DAY_MS,
 	FOLLOW_UP_PROBE_MAX,
 	LETTER_WAIT_DAYS,
 	PLACE_AFTER_MS,
+	PLACE_BUDGET_RESERVE,
 	RECHECK_DELAYS_MS,
 	RECHECK_OVERDUE_MS,
 	RECHECK_SWEEP_MAX,
 	RECIPIENT_PUSH_DELAY_MS,
+	REFRESH_BUDGET,
 	recipientPushDelay,
 	SWEEP_BATCH,
 	textHashOf,
@@ -581,6 +585,45 @@ describe("letters.match.place", () => {
 		expect((await rowOf(reader))?.pool).toBe("out");
 	});
 
+	it("stops on its budget saying no one was tried, not that the pool is empty", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const sleeping = await recipient(2, root);
+		await setNotifications(sleeping, {
+			quietWindow: { dontReachAfter: 22, dontReachBefore: 13 },
+			timezone: "UTC",
+		});
+		const id = await waitingLetter(sender);
+		/** `ctx` with this many queries left in the transaction. */
+		const withQueriesLeft = (ctx: MutationCtx, remaining: number) =>
+			({
+				...ctx,
+				meta: {
+					...ctx.meta,
+					getTransactionMetrics: async () => ({
+						...(await ctx.meta.getTransactionMetrics()),
+						databaseQueries: { remaining, used: 0 },
+					}),
+				},
+			}) as MutationCtx;
+		const placeWith = (remaining: number) =>
+			root.run((ctx) =>
+				placeLetter(withQueriesLeft(ctx, remaining), id, Date.now())
+			);
+		// The reserve plus one refresh: no room to try even the first.
+		expect(
+			await placeWith(PLACE_BUDGET_RESERVE.queries + REFRESH_BUDGET.queries)
+		).toEqual({ aimOnly: false, anyone: false, none: true });
+		expect((await rowOf(sleeping))?.pool).toBe("ready");
+		// With room the same walk tries them: the pool is why, not the budget.
+		expect(await placeWith(4096)).toEqual({
+			aimOnly: false,
+			anyone: true,
+			none: true,
+		});
+		expect((await rowOf(sleeping))?.pool).toBe("out");
+	});
+
 	it("never places with an account deleted since its last refresh", async () => {
 		const root = asUnauthed();
 		const sender = await adult(1, root);
@@ -930,6 +973,9 @@ describe("letters.check.recheck", () => {
 			shown: "elevated",
 		});
 		expect(await lateRisk()).toBe("crisis");
+		// A call that doesn't say what it showed counts as elevated care.
+		await sender.t.mutation(api.letters.status.lateRiskShown, {});
+		expect(await lateRisk()).toBe("crisis");
 		await sender.t.mutation(api.letters.status.lateRiskShown, {
 			shown: "crisis",
 		});
@@ -987,18 +1033,19 @@ describe("letters.check.recheck", () => {
 		expect((await letter(root, id))?.status).toBe("held");
 	});
 
-	it("a late hold of words already held is one review and one strike", async () => {
+	it("a late hold of words already held deletes the late copy: one review, one strike", async () => {
 		const { id, root, sender } = await unchecked();
-		await root.run(async (ctx) => {
-			await ctx.db.insert("letters", {
-				createdAt: NOW,
-				language: "en",
-				senderProfileId: sender.profileId,
-				status: "held",
-				text: KIND_LETTER,
-				textHash: await textHashOf(KIND_LETTER),
-			});
-		});
+		const first = await root.run(
+			async (ctx) =>
+				await ctx.db.insert("letters", {
+					createdAt: NOW,
+					language: "en",
+					senderProfileId: sender.profileId,
+					status: "held",
+					text: KIND_LETTER,
+					textHash: await textHashOf(KIND_LETTER),
+				})
+		);
 		stub.verdict = {
 			crisisMention: "none",
 			fixable: null,
@@ -1006,16 +1053,17 @@ describe("letters.check.recheck", () => {
 			language: "en",
 		};
 		await recheck(root, id);
-		expect((await letter(root, id))?.status).toBe("held");
+		// The held copy stands for both: no second copy of the words, and
+		// nothing in Sent to go stale once that copy's review is decided.
+		expect(await letter(root, id)).toBeNull();
+		expect((await letter(root, first))?.status).toBe("held");
 		const [reviews, strikes] = await root.run(async (ctx) => [
 			await ctx.db.query("letter_reviews").collect(),
 			await ctx.db.query("letter_strikes").collect(),
 		]);
 		expect(reviews).toHaveLength(0);
 		expect(strikes).toHaveLength(0);
-		// Nothing keeps this copy for review: dismissing it deletes it.
-		await sender.t.mutation(api.letters.sent.dismiss, { id });
-		expect(await letter(root, id)).toBeNull();
+		expect(await sender.t.query(api.letters.sent.list, {})).toEqual([]);
 	});
 
 	it.each<[string, LetterVerdict]>([

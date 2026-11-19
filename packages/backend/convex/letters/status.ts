@@ -48,7 +48,8 @@ export const get = query({
 /**
  * The care for a late risk was shown: it doesn't show again. `shown` is the
  * level the client showed; a crisis raised since then stays until it's shown
- * too. Without `shown`, whatever is stored clears (S21 always passes it).
+ * too. Without `shown` the client is taken to have shown elevated care, so a
+ * stored crisis never clears on a call that didn't say it showed one.
  */
 export const lateRiskShown = mutation({
 	args: { shown: v.optional(lateRiskValidator) },
@@ -58,7 +59,8 @@ export const lateRiskShown = mutation({
 		if (!row?.lateRisk) {
 			return null;
 		}
-		if (args.shown === "elevated" && row.lateRisk === "crisis") {
+		const shown = args.shown ?? "elevated";
+		if (shown === "elevated" && row.lateRisk === "crisis") {
 			return null;
 		}
 		await ctx.db.patch("letter_profiles", row._id, { lateRisk: undefined });
