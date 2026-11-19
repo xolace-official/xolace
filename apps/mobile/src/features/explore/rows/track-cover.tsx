@@ -14,18 +14,21 @@ import { useTokenColor } from "@/lib/use-token-color";
 export type PlayingMark = "playing" | "paused" | null;
 
 type Props = {
-	uri: string;
+	/** A Lantern entry can have no cover yet: the surface shows. */
+	uri?: string;
 	thumbhash?: string;
 	recyclingKey: string;
 	size: number;
 	radius: number;
 	locked: boolean;
 	playing: PlayingMark;
+	/** Hold to hear (Explore home): the veil and live bars while a preview plays. */
+	hearing?: boolean;
 };
 
 /**
  * A track's cover: production's art with Explore's half-point edge, the lock for a free listener,
- * and the playing mark (a veil and the bars) while it's the track in the mini player.
+ * and the playing mark (a veil and the bars) while it's the track in the mini player or heard.
  */
 export function TrackCover({
 	uri,
@@ -35,9 +38,10 @@ export function TrackCover({
 	radius,
 	locked,
 	playing,
+	hearing = false,
 }: Props) {
 	const focused = useIsFocused();
-	const on = playing !== null;
+	const on = playing !== null || hearing;
 	const veil = useAnimatedStyle(() => ({
 		opacity: withTiming(on ? 1 : 0, {
 			duration: on ? EX_TIMING.veilInMs : EX_TIMING.veilOutMs,
@@ -68,7 +72,11 @@ export function TrackCover({
 					pointerEvents="none"
 					style={veil}
 				>
-					{on ? <Equaliser playing={playing === "playing" && focused} /> : null}
+					{on ? (
+						<Equaliser
+							playing={(hearing || playing === "playing") && focused}
+						/>
+					) : null}
 				</Animated.View>
 			</View>
 			{locked ? <LockBadge /> : null}

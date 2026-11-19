@@ -28,7 +28,7 @@ const NO_ACTIONS = {};
 function useFixtureListen(locked: boolean, start?: string): Listen {
 	const [nowPlaying, setNowPlaying] = useState<string | null>(start ?? null);
 	const [playing, setPlaying] = useState(start !== undefined);
-	const open = (t: ExploreTrack) => {
+	const open: Listen["open"] = (t) => {
 		if (locked) {
 			return;
 		}

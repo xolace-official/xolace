@@ -9,7 +9,7 @@ import type { PostHog } from "posthog-react-native";
 type Kind = Doc<"library_entries">["kind"];
 
 /** Where a reader open came from; a forgotten one lands as `unknown`. `today` has no surface
- * yet; `next` is Up next (#417). */
+ * yet; `next` is Up next (#417); `explore` is a shelf on Explore's home. */
 export type ReaderFrom =
 	| "twig"
 	| "home"
@@ -22,6 +22,7 @@ export type ReaderFrom =
 	| "continue"
 	| "saved"
 	| "search"
+	| "explore"
 	| "unknown";
 
 type Entry = { slug: string };

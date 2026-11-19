@@ -1,4 +1,4 @@
-// Browse home with search (#549). The hub stays mounted under the results so
+// Browse home with search (#549). Explore's home stays mounted under the results so
 // clearing restores it. Sections rank on their own (#550), show a few with See
 // all (#551); a crisis-term query gets Need someone now?; analytics carry only shape (#552).
 
@@ -8,7 +8,6 @@ import { router, Stack } from "expo-router";
 import { type ReactNode, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { BrowseHubScreen } from "@/features/browse/components/browse-hub-screen";
 import { TrackRow } from "@/features/browse/components/track-row";
 import {
 	EntryRow,
@@ -147,7 +146,8 @@ function SearchResults({ query }: { query: string }) {
 	);
 }
 
-export function BrowseHome() {
+/** The search field over Explore's home (`children`), which stays mounted under the results. */
+export function BrowseHome({ children }: { children: ReactNode }) {
 	const [text, setText] = useState("");
 	const searching = text.trim() !== "";
 	// A clear lands at once, so a quick retype can't flash the old query's results.
@@ -155,15 +155,15 @@ export function BrowseHome() {
 
 	return (
 		<>
+			{/* Always shown under the title, as the handoff draws it (explore.md). */}
 			<Stack.SearchBar
+				hideWhenScrolling={false}
 				onCancelButtonPress={() => setText("")}
 				onChangeText={(e) => setText(e.nativeEvent.text)}
 				onClose={() => setText("")}
 				placeholder="Search audio, music and Lantern"
 			/>
-			<View className={cn("flex-1", searching && "hidden")}>
-				<BrowseHubScreen />
-			</View>
+			<View className={cn("flex-1", searching && "hidden")}>{children}</View>
 			{searching && <SearchResults query={query} />}
 		</>
 	);

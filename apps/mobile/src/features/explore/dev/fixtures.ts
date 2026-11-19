@@ -141,7 +141,7 @@ const TR = {
 	warm: ["A warm room", "m", "loneliness", 0, "#FFD2B8", "#D9876E"],
 	weight: ["The weight of a long day", "s", "stress", 8, "#F3C9D9", "#B56C93"],
 } as const satisfies Record<string, Row>;
-type TrackId = keyof typeof TR;
+export type TrackId = keyof typeof TR;
 
 /** title, art: the board's `TOPICS`, alphabetical by slug. */
 const TOPICS = {
@@ -191,6 +191,9 @@ function track(id: TrackId, i: number): ExploreTrack {
 	};
 }
 const tracks = (ids: readonly TrackId[]) => ids.map(track);
+
+/** One board track, by its key: Explore home's shelves draw from the same table. */
+export const trackOf = (id: TrackId) => track(id, Object.keys(TR).indexOf(id));
 
 const SLEEP = {
 	eps: ["setting", "letting", "thoughts", "housequiet", "sleepcomes"],

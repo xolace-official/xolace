@@ -1,6 +1,7 @@
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
 import { COPY, type Family, type TopicFilter } from "@/features/explore/copy";
+import type { BrowseFrom } from "@/lib/now-playing/now-playing-store";
 
 /** A catalogue track, as `getTopic` and `listByFamily` serve it. */
 export type ExploreTrack = FunctionReturnType<
@@ -25,7 +26,11 @@ export type Listen = {
 	/** The slug in the mini player, if any. */
 	nowPlaying: string | null;
 	playing: boolean;
-	open: (track: ExploreTrack) => void;
+	/** `from` overrides the screen's own, for a screen with several shelves (Explore home). */
+	open: (
+		track: Pick<ExploreTrack, "family" | "slug">,
+		from?: BrowseFrom
+	) => void;
 };
 
 const SECONDS = 60;

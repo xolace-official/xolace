@@ -27,11 +27,24 @@ export function NowPlayingHost() {
 	// Keyed by slug (a new twig on the same track keeps the audio) and by Try again, which
 	// mints the track afresh.
 	return np ? (
-		<Runner key={`${np.slug}:${attempt}`} slug={np.slug} stepId={np.stepId} />
+		<Runner
+			key={`${np.slug}:${attempt}`}
+			preview={np.preview === true}
+			slug={np.slug}
+			stepId={np.stepId}
+		/>
 	) : null;
 }
 
-function Runner({ slug, stepId }: { slug: string; stepId?: Id<"path_steps"> }) {
-	useNowPlayingAudio(slug, stepId);
+function Runner({
+	slug,
+	stepId,
+	preview,
+}: {
+	slug: string;
+	stepId?: Id<"path_steps">;
+	preview: boolean;
+}) {
+	useNowPlayingAudio(slug, stepId, preview);
 	return null;
 }

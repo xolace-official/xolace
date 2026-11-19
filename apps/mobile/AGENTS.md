@@ -230,10 +230,9 @@ the in-app banner) is composed on Today's route (`features/follow-up/coming-back
 S4 replaces it; the starter bubble stays with Reflect (its route, `app/(protected)/reflect.tsx`). There is no
 flag: a screen PR replaces the old screen outright. Where a screen PR adds to the shell:
 
-- **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`, hosts
-  the old screen that did the job (Explore: the Browse hub) until the tab's screen PR
-  swaps it. Today, Connect and You are swapped. The tab's label and icon are its `TABS`
-  entry.
+- **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`,
+  renders the tab's screen. All four are swapped (Explore's home is S7,
+  `features/explore/home/`). The tab's label and icon are its `TABS` entry.
 - **A root screen:** an entry in the feature's `screens.ts` (see "Root screens").
 - **A host:** an entry in `ROOT_HOSTS` (`src/features/navigation/hosts.ts`). A host is a
   component the `(protected)` layout keeps mounted above the stack while someone is

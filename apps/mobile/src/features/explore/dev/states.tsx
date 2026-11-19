@@ -1,6 +1,7 @@
-/** Explore's topics and lists on fixtures: `xolace://dev/explore/<id>`. */
+/** Explore's home, topics and lists on fixtures: `xolace://dev/explore/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { COPY } from "@/features/explore/copy";
+import { FixtureHome } from "@/features/explore/dev/fixture-home";
 import {
 	FixtureList,
 	FixtureTopic,
@@ -11,9 +12,77 @@ import { LIST, TILES } from "@/features/explore/dev/fixtures";
 /** The screens set their own bars, as their routes do. */
 const OWN_BAR = { title: "" };
 const EMPTY = { music: [], support: [] };
+/** The home's bar, as its route has it. */
+const HOME_BAR = { headerLargeTitle: true, title: "Explore" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
 export const devStates: readonly DevState[] = [
+	{
+		id: "home",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome />,
+		title: "Home: Xolace+ member, for the day",
+	},
+	{
+		id: "home-free",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome locked />,
+		title: "Home: returning free listener",
+	},
+	{
+		id: "home-new",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome fresh locked />,
+		title: "Home: new member",
+	},
+	{
+		id: "home-dawn",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome phase="dawn" />,
+		title: "Home: For this morning",
+	},
+	{
+		id: "home-evening",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome phase="evening" />,
+		title: "Home: For this evening",
+	},
+	{
+		id: "home-late",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome phase="late" />,
+		title: "Home: For the small hours",
+	},
+	{
+		id: "home-no-sessions",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome noSessions />,
+		title: "Home: Don’t use my sessions here",
+	},
+	{
+		id: "home-playing",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome playing="dev-letting" />,
+		title: "Home: Continue's track playing",
+	},
+	{
+		id: "home-picked",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome startPicked />,
+		title: "Home: Choose for me, picked",
+	},
+	{
+		id: "home-hearing",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome hearing="hour:dev-clear" />,
+		title: "Home: Hold to hear (not in the app yet)",
+	},
+	{
+		id: "home-loading",
+		options: HOME_BAR,
+		Screen: () => <FixtureHome loading />,
+		title: "Home: loading",
+	},
 	{
 		id: "topics",
 		options: OWN_BAR,

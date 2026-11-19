@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import type { ExploreTrack, Listen } from "@/features/explore/explore-model";
+import type { Listen } from "@/features/explore/explore-model";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/lib/haptics";
@@ -16,16 +16,18 @@ import { usePushOnce } from "@/lib/use-push-once";
  * gets the paywall (`browse`), Xolace+ the player. Never carries a `stepId`, so nothing opened
  * here tends a twig. Also the playing mark: which slug is loaded, and whether it plays.
  */
-export function useListen(from: BrowseFrom): Listen {
+export function useListen(screen: BrowseFrom): Listen {
 	const posthog = usePostHog();
 	const pushOnce = usePushOnce();
 	const { isPlus, isLoading } = usePlusEntitlement();
 	const locked = !(isLoading || isPlus);
-	const nowPlaying = useNowPlaying()?.slug ?? null;
+	const np = useNowPlaying();
+	// A preview isn't what's playing: its cover says "Hearing a preview" instead.
+	const nowPlaying = np && !np.preview ? np.slug : null;
 	// A boolean snapshot: rows don't re-render on every status tick.
 	const playing = useNowPlayingIsPlaying();
 
-	const open = (track: ExploreTrack) => {
+	const open: Listen["open"] = (track, from = screen) => {
 		playSoftPress();
 		if (locked) {
 			posthog.capture("browse_paywall_tapped", {

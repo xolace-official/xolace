@@ -34,7 +34,8 @@ export type PlaybackReturn<T> = {
 	currentTime: number;
 	duration: number;
 	toggle: () => void;
-	seekTo: (seconds: number) => void;
+	/** Resolves once the player has moved (a play right after it starts from there). */
+	seekTo: (seconds: number) => Promise<void>;
 	/** 0–1. Survives a re-mint: the rebuilt player is set to it on load. */
 	volume: number;
 	setVolume: (volume: number) => void;
