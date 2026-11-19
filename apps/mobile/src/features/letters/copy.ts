@@ -66,16 +66,6 @@ export const LETTERS = {
 		held: "This letter can’t be sent.",
 		lang: "Letters are English-only for now.",
 	},
-	endCard: {
-		read: {
-			sub: "Someone wrote it for whoever needed it",
-			title: "A letter is waiting for you",
-		},
-		write: {
-			sub: "A few kind lines, for whoever needs them",
-			title: "Write a letter to a stranger",
-		},
-	},
 	/** Above every letter. */
 	fixedLine: "Someone wrote this for whoever needed it",
 	hub: {

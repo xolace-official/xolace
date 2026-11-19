@@ -1,15 +1,26 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	PLUS_OFFER_COOLDOWN_MS,
 	PLUS_OFFER_FULL_STOP_MS,
 } from "@/features/purchases/plus-offer-policy";
-import { FREE, LISTEN, LISTENER, LOADING, STATE } from "./dev/fixtures";
+import {
+	FREE,
+	LETTER_WAITING,
+	LETTER_WRITE,
+	LISTEN,
+	LISTENER,
+	LOADING,
+	STATE,
+} from "./dev/fixtures";
 import {
 	continueStep,
 	ctaLabel,
 	dayOf,
+	endLetterOffer,
+	endSafeguard,
 	fromOf,
 	keptAtMoment2,
+	letterPassed,
 	momentGate,
 	type NextInput,
 	nextKey,
@@ -140,6 +151,140 @@ describe("nextKey", () => {
 		expect(nextKey(input(FREE.slot, { step: -2 }))).toBe("kfree");
 		expect(nextKey(input({ ...FREE.slot, pitchAllowed: false }))).toBe("none");
 		expect(nextKey(input({ ...FREE.slot, qualifies: false }))).toBe("none");
+	});
+});
+
+describe("nextKey with letters", () => {
+	const READ = { waiting: true, write: true };
+	const WRITE = { waiting: false, write: true };
+	const NONE = { waiting: false, write: false };
+	const PLUS_SETTING_UP = { ...STATE.slot, kindlingReady: false };
+
+	it("holds the slot until letters answer, then 2 s at most", () => {
+		expect(nextKey(input({ ...FREE.slot, letters: undefined }))).toBe(
+			"loading"
+		);
+		expect(
+			nextKey(input({ ...FREE.slot, letters: undefined, waitedOut: true }))
+		).toBe("kfree");
+	});
+
+	it("puts a matched listener above both letter cards", () => {
+		expect(nextKey(input({ ...LISTENER.slot, letters: READ }))).toBe(
+			"listener"
+		);
+	});
+
+	it("offers the waiting letter, then writing one, above the free pitch", () => {
+		expect(nextKey(input(LETTER_WAITING.slot))).toBe("letterRead");
+		expect(nextKey(input(LETTER_WRITE.slot))).toBe("letterWrite");
+		expect(nextKey(input({ ...FREE.slot, letters: NONE }))).toBe("kfree");
+	});
+
+	it("puts a waiting letter above kindling, and kindling above writing one", () => {
+		expect(nextKey(input({ ...STATE.slot, letters: READ }))).toBe("letterRead");
+		expect(nextKey(input({ ...STATE.slot, letters: WRITE }))).toBe("kindling");
+	});
+
+	it("collides with kindling setting up as with kindling", () => {
+		expect(nextKey(input({ ...PLUS_SETTING_UP, letters: READ }))).toBe(
+			"letterRead"
+		);
+		expect(nextKey(input({ ...PLUS_SETTING_UP, letters: WRITE }))).toBe(
+			"kindlingSettingUp"
+		);
+	});
+
+	it("doesn't need the session to qualify, and doesn't wait on it past 2 s", () => {
+		const free = { ...FREE.slot, letters: WRITE, qualifies: false };
+		expect(nextKey(input(free))).toBe("letterWrite");
+		const plus = { ...STATE.slot, letters: WRITE, qualifies: false };
+		expect(nextKey(input({ ...plus, listen: true }))).toBe("letterWrite");
+		const pending = { ...FREE.slot, letters: READ, qualifies: undefined };
+		expect(nextKey(input(pending))).toBe("loading");
+		expect(nextKey(input({ ...pending, waitedOut: true }))).toBe("letterRead");
+	});
+
+	it("never follows a heavier answer, no answer, or a late session", () => {
+		for (const extra of [{ step: -1 }, { step: null }, { late: true }]) {
+			expect(nextKey(input(LETTER_WAITING.slot, extra))).not.toMatch(/letter/);
+			expect(nextKey(input(LETTER_WRITE.slot, extra))).not.toMatch(/letter/);
+		}
+		expect(nextKey(input(LETTER_WRITE.slot, { step: 0 }))).toBe("letterWrite");
+		// A step of −1 or −2 still allows the free pitch, as production did.
+		expect(nextKey(input(LETTER_WRITE.slot, { step: -1 }))).toBe("kfree");
+	});
+
+	it("offers the waiting letter on the same answer (step 0), not only a lighter one", () => {
+		expect(nextKey(input(LETTER_WAITING.slot, { step: 0 }))).toBe("letterRead");
+		expect(nextKey(input({ ...STATE.slot, letters: READ }, { step: 0 }))).toBe(
+			"letterRead"
+		);
+	});
+
+	it("gives a late Xolace+ session its kindling, not the waiting letter", () => {
+		const plus = { ...STATE.slot, letters: READ };
+		expect(nextKey(input(plus, { late: true }))).toBe("kindling");
+		expect(
+			nextKey(input({ ...plus, kindlingReady: false }, { late: true }))
+		).toBe("kindlingSettingUp");
+	});
+
+	it("gives Xolace+ its kindling once 2 s pass with letters still unread", () => {
+		const unread = { ...STATE.slot, letters: undefined };
+		expect(nextKey(input(unread))).toBe("loading");
+		expect(nextKey(input({ ...unread, waitedOut: true }))).toBe("kindling");
+	});
+});
+
+describe("the letters' slot and the safeguard", () => {
+	const READ = { waiting: true, write: true };
+	const STEADY = { safeguardLevel: "gentle" as const };
+	const offerWith = () => vi.fn((_safeguard: boolean) => READ);
+
+	it("reaches Xolace+, whose offer context is null, off the session alone", () => {
+		const offer = offerWith();
+		const letters = endLetterOffer(STEADY, null, offer);
+		expect(offer).toHaveBeenCalledWith(false);
+		expect(nextKey(input({ ...STATE.slot, letters }))).toBe("letterRead");
+	});
+
+	it("mirrors offerContext's rule: an escalation, elevated or crisis", () => {
+		expect(endSafeguard({ escalationTriggered: true }, null)).toBe(true);
+		expect(endSafeguard({ safeguardLevel: "elevated" }, null)).toBe(true);
+		expect(endSafeguard({ safeguardLevel: "crisis" }, null)).toBe(true);
+		expect(endSafeguard({ safeguardLevel: "gentle" }, null)).toBe(false);
+		expect(endSafeguard({ safeguardLevel: "none" }, null)).toBe(false);
+		expect(endSafeguard({}, null)).toBe(false);
+	});
+
+	it("passes a Xolace+ safeguard to letters, so they can withhold both cards", () => {
+		const offer = offerWith();
+		endLetterOffer({ safeguardLevel: "crisis" }, null, offer);
+		expect(offer).toHaveBeenCalledWith(true);
+	});
+
+	it("keeps a free user's offer context as well as the session", () => {
+		const active = { safeguardActive: true };
+		expect(endSafeguard(STEADY, active)).toBe(true);
+		expect(endSafeguard(STEADY, { safeguardActive: false })).toBe(false);
+	});
+
+	it("holds the slot until both are read, and treats a missing session as a safeguard", () => {
+		const offer = offerWith();
+		expect(endLetterOffer(undefined, null, offer)).toBeUndefined();
+		expect(endLetterOffer(STEADY, undefined, offer)).toBeUndefined();
+		expect(offer).not.toHaveBeenCalled();
+		expect(endSafeguard(null, null)).toBe(true);
+	});
+});
+
+describe("letterPassed", () => {
+	it("counts leaving with the write card shown and untaken", () => {
+		expect(letterPassed("letterWrite", false)).toBe(true);
+		expect(letterPassed("letterWrite", true)).toBe(false);
+		expect(letterPassed("letterRead", false)).toBe(false);
+		expect(letterPassed(null, false)).toBe(false);
 	});
 });
 

@@ -10,10 +10,11 @@ import { goHome } from "@/lib/landing";
 import { useAppStore } from "@/store/store";
 import { useFollowUpAsk } from "./follow-up/follow-up-ask";
 import { followUpBucket } from "./mood-scale";
-import type { SessionEnd } from "./session-end-data";
+import type { EndLetters, SessionEnd } from "./session-end-data";
 import {
 	dayOf,
 	fromOf,
+	letterPassed,
 	type NextKey,
 	pitchDismissed,
 	type SavedMood,
@@ -40,9 +41,11 @@ type Saved = { mood: SavedMood | null; contributed: boolean | null };
 export function useSessionEndData({
 	path,
 	sessionId,
+	letters,
 }: {
 	path: SessionPath;
 	sessionId: Id<"sessions"> | null;
+	letters: EndLetters;
 }): SessionEnd {
 	const router = useRouter();
 	const posthog = usePostHog();
@@ -55,7 +58,7 @@ export function useSessionEndData({
 	const canAsk = useQuery(api.feedback.canAskContextual);
 	const record = useMutation(api.sessions.recordPostSessionFeedback);
 	const markUnlockSeen = useMutation(api.compounding.unlocks.markSeen);
-	const next = useNextStep(sessionId);
+	const next = useNextStep(sessionId, session, letters);
 	const openPaywall = usePaywall((s) => s.open);
 	const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
 	const recordPlusOfferShown = useAppStore((s) => s.recordPlusOfferShown);
@@ -132,6 +135,9 @@ export function useSessionEndData({
 			recordPlusOfferDismissal("session_close");
 			posthog.capture("plus_offer_dismissed", PITCH_EVENT);
 		}
+		if (letterPassed(shown.current.key, shown.current.taken)) {
+			letters.writePassed();
+		}
 		complete(exit);
 		navigate();
 	};
@@ -148,6 +154,10 @@ export function useSessionEndData({
 			posthog.capture("plus_upsell_shown", { surface: "kindling" });
 		} else if (key === "listener") {
 			posthog.capture("xolacer_suggestion_shown", { variant });
+		} else if (key === "letterWrite") {
+			letters.writeShown();
+		} else if (key === "letterRead") {
+			letters.readShown();
 		}
 	};
 
@@ -167,6 +177,12 @@ export function useSessionEndData({
 			posthog.capture("plus_upsell_tapped", { surface: "kindling" });
 			complete({ action: "open_paywall" });
 			openPaywall("kindling", sessionId ? { sessionId } : undefined);
+		} else if (key === "letterRead") {
+			complete({ action: "open_letter" });
+			letters.openRead();
+		} else if (key === "letterWrite") {
+			complete({ action: "write_letter" });
+			letters.openWrite();
 		}
 	};
 
@@ -204,6 +220,7 @@ export function useSessionEndData({
 			day: summary ? dayOf(summary.currentStreak, null) : null,
 			from: fromOf(path),
 			late: isNight,
+			letterTile: letters.tile,
 			listener: next.listener.card,
 			ready,
 			slot: next.slot,

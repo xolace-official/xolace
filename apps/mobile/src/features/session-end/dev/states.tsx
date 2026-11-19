@@ -10,6 +10,7 @@ import {
 	NOTHING,
 	STATE,
 } from "./fixtures";
+import { LetterWaiting, LetterWrite } from "./letter-screen";
 
 /** The real route draws its own chrome: no header, no swipe back. */
 const OPTIONS = { gestureEnabled: false, headerShown: false };
@@ -182,5 +183,17 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureScreen scene={{ moment: 2 }} state={LISTEN} />,
 		title: "Xolace+: something to listen to",
+	},
+	{
+		id: "letter-waiting",
+		options: OPTIONS,
+		Screen: LetterWaiting,
+		title: "Letters 30: a letter is waiting for you",
+	},
+	{
+		id: "letter-write",
+		options: OPTIONS,
+		Screen: LetterWrite,
+		title: "Letters 29: write a letter to a stranger",
 	},
 ];

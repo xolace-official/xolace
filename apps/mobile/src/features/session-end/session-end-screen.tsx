@@ -139,6 +139,7 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 					cs={clocks.cs}
 					ctaTop={ctaTop}
 					from={session.state.from}
+					letterTile={session.state.letterTile}
 					listener={session.state.listener}
 					next={next}
 					onNext={() => session.actions.openNext(next)}

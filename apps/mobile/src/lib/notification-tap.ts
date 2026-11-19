@@ -66,7 +66,8 @@ export type TapNavigation =
 			action: "navigate";
 			href:
 				| ReturnType<typeof chatNotificationRoute>
-				| "/(protected)/achievements";
+				| "/(protected)/achievements"
+				| "/(protected)/letters";
 	  }
 	| { action: "home" }
 	| {
@@ -74,7 +75,12 @@ export type TapNavigation =
 			href:
 				| "/(protected)/quotes"
 				| "/(protected)/kindling"
-				| "/profile/insights";
+				| "/profile/insights"
+				| {
+						pathname: "/letters/read/[id]";
+						/** `from: "push"`: a gone letter goes to Letters, not back to Today. */
+						params: { id: string; from: "push" };
+				  };
 	  };
 
 export type NotificationTapPlan = {
@@ -86,6 +92,17 @@ export type NotificationTapPlan = {
 };
 
 const HOME: TapNavigation = { action: "home" };
+
+/**
+ * Letters' three pushes (`backend.md` §2.3; S21 sends them, ids only): a letter placed with you
+ * opens it in the reader; yours received or acknowledged opens the Letters screen, reusing it
+ * when it's already on top. Both stack, so a held screen keeps what's in progress under them.
+ */
+const LETTER_FOR_YOU = "letter_for_you";
+const LETTER_SENT_TYPES: ReadonlySet<unknown> = new Set([
+	"letter_received",
+	"letter_acknowledged",
+]);
 
 /**
  * Reflect is pushed over the tabs, so going home would pop it: mid-sentence, mid-clarify or
@@ -137,6 +154,21 @@ export function notificationTapPlan(
 		// second copy of the tabs. The shim's dismissTo would pop a held screen above the tabs,
 		// so a tap on one goes nowhere, as home's does.
 		plan.navigation = { action: "push", href: "/profile/insights" };
+	} else if (data?.type === LETTER_FOR_YOU) {
+		// Without a real id, drop the navigation rather than opening a reader with nothing in it.
+		const letterId = typeof data.letterId === "string" ? data.letterId : "";
+		if (letterId) {
+			plan.navigation = {
+				action: "push",
+				// `from`: if the letter is gone, the reader goes to Letters, not back to Today.
+				href: {
+					params: { from: "push", id: letterId },
+					pathname: "/letters/read/[id]",
+				},
+			};
+		}
+	} else if (LETTER_SENT_TYPES.has(data?.type)) {
+		plan.navigation = { action: "navigate", href: "/(protected)/letters" };
 	} else if (data?.type === "kindling_ready") {
 		plan.navigation = { action: "push", href: "/(protected)/kindling" };
 	} else if (data?.type === "achievement") {

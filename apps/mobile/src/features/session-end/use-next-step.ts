@@ -4,7 +4,13 @@ import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useAppStore } from "@/store/store";
-import { type NextInput, pitchAllowed } from "./session-end-model";
+import type { EndLetters } from "./session-end-data";
+import {
+	endLetterOffer,
+	type NextInput,
+	pitchAllowed,
+	type SafeguardFields,
+} from "./session-end-model";
 import { type ListenerMatch, useListenerMatch } from "./use-listener-match";
 
 export type NextStep = {
@@ -15,12 +21,17 @@ export type NextStep = {
 /**
  * What the next-step slot can offer this session (`nextKey`'s inputs): a
  * listener match, Xolace+, whether the session qualifies for kindling and
- * whether it has landed, and whether the free pitch's cadence allows it.
+ * whether it has landed, letters' two cards, and whether the free pitch's cadence allows it.
  */
 /** How long the slot holds for the plan and kindling answers (and a listener match). */
 const SLOT_WAIT_MS = 2000;
 
-export function useNextStep(sessionId: Id<"sessions"> | null): NextStep {
+export function useNextStep(
+	sessionId: Id<"sessions"> | null,
+	/** The session doc (`sessions.getById`): undefined while it loads. */
+	session: SafeguardFields | null | undefined,
+	letters: EndLetters
+): NextStep {
 	const listener = useListenerMatch(sessionId);
 	const [waitedOut, setWaitedOut] = useState(false);
 	useEffect(() => {
@@ -62,6 +73,8 @@ export function useNextStep(sessionId: Id<"sessions"> | null): NextStep {
 		listener,
 		slot: {
 			kindlingReady: active != null && active.sessionId === sessionId,
+			// The safeguard comes off the session too: the offer context is null for Xolace+.
+			letters: endLetterOffer(session, context, letters.offer),
 			// No backend pick for a track yet (open question 8): the slot never offers one.
 			listen: false,
 			listener: listener.status,

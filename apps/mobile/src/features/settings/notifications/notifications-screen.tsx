@@ -129,6 +129,16 @@ export function NotificationsScreen({
 						/>
 					</SettingsCard>
 				</Section>
+				<Section note={C.lettersNote} title={C.letters}>
+					<SettingsCard>
+						<SettingsSwitchRow
+							disabled={state.blocked || state.letters === null}
+							label={C.lettersRow}
+							onChange={actions.setLetters}
+							value={state.letters ?? false}
+						/>
+					</SettingsCard>
+				</Section>
 			</ScrollView>
 			{/* The OS has stopped asking: the switch stays put and this points at Settings. */}
 			<ConfirmationDialog

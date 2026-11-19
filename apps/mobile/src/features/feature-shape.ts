@@ -243,22 +243,51 @@ export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
 	return unique(found);
 }
 
+/**
+ * `src/dev/` files a ported feature's dev states may reach another ported feature through: a dev
+ * state has no route to compose features in. Named one by one, so relaying past check 4 can't
+ * become a pattern; each goes when its contract lands.
+ */
+const DEV_BRIDGES = new Set([
+	// The session end's letter cards draw letters' real tile (Letters, until S21).
+	"dev/letters-slots.ts",
+]);
+
+const isPortedTarget = (from: string, to: string | null | undefined) =>
+	Boolean(to) &&
+	from !== to &&
+	!isLegacyFeature(to as string) &&
+	!Object.hasOwn(SHARED_FEATURES, to as string);
+
 /** 4. A ported folder imports no other ported feature, except the shared modules
- * above: features meet in routes. (An old folder it imports is check 1.) */
+ * above: features meet in routes. (An old folder it imports is check 1.) Nor does it
+ * reach one through a `src/dev/` file, bar the named `DEV_BRIDGES`. */
 export function crossFeatureImportsFromPorted(graph: ImportGraph): string[] {
 	const found: string[] = [];
+	const devReaches = new Map<string, Set<string>>();
+	for (const edge of edges(graph)) {
+		const to = edge.target && featureOf(edge.target);
+		const file = relative(edge.file);
+		if (file.startsWith(DEV_REGISTRY) && to) {
+			devReaches.set(file, (devReaches.get(file) ?? new Set()).add(to));
+		}
+	}
 	for (const edge of edges(graph)) {
 		const from = featureOf(edge.file);
-		const to = edge.target && featureOf(edge.target);
-		if (
-			from &&
-			to &&
-			from !== to &&
-			isPortedFeature(from) &&
-			!isLegacyFeature(to) &&
-			!Object.hasOwn(SHARED_FEATURES, to)
-		) {
+		if (!(from && isPortedFeature(from) && edge.target)) {
+			continue;
+		}
+		const to = featureOf(edge.target);
+		if (isPortedTarget(from, to)) {
 			found.push(show(edge));
+		}
+		const target = relative(edge.target);
+		if (target.startsWith(DEV_REGISTRY) && !DEV_BRIDGES.has(target)) {
+			for (const reached of devReaches.get(target) ?? []) {
+				if (isPortedTarget(from, reached)) {
+					found.push(`${show(edge)} (reaches ${reached})`);
+				}
+			}
 		}
 	}
 	return unique(found);

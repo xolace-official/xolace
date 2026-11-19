@@ -14,6 +14,7 @@ export const PRIVACY_ACTIONS: Privacy["actions"] = {
 	openPolicy: ignore,
 	pickRetention: ignore,
 	setMemory: ignore,
+	setReceiveLetters: ignore,
 	setShare: ignore,
 };
 
@@ -33,6 +34,7 @@ export const PRIVACY_TOP: State = {
 	past: null,
 	pending: null,
 	policyOpen: false,
+	receiveLetters: false,
 	retention: "indefinite",
 	share: false,
 };
@@ -63,6 +65,12 @@ export const PRIVACY_ALERT_CAPPED: State = {
 	...PRIVACY_TOP,
 	past: PAST_CAPPED,
 	pending: "6_months",
+};
+
+/** Letters: receiving them, after Yes on the offer or this switch. */
+export const PRIVACY_LETTERS_ON: State = {
+	...PRIVACY_TOP,
+	receiveLetters: true,
 };
 
 /** Render 25: after "Delete them", 6 months is saved. */

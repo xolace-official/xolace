@@ -23,9 +23,11 @@ import {
 	type ReceivedLetter,
 	readerAcknowledged,
 	readerActions,
+	readerExit,
 	readerGoneLine,
 	readerHidden,
 	readerSealed,
+	readTarget,
 	receivedRowSub,
 	type SentLetter,
 	sentShown,
@@ -309,6 +311,27 @@ describe("the reader", () => {
 	it("says reported only for a letter it had, else that it isn't there (R3)", () => {
 		expect(readerGoneLine(true)).toBe(LETTERS.read.gone);
 		expect(readerGoneLine(false)).toBe(LETTERS.read.notThere);
+	});
+
+	it("leaves a gone letter for Letters after a push, even with Today under it", () => {
+		expect(readerExit(true, true)).toBe("letters");
+		expect(readerExit(true, false)).toBe("letters");
+		expect(readerExit(false, false)).toBe("letters");
+		expect(readerExit(false, true)).toBe("back");
+	});
+});
+
+describe("readTarget (the session end's waiting-letter card)", () => {
+	const mine = [{ id: "a" }, { id: "b" }];
+
+	it("opens the letter kept with the card, opened since or not", () => {
+		expect(readTarget("a", mine)).toBe("a");
+		expect(readTarget("a", undefined)).toBe("a");
+	});
+
+	it("opens Letters instead once that letter is gone, or there was none", () => {
+		expect(readTarget("gone", mine)).toBeNull();
+		expect(readTarget(null, mine)).toBeNull();
 	});
 });
 

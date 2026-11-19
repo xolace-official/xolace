@@ -2,6 +2,7 @@ import { createContext, type ReactNode, use } from "react";
 import type { Reach } from "@/features/settings/notifications/copy";
 import type { Quiet } from "@/features/settings/notifications/notifications-model";
 import { useNotifications } from "@/features/settings/notifications/use-notifications";
+import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 
 /**
  * The "Reach me on…" row, composed in by the route (it reads the `reach-me-on` flag and
@@ -22,6 +23,9 @@ export type Notifications = {
 		/** As shown: off while the phone blocks them. */
 		reminders: boolean;
 		chat: boolean;
+		/** Letters' push switch (composed in by the route): off while the phone blocks it; null
+		 * while it, or the screen, loads. */
+		letters: boolean | null;
 		reach: Reach;
 		quiet: Quiet | null;
 		reachMeOn: ReachMeOn | null;
@@ -31,6 +35,7 @@ export type Notifications = {
 	actions: {
 		setReminders: (on: boolean) => void;
 		setChat: (on: boolean) => void;
+		setLetters: (on: boolean) => void;
 		setReach: (reach: Reach) => void;
 		setQuiet: (on: boolean) => void;
 		setQuietHour: (end: "after" | "before", hour: number) => void;
@@ -56,13 +61,15 @@ export function NotificationsProvider({
 /** The app's adapter. */
 export function NotificationsData({
 	reachMeOn,
+	letters,
 	children,
 }: {
 	reachMeOn: ReachMeOn | null;
+	letters: ComposedSwitch;
 	children: ReactNode;
 }) {
 	return (
-		<NotificationsProvider value={useNotifications(reachMeOn)}>
+		<NotificationsProvider value={useNotifications(reachMeOn, letters)}>
 			{children}
 		</NotificationsProvider>
 	);

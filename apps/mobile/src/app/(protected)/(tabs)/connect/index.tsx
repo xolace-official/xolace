@@ -4,9 +4,10 @@ import { useState } from "react";
 import { View } from "react-native";
 import { ConnectData } from "@/features/connect/connect-data";
 import { ConnectScreen } from "@/features/connect/connect-screen";
+import { ConnectLettersCard } from "@/features/letters/connect/connect-card";
 
 /** NativeTabs mounts every tab eagerly (no lazy option), so this is held until first focused;
- * then it stays mounted. */
+ * then it stays mounted. Letters' card is composed in here: features meet in routes. */
 export default function ConnectRoute() {
 	const isFocused = useIsFocused();
 	// `specialty` pre-filters the roster, `view` picks a segment outright, `t` is
@@ -29,7 +30,7 @@ export default function ConnectRoute() {
 	}
 	return (
 		<ConnectData route={{ navToken: t, specialty, stepId, view }}>
-			<ConnectScreen />
+			<ConnectScreen letters={<ConnectLettersCard />} />
 		</ConnectData>
 	);
 }

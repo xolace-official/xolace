@@ -14,6 +14,7 @@ import {
 	PRIVACY_6_MONTHS,
 	PRIVACY_6_MONTHS_ALERT,
 	PRIVACY_ALERT_CAPPED,
+	PRIVACY_LETTERS_ON,
 	PRIVACY_LOADING,
 	PRIVACY_MEMORY_OFF_SHARE_ON,
 	PRIVACY_POLICY_OPEN,
@@ -39,6 +40,12 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixturePrivacy state={PRIVACY_MEMORY_OFF_SHARE_ON} />,
 		title: "Privacy: memory off, sharing on (23)",
+	},
+	{
+		id: "privacy-letters-on",
+		options: OPTIONS,
+		Screen: () => <FixturePrivacy state={PRIVACY_LETTERS_ON} />,
+		title: "Privacy: receiving letters (Letters, S20)",
 	},
 	{
 		id: "privacy-6-months-alert",

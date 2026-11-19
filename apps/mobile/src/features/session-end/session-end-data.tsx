@@ -1,6 +1,7 @@
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { createContext, type ReactNode, use } from "react";
 import type {
+	LetterOffer,
 	NextInput,
 	NextKey,
 	SavedMood,
@@ -15,6 +16,27 @@ export type ListenerCard = {
 	/** "anxiety", "work stress": what they listen to, from their specialty. */
 	listensTo: string;
 	photoUrl?: string;
+};
+
+/**
+ * Letters' two cards, composed in by the route (features meet in routes): what letters may
+ * offer, their tile, and what showing, passing and taking them does to letters' memory.
+ */
+export type EndLetters = {
+	/** Given this session's safeguard; undefined while letters load. */
+	offer: (safeguard: boolean) => LetterOffer | undefined;
+	/** The folded letter with its ember seal, on the ember wash: both cards' tile. */
+	tile: ReactNode;
+	/** The write card showed: it rests a week. */
+	writeShown: () => void;
+	/** Left without taking it: the third pass running rests it 30 days. */
+	writePassed: () => void;
+	/** The waiting-letter card was kept: it opens that letter all visit, even once it's opened. */
+	readShown: () => void;
+	/** The waiting letter, in the reader; the Letters screen if it's gone. */
+	openRead: () => void;
+	/** Taken: its passes start over, and the writing screen opens. */
+	openWrite: () => void;
 };
 
 /**
@@ -38,6 +60,8 @@ export type SessionEnd = {
 		/** The next-step slot's inputs; the screen adds the answer's step. */
 		slot: Omit<NextInput, "late" | "step">;
 		listener: ListenerCard | null;
+		/** Letters' tile for its two cards. */
+		letterTile: ReactNode;
 		/** The heavier follow-up hasn't been answered in the last 24 hours. */
 		canAskFollowUp: boolean;
 	};
@@ -77,13 +101,15 @@ export function SessionEndProvider({
 export function SessionEndData({
 	path,
 	sessionId,
+	letters,
 	children,
 }: {
 	path: SessionPath;
 	sessionId: Id<"sessions"> | null;
+	letters: EndLetters;
 	children: ReactNode;
 }) {
-	const value = useSessionEndData({ path, sessionId });
+	const value = useSessionEndData({ letters, path, sessionId });
 	return <SessionEndProvider value={value}>{children}</SessionEndProvider>;
 }
 

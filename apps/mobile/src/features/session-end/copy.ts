@@ -52,6 +52,15 @@ export const COPY = {
 			sub: "It lands on Today when it’s ready",
 			title: "Setting up your kindling…",
 		},
+		/** Letters (handoff `letters.md` §2): until it's opened. */
+		letterRead: {
+			sub: "Someone wrote it for whoever needed it",
+			title: "A letter is waiting for you",
+		},
+		letterWrite: {
+			sub: "A few kind lines, for whoever needs them",
+			title: "Write a letter to a stranger",
+		},
 		listen: {
 			sub: "Sounds made for after a session",
 			title: "Something soft to listen to",

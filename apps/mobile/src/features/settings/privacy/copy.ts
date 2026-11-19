@@ -38,6 +38,11 @@ export const PRIVACY_COPY = {
 	keepNote:
 		"Older sessions are deleted by themselves within a day. Keeping longer starts from now; what’s gone doesn’t come back.",
 	kicker: "What Xolace keeps",
+	/** Letters (S20): the opt-in, also answered by the offer on Connect and the Letters screen. */
+	letters: "Letters",
+	lettersNote:
+		"Strangers write short, unsigned letters of encouragement. On: Xolace can place one with you, picked by how your recent sessions felt. The sender never learns who you are.",
+	lettersRow: "Receive letters",
 	memory: "Memory",
 	memoryNote:
 		"Xolace remembers what you’ve shared with it; that’s how it comes to know you. Turn this off and new sessions are kept without their words.",

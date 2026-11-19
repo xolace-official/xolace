@@ -8,6 +8,7 @@ export const NOTIFY_ACTIONS: Notifications["actions"] = {
 	openReachMeOn: ignore,
 	openSettings: ignore,
 	setChat: ignore,
+	setLetters: ignore,
 	setQuiet: ignore,
 	setQuietHour: ignore,
 	setReach: ignore,
@@ -21,6 +22,7 @@ export const NOTIFY_HELD: State = {
 	alertOpen: false,
 	blocked: false,
 	chat: true,
+	letters: true,
 	loading: false,
 	quiet: { after: 21, before: 8 },
 	reach: "warm",
@@ -43,11 +45,15 @@ export const NOTIFY_QUIET_OFF: State = { ...NOTIFY_HELD, quiet: null };
 /** Reminders off: How I reach out and Quiet hours hide, the pill says so. */
 export const NOTIFY_REMINDERS_OFF: State = { ...NOTIFY_HELD, reminders: false };
 
+/** Letters' pushes off (on by default, apart from Privacy › Receive letters). */
+export const NOTIFY_LETTERS_OFF: State = { ...NOTIFY_HELD, letters: false };
+
 /** Render 20: the phone blocks notifications; both switches read off. */
 export const NOTIFY_BLOCKED: State = {
 	...NOTIFY_HELD,
 	blocked: true,
 	chat: false,
+	letters: false,
 	reminders: false,
 };
 
@@ -73,6 +79,7 @@ export const NOTIFY_REACH_PUSH: State = {
 export const NOTIFY_LOADING: State = {
 	...NOTIFY_HELD,
 	chat: false,
+	letters: null,
 	loading: true,
 	quiet: null,
 	reminders: false,

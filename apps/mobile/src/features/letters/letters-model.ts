@@ -302,6 +302,29 @@ export function readerActions(r: {
 export const readerGoneLine = (hadIt: boolean): string =>
 	hadIt ? LETTERS.read.gone : LETTERS.read.notThere;
 
+/**
+ * The letter a session end's "A letter is waiting" card opens: the one waiting when the card was
+ * kept, still in your letters (opened since is fine: it opens already open). Null once it's gone
+ * (reported on another device): the card opens the Letters screen instead. Loading counts as there.
+ */
+export const readTarget = (
+	id: string | null,
+	received: readonly { id: string }[] | undefined
+): string | null =>
+	id !== null && (received === undefined || received.some((l) => l.id === id))
+		? id
+		: null;
+
+/**
+ * Where the reader goes when its letter is gone: back where it was opened from, or the Letters
+ * screen. A push tap always goes to Letters: it pushes the reader over the tabs, so there is
+ * always something to go back to, and on a cold start that's Today, not where letters live.
+ */
+export const readerExit = (
+	fromPush: boolean,
+	canGoBack: boolean
+): "back" | "letters" => (fromPush || !canGoBack ? "letters" : "back");
+
 /* ---------- Writing (handoff §3, §5) ---------- */
 
 /** Where the writing screen is: writing, the check running, what it answered. */

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { View } from "react-native";
 import Animated, {
 	cancelAnimation,
@@ -36,12 +36,16 @@ type Props = {
 	k: NextKey;
 	colors: SessionColors;
 	listener: ListenerCard | null;
+	letterTile: ReactNode;
 };
 
-/** The next card's left: the kindling avatars, a listener, the listen tile, or the loading tile. */
-export function NextArt({ k, colors, listener }: Props) {
+/** The next card's left: the kindling avatars, a listener, letters' tile, the listen tile, or the loading tile. */
+export function NextArt({ k, colors, listener, letterTile }: Props) {
 	if (k === "listener" && listener) {
 		return <ListenerArt listener={listener} />;
+	}
+	if (k === "letterRead" || k === "letterWrite") {
+		return letterTile;
 	}
 	if (k === "listen") {
 		const [bg, fg] = colors.listen;
