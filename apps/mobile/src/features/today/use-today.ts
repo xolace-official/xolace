@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { useAppActive } from "@/components/shared/use-app-active";
 import { useSessionMode } from "@/context/session-mode-context";
+import { usePaywall } from "@/features/purchases/use-paywall";
 import { playSoftPress } from "@/lib/haptics";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
@@ -164,7 +165,7 @@ export function useTodayData(): Today {
 	const streak = useStreak(summary?.currentStreak, day, userId);
 	const intro = useIntro(day, userId);
 	const monthPrompt = useMonthPrompt(now);
-	const { campfire, campfireSettled, kindling } = useModules();
+	const { campfire, campfireSettled, kindling, kindlingEmpty } = useModules();
 	// Reflect's open session, so the card can wait with your words or say the mirror is back.
 	const active = useQuery(api.sessions.getActive);
 	const lower = useLowerModules();
@@ -188,6 +189,16 @@ export function useTodayData(): Today {
 			openStreak: () => router.navigate("/you"),
 			pressReflect: playSoftPress,
 			rekindle: () => void spendSaver(),
+			seeKindlingPlus: () =>
+				pushOnce(() => {
+					playSoftPress();
+					usePaywall.getState().open("kindling");
+				}),
+			talkForKindling: () =>
+				pushOnce(() => {
+					playSoftPress();
+					router.push(DOOR_HREF.talk);
+				}),
 		},
 		state: {
 			campfire,
@@ -203,10 +214,12 @@ export function useTodayData(): Today {
 			greeting,
 			intro,
 			kindling,
+			kindlingEmpty,
 			phase,
 			ready: todayReady({
 				campfireSettled,
 				kindling,
+				kindlingEmpty,
 				phase,
 				rail: lower.rail,
 				session: active,

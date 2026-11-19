@@ -28,8 +28,10 @@ export type PaywallSurface =
 	| "intake_same_week"
 	// A free user's tap on a Browse track row (#340, §9.4). The slug rides on browse_paywall_*.
 	| "browse"
-	// Session-end's free-user upsell line (docs/paths-v1.md §12, #337). A fixed slot,
-	// not one of the five ranked moments: no cooldown, shown every qualifying session.
+	// Kindling's Xolace+ upsell: session-end's free-user line (docs/paths-v1.md §12, #337;
+	// a fixed slot, not one of the five ranked moments: no cooldown, every qualifying
+	// session) and Today's kindling card with none (S16, "See how"). The spec keeps both on
+	// this one placement, so paywall_opened doesn't tell them apart.
 	| "kindling"
 	// The Lantern reader's audio dock at the end of the 30s preview (#411).
 	| "library_audio"

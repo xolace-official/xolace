@@ -112,6 +112,34 @@ export const COPY = {
 		begin: "Begin",
 		done: "DONE",
 		doneEyebrow: "THIS KINDLING IS DONE",
+		/**
+		 * The card with no kindling (`P/design/handoff/kindling.md` §11.1, `KINDLING_TODAY.empty`).
+		 * VoiceOver reads each as one element.
+		 */
+		empty: {
+			/** Free: kindling is part of Xolace+. */
+			free: {
+				action: "See how",
+				eyebrow: "PART OF XOLACE+",
+				hint: "Shows Xolace+",
+				label: "Your kindling, part of Xolace+. A few steps after each talk.",
+				title: "A few steps after each talk",
+			},
+			/** Xolace+, none right now: never had one, or the last was finished or put out. */
+			plus: {
+				action: "Talk",
+				eyebrow: "NONE RIGHT NOW",
+				hint: "Opens Talk",
+				label: "Your kindling. None right now. Your next talk lights one.",
+				title: "Your next talk lights one",
+			},
+			/** Xolace+, a qualifying session just ended and its kindling is being made. */
+			settingUp: {
+				eyebrow: "SETTING UP",
+				label: "Your kindling is being set up. It lands here when it’s ready.",
+				title: "It lands here when it’s ready",
+			},
+		},
 		/** Each kind of step: its title when the server sends none, and how long it asks (production's twig eyebrows). */
 		kinds: {
 			audio: { length: "SOMETHING TO HEAR", title: "A voice for this" },

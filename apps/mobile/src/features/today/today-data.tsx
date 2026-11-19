@@ -1,6 +1,7 @@
 import type { Href } from "expo-router";
 import { createContext, type ReactNode, use } from "react";
 import type { CampfireView } from "./campfire/campfire-model";
+import type { KindlingEmptyMode } from "./kindling/card-mode";
 import type { KindlingView } from "./kindling/kindling-model";
 import type { MomentView } from "./moments/moments-model";
 import type { RailTile } from "./rail/rail-model";
@@ -48,9 +49,14 @@ export type Today = {
 		};
 		/**
 		 * Your kindling: undefined while it loads, null with none (free, none yet, or the
-		 * last one closed). S16 draws plus, free and setting up in the card's frame.
+		 * last one closed).
 		 */
 		kindling: KindlingView | null | undefined;
+		/**
+		 * What the card shows with no kindling: Xolace+ with none right now, free, or one
+		 * being set up (`paths.settingUp.get`). Undefined while that loads.
+		 */
+		kindlingEmpty: KindlingEmptyMode | undefined;
 		/** This week's campers by the fire, or nothing without an honest number. */
 		campfire: CampfireView | null;
 		/** The local day ("YYYY-MM-DD"): a new day remounts the page, so its intro can play. */
@@ -79,6 +85,10 @@ export type Today = {
 		openDoor: (door: Door) => void;
 		/** The kindling card and its Begin. */
 		openKindling: () => void;
+		/** No kindling, Xolace+: the card's Talk. */
+		talkForKindling: () => void;
+		/** No kindling, free: the card's See how, the paywall (`kindling`). */
+		seeKindlingPlus: () => void;
 		/** A rail tile or the quiet row: the player for Plus, the paywall for free. */
 		openTrack: (tile: RailTile) => void;
 		/** The rail's See all. */
