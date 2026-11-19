@@ -10,7 +10,7 @@
 | Web / admin E2E | `bun run test:e2e -F @xolace/web` · `-F @xolace/admin` | Playwright + `@clerk/testing` against the E2E deployment, reset and seeded first | PRs touching web, admin or backend |
 | Mobile E2E (blocking) | `.argent/flows` | the E2E simulator build | PRs touching mobile or backend (EAS Workflow) |
 | Mobile E2E (exploratory) | argent agent run from the PR title/body/diff | same build; reports, never blocks | same PRs |
-| Live evals | `test:evals:*` | model behavior (intensity, talk) | PRs touching `convex/ai/**` |
+| Live evals | `test:evals:*` | model behavior (intensity, talk, letters check) | PRs touching what each gate's workflow lists (`intensity-gate.yml`, `talk-gate.yml`, `letters-gate.yml`) |
 
 Tiers beyond "Changed only" and "Unit" land with Phase 1E/2/3; until a command
 exists, say in the PR that the tier was not run.

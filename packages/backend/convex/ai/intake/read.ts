@@ -14,7 +14,7 @@ import type { Id } from "../../_generated/dataModel";
 import { action, internalQuery } from "../../_generated/server";
 import { requireAuth } from "../../lib/auth";
 import { rateLimiter } from "../../lib/rateLimits";
-import { peakOf, phrasePeak } from "../../talk/safety";
+import { moderationPeak, peakOf, phrasePeak } from "../../talk/safety";
 import { buildClassifierPrompt } from "../prompts/classifier";
 import {
 	CLASSIFIER_MODEL,
@@ -24,7 +24,11 @@ import {
 	parseClassificationResponse,
 	thinkingOff,
 } from "../providers/anthropic";
-import { MODERATION_UNAVAILABLE, moderateInput } from "../providers/moderation";
+import {
+	MODERATION_UNAVAILABLE,
+	type ModerationResult,
+	moderateInput,
+} from "../providers/moderation";
 import {
 	CRISIS_RESOURCES,
 	evaluateSafeguard,
@@ -67,9 +71,15 @@ export const readerProfileId = internalQuery({
 	returns: v.id("emotional_profiles"),
 });
 
-/** Talk's deterministic phrase floor (#599) as a verdict: no model, no budget. */
-async function phraseFloor(words: string): Promise<RaisedVerdict> {
-	const phrase = phrasePeak(words);
+/** Which phrases floor a check: talk's (#599) unless a caller has its own. */
+export type PhraseFloor = (words: string) => TalkPeak | null;
+
+/** A phrase floor as a verdict: no model, no budget. */
+async function phraseFloor(
+	words: string,
+	peakOfPhrase: PhraseFloor = phrasePeak
+): Promise<RaisedVerdict> {
+	const phrase = peakOfPhrase(words);
 	if (!phrase) {
 		return { level: "none", resources: [] };
 	}
@@ -91,7 +101,7 @@ const PHRASE_WAIT_MS = 3000;
  * stops the work then, so a provider past its deadline doesn't keep running (or
  * retry) for an answer nobody will read.
  */
-async function within<T>(
+export async function within<T>(
 	work: Promise<T>,
 	ms: number,
 	fallback: () => T,
@@ -117,7 +127,48 @@ async function within<T>(
  * escalation event (#772): categories only, never their words.
  */
 type RaisedVerdict = SafetyVerdict & { peak?: TalkPeak };
-export type WordsVerdict = RaisedVerdict & { unavailable: boolean };
+export type WordsVerdict = RaisedVerdict & {
+	unavailable: boolean;
+	/**
+	 * The engine would reject these words on content policy (sexual content
+	 * involving minors, threatening hate, violent harassment). Intake and
+	 * Telegram ignore it; the letters check holds the letter on it (#750).
+	 */
+	rejected?: true;
+	/**
+	 * Moderation itself couldn't answer (an error, its deadline, no key), even
+	 * if the classifier did. Intake and Telegram ignore it; the letters check
+	 * waits and re-checks on it (#750). Absent when the phrase floor answered
+	 * before the engine.
+	 */
+	moderationUnavailable?: true;
+	/**
+	 * Elevated only because of moderation's self-harm scores: moderation alone
+	 * reads elevated (not crisis), it reads nothing without its self-harm
+	 * scores, and the classifier alone raises nothing. Intake and Telegram
+	 * ignore it; the letters check may pass such a letter when the mention is
+	 * past or someone else's (owner, 19 Nov 2026).
+	 */
+	selfHarmScoresOnly?: true;
+};
+
+/** `moderation` with its self-harm categories and scores taken out. */
+function withoutSelfHarm(moderation: ModerationResult): ModerationResult {
+	return {
+		...moderation,
+		categories: {
+			...moderation.categories,
+			"self-harm": false,
+			"self-harm/instructions": false,
+			"self-harm/intent": false,
+		},
+		categoryScores: Object.fromEntries(
+			Object.entries(moderation.categoryScores).filter(
+				([category]) => !category.startsWith("self-harm")
+			)
+		),
+	};
+}
 
 /**
  * Moderation and the classifier through the safeguard engine. Never rejects, and
@@ -153,19 +204,36 @@ async function engineVerdict(words: string): Promise<WordsVerdict> {
 			classifying
 		),
 	]);
-	const unavailable =
-		moderation === MODERATION_UNAVAILABLE && classification === UNCLASSIFIED;
+	const moderationDown = moderation === MODERATION_UNAVAILABLE;
+	const unavailable = moderationDown && classification === UNCLASSIFIED;
+	const moderationFlag = moderationDown && {
+		moderationUnavailable: true as const,
+	};
 	const verdict = evaluateSafeguard(classification, moderation, []);
-	// A content-policy rejection turns a mirror away; here it just means no escalation.
+	// A content-policy rejection turns a mirror away; here it means no
+	// escalation, and a flag for a caller that holds such words (letters).
 	if (verdict.shouldReject) {
-		return { level: "none", resources: [], unavailable };
+		return {
+			level: "none",
+			rejected: true,
+			resources: [],
+			unavailable,
+			...moderationFlag,
+		};
 	}
 	const peak = peakOf(verdict);
+	const selfHarmScoresOnly =
+		verdict.level === "elevated" &&
+		moderationPeak(moderation)?.level === "elevated" &&
+		!moderationPeak(withoutSelfHarm(moderation)) &&
+		!peakOf(evaluateSafeguard(classification, MODERATION_UNAVAILABLE, []));
 	return {
 		level: verdict.level,
 		resources: verdict.resourcesPresented,
 		unavailable,
+		...moderationFlag,
 		...(peak && { peak }),
+		...(selfHarmScoresOnly && { selfHarmScoresOnly: true as const }),
 	};
 }
 
@@ -176,16 +244,27 @@ async function engineVerdict(words: string): Promise<WordsVerdict> {
  * a loose one gives moderation {@link PHRASE_WAIT_MS} to raise it before it
  * stands. A provider that fails or passes the deadline leaves the other and the
  * phrase floor standing; `unavailable` says both failed. Intake's first answer
- * and Telegram's free text (#770) both run it.
+ * and Telegram's free text (#770) both run it with talk's floor; letters pass
+ * their own (`ai/letters/floor.ts`).
  */
-export async function checkWordsSafety(words: string): Promise<WordsVerdict> {
-	const floor = await phraseFloor(words);
+export async function checkWordsSafety(
+	words: string,
+	peakOfPhrase: PhraseFloor = phrasePeak
+): Promise<WordsVerdict> {
+	const floor = await phraseFloor(words, peakOfPhrase);
 	if (floor.level === "crisis") {
 		return { ...floor, unavailable: false };
 	}
 	const engine = engineVerdict(words).then((verdict) =>
 		levelAbove(floor.level, verdict.level)
-			? { ...floor, unavailable: verdict.unavailable }
+			? {
+					...floor,
+					unavailable: verdict.unavailable,
+					...(verdict.rejected && { rejected: verdict.rejected }),
+					...(verdict.moderationUnavailable && {
+						moderationUnavailable: verdict.moderationUnavailable,
+					}),
+				}
 			: verdict
 	);
 	if (floor.level === "none") {
