@@ -914,5 +914,33 @@
     "reflectPrompt": "What does showing up look like for you on a hard day?",
     "bodyPath": "bodies/stories/im-still-showing-up.md",
     "contentNote": "Mentions being physically hurt at home and the loss of her mother. Nothing graphic."
+  },
+  {
+    "slug": "the-girl-who-prayed-for-a-numb-heart",
+    "coverPath": "stories/the-girl-who-prayed-for-a-numb-heart.jpg",
+    "kind": "story",
+    "title": "The girl who prayed for a numb heart",
+    "dek": "At six, she called her dad and a cold voice answered. Fourteen years on, she has found peace without forgetting.",
+    "primarySubject": "grief",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "The girl who prayed for a numb heart",
+        "author": "Florence Boateng"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Florence Boateng",
+    "consentRecordedAt": 1795046400000,
+    "lastReviewedAt": 1795046400000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["grief", "sadness", "anger", "hope"],
+      "lifeArea": ["family", "neglect", "loss", "self-worth"]
+    },
+    "reflectPrompt": "What would you tell the child you were, if you could?",
+    "bodyPath": "bodies/stories/the-girl-who-prayed-for-a-numb-heart.md",
+    "contentNote": "About a father who left and a painful phone call in childhood. Nothing graphic."
   }
 ]
