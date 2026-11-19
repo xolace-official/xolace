@@ -7,6 +7,7 @@
  */
 import type { WordsVerdict } from "../ai/intake/read";
 import type { LetterVerdict } from "../ai/letters/check";
+import { discountedPeak } from "../ai/letters/floor";
 import type { TalkPeak } from "../ai/safeguard";
 import { contactLeakIn, urlIn } from "../lib/contactPatterns";
 import type { FixableCategory } from "./lines";
@@ -75,15 +76,25 @@ export function patternCategory(text: string): FixableCategory | null {
  * moderation is down, even if its classifier answered. A half that did answer
  * still decides what comes before unavailable, so a crisis is never held back
  * behind an outage.
+ *
+ * Fail-safe (owner, 19 Nov 2026): `discounted` is talk's floor peak when the
+ * letters floor cut a mention it read as past or someone else's. That cut
+ * alone never passes a letter: unless the classifier answered that every
+ * mention is past or someone else's, the letter is risk at the uncut level.
+ * A classifier that's down, timed out, unparseable or unsure is not a yes.
  */
 export function decideLetterCheck(input: {
 	safety: WordsVerdict;
 	verdict: LetterVerdict | null;
 	pattern: FixableCategory | null;
+	discounted: TalkPeak | null;
 }): LetterCheck {
-	const { safety, verdict, pattern } = input;
+	const { safety, verdict, pattern, discounted } = input;
 	if (safety.level === "elevated" || safety.level === "crisis") {
 		return { kind: "risk", peak: safety.peak ?? null };
+	}
+	if (discounted && verdict?.crisisMention !== "past_or_others") {
+		return { kind: "risk", peak: discounted };
 	}
 	if (verdict?.hostile || safety.rejected) {
 		return { kind: "held" };
@@ -126,5 +137,10 @@ export async function checkLetterText(
 		deps.safety(text).catch(() => SAFETY_THREW),
 		deps.classify(text).catch(() => null),
 	]);
-	return decideLetterCheck({ pattern, safety, verdict });
+	return decideLetterCheck({
+		discounted: discountedPeak(text),
+		pattern,
+		safety,
+		verdict,
+	});
 }

@@ -14,19 +14,47 @@ const FLAGS_OFF = {
 	selling: false,
 };
 
+const NO_MENTION = { crisis_mention: "none" };
+
 describe("parseLetterCheckResponse", () => {
 	it("reads a clean, fenced verdict", () => {
 		expect(
 			parseLetterCheckResponse(
-				`\`\`\`json\n${JSON.stringify({ ...FLAGS_OFF, hostile: false, language: "en" })}\n\`\`\``
+				`\`\`\`json\n${JSON.stringify({ ...FLAGS_OFF, ...NO_MENTION, hostile: false, language: "en" })}\n\`\`\``
 			)
-		).toEqual({ fixable: null, hostile: false, language: "en" });
+		).toEqual({
+			crisisMention: "none",
+			fixable: null,
+			hostile: false,
+			language: "en",
+		});
 	});
+
+	it.each(["none", "past_or_others", "current"] as const)(
+		"reads crisis_mention %s",
+		(mention) => {
+			expect(
+				parseLetterCheckResponse(
+					JSON.stringify({
+						...FLAGS_OFF,
+						crisis_mention: mention,
+						hostile: false,
+						language: "en",
+					})
+				)?.crisisMention
+			).toBe(mention);
+		}
+	);
 
 	it("lower-cases the language and accepts und", () => {
 		const read = (language: string) =>
 			parseLetterCheckResponse(
-				JSON.stringify({ ...FLAGS_OFF, hostile: false, language })
+				JSON.stringify({
+					...FLAGS_OFF,
+					...NO_MENTION,
+					hostile: false,
+					language,
+				})
 			)?.language;
 		expect(read(" EN ")).toBe("en");
 		expect(read("und")).toBe("und");
@@ -36,6 +64,7 @@ describe("parseLetterCheckResponse", () => {
 		const verdict = parseLetterCheckResponse(
 			JSON.stringify({
 				...FLAGS_OFF,
+				...NO_MENTION,
 				hostile: false,
 				language: "en",
 				medical: true,
@@ -50,28 +79,63 @@ describe("parseLetterCheckResponse", () => {
 	it.each([
 		["prose", "I can't classify this letter."],
 		["broken JSON", '{"hostile": false,'],
-		["no hostile answer", JSON.stringify({ ...FLAGS_OFF, language: "en" })],
+		[
+			"no hostile answer",
+			JSON.stringify({ ...FLAGS_OFF, ...NO_MENTION, language: "en" }),
+		],
 		[
 			"a non-boolean hostile",
-			JSON.stringify({ ...FLAGS_OFF, hostile: "no", language: "en" }),
+			JSON.stringify({
+				...FLAGS_OFF,
+				...NO_MENTION,
+				hostile: "no",
+				language: "en",
+			}),
 		],
 		[
 			"a missing category",
-			JSON.stringify({ ...missingMedical, hostile: false, language: "en" }),
+			JSON.stringify({
+				...missingMedical,
+				...NO_MENTION,
+				hostile: false,
+				language: "en",
+			}),
 		],
 		[
 			"a non-boolean category",
 			JSON.stringify({
 				...FLAGS_OFF,
+				...NO_MENTION,
 				hostile: false,
 				language: "en",
 				link: "false",
 			}),
 		],
-		["no language", JSON.stringify({ ...FLAGS_OFF, hostile: false })],
+		[
+			"no crisis_mention",
+			JSON.stringify({ ...FLAGS_OFF, hostile: false, language: "en" }),
+		],
+		[
+			"an unknown crisis_mention",
+			JSON.stringify({
+				...FLAGS_OFF,
+				crisis_mention: "past",
+				hostile: false,
+				language: "en",
+			}),
+		],
+		[
+			"no language",
+			JSON.stringify({ ...FLAGS_OFF, ...NO_MENTION, hostile: false }),
+		],
 		[
 			"a language that isn't a code",
-			JSON.stringify({ ...FLAGS_OFF, hostile: false, language: "English" }),
+			JSON.stringify({
+				...FLAGS_OFF,
+				...NO_MENTION,
+				hostile: false,
+				language: "English",
+			}),
 		],
 	])("is null for %s, never a pass", (_label, raw) => {
 		expect(parseLetterCheckResponse(raw)).toBeNull();
@@ -85,6 +149,9 @@ describe("buildLetterCheckPrompt", () => {
 		for (const key of Object.keys(FLAGS_OFF)) {
 			expect(system).toContain(`"${key}": boolean`);
 		}
+		expect(system).toContain(
+			'"crisis_mention": "none" | "past_or_others" | "current"'
+		);
 	});
 
 	it("tells the model the letter is data, never instructions", () => {

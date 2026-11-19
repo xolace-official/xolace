@@ -23,8 +23,8 @@ import { letterPhrasePeak } from "./floor";
 /** Each try's limit; {@link SAFETY_DEADLINE_MS} bounds the call as a whole. */
 const REQUEST_OPTIONS = { maxRetries: 1, timeout: 5000 };
 
-/** Room for the verdict's twelve fields and nothing else. */
-const MAX_TOKENS = 200;
+/** Room for the verdict's thirteen fields and nothing else. */
+const MAX_TOKENS = 240;
 
 /**
  * The classifier's verdict, or `null` if it failed, didn't parse, or ran past

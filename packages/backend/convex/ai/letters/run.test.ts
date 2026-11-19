@@ -23,6 +23,7 @@ vi.mock("../providers/anthropic", async (orig) => ({
 
 const VERDICT = {
 	contact: false,
+	crisis_mention: "none",
 	forced_positivity: false,
 	graphic: false,
 	hostile: false,
@@ -52,6 +53,7 @@ describe("classifyLetter", () => {
 	it("returns the parsed verdict", async () => {
 		client.create = async () => reply(JSON.stringify(VERDICT));
 		expect(await classifyLetter("You are not alone.")).toEqual({
+			crisisMention: "none",
 			fixable: null,
 			hostile: false,
 			language: "en",

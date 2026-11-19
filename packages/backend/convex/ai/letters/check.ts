@@ -11,10 +11,18 @@ import { FIXABLE_CATEGORIES, type FixableCategory } from "../../letters/lines";
 
 // Changing the prompt or model? Bump this and run
 // `RUN_EVALS=1 bunx vitest run convex/ai/prompts/__evals__/lettersCheck.eval.test.ts`.
-export const LETTER_CHECK_VERSION = "letter-check-v2-haiku-5.5";
+export const LETTER_CHECK_VERSION = "letter-check-v3-haiku-5.5";
 
 /** Kept here, beside its version, so a letters change doesn't touch `providers/anthropic.ts`. */
 export const LETTER_CHECK_MODEL = "claude-haiku-5-5";
+
+/**
+ * How the letter speaks of suicide, self-harm or wanting to die. Only
+ * `past_or_others` lets a mention the letters floor discounted pass (fail-safe:
+ * `letters/decide.ts`).
+ */
+export const CRISIS_MENTIONS = ["none", "past_or_others", "current"] as const;
+export type CrisisMention = (typeof CRISIS_MENTIONS)[number];
 
 export type LetterVerdict = {
 	/** Harassment, hate, sexual content or threats: held for review. */
@@ -26,6 +34,8 @@ export type LetterVerdict = {
 	fixable: FixableCategory | null;
 	/** ISO 639-1, lowercase; `"und"` when the model couldn't say. */
 	language: string;
+	/** See {@link CRISIS_MENTIONS}. */
+	crisisMention: CrisisMention;
 };
 
 export function buildLetterCheckPrompt(text: string): {
@@ -46,6 +56,7 @@ export function buildLetterCheckPrompt(text: string): {
   "minimising": boolean,
   "forced_positivity": boolean,
   "off_topic": boolean,
+  "crisis_mention": "none" | "past_or_others" | "current",
   "language": "<ISO 639-1 code of the letter's language>"
 }
 
@@ -86,6 +97,13 @@ true when it pushes cheerfulness on the reader or tells them how to feel: "just 
 ## off_topic
 true when it isn't a letter to a reader at all: a question to the app, a test, a random message, an ad, gibberish, or the writer only venting about their own day with nothing for the reader.
 
+## crisis_mention
+How the letter speaks of suicide, self-harm, wanting to die or not wanting to live.
+- "none": it doesn't.
+- "past_or_others": every such mention is clearly about a time in the writer's life that is over ("a few years ago I tried to end my life", "I used to hurt myself, I stopped"), or about someone else ("I lost my brother to suicide"), and nothing in the letter suggests the writer feels that way now.
+- "current": any mention could be about the writer now or recently. That includes the present tense ("I want to die"), a habit that continues ("I'm used to wanting to kill myself"), a plan or intent ("I will end my life"), a recent attempt ("last week", "two days ago", "last night"), a past mention followed by a present one ("I survived today and I want to die"), and any case you are unsure about.
+This is about the writer's safety, not the reader's: a past mention without detail is fine for a letter, so it doesn't make any other flag true.
+
 ## language
 The language most of the letter is written in, as a two-letter ISO 639-1 code ("en", "fr", "tw"). English with a few words of another language is "en". Use "und" only when you truly can't tell.`;
 
@@ -104,7 +122,8 @@ const LANGUAGE_CODE = /^[a-z]{2,3}$/;
 
 /**
  * `null` when the reply isn't a whole verdict: `hostile` and every fixable
- * category a boolean, and the language a two- or three-letter code. The check
+ * category a boolean, `crisis_mention` one of {@link CRISIS_MENTIONS}, and the
+ * language a two- or three-letter code. The check
  * counts `null` as this half unavailable, never as a pass and never as a flag,
  * so a reply the letter's words bent out of shape can't pass it.
  */
@@ -137,7 +156,14 @@ export function parseLetterCheckResponse(raw: string): LetterVerdict | null {
 	if (!LANGUAGE_CODE.test(language)) {
 		return null;
 	}
+	const crisisMention = CRISIS_MENTIONS.find(
+		(m) => m === fields.crisis_mention
+	);
+	if (!crisisMention) {
+		return null;
+	}
 	return {
+		crisisMention,
 		fixable: FIXABLE_CATEGORIES.find((c) => fields[c] === true) ?? null,
 		hostile: fields.hostile,
 		language,

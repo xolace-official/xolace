@@ -2,7 +2,9 @@
  * The letters phrase floor (owner, 19 Nov 2026): past-tense and third-person
  * mentions are left to moderation and the safeguard; a present-tense,
  * first-person phrase still raises as talk's does. Intake's floor is
- * unchanged. The model and moderation are stubbed.
+ * unchanged. Fail-safe: a cut mention passes only when the letters classifier
+ * says every mention is past or someone else's. The model and moderation are
+ * stubbed.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { checkLetterText } from "../../letters/decide";
@@ -14,7 +16,7 @@ import {
 	type ModerationResult,
 } from "../providers/moderation";
 import type { LetterVerdict } from "./check";
-import { letterPhrasePeak } from "./floor";
+import { discountedPeak, letterPhrasePeak } from "./floor";
 
 const CLEAN: ModerationResult = {
 	categories: EMPTY_CATEGORIES,
@@ -43,14 +45,44 @@ beforeEach(() => {
 	stub.moderation = CLEAN;
 });
 
-const KIND: LetterVerdict = { fixable: null, hostile: false, language: "en" };
+/** The classifier's kind verdict: every mention is past or someone else's. */
+const KIND: LetterVerdict = {
+	crisisMention: "past_or_others",
+	fixable: null,
+	hostile: false,
+	language: "en",
+};
 
-/** The whole check with the letters floor, the classifier answering kind. */
-const check = (text: string) =>
+/**
+ * The whole check with the letters floor; the classifier answers `verdict`
+ * (kind and confirming by default, `null` when it's silent).
+ */
+const check = (text: string, verdict: LetterVerdict | null = KIND) =>
 	checkLetterText(text, {
-		classify: () => Promise.resolve(KIND),
+		classify: () => Promise.resolve(verdict),
 		safety: (t) => checkWordsSafety(t, letterPhrasePeak),
 	});
+
+/**
+ * Present-tense crisis that an earlier floor cut to nothing (review of #857):
+ * "I'm used to", a clause joined by and/so/but, and recent attempts. Each with
+ * the level talk's floor gives it, which the letters floor must keep.
+ */
+const PRESENT: [string, "crisis" | "elevated"][] = [
+	["I'm used to wanting to kill myself.", "crisis"],
+	["I'm so used to it and I'll kill myself.", "crisis"],
+	["I'm used to it so I'll end my life.", "crisis"],
+	["I barely survived today and will kill myself.", "crisis"],
+	["I tried to and will end my life.", "crisis"],
+	["I'm used to feeling suicidal.", "elevated"],
+	["I survived today and I want to die.", "elevated"],
+	["I tried to stop but want to die.", "elevated"],
+	["I lost my job and I'm close to suicide.", "elevated"],
+	["Honestly it's suicide or nothing for me now.", "elevated"],
+	["I tried to kill myself last week.", "crisis"],
+	["I tried to kill myself two days ago.", "crisis"],
+	["It happened last night. I tried to end my life.", "crisis"],
+];
 
 const MENTIONS = [
 	"A few years ago I tried to end my life. I'm still here, and some days are good now.",
@@ -112,11 +144,64 @@ describe("letterPhrasePeak", () => {
 	});
 });
 
+describe("letterPhrasePeak on present-tense crisis", () => {
+	it.each(PRESENT)("keeps talk's level: %s", (text, level) => {
+		expect(phrasePeak(text.toLowerCase())?.level).toBe(level);
+		expect(letterPhrasePeak(text)?.level).toBe(level);
+		expect(discountedPeak(text)).toBeNull();
+	});
+});
+
+describe("discountedPeak", () => {
+	it.each(MENTIONS)("is talk's peak when a mention was cut: %s", (text) => {
+		expect(discountedPeak(text)).toEqual(phrasePeak(text));
+	});
+
+	it("is null for a letter with no phrase at all", () => {
+		expect(discountedPeak("You are not alone tonight.")).toBeNull();
+	});
+});
+
 describe("the letters check with its floor", () => {
 	it.each(MENTIONS)(
-		"passes a mention when the engine says none: %s",
+		"passes a mention when the engine says none and the classifier confirms it's past: %s",
 		async (text) => {
 			expect(await check(text)).toEqual({ kind: "pass" });
+		}
+	);
+
+	// The fail-safe: the floor's cut alone never passes a letter. Remove the
+	// guard in `decideLetterCheck` and these go red.
+	it.each(MENTIONS)(
+		"routes a cut mention to risk when the classifier is silent: %s",
+		async (text) => {
+			expect(await check(text, null)).toEqual({
+				kind: "risk",
+				peak: phrasePeak(text),
+			});
+		}
+	);
+
+	it.each(["none", "current"] as const)(
+		"routes a cut mention to risk when the classifier says %s",
+		async (crisisMention) => {
+			for (const text of MENTIONS) {
+				expect(await check(text, { ...KIND, crisisMention })).toMatchObject({
+					kind: "risk",
+				});
+			}
+		}
+	);
+
+	it.each(PRESENT)(
+		"routes present-tense crisis to risk, the classifier silent or not: %s",
+		async (text, level) => {
+			for (const verdict of [null, KIND]) {
+				expect(await check(text, verdict)).toMatchObject({
+					kind: "risk",
+					peak: { level },
+				});
+			}
 		}
 	);
 

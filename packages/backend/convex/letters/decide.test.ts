@@ -18,6 +18,7 @@ const PEAK: TalkPeak = {
 	triggerType: "explicit_crisis_language",
 };
 const KIND: LetterVerdict = {
+	crisisMention: "none",
 	fixable: null,
 	hostile: false,
 	language: "en",
@@ -27,7 +28,7 @@ const decide = (
 	safety: WordsVerdict,
 	verdict: LetterVerdict | null,
 	pattern: "contact" | "link" | null = null
-) => decideLetterCheck({ pattern, safety, verdict });
+) => decideLetterCheck({ discounted: null, pattern, safety, verdict });
 
 describe("decideLetterCheck", () => {
 	it("passes a kind letter both halves read", () => {
@@ -128,6 +129,47 @@ describe("decideLetterCheck", () => {
 		expect(decide(SAFETY_DOWN, KIND)).toEqual({ kind: "unavailable" });
 		expect(decide(SAFE, null)).toEqual({ kind: "unavailable" });
 		expect(decide(SAFETY_DOWN, null)).toEqual({ kind: "unavailable" });
+	});
+
+	describe("a mention the letters floor cut (fail-safe)", () => {
+		const cut = (verdict: LetterVerdict | null) =>
+			decideLetterCheck({
+				discounted: PEAK,
+				pattern: null,
+				safety: SAFE,
+				verdict,
+			});
+
+		it("passes only when the classifier says every mention is past or someone else's", () => {
+			expect(cut({ ...KIND, crisisMention: "past_or_others" })).toEqual({
+				kind: "pass",
+			});
+		});
+
+		it.each(["none", "current"] as const)(
+			"is risk at the uncut level when the classifier says %s",
+			(crisisMention) => {
+				expect(cut({ ...KIND, crisisMention })).toEqual({
+					kind: "risk",
+					peak: PEAK,
+				});
+			}
+		);
+
+		it("is risk, never pass or unavailable, when the classifier is silent", () => {
+			expect(cut(null)).toEqual({ kind: "risk", peak: PEAK });
+		});
+
+		it("comes before a hostile verdict or a pattern hit", () => {
+			expect(
+				decideLetterCheck({
+					discounted: PEAK,
+					pattern: "contact",
+					safety: SAFE,
+					verdict: { ...KIND, hostile: true },
+				}).kind
+			).toBe("risk");
+		});
 	});
 
 	it("is unavailable when moderation is down, even if the safeguard answered", () => {
