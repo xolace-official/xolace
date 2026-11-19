@@ -169,7 +169,7 @@ Desktop dev (`tauri dev`) still expects web on 3001; run it from one worktree at
 
 | When | Run |
 |---|---|
-| Iterating | `bun run check:changed` (Biome on changed files, `check-types`+`lint` for affected packages and dependents, sibling tests). `--base <ref>` to compare elsewhere, `--list` to dry-run |
+| Iterating | `bun run check:changed` (Biome on changed files, `check-types` for affected packages and dependents, sibling tests) since the merge-base with `origin/dev`. `--base <ref>` to compare elsewhere, `--list` to dry-run |
 | One test file | `bunx vitest run <file>` inside the package, or `bunx turbo run test -F <pkg> -- <file>`; root scripts: `bun test scripts/` |
 | Before a PR | `bunx turbo run check-types lint test`, `bun run check` and `bun run knip` (unused files, exports and dependencies; mobile only for now) |
 
