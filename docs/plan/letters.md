@@ -98,17 +98,18 @@ Matching indexes: `by_pool_aim` `[pool, language, aim, band, lastReceivedAt, tie
 and `by_pool_band` `[pool, language, band, lastReceivedAt, tiebreak]`.
 
 **`letter_blocks`**: `{ recipientProfileId, senderProfileId, createdAt, cause: "hide" | "report" }`,
-index `by_pair`. That sender is never matched to that recipient again (#750). Unhide
-doesn't remove it.
+indexes `by_pair` and `by_sender` (account deletion). That sender is never matched to
+that recipient again (#750). Unhide doesn't remove it.
 
 **`letter_reviews`**: what a person may read (#750: only reported letters and held
 ones). `{ letterId, kind: "held" | "report", reason?, reporterProfileId?, createdAt,
 state: "open" | "confirmed" | "dismissed", decidedAt?, decidedBy? }` (`decidedBy` is the
 admin's Clerk subject). `reason` is the report's: `"unkind" | "selling" | "private" |
-"other"` (required, open question 30). Indexes `by_state_created`, `by_letter`.
+"other"` (required, open question 30). Indexes `by_state_created`, `by_letter`,
+`by_reporter` (a reporter's deletion or wipe) and `by_decided` (reviewed text's 30 days).
 
-**`letter_strikes`**: `{ senderProfileId, at, cause: "held" | "report", reviewId }`, index
-`by_sender_at`. No text.
+**`letter_strikes`**: `{ senderProfileId, at, cause: "held" | "report", reviewId }`,
+indexes `by_sender_at` and `by_at` (the 120-day cleanup). No text.
 
 **Widened, additive:**
 
@@ -119,7 +120,9 @@ admin's Clerk subject). `reason` is the report's: `"unkind" | "selling" | "priva
 - `consent_records.consentType`: add `"letters_receive"`. The opt-in is consent (#748);
   each answer appends a record, as `telegram_outreach` does.
 - `preferences.notifications.letters`: `optional(boolean)`, absent = on, like `chat`.
-- `admin_audit_log.action`: add `"letter_viewed"`.
+- `admin_audit_log.action`: add `"letter_viewed"`, with an optional `letterReviewId`.
+  `targetClerkUserId` becomes optional: a letter whose sender deleted their account has
+  no one to name. Existing rows and `viewUserOutreach` still set it.
 
 ### 2. A letter's life
 
@@ -369,11 +372,15 @@ account). Ids only, never text. The client routes are S20's
 ### 8. Reports, hides, strikes, pauses, escalation
 
 - **Hide** (`hiddenAt`) writes a `letter_blocks` row; **unhide** clears `hiddenAt` only.
+- **Open, hide and report** each free the recipient's unopened slot if this letter held
+  it: a hidden or reported letter mustn't keep someone out of the pool.
 - **Report** sets `reportedAt`, writes a block and a `letter_reviews` row (`report`,
   with the reason). Never a strike on its own. The sender is never told.
 - **Strikes:** a held letter (at once) or a confirmed report (when an admin confirms)
   writes a `letter_strikes` row. `STRIKES_TO_PAUSE` (2) within `STRIKE_WINDOW_DAYS` (90)
   sets `pausedUntil = now + PAUSE_DAYS` (30), `pausedBy: "strikes"`. Silent.
+- **Dismissing a held review** deletes the strike it earned. A pause that strike caused
+  stays until an admin lifts it, and the letter is still never placed.
 - **Escalation:** a `risk` outcome writes `escalation_events` through
   `raiseEscalation` with `source: "letter"` (one per profile per day, the channel dedupe
   that already exists). It waits for the escalation review the outreach work plans; no
@@ -390,15 +397,36 @@ server finds the sender.
 | `listQueue` | `adminQuery` | Open reviews, oldest first, paginated: `{ reviewId, kind, reason?, createdAt, priorStrikes }`. No text |
 | `openReview` | `adminMutation` | The letter's text for one review; writes an `admin_audit_log` row (`letter_viewed`) |
 | `decide` | `adminMutation` | `{ reviewId, decision: "confirm" \| "dismiss" }`. Confirm on a report adds a strike (and may pause) |
-| `pauseSender` / `liftPause` | `adminMutation` | By `reviewId`. `pausedBy: "admin"` |
+| `pauseSender` / `liftPause` | `adminMutation` | By `reviewId`; `liftPause` also takes `listPauses`' `pauseRef`. `pausedBy: "admin"` |
 | `listPauses` | `adminQuery` | Active pauses: `{ pauseRef, until, pausedBy, strikes }` (an opaque ref, not a profile id) |
 
 ### 10. Deletion, wipe and retention
 
-As decided in B (§"Owner's decisions"): drain steps in `jobs/accountDeletion.ts` for
-each letters table, the same steps from `jobs/dataWipe.ts` (keeping `optIn` and the push
-switch), the retention cutoff applied to each person's own side in the nightly job, and a
-daily `letters.retention.run` for reviewed text and old strikes.
+As decided in B (§"Owner's decisions"), in `convex/letters/erasure.ts` and
+`convex/letters/retention.ts`: one step in `jobs/accountDeletion.ts`, one section in
+`jobs/dataWipe.ts`, the retention cutoff applied to each person's own side in
+`purgeProfilePastCutoff` (the nightly job and Settings' "Delete them"), and a daily
+`letters.retention.run` for reviewed text and old strikes.
+
+One `letters` row is both the sender's Sent row and the recipient's letter, so each side
+lets go of its own end: a received letter loses the departing side's profile id, and the
+row is deleted once neither side holds it and no review is open. How the build reads B:
+
+- **A recipient's deletion cuts their letters** rather than deleting the rows, so the
+  sender's Sent row keeps its status. To the recipient they're gone either way.
+- **A sender's deletion deletes a reported letter outright**, with its reviews: its
+  recipient lost it when they reported it.
+- **A wipe keeps strikes, a pause, and other people's blocks of the sender.** B says a
+  wipe is the same as deletion; following it would let a paused sender wipe to lift the
+  pause, or reach a recipient who hid them again. Those rows record what others chose
+  about the sender, not what the sender said. **Open: owner to confirm.**
+- **Retention cuts a letter still under review from its sender** instead of deleting it,
+  so an admin can still decide; that review can no longer strike them.
+- **A reported letter's text outlives its review's 30 days while its sender has an
+  account**: it's still their Sent row. Only the review goes; the letter goes with its
+  sender.
+- **Settings' retention count** ("N sessions would go") still counts sessions only; its
+  purge deletes letters too.
 
 ### 11. Analytics
 
@@ -629,6 +657,8 @@ Small gaps the tickets left. Change them in review if they're wrong.
   sent with Yes is enough to start; the classifier's session language (#749) is slice 6,
   after launch. The match reads `language` first whenever it exists.
 - **Admin acts by review id**, so an admin never handles a profile id.
+- **First letter's copy** is "You wrote something kind for a stranger." It ships once its
+  badge art is approved (`scripts/badges/manifest.json` must list `first-letter`).
 
 ## Build slices
 
