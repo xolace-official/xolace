@@ -20,11 +20,9 @@ import {
 	DAY_MS,
 	REVIEW_KEEP_DAYS,
 	REVIEW_OPEN_MAX_DAYS,
+	ERASE_BATCH as RUN_BATCH,
 	STRIKE_KEEP_DAYS,
 } from "./rules";
-
-/** Rows of each kind one `run` handles before it schedules the next. */
-const RUN_BATCH = 100;
 
 /**
  * One bounded pass of a profile's letters past `cutoff`: what they sent

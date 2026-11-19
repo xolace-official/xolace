@@ -131,6 +131,11 @@ export const REVIEW_KEEP_DAYS = 30;
 export const REVIEW_OPEN_MAX_DAYS = 180;
 /** Past this a strike can no longer start or extend a pause, so it goes. */
 export const STRIKE_KEEP_DAYS = STRIKE_WINDOW_DAYS + PAUSE_DAYS;
+/**
+ * Rows of each letters table one erasure or retention pass handles before it
+ * schedules the next: the same as `jobs/dataRetention`'s batch.
+ */
+export const ERASE_BATCH = 50;
 /** Retention runs once a day. */
 export const RETENTION_EVERY_HOURS = 24;
 

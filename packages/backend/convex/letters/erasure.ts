@@ -12,11 +12,9 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { letterProfileOf } from "./profiles";
+import { ERASE_BATCH as BATCH } from "./rules";
 
 type ProfileId = Id<"emotional_profiles">;
-
-/** Rows of each table one pass handles. */
-const BATCH = 100;
 
 /** Delete a letter and every review of it. */
 export async function deleteLetter(
@@ -252,6 +250,10 @@ export async function drainLettersForDeletion(
  * Kept, unlike deletion: strikes, a pause, and other people's blocks of them.
  * Those record what others chose about this sender, and a wipe mustn't be a
  * way out of a pause or back to someone who hid them.
+ *
+ * `language` stays: today it only comes from the locale. Once sessions write
+ * it (slice 6), a wipe must reset it to the locale's, since it's then derived
+ * from the sessions the wipe removed.
  */
 export async function wipeLetters(
 	ctx: MutationCtx,

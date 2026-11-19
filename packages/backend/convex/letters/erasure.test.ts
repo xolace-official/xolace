@@ -13,7 +13,7 @@ import {
 	type SeededUser,
 } from "../test/harness.helpers";
 import { aggregatesMock, posthogMock } from "../test/mocks.helpers";
-import { DAY_MS } from "./rules";
+import { DAY_MS, ERASE_BATCH } from "./rules";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../posthog", () => posthogMock());
@@ -358,6 +358,74 @@ describe("data wipe", () => {
 			pausedBy: "admin",
 			pausedUntil: NOW + 30 * DAY_MS,
 		});
+	});
+});
+
+describe("batches", () => {
+	it("a wipe drains more letters than a batch over several passes, then resets the pool", async () => {
+		const { reader, root } = await pair();
+		await letterProfile(root, reader.profileId, { pool: "ready" });
+		await root.run(async (ctx) => {
+			for (let i = 0; i < ERASE_BATCH + 5; i++) {
+				await ctx.db.insert("letters", {
+					createdAt: NOW - i,
+					language: "en",
+					senderProfileId: reader.profileId,
+					status: "returned",
+					text: TEXT,
+				});
+			}
+		});
+		const left = () =>
+			root.run(async (ctx) => (await ctx.db.query("letters").collect()).length);
+
+		await wipe(reader);
+		expect(await left()).toBe(5);
+		// Not reset until its letters are gone.
+		expect((await profileRow(root, reader.profileId))?.pool).toBe("ready");
+
+		await wipe(reader);
+		expect(await left()).toBe(0);
+		expect((await profileRow(root, reader.profileId))?.pool).toBe("out");
+	});
+
+	it("letters.retention.run goes on past a batch, and a second run changes nothing", async () => {
+		const { root, sender } = await pair();
+		const held = await letter(root, {
+			senderProfileId: sender.profileId,
+			status: "held",
+		});
+		const reviewId = await review(root, held, { kind: "held" });
+		await root.run(async (ctx) => {
+			for (let i = 0; i < ERASE_BATCH + 5; i++) {
+				await ctx.db.insert("letter_strikes", {
+					at: NOW - 121 * DAY_MS - i,
+					cause: "held",
+					reviewId,
+					senderProfileId: sender.profileId,
+				});
+			}
+		});
+		const strikesLeft = async () => (await allStrikes(root)).length;
+		const runs = async () =>
+			(
+				await root.run((ctx) =>
+					ctx.db.system.query("_scheduled_functions").collect()
+				)
+			).filter((j) => j.name === "letters/retention:run").length;
+
+		await root.mutation(internal.letters.retention.run, {});
+		expect(await strikesLeft()).toBe(5);
+		expect(await runs()).toBe(1);
+
+		await root.mutation(internal.letters.retention.run, {});
+		expect(await strikesLeft()).toBe(0);
+		expect(await runs()).toBe(1);
+
+		await root.mutation(internal.letters.retention.run, {});
+		expect(await get(root, "letters", held)).not.toBeNull();
+		expect(await get(root, "letter_reviews", reviewId)).not.toBeNull();
+		expect(await runs()).toBe(1);
 	});
 });
 
