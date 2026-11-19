@@ -74,7 +74,7 @@ Indexes: `by_sender_created` `[senderProfileId, createdAt]` (Sent list, the dail
 `by_sender_status` `[senderProfileId, status]` (three waiting), `by_recipient_received`
 `[recipientProfileId, receivedAt]` (For you), `by_status_checked`
 `[status, checkedAt]` (the FIFO pool, expiry, re-checks), `by_sender_hash`
-`[senderProfileId, textHash]`.
+`[senderProfileId, textHash]`, `by_received` `[receivedAt]` (the invite backlog).
 
 **`letter_profiles`**: one row per person who has answered the offer or sent a letter.
 No row = opt-in `unset`, never sent.
@@ -321,7 +321,8 @@ growing intervals (5 min, 30 min, 2 h, then each sweep), with the same check as 
 minus the parts that need the sender in the room. It is never placed unchecked. A late
 `pass` makes it `waiting`; a late `risk` writes the escalation and deletes the letter; a
 late `held` holds it (review, strike); a late `fixable` or `lang` is decision C's
-"returned" path.
+"returned" path. An unchecked letter still unchecked `LETTER_WAIT_DAYS` (30) after it was
+written is returned too.
 
 #### 5.5 Aims
 
@@ -339,7 +340,9 @@ modelled on `chatNotifications.send`: `sendPushToProfile` directly, not outreach
 `enqueue` (the glossary: a letter isn't outreach, and its pushes aren't Xolace reaching
 out). It honours `notifications.enabled` and `notifications.letters !== false`, and the
 quiet window: inside it, the same mutation is scheduled for `quietWindowEndsAt` and runs
-its checks again then (open question 31: quiet hours decide). It is the one place that knows how a letter push goes out, so moving letters onto outreach later changes only its body (owner decision E).
+its checks again then (open question 31: quiet hours decide). With no `preferences` row
+it sends nothing, as chat does. The pushes use the gentle Reflections channel and sound
+(`NUDGE_NOTIFICATION_SOUND`). It is the one place that knows how a letter push goes out, so moving letters onto outreach later changes only its body (owner decision E).
 
 | `type` | To | When | Copy (`LETTERS.push`, open question 28) | `data` |
 |---|---|---|---|---|
@@ -498,8 +501,10 @@ recipient's letter disappears from their list without explanation.
 - **More letters than recipients** (likely at launch: receiving is off by default, and a
   recipient gets one a week): `letters.status.get` gains an optional `invite: boolean`,
   false while the waiting pool is more than `INVITE_BACKLOG_DAYS` (7) of recent
-  placements (always `true` until matching ships in slice 3), and the session-end write card (not Connect's Write) stays away while it's
-  false. Xolace stops asking for letters nobody will receive, and writing stays open.
+  placements, and the session-end write card (not Connect's Write) stays away while it's
+  false. The hourly sweep works it out (`waiting ≤ placements in the last 7 days`) and
+  keeps it on a one-row `letter_stats` table, so `status.get` reads one document; it is
+  `true` until the sweep first runs. Xolace stops asking for letters nobody will receive, and writing stays open.
 - **More recipients than letters:** recipients wait; nothing promised them a letter.
 - **No seeding:** Xolace never writes letters, and never with AI (Koko, #744). Before
   launch, the team and beta users write real letters through the ordinary flow on
