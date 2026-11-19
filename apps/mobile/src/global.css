@@ -526,6 +526,37 @@
 }
 
 /*
+ * Coming back (design/boards/ReturnAlive.dc.html): the month prompt's rose wash (its row dot,
+ * the pill's dot; the ink is `month-rose` above), the prompt page's banner, the pill's glass
+ * by dark and its shadow, the check-in's paper and upward shadow, and the answer cards (v1's,
+ * kept): a pastel by day and a dusk by night, each with its ink. Printed on the greeting and
+ * the cards, so the same in every theme.
+ */
+@theme static {
+	--color-month-rose-wash: #fce4ee;
+	--color-month-rose-wash-dark: #3b2030;
+	--color-month-banner-1: #ffe9d6;
+	--color-month-banner-2: #f9d7e6;
+	--color-month-banner-3: #e4dbff;
+	--color-pill-dark: rgba(23, 20, 31, 0.82);
+	--color-pill-shadow: #281e5a;
+	--color-check-in-paper: #f2eff8;
+	--color-check-in-shadow: #28145a;
+	--color-answer-lighter: #ddf3e8;
+	--color-answer-lighter-ink: #1e7a61;
+	--color-answer-lighter-dusk: #173229;
+	--color-answer-still: #dce9fa;
+	--color-answer-still-ink: #1f5a9e;
+	--color-answer-still-dusk: #1a2738;
+	--color-answer-heavier: #e6deff;
+	--color-answer-heavier-ink: #4b32c2;
+	--color-answer-heavier-dusk: #2a2440;
+	--color-answer-processed: #ffe6cc;
+	--color-answer-processed-ink: #9a5600;
+	--color-answer-processed-dusk: #35251a;
+}
+
+/*
  * Reflect's light (design/boards/ReflectAlive.dc.html), drawn in Skia and on gradients:
  * the sky's last light at the top, the bottom glow and the heavy path's tide, plus each
  * stage's own light below. Light, never a surface, so the same in every theme; each has a

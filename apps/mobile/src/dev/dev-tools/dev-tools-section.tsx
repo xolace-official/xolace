@@ -4,15 +4,11 @@
  * drop it. Rows marked "Delete with features/<name>" open an old feature's piece: the screen
  * PR that deletes that folder deletes the row with it.
  */
-import { useState } from "react";
 import { View } from "react-native";
 import { SectionTitle, SettingsCard } from "@/components/settings-kit/parts";
 import { TileRow } from "@/components/settings-kit/tile-row";
 import type { IconName } from "@/components/shared/icon";
 import { type FollowUpTier, useDevTools } from "@/dev/dev-tools/use-dev-tools";
-import type { ReturnWelcomeTier } from "@/features/follow-up/coming-back/return-welcome-copy";
-// Delete with features/reflect.
-import { ReturnWelcomeSheet } from "@/features/follow-up/coming-back/return-welcome-sheet";
 
 const I = {
 	age: { android: "cake", ios: "birthday.cake" },
@@ -26,7 +22,6 @@ const I = {
 	plus: { android: "workspace_premium", ios: "sparkles" },
 	replay: { android: "replay", ios: "play.circle" },
 	reset: { android: "restart_alt", ios: "arrow.counterclockwise" },
-	returnWelcome: { android: "waving_hand", ios: "hand.wave" },
 	sentry: { android: "bug_report", ios: "ant.circle" },
 	states: { android: "view_carousel", ios: "rectangle.stack" },
 } as const satisfies Record<string, IconName>;
@@ -37,23 +32,9 @@ const FOLLOW_UP_TIERS: readonly FollowUpTier[] = [
 	"acute",
 ];
 
-const RETURN_WELCOME_TIERS: readonly {
-	tier: ReturnWelcomeTier;
-	label: string;
-}[] = [
-	{ label: "recent", tier: "recent" },
-	{ label: "14–30d", tier: "away-14-30" },
-	{ label: "30–90d", tier: "away-30-90" },
-	{ label: "90d+", tier: "away-90-plus" },
-	{ label: "anniversary", tier: "anniversary" },
-];
-
 /** @public Reached only through the Account route's `__DEV__` require, which knip can't follow. */
 export function DevToolsSection() {
 	const dev = useDevTools();
-	const [previewTier, setPreviewTier] = useState<ReturnWelcomeTier | null>(
-		null
-	);
 	return (
 		<View>
 			<SectionTitle>Dev tools</SectionTitle>
@@ -83,15 +64,6 @@ export function DevToolsSection() {
 					label="Reset awareness events"
 					onPress={dev.resetAwareness}
 				/>
-				{/* Delete with features/reflect. */}
-				{RETURN_WELCOME_TIERS.map(({ tier, label }) => (
-					<TileRow
-						icon={I.returnWelcome}
-						key={tier}
-						label={`Return welcome · ${label}`}
-						onPress={() => setPreviewTier(tier)}
-					/>
-				))}
 				{FOLLOW_UP_TIERS.map((tier) => (
 					<TileRow
 						icon={I.followUp}
@@ -140,11 +112,6 @@ export function DevToolsSection() {
 					onPress={dev.sentryTest}
 				/>
 			</SettingsCard>
-			<ReturnWelcomeSheet
-				isOpen={previewTier !== null}
-				onClose={() => setPreviewTier(null)}
-				tier={previewTier ?? "recent"}
-			/>
 		</View>
 	);
 }

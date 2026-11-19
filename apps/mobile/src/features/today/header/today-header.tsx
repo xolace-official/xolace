@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { View } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -20,18 +21,20 @@ const FADE_OVER = 120;
 const LIFEBUOY = 20;
 /**
  * Where the return pill sits under the greeting (board `.tpill`: 14 below, 36 tall). The
- * pill shows what coming back left waiting, which needs `followUps.getWaitingCard`
- * (B1); until it lands the slot stays empty, as the prototype's is with nothing
- * waiting. The Reflect card's margin gives the room back, so Today doesn't move. A streak
- * one saver can bring back asks there meanwhile (`RekindlePill`).
+ * route composes coming back's pill in (what the greeting left waiting); when nothing waits,
+ * a streak one saver can bring back asks there (`RekindlePill`). The Reflect card's margin
+ * gives the room back, so Today doesn't move.
  */
 export const PILL_SLOT = 14 + 36;
 
 /** Eyebrow and the glass group (streak + lifebuoy), then the greeting. */
 export function TodayHeader({
 	flameClock,
+	pill,
 }: {
 	flameClock: SharedValue<number>;
+	/** Coming back's pill around the rekindle one (from the route). */
+	pill?: (fallback: ReactNode) => ReactNode;
 }) {
 	const danger = useTokenColor("danger");
 	const { state, actions } = useToday();
@@ -87,7 +90,11 @@ export function TodayHeader({
 				text={state.greeting}
 				waiting={waiting}
 			/>
-			<RekindlePill height={PILL_SLOT} />
+			{pill ? (
+				pill(<RekindlePill height={PILL_SLOT} />)
+			) : (
+				<RekindlePill height={PILL_SLOT} />
+			)}
 		</Animated.View>
 	);
 }

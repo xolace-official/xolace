@@ -45,10 +45,15 @@ type Props = {
 	 * then, so the rise and the greeting play under the cover's fade. Fixtures: always.
 	 */
 	revealed?: boolean;
+	/**
+	 * Coming back's pill, composed by the route into the slot under the greeting; it draws
+	 * `fallback` (the rekindle pill) when nothing waits.
+	 */
+	pill?: (fallback: ReactNode) => ReactNode;
 };
 
 /** Today: a sky that keeps the hour, the Reflect card as its horizon, then up to five quiet modules. */
-export function TodayScreen({ finding, revealed = true }: Props) {
+export function TodayScreen({ finding, pill, revealed = true }: Props) {
 	const insets = useSafeAreaInsets();
 	const { height } = useWindowDimensions();
 	const { state } = useToday();
@@ -99,6 +104,7 @@ export function TodayScreen({ finding, revealed = true }: Props) {
 						// A new day (Today stays mounted for days) replays the first open, once.
 						key={state.day}
 						live={live}
+						pill={pill}
 						reduced={reduced}
 						revealed={revealed}
 						scrollY={scrollY}
@@ -121,11 +127,18 @@ export function TodayScreen({ finding, revealed = true }: Props) {
 type BodyProps = Omit<TodayFrameValue, "intro" | "low" | "waiting"> & {
 	flameClock: SharedValue<number>;
 	finding: ReactNode;
+	pill: Props["pill"];
 	revealed: boolean;
 };
 
 /** The page under the sky: the header, the hero and the modules for the hour. */
-function TodayBody({ flameClock, finding, revealed, ...frame }: BodyProps) {
+function TodayBody({
+	flameClock,
+	finding,
+	pill,
+	revealed,
+	...frame
+}: BodyProps) {
 	const { width } = useWindowDimensions();
 	const { state } = useToday();
 	// The first open of the day plays once: anything that mounts after this window
@@ -147,7 +160,7 @@ function TodayBody({ flameClock, finding, revealed, ...frame }: BodyProps) {
 		<TodayFrame value={{ ...frame, intro, low, waiting }}>
 			<SkyCanvas phase={state.phase} width={width} />
 			<View className="mx-4">
-				<TodayHeader flameClock={flameClock} />
+				<TodayHeader flameClock={flameClock} pill={pill} />
 			</View>
 			<ReflectCard />
 			{late ? (

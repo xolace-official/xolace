@@ -37,7 +37,7 @@ export function useYouFollowUps() {
 		}
 	};
 
-	// The check-in screen (`/follow-up`) takes the answer, with its steps per tier.
+	// The check-in (`/check-in`, coming back's) takes the answer, with its steps per tier.
 	const checkIn = (card: FollowUpCard) => {
 		markShown({ cardId: card._id }).catch(() => undefined);
 		posthog.capture("follow_up_shown", {
@@ -52,7 +52,7 @@ export function useYouFollowUps() {
 				escalation: card.escalationDerived ? "1" : undefined,
 				tier: card.tier,
 			},
-			pathname: "/follow-up",
+			pathname: "/check-in",
 		});
 	};
 

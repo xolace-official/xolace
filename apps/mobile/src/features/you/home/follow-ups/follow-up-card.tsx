@@ -14,7 +14,7 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 /**
  * A card waiting on someone: the day of the moment and the card's own question. The answer
- * is given in production's check-in (`/follow-up`), which asks per tier and follows up per
+ * is given in the check-in (`/check-in`), which asks per tier and follows up per
  * answer; a card no check-in is coming for only closes.
  */
 export function WaitingCard({

@@ -78,7 +78,8 @@ const pinned = (reduced: boolean) => {
 		"browse-player": { animation: "none" },
 		"chat/[conversationId]": CHAT,
 		"crisis-resources": NO_GESTURE,
-		"follow-up": PLAYER,
+		// Moved to /check-in (S4): its shim.
+		"follow-up": { animation: "none" },
 		"kindling/index": undefined,
 		"lantern-welcome": { ...PLAYER, gestureEnabled: false },
 		"library/[slug]": { animation: reduced ? "fade" : "default" },
@@ -102,7 +103,8 @@ const pinned = (reduced: boolean) => {
 		"session-end": NO_GESTURE,
 		"sit-with-this": NO_GESTURE,
 		"steadiness-face-info": FIT_SHEET,
-		"streak-held": PLAYER,
+		// Moved to /today (S4): its shim.
+		"streak-held": { animation: "none" },
 		"trusted-bridge": undefined,
 		upgrade: {
 			gestureEnabled: true,

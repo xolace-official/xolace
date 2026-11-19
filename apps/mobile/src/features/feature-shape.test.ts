@@ -46,14 +46,14 @@ describe("oldFolderImportsFromNewCode", () => {
 	it("flags a ported folder or a lower layer importing an old folder, types included", () => {
 		const graph = graphOf({
 			"components/shared/card.tsx": [local("features/intake/tile.tsx")],
-			"design/type.ts": [local("features/streak/faces.ts", true)],
+			"design/type.ts": [local("features/browse/faces.ts", true)],
 			"features/today/today-screen.tsx": [
 				local("features/intake/components/intake-screen.tsx"),
 			],
 		});
 		expect(oldFolderImportsFromNewCode(graph)).toEqual([
 			"components/shared/card.tsx -> features/intake/tile.tsx",
-			"design/type.ts -> features/streak/faces.ts",
+			"design/type.ts -> features/browse/faces.ts",
 			"features/today/today-screen.tsx -> features/intake/components/intake-screen.tsx",
 		]);
 	});
@@ -68,7 +68,7 @@ describe("oldFolderImportsFromNewCode", () => {
 				local("features/intake/tile.tsx"),
 			],
 			"features/navigation/root-screens.ts": [
-				local("features/streak/screens.ts"),
+				local("features/browse/screens.ts"),
 			],
 			"features/today/today-screen.tsx": [
 				local("features/purchases/use-paywall.ts"),
@@ -223,7 +223,7 @@ describe("backendCallsOutsideDataHooks", () => {
 
 	it("allows data hooks, type-only imports, other heroui parts and old folders", () => {
 		const graph = graphOf({
-			"features/streak/streak-card.tsx": [pkg("convex/react", ["useQuery"])],
+			"features/browse/streak-card.tsx": [pkg("convex/react", ["useQuery"])],
 			"features/today/hero/hero.tsx": [
 				{ ...pkg("@xolace/backend/convex/_generated/api"), typeOnly: true },
 				pkg("heroui-native", ["Button"]),
@@ -260,14 +260,14 @@ describe("crossFeatureImportsFromPorted", () => {
 
 	it("leaves an import of an old folder to oldFolderImportsFromNewCode", () => {
 		const graph = graphOf({
-			"features/today/today-screen.tsx": [local("features/streak/x.ts")],
+			"features/today/today-screen.tsx": [local("features/browse/x.ts")],
 		});
 		expect(crossFeatureImportsFromPorted(graph)).toEqual([]);
 	});
 
 	it("allows the shared modules, lower layers, old folders and the navigation hub", () => {
 		const graph = graphOf({
-			"features/intake/quote-screen.tsx": [local("features/streak/x.ts")],
+			"features/intake/quote-screen.tsx": [local("features/browse/x.ts")],
 			"features/navigation/root-screens.ts": [
 				local("features/today/screens.ts"),
 			],

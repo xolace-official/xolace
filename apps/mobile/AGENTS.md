@@ -51,7 +51,8 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   voice orbs, look glows, aurora and leave scrim, Today's sky and light, Today's
   Reflect-card doors and light, Today's kindling and campfire firelight, the kindling
   screen's road, stop tints and the tend's light, Connect's avatar art and Xolace flame,
-  Reflect's sky and light, Letters' paper and ember, the launch cover's splash colours),
+  Reflect's sky and light, Letters' paper and ember, the launch cover's splash colours,
+  Coming back's month-prompt rose and banner, the check-in's paper and answer cards),
   still as tokens in `global.css`. Today's sky is the hour's,
   not the theme's, and its gradient stops stay strings in `features/today/sky/` because
   worklets interpolate them. Connect's art is content a person or the brand wears, the
@@ -225,9 +226,11 @@ drawn by `components/app-tabs.tsx`). Today is the landing: "/" (where sign-in, i
 old links arrive) hands over to `/today` at once (`(protected)/index.tsx`, `ReturnTo`), so
 the tabs are the bottom of the stack. Home is `dismissTo("/today")` (`LANDING`,
 `src/lib/landing.ts`); Reflect is `/reflect`, pushed over the tabs (Today's card and pill zoom into it with `Link.AppleZoom`). What greets someone
-coming back (follow-up check-in, return welcome, the month's awareness sheet, streak held,
-the in-app banner) is composed on Today's route (`features/follow-up/coming-back/`) until
-S4 replaces it; the starter bubble stays with Reflect (its route, `app/(protected)/reflect.tsx`). There is no
+coming back is `features/coming-back/`, composed on Today's route: the greeting
+(`/welcome-back`, once per return: a freeze that held the streak, a waiting check-in, this
+month's prompt), the check-in it opens (`/check-in`, also opened from You's Follow-ups), the
+pill under Today's greeting for what was left, and the in-app banner. Nothing opens the
+check-in on its own. The starter bubble stays with Reflect (its route, `app/(protected)/reflect.tsx`). There is no
 flag: a screen PR replaces the old screen outright. Where a screen PR adds to the shell:
 
 - **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`, hosts
@@ -244,7 +247,7 @@ flag: a screen PR replaces the old screen outright. Where a screen PR adds to th
   natively presented screen (the player, a form sheet) and position themselves
   absolutely. The layout maps the list; don't edit its lines.
 - **A path that moved** (`/discovery`, `/browse/**`, `/browse-player`, `/profile`,
-  `/profile/insights`, `/kindling-announcement`, `/timeline/**`; next, `/streak-held`;
+  `/profile/insights`, `/kindling-announcement`, `/timeline/**`, `/follow-up`, `/streak-held`;
   "/" itself, Reflect before Today landed, is the landing hand-off above, not a `MOVED` entry): `MOVED` in
   `src/features/navigation/moved-paths.ts` says where each lives now, a tab or a root
   screen, and whether its subpaths moved too (`subtree`) or one subpath moved somewhere of
