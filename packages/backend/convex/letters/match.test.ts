@@ -25,7 +25,13 @@ import {
 import { aggregatesMock, rateLimiterMock } from "../test/mocks.helpers";
 import { letterAimOf } from "./aims";
 import { waitBucketOf } from "./analytics";
-import { DAY_MS, LETTER_WAIT_DAYS, RECHECK_DELAYS_MS } from "./rules";
+import {
+	CANDIDATES_TRIED_MAX,
+	DAY_MS,
+	LETTER_WAIT_DAYS,
+	RECHECK_DELAYS_MS,
+	SWEEP_BATCH,
+} from "./rules";
 
 type Pushed = {
 	emotionalProfileId: Id<"emotional_profiles">;
@@ -194,6 +200,34 @@ const waitingLetter = (
 
 const place = (root: SeededUser["root"], letterId: Id<"letters">) =>
 	root.mutation(internal.letters.match.place, { letterId });
+
+/**
+ * One sweep's placement pass: `placeWaiting` and every run it schedules
+ * after itself, in order. Returns how many mutations the pass took.
+ */
+async function sweepPlace(root: SeededUser["root"]): Promise<number> {
+	const MAX_RUNS = 500;
+	let args = {};
+	for (let runs = 1; runs <= MAX_RUNS; runs++) {
+		await root.mutation(internal.letters.sweep.placeWaiting, args);
+		const next = (
+			await root.run((ctx) =>
+				ctx.db.system.query("_scheduled_functions").collect()
+			)
+		).filter(
+			(j) =>
+				j.name.endsWith("letters/sweep:placeWaiting") &&
+				j.state.kind === "pending"
+		);
+		const job = next.at(-1);
+		if (!job) {
+			return runs;
+		}
+		await root.run((ctx) => ctx.scheduler.cancel(job._id));
+		args = job.args[0] ?? {};
+	}
+	throw new Error("the placement pass never finished");
+}
 
 const letter = (root: SeededUser["root"], id: Id<"letters">) =>
 	root.run((ctx) => ctx.db.get("letters", id));
@@ -830,7 +864,7 @@ describe("letters.sweep", () => {
 		const reader = await recipient(2, root);
 		const newer = await waitingLetter(sender, {}, HOUR_MS);
 		const older = await waitingLetter(sender, {}, 2 * HOUR_MS);
-		await root.mutation(internal.letters.sweep.placeWaiting, {});
+		await sweepPlace(root);
 		expect((await rowOf(reader))?.unopenedLetterId).toBe(older);
 		expect((await letter(root, newer))?.status).toBe("waiting");
 	});
@@ -848,12 +882,94 @@ describe("letters.sweep", () => {
 				text: KIND_LETTER,
 			})
 		);
-		await root.mutation(internal.letters.sweep.placeWaiting, {});
+		await sweepPlace(root);
 		await root.mutation(internal.letters.sweep.uncheckedDue, {});
 		expect((await letter(root, old))?.status).toBe("returned");
 		expect((await letter(root, unchecked))?.status).toBe("returned");
 		const sent = await sender.t.query(api.letters.sent.list, {});
 		expect(sent.map((s) => s.status)).toEqual(["returned", "returned"]);
+	});
+
+	it("handles more than a batch of letters, one placement to a mutation", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const first = await recipient(2, root);
+		const second = await recipient(3, root);
+		const expired = SWEEP_BATCH + 5;
+		await root.run(async (ctx) => {
+			for (let i = 0; i < expired; i++) {
+				await ctx.db.insert("letters", {
+					checkedAt: NOW - LETTER_WAIT_DAYS * DAY_MS - i,
+					createdAt: NOW - LETTER_WAIT_DAYS * DAY_MS - i,
+					language: "en",
+					senderProfileId: sender.profileId,
+					status: "waiting",
+					text: KIND_LETTER,
+				});
+			}
+		});
+		const live: Id<"letters">[] = [];
+		for (let i = 0; i < SWEEP_BATCH + 5; i++) {
+			live.push(await waitingLetter(sender, {}, HOUR_MS - i));
+		}
+
+		const runs = await sweepPlace(root);
+
+		const all = await root.run((ctx) => ctx.db.query("letters").collect());
+		const count = (status: string) =>
+			all.filter((l) => l.status === status).length;
+		expect(count("returned")).toBe(expired);
+		expect(count("received")).toBe(2);
+		expect(count("waiting")).toBe(live.length - 2);
+		// The two oldest live letters, one to each recipient.
+		expect(
+			new Set([
+				(await rowOf(first))?.unopenedLetterId,
+				(await rowOf(second))?.unopenedLetterId,
+			])
+		).toEqual(new Set([live[0], live[1]]));
+		// Two placements, one search that found no one, then cheap skips.
+		expect(runs).toBeLessThanOrEqual(
+			3 + Math.ceil((expired + live.length) / SWEEP_BATCH) + 1
+		);
+	});
+
+	it("steps past more turned-away candidates than one page", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const turnedAway = CANDIDATES_TRIED_MAX - 10;
+		const blocked: SeededUser[] = [];
+		for (let n = 0; n < turnedAway; n++) {
+			blocked.push(await asNewUser(100 + n, root));
+		}
+		await root.run(async (ctx) => {
+			for (const [i, user] of blocked.entries()) {
+				await ctx.db.insert("letter_profiles", {
+					band: "heavier",
+					emotionalProfileId: user.profileId,
+					language: "en",
+					lastReceivedAt: 0,
+					optIn: "yes",
+					pool: "ready",
+					tiebreak: i / (2 * turnedAway),
+				});
+				await ctx.db.insert("letter_blocks", {
+					cause: "hide",
+					createdAt: NOW,
+					recipientProfileId: user.profileId,
+					senderProfileId: sender.profileId,
+				});
+			}
+		});
+		const reader = await recipient(2, root);
+		const readerRow = await rowOf(reader);
+		await root.run((ctx) =>
+			ctx.db.patch("letter_profiles", readerRow!._id, { tiebreak: 0.99 })
+		);
+		const id = await waitingLetter(sender);
+
+		expect(await place(root, id)).toBe(true);
+		expect((await rowOf(reader))?.unopenedLetterId).toBe(id);
 	});
 
 	it("stops inviting letters while more wait than a week of placements", async () => {
@@ -867,7 +983,7 @@ describe("letters.sweep", () => {
 		expect((await status()).invite).toBe(false);
 
 		await recipient(2, root);
-		await root.mutation(internal.letters.sweep.placeWaiting, {});
+		await sweepPlace(root);
 		await root.mutation(internal.letters.sweep.invite, {});
 		expect((await status()).invite).toBe(true);
 	});
@@ -888,7 +1004,7 @@ describe("letters analytics", () => {
 		await recipient(2, root);
 		await place(root, await waitingLetter(sender, {}, 5 * HOUR_MS));
 		await waitingLetter(sender, {}, LETTER_WAIT_DAYS * DAY_MS);
-		await root.mutation(internal.letters.sweep.placeWaiting, {});
+		await sweepPlace(root);
 
 		const letterEvents = stub.events.filter((e) =>
 			e.event.startsWith("letter_")

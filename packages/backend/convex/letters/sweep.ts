@@ -6,7 +6,8 @@
  */
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
-import { internalMutation } from "../_generated/server";
+import type { Doc } from "../_generated/dataModel";
+import { internalMutation, type MutationCtx } from "../_generated/server";
 import { captureLetterEvent } from "./analytics";
 import { placeLetter } from "./match";
 import { refreshPool } from "./pool";
@@ -53,53 +54,92 @@ export const refreshDue = internalMutation({
 	returns: v.null(),
 });
 
+/** Where `placeWaiting` stopped: the last letter it handled, in index order. */
+const placeCursorValidator = v.object({
+	checkedAt: v.number(),
+	creationTime: v.number(),
+});
+
 /**
  * Waiting letters, oldest pass first: return those past the wait, place the
- * rest. A language whose pool came back empty is skipped for the rest of the
- * sweep.
+ * rest. Returns and skips are cheap and run `SWEEP_BATCH` to a mutation; a
+ * placement reads the pool, so each runs in a mutation of its own and the
+ * next one is scheduled after it. Once a letter finds no one, the rest of
+ * this sweep skips its language (or, inside an aim window, its language and
+ * aim): the next letter would read the same pool.
  */
 export const placeWaiting = internalMutation({
 	args: {
-		cursor: v.optional(v.string()),
-		emptyLanguages: v.optional(v.array(v.string())),
+		after: v.optional(placeCursorValidator),
+		skip: v.optional(v.array(v.string())),
 	},
 	handler: async (ctx, args) => {
 		const now = Date.now();
-		const empty = new Set(args.emptyLanguages);
-		const page = await ctx.db
+		const skip = new Set(args.skip);
+		const after = args.after;
+		const letters = ctx.db
 			.query("letters")
-			.withIndex("by_status_checked", (q) => q.eq("status", "waiting"))
-			.paginate({ cursor: args.cursor ?? null, numItems: SWEEP_BATCH });
-		for (const letter of page.page) {
-			if ((letter.checkedAt ?? 0) + LETTER_WAIT_DAYS * DAY_MS <= now) {
-				// "Not placed. No one it fit came along this time." (decision C)
-				await ctx.db.patch("letters", letter._id, { status: "returned" });
-				if (letter.senderProfileId) {
-					await captureLetterEvent(ctx, letter.senderProfileId, {
-						event: "letter_returned",
-						properties: { why: "unplaced" },
-					});
+			.withIndex("by_status_checked", (q) =>
+				after
+					? q.eq("status", "waiting").gte("checkedAt", after.checkedAt)
+					: q.eq("status", "waiting")
+			);
+		let handled = 0;
+		let last: typeof after;
+		for await (const letter of letters) {
+			const checkedAt = letter.checkedAt ?? 0;
+			if (
+				after &&
+				checkedAt === after.checkedAt &&
+				letter._creationTime <= after.creationTime
+			) {
+				continue;
+			}
+			last = { checkedAt, creationTime: letter._creationTime };
+			handled += 1;
+			if (checkedAt + LETTER_WAIT_DAYS * DAY_MS <= now) {
+				await returnUnplaced(ctx, letter);
+			} else if (!(skip.has(letter.language) || skip.has(aimKey(letter)))) {
+				const result = await placeLetter(ctx, letter._id, now);
+				if (typeof result === "object") {
+					skip.add(result.aimOnly ? aimKey(letter) : letter.language);
 				}
-				continue;
+				if (result === "placed" || typeof result === "object") {
+					break;
+				}
 			}
-			if (empty.has(letter.language)) {
-				continue;
-			}
-			const result = await placeLetter(ctx, letter._id, now);
-			if (typeof result === "object" && result.poolEmpty) {
-				empty.add(letter.language);
+			if (handled >= SWEEP_BATCH) {
+				break;
 			}
 		}
-		if (!page.isDone) {
+		if (last) {
 			await ctx.scheduler.runAfter(0, internal.letters.sweep.placeWaiting, {
-				cursor: page.continueCursor,
-				emptyLanguages: [...empty],
+				after: last,
+				skip: [...skip],
 			});
 		}
 		return null;
 	},
 	returns: v.null(),
 });
+
+/** The skip key for a letter's own aim inside its window. */
+const aimKey = (letter: Doc<"letters">) =>
+	`${letter.language}:${letter.aim ?? ""}`;
+
+/** "Not placed. No one it fit came along this time." (decision C) */
+async function returnUnplaced(
+	ctx: MutationCtx,
+	letter: Doc<"letters">
+): Promise<void> {
+	await ctx.db.patch("letters", letter._id, { status: "returned" });
+	if (letter.senderProfileId) {
+		await captureLetterEvent(ctx, letter.senderProfileId, {
+			event: "letter_returned",
+			properties: { why: "unplaced" },
+		});
+	}
+}
 
 /**
  * Unchecked letters: returned past the wait, otherwise re-checked once their

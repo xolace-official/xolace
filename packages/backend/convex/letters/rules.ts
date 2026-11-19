@@ -50,8 +50,13 @@ export const RECIPIENT_REST_DAYS = 7;
 export const HEAVIER_FROM = 6;
 /** A letter's aim steers matching for this long after it passes the check. */
 export const AIM_WINDOW_HOURS = 72;
-/** Candidates one pool read takes before the live checks. */
-export const CANDIDATES_PER_READ = 25;
+/**
+ * Candidates one placement may try per band before it gives up for now. It
+ * steps past those the live checks turn away (quiet hours, an open hard
+ * follow-up), so a full first page can't starve everyone behind it. Each try
+ * is about seven index reads, and a placement runs in its own mutation.
+ */
+export const CANDIDATES_TRIED_MAX = 100;
 /** A letter still waiting this long after it passed is returned (decision C). */
 export const LETTER_WAIT_DAYS = 30;
 /**

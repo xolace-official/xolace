@@ -11,7 +11,7 @@ import { internalMutation, type MutationCtx } from "../_generated/server";
 import { quietWindowEndsAt } from "../outreach/quietWindow";
 import { captureLetterEvent, waitBucketOf } from "./analytics";
 import { letterProfileOf } from "./profiles";
-import { AIM_WINDOW_MS, CANDIDATES_PER_READ } from "./rules";
+import { AIM_WINDOW_MS, CANDIDATES_TRIED_MAX } from "./rules";
 
 /** Follow-up states a person can still see and answer. */
 const OPEN_FOLLOW_UP = ["pending", "ready", "shown", "superseded"] as const;
@@ -20,8 +20,11 @@ const BANDS = ["heavier", "lighter"] as const;
 export type PlaceResult =
 	/** Placed with a recipient; both pushes are scheduled. */
 	| "placed"
-	/** No candidate passed; still waiting. `poolEmpty`: none were even read. */
-	| { none: true; poolEmpty: boolean }
+	/**
+	 * No candidate passed; still waiting. `aimOnly`: only the letter's aim was
+	 * read (inside its aim window), so this says nothing about other letters.
+	 */
+	| { none: true; aimOnly: boolean }
 	/** The sender is paused; still waiting, skipped silently. */
 	| "paused"
 	/** Not a waiting letter (any more). */
@@ -81,7 +84,7 @@ async function passesLiveChecks(
 	return !(await hasOpenHardFollowUp(ctx, recipientProfileId));
 }
 
-/** The ready rows one read offers, in the order matching takes them. */
+/** The ready rows, in the order matching takes them, read as they're tried. */
 function readyCandidates(
 	ctx: MutationCtx,
 	letter: Doc<"letters">,
@@ -98,15 +101,13 @@ function readyCandidates(
 					.eq("language", letter.language)
 					.eq("aim", aim)
 					.eq("band", band)
-			)
-			.take(CANDIDATES_PER_READ);
+			);
 	}
 	return ctx.db
 		.query("letter_profiles")
 		.withIndex("by_pool_band", (q) =>
 			q.eq("pool", "ready").eq("language", letter.language).eq("band", band)
-		)
-		.take(CANDIDATES_PER_READ);
+		);
 }
 
 /** Give the letter to its recipient and tell both sides. */
@@ -167,19 +168,25 @@ export async function placeLetter(
 	}
 
 	const inAimWindow = now < letter.checkedAt + AIM_WINDOW_MS;
-	let read = 0;
 	for (const band of BANDS) {
-		const candidates = await readyCandidates(ctx, letter, band, inAimWindow);
-		read += candidates.length;
-		for (const candidate of candidates) {
+		let tried = 0;
+		for await (const candidate of readyCandidates(
+			ctx,
+			letter,
+			band,
+			inAimWindow
+		)) {
 			if (await passesLiveChecks(ctx, candidate, senderProfileId, now)) {
 				await give(ctx, letter, candidate, senderProfileId, now);
 				return "placed";
 			}
+			tried += 1;
+			if (tried >= CANDIDATES_TRIED_MAX) {
+				break;
+			}
 		}
 	}
-	// Only a band read speaks for the whole language's pool.
-	return { none: true, poolEmpty: read === 0 && !(letter.aim && inAimWindow) };
+	return { aimOnly: Boolean(letter.aim && inAimWindow), none: true };
 }
 
 export const place = internalMutation({
