@@ -1,0 +1,72 @@
+name: Letters gate
+
+# #750: a change to the letters check (its classifier prompt, parser or model,
+# the decision, the contact patterns, or the words-safety code it reuses) must
+# pass the letters eval before it ships. Calls live Haiku (one request per
+# case) and, with OPENAI_API_KEY set, the whole check end to end on a few kind
+# letters, so it only runs when one of these moves.
+on:
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - packages/backend/convex/ai/letters/**
+      - packages/backend/convex/letters/decide.ts
+      - packages/backend/convex/letters/lines.ts
+      - packages/backend/convex/lib/contactPatterns.ts
+      - packages/backend/convex/ai/intake/read.ts
+      - packages/backend/convex/ai/safeguard.ts
+      - packages/backend/convex/talk/safety.ts
+      - packages/backend/convex/ai/providers/anthropic.ts
+      - packages/backend/convex/ai/providers/moderation.ts
+      - packages/backend/convex/ai/prompts/__evals__/lettersCheck.*
+      - packages/backend/convex/ai/prompts/__evals__/harness.eval.ts
+      - .github/workflows/letters-gate.yml
+  workflow_dispatch:
+
+jobs:
+  letters:
+    name: Letters eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # vitest runs under Node via its shebang (see ci.yml).
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Pinned bun from package.json, cached `bun install --frozen-lockfile`.
+      - name: Setup workspace
+        uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
+
+      # Without the key the eval skips, and a skipped gate would read green.
+      - name: Require ANTHROPIC_API_KEY
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is not set; the letters gate cannot run."
+            exit 1
+          fi
+
+      # The end-to-end block needs moderation too. Without it that block
+      # skips and only the classifier is gated, so say so on the run.
+      - name: Check OPENAI_API_KEY
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::warning::OPENAI_API_KEY secret is not set; the letters end-to-end cases are skipped."
+          fi
+
+      - name: Run letters eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: bun run --cwd packages/backend test:evals:letters

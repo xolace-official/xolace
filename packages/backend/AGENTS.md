@@ -14,7 +14,7 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
 - Check: `bun run check:changed` from the root; `bun run check-types` here (incremental:
   a no-change rerun takes seconds; `rm -rf node_modules/.cache/tsc` forces a cold one).
 - Tests: `bun run test` here. Live evals spend Anthropic credits and run only on
-  request: `bun run test:evals` (or `:intensity` / `:talk`), with
+  request: `bun run test:evals` (or `:intensity` / `:talk` / `:letters`), with
   `ANTHROPIC_API_KEY` set.
 - Never: `convex deploy`, `convex dev` against a shared/prod deployment,
   `convex env set` on prod. Only the release pipeline deploys Convex (below).
