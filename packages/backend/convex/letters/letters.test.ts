@@ -9,6 +9,7 @@ import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import type { WordsVerdict } from "../ai/intake/read";
 import type { LetterVerdict } from "../ai/letters/check";
+import { letterPhrasePeak } from "../ai/letters/floor";
 import { expectCode } from "../test/fixtures.helpers";
 import {
 	asNewUser,
@@ -273,6 +274,55 @@ describe("letters.send outcomes", () => {
 		});
 		expect(events[0]?.sessionId).toBeUndefined();
 		expect(JSON.stringify(events[0])).not.toContain("carrying");
+	});
+
+	// Review of #857: a floor cut must never lower crisis to elevated. The
+	// safety half is what the engine gives these with moderation clean and the
+	// safeguard down: the letters floor's elevated on what's left after the cut.
+	it.each([
+		"I survived today wanting to kill myself. I want to die.",
+		"I tried to kill myself and I want to die.",
+		"I tried to take my life back but I want to die.",
+	])("presents the crisis line beside a cut mention: %s", async (text) => {
+		const peak = letterPhrasePeak(text);
+		expect(peak?.level).toBe("elevated");
+		const kind: LetterVerdict = {
+			crisisMention: "past_or_others",
+			fixable: null,
+			hostile: false,
+			language: "en",
+		};
+		for (const verdict of [
+			kind,
+			{ ...kind, crisisMention: "current" as const },
+			null,
+		]) {
+			const user = await writer();
+			stub.safety = {
+				level: "elevated",
+				...(peak && { peak }),
+				resources: [],
+				unavailable: true,
+			};
+			stub.verdict = verdict;
+			expect(await send(user, text)).toEqual({ kind: "risk" });
+			expect(await lettersOf(user)).toHaveLength(0);
+			const events = await user.root.run((ctx) =>
+				ctx.db
+					.query("escalation_events")
+					.withIndex("by_profile", (q) =>
+						q.eq("emotionalProfileId", user.profileId)
+					)
+					.collect()
+			);
+			expect(events).toMatchObject([
+				{
+					actionTaken: "crisis_line_presented",
+					source: "letter",
+					triggerType: "crisis_keywords",
+				},
+			]);
+		}
 	});
 
 	it("holds a hostile letter for review with a strike, never in Sent", async () => {
