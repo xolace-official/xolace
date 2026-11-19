@@ -8,6 +8,8 @@ import { heldOn, type TrailView, type TwigState } from "../kindling-model";
 const RETURN_MS = 700;
 /** "Tend on return": the server's word arrives after the screen has settled. */
 const ARRIVE_MS = 400;
+/** A refused "I did this": the server's no arrives mid-burn. */
+const REFUSE_MS = 900;
 
 export type FixtureProps = {
 	view?: TrailView;
@@ -18,6 +20,8 @@ export type FixtureProps = {
 	arrive?: readonly number[];
 	/** Loading for this long first (a cold open from a notification), then `status`. */
 	loadsMs?: number;
+	/** The server refuses every "I did this", a moment later. */
+	refuses?: boolean;
 };
 
 const set = (states: readonly TwigState[], i: number, s: TwigState) =>
@@ -30,6 +34,7 @@ export function useFixtureKindling({
 	matching,
 	arrive,
 	loadsMs,
+	refuses,
 }: FixtureProps): Kindling {
 	const [loaded, setLoaded] = useState(!loadsMs);
 	useEffect(() => {
@@ -76,6 +81,11 @@ export function useFixtureKindling({
 				return Promise.resolve(true);
 			},
 			tend: (id) => {
+				if (refuses) {
+					return new Promise((done) => {
+						setTimeout(() => done(false), REFUSE_MS);
+					});
+				}
 				mark(id, "done");
 				return Promise.resolve(true);
 			},

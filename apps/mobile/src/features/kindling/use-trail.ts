@@ -31,14 +31,18 @@ import {
 	chosen,
 	commitStep,
 	type FlowStep,
+	holdFor,
+	letGo,
 	moveOnLands,
 	NO_CHOICES,
 	NO_HOLD,
 	NO_LOCAL,
+	NOT_HELD,
 	putOutStep,
 	skipFailed,
 	skipStep,
 	tendFailed,
+	tendPlays,
 	tendRun,
 	tendStep,
 	undoStep,
@@ -73,9 +77,8 @@ export function useTrail(
 	const [forId, setForId] = useState(view.id);
 	const [shown, setShown] = useState(now);
 	const [open, setOpen] = useState(() => restingCard(now));
-	const [hold, setHold] = useState(NO_HOLD);
-	// A spark is on its way into the fire: it hasn't caught yet.
-	const [heading, setHeading] = useState(false);
+	// The stop held dim until a spark lands, and a spark on its way into the fire (not caught yet).
+	const [held, setHeld] = useState(NOT_HELD);
 	// A new kindling (a fresh session replaced this one): start over, playing nothing.
 	if (forId === view.id) {
 		const followed = followStates(shown, now);
@@ -88,8 +91,7 @@ export function useTrail(
 		setLocal(NO_LOCAL);
 		setShown(fresh);
 		setOpen(restingCard(fresh));
-		setHold(NO_HOLD);
-		setHeading(false);
+		setHeld(NOT_HELD);
 	}
 
 	const tend = useTend({
@@ -151,27 +153,29 @@ export function useTrail(
 	 * waiting, on into the fire (§4, §5). The card moves on once it lands.
 	 */
 	const play = (i: number, last: boolean) => {
-		// "I did this" plays it itself; the return effect may find it too.
-		if (latest.current.shown[i] === "done") {
+		// "I did this" plays it itself, and the return effect may find it too; a tend the server
+		// refused before it played has gone back to waiting.
+		if (!tendPlays(latest.current.shown, latest.current.now, i)) {
 			return;
 		}
-		const { after, toFire, hold: dim } = tendRun(latest.current.now, i, last);
+		const run = tendRun(latest.current.now, i, last);
 		setShown((s) => s.map((x, j) => (j === i ? "done" : x)));
-		if (toFire) {
-			setHeading(true);
-		} else if (dim !== NO_HOLD) {
-			setHold(dim);
-		}
+		setHeld((h) => holdFor(h, i, run));
 		AccessibilityInfo.announceForAccessibility(
-			COPY.a11y.announce(tendedCount(after), after.length)
+			COPY.a11y.announce(tendedCount(run.after), run.after.length)
 		);
-		tend.tend(i, toFire, () => {
-			setHold((h) => (h === dim ? NO_HOLD : h));
-			if (toFire) {
-				setHeading(false);
-			}
-			moveOn(MOVE_ON_MS);
+		// The move-on is ticketed now: a stop they choose while the spark is on its way keeps the card.
+		const ticket = choices.current;
+		tend.tend(i, run.toFire, () => {
+			setHeld((h) => letGo(h, i));
+			moveOn(MOVE_ON_MS, ticket);
 		});
+	};
+	/** The server refused twig i's tend: its burn stops where it is, and it lands nothing. */
+	const refuse = (i: number, id: string) => {
+		apply(tendFailed(localRef.current, id));
+		tend.cancel(i);
+		setHeld((h) => letGo(h, i));
 	};
 
 	// Coming back (or the server catching up): what was tended elsewhere plays, in trail order.
@@ -271,7 +275,7 @@ export function useTrail(
 				apply(step);
 				k.tend(twig.id).then((ok) => {
 					if (!ok) {
-						apply(tendFailed(localRef.current, twig.id));
+						refuse(i, twig.id);
 					}
 				});
 				later(PRESS_TEND_MS, () => play(i, true));
@@ -328,8 +332,8 @@ export function useTrail(
 		},
 		/** The fire is due (the scroll brings it up), and has caught (the spark has landed). */
 		bound: caught(shown),
-		caught: caught(shown) && !heading,
-		hold,
+		caught: caught(shown) && held.heading === NO_HOLD,
+		hold: held.hold,
 		/**
 		 * The ⋯ menu's Put it out (§11.1). While its alert asks, the Undo window waits: nothing
 		 * completes the kindling behind it. Confirmed, the pending skip is dropped (the kindling is

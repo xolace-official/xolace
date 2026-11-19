@@ -125,6 +125,41 @@ export function tendRun(
 	return { after, hold, toFire };
 }
 
+/** Whether a stop is held dim (`hold`) and a spark is on its way into the fire (`heading`, its leg). */
+export type Held = { hold: number; heading: number };
+export const NOT_HELD: Held = { heading: NO_HOLD, hold: NO_HOLD };
+
+/** Twig i's tend starts: the stop after it holds dim, or its spark heads into the fire. */
+export const holdFor = (
+	h: Held,
+	i: number,
+	run: ReturnType<typeof tendRun>
+): Held => {
+	if (run.toFire) {
+		return { ...h, heading: i };
+	}
+	return run.hold === NO_HOLD ? h : { ...h, hold: run.hold };
+};
+
+/**
+ * Twig i's spark has landed, or the server refused its tend mid-burn: what it held lets go.
+ * Another tend's hold stays.
+ */
+export const letGo = (h: Held, i: number): Held => ({
+	heading: h.heading === i ? NO_HOLD : h.heading,
+	hold: h.hold === i + 1 ? NO_HOLD : h.hold,
+});
+
+/**
+ * Whether twig i's tend plays now: the stop doesn't show it yet, and it is still done. One the
+ * server refused in the moment before it played has gone back to waiting, and plays nothing.
+ */
+export const tendPlays = (
+	shown: readonly TwigState[],
+	now: readonly TwigState[],
+	i: number
+) => shown[i] !== "done" && now[i] === "done";
+
 /** A committed skip that leaves nothing waiting: the fire catches where it is (§5), unless leaving. */
 export const catchesInPlace = (
 	view: TrailView,
