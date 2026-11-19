@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
+import { drainListenProgress } from "../audio/progress";
 import { drainLettersForDeletion } from "../letters/erasure";
 import { drainPromptStates } from "../monthlyEvents/prompt";
 import {
@@ -129,6 +130,7 @@ export const purgeUser = internalMutation({
 			drainSemanticVersions,
 			drainPushDevices,
 			drainLibraryReads,
+			drainListenProgress,
 			drainActivityLog,
 			drainFrozenDays,
 			drainStretches,

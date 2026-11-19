@@ -35,7 +35,7 @@ const DAY_MS = 24 * HOUR_MS;
  * most rows leave unset. Callers read newest-first, so a catalogue past
  * 1000 rows drops its oldest tracks, not the ones the top-up wants.
  */
-function newPool(tracks: Doc<"audio_tracks">[], now: number) {
+export function newPool(tracks: Doc<"audio_tracks">[], now: number) {
 	const active = tracks.filter((t) => t.active);
 	const fresh = active
 		.filter((t) => t.newUntil !== undefined && t.newUntil > now)

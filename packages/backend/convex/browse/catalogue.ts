@@ -103,7 +103,8 @@ export function trackItems(ctx: QueryCtx) {
 	});
 }
 
-async function activeByFamily(
+/** A family's active tracks: the bounded catalogue, unordered. */
+export async function activeByFamily(
 	ctx: QueryCtx,
 	family: Doc<"audio_tracks">["family"]
 ) {

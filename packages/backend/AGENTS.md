@@ -100,3 +100,7 @@ The backend deploys before app-store review clears, so the *old* app runs agains
   from `daily_quote_pushes`, one row per person who has it on, keyed by the next
   local slot. Change `notifications.dailyQuote` or the time zone only through
   `updateNotificationPrefs`, which keeps that row in step.
+- Explore's "For the hour" (`browse/explore.getForHour`, B6) reads `audio_tracks.bestAt`
+  (dawn/day/evening/late). Set it in the Kindling manifest or with
+  `browse/explore:setBestAt`; there is no admin screen. Until three tracks carry a
+  phase, the shelf fills from the New pool.

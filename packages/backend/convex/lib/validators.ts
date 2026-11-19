@@ -488,6 +488,18 @@ export const quoteBackgroundFileValidator = v.object({
 	storageId: v.id("_storage"),
 });
 
+/**
+ * Explore's time of day (B6, `explore.md` §7), the same four phases as
+ * Today's clock (`useTodayPhase`): dawn 4–9, day 9–17, evening 17–22, late
+ * 22–4. Also what an `audio_tracks.bestAt` tag holds.
+ */
+export const explorePhaseValidator = v.union(
+	v.literal("dawn"),
+	v.literal("day"),
+	v.literal("evening"),
+	v.literal("late")
+);
+
 /** A card on Explore's "Pick up where you left off": a track (an episode
  * included) or a Lantern entry. */
 export const exploreContinueItemValidator = v.union(

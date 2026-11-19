@@ -22,6 +22,7 @@ import {
 	domainValidator,
 	escalationSourceValidator,
 	exploreHiddenContinueValidator,
+	explorePhaseValidator,
 	insightFeatureValidator,
 	intakeRowAnswerValidators,
 	licenceValidator,
@@ -178,6 +179,10 @@ export default defineSchema({
 	//
 	audio_tracks: defineTable({
 		active: v.boolean(), // retire (licence lapse) without deleting
+		// Explore's "For the hour" (B6): the times of day this track suits. Set
+		// by the ingest manifest or `browse/forHour:setBestAt`; no admin screen.
+		// Untagged tracks only fill the shelf when too few are tagged.
+		bestAt: v.optional(v.array(explorePhaseValidator)),
 		durationSec: v.number(),
 		// Admin edits (admin v1 step 6): the staff member's Clerk subject on the
 		// latest admin write, and when. A file import replaces the row and drops
@@ -232,6 +237,12 @@ export default defineSchema({
 		.index("by_family_and_topic", ["family", "topic"])
 		.index("by_family_and_secondaryTopic", ["family", "secondaryTopic"])
 		.index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
+		// Explore's "Five minutes or less" (B6): short active tracks of a family.
+		.index("by_family_and_active_and_durationSec", [
+			"family",
+			"active",
+			"durationSec",
+		])
 		.index("by_thumbKey", ["thumbKey"])
 		.searchIndex("search_searchText", {
 			filterFields: ["active", "family"],
@@ -1824,6 +1835,8 @@ export default defineSchema({
 	})
 		.index("by_slug", ["slug"])
 		.index("by_active_and_kind", ["active", "kind"])
+		// Explore's "Five minutes or less" (B6): short active reads.
+		.index("by_active_and_readMin", ["active", "readMin"])
 		.searchIndex("search_searchText", {
 			filterFields: ["active"],
 			searchField: "searchText",
@@ -1979,6 +1992,28 @@ export default defineSchema({
 		updatedAt: v.optional(v.number()), // last write by the admin or an import
 		url: v.optional(v.string()),
 	}).index("by_slug", ["slug"]),
+
+	// Where someone is in a support track (B6), for Explore's "Pick up where
+	// you left off". Written by the player (`audio/progress:record`); music
+	// isn't kept (it loops). Private: one row per (profile, track), purged by
+	// wipe and account deletion like `library_reads`.
+	listen_progress: defineTable({
+		emotionalProfileId: v.id("emotional_profiles"),
+		finishedAt: v.optional(v.number()), // reached the end; cleared if started again
+		positionSec: v.number(),
+		trackId: v.id("audio_tracks"),
+		updatedAt: v.number(), // last position write; orders Continue
+	})
+		.index("by_emotionalProfileId_and_trackId", [
+			"emotionalProfileId",
+			"trackId",
+		])
+		// finishedAt first so Continue only walks unfinished rows.
+		.index("by_emotionalProfileId_and_finishedAt_and_updatedAt", [
+			"emotionalProfileId",
+			"finishedAt",
+			"updatedAt",
+		]),
 
 	// What a user chose on a monthly event's prompt (redesign "Coming back",
 	// B2). No row = still waiting. One row per (profile, event), written once:

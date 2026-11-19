@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
+import { drainListenProgress } from "../audio/progress";
 import { forgetDailyQuotePushHistory } from "../dailyQuotes/schedule";
 import { purgeReplyEntries } from "../episodicMemory";
 import { wipeLetters } from "../letters/erasure";
@@ -22,6 +23,7 @@ const BATCH_SIZE = 100;
  *
  * Deletes: sessions, emotional_metadata, session_turns,
  *          reflection_resonances, notification_log, library_reads,
+ *          listen_progress,
  *          monthly_event_states, activity_log,
  *          frozen_days, compounding_stretches, steadiness_insights, outreach,
  *          the letters they sent and received (letters/erasure.ts),
@@ -144,6 +146,12 @@ export const wipe = internalMutation({
 		}
 		for (const r of reads) {
 			await ctx.db.delete("library_reads", r._id);
+		}
+
+		// ── Delete listening positions (B6) ──────────────────────────
+		// Where they are in each track: history, like the reads above.
+		if (await drainListenProgress(ctx, emotionalProfileId)) {
+			hasMore = true;
 		}
 
 		// ── Delete monthly prompt choices (B2) ───────────────────────
