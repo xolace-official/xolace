@@ -14,11 +14,19 @@ import {
 	asUnauthed,
 	type SeededUser,
 } from "../test/harness.helpers";
-import { aggregatesMock, posthogMock } from "../test/mocks.helpers";
-import { DAY_MS, PAUSE_DAYS } from "./rules";
+import { aggregatesMock } from "../test/mocks.helpers";
+import { DAY_MS, PAUSE_DAYS, STRIKE_WINDOW_DAYS } from "./rules";
+
+const captured = vi.hoisted(() => ({ events: [] as string[] }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
-vi.mock("../posthog", () => posthogMock());
+vi.mock("../posthog", () => ({
+	posthog: {
+		capture: async (_ctx: unknown, e: { event: string }) => {
+			captured.events.push(e.event);
+		},
+	},
+}));
 
 // 2026-11-19 12:00 UTC.
 const NOW = Date.UTC(2026, 10, 19, 12);
@@ -28,6 +36,7 @@ const KIND_LETTER =
 beforeEach(() => {
 	vi.useFakeTimers();
 	vi.setSystemTime(NOW);
+	captured.events = [];
 });
 afterEach(() => vi.useRealTimers());
 
@@ -126,6 +135,28 @@ describe("letters.received acts", () => {
 		]);
 		const [row] = await sender.t.query(api.letters.sent.list, {});
 		expect(row?.status).toBe("acknowledged");
+		// Acknowledged without opening first: counted as opened too, once.
+		expect(captured.events).toEqual(["letter_opened", "letter_acknowledged"]);
+	});
+
+	it("acknowledge after open counts the open once", async () => {
+		const { id, reader } = await placed();
+		await reader.t.mutation(api.letters.received.open, { id });
+		await reader.t.mutation(api.letters.received.acknowledge, { id });
+		expect(captured.events).toEqual(["letter_opened", "letter_acknowledged"]);
+	});
+
+	it("acknowledge after a report answers letter_not_found", async () => {
+		const { id, reader, root } = await placed();
+		await reader.t.mutation(api.letters.received.report, {
+			id,
+			reason: "unkind",
+		});
+		await expectCode(
+			() => reader.t.mutation(api.letters.received.acknowledge, { id }),
+			"letter_not_found"
+		);
+		expect((await letterRow(root, id))?.acknowledgedAt).toBeUndefined();
 	});
 
 	it("hide blocks the sender; unhide shows it again and keeps the block", async () => {
@@ -332,6 +363,21 @@ describe("api.admin.letters", () => {
 				}),
 			"review_decided"
 		);
+	});
+
+	it("a confirmed report with the other strike outside 90 days doesn't pause", async () => {
+		const { id, reader, root, sender } = await placed();
+		await held(root, sender, NOW - (STRIKE_WINDOW_DAYS + 1) * DAY_MS);
+		await reader.t.mutation(api.letters.received.report, {
+			id,
+			reason: "unkind",
+		});
+		const [report] = (await reviews(root)).filter((r) => r.kind === "report");
+		await asAdmin(9, root).mutation(api.admin.letters.decide, {
+			decision: "confirm",
+			reviewId: report!._id,
+		});
+		expect(await pauseOf(root, sender)).toBeUndefined();
 	});
 
 	it("a dismissed report is no strike; a dismissed hold takes its strike back", async () => {

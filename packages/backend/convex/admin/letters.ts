@@ -198,8 +198,9 @@ async function dropStrikeFor(
 /**
  * Decide an open review. Confirming a report is a strike (two in 90 days
  * pause the sender, silently). A held letter was struck when it was held;
- * dismissing it takes that strike back (a pause it caused stays until an
- * admin lifts it). A dismissed held letter is still never placed.
+ * dismissing it takes that strike back (a pause it caused isn't lifted with
+ * it: it runs to `pausedUntil` unless an admin lifts it). A dismissed held
+ * letter is still never placed.
  */
 export const decide = adminMutation({
 	args: {

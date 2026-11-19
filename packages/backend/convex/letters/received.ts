@@ -77,14 +77,15 @@ export const get = query({
  */
 async function ownReceived(
 	ctx: MutationCtx,
-	id: Id<"letters">
+	id: Id<"letters">,
+	{ reported = false }: { reported?: boolean } = {}
 ): Promise<{ letter: Doc<"letters">; profileId: Id<"emotional_profiles"> }> {
 	const { profile } = await requireAuth(ctx);
 	const letter = await ctx.db.get("letters", id);
 	if (
 		!letter ||
 		letter.recipientProfileId !== profile._id ||
-		letter.reportedAt !== undefined
+		(letter.reportedAt !== undefined && !reported)
 	) {
 		throw new ConvexError({
 			code: "letter_not_found",
@@ -176,6 +177,11 @@ export const acknowledge = mutation({
 			acknowledgedAt: now,
 			openedAt: letter.openedAt ?? now,
 		});
+		// Acknowledged from the list without opening it first: it's opened now,
+		// and counted as opened like any other.
+		if (letter.openedAt === undefined) {
+			await captureLetterEvent(ctx, profileId, { event: "letter_opened" });
+		}
 		await releaseUnopened(ctx, profileId, letter._id, now);
 		if (letter.senderProfileId) {
 			await ctx.scheduler.runAfter(0, internal.letters.push.send, {
@@ -231,16 +237,15 @@ export const unhide = mutation({
 export const report = mutation({
 	args: { id: v.id("letters"), reason: reportReasonValidator },
 	handler: async (ctx, args) => {
-		const { profile } = await requireAuth(ctx);
-		const letter = await ctx.db.get("letters", args.id);
-		if (letter?.recipientProfileId === profile._id && letter.reportedAt) {
+		const { letter, profileId } = await ownReceived(ctx, args.id, {
+			reported: true,
+		});
+		if (letter.reportedAt !== undefined) {
 			return null;
 		}
-		const own = await ownReceived(ctx, args.id);
-		const { profileId } = own;
 		const now = Date.now();
 		await ctx.db.patch("letters", args.id, { reportedAt: now });
-		await block(ctx, own.letter, profileId, "report", now);
+		await block(ctx, letter, profileId, "report", now);
 		await ctx.db.insert("letter_reviews", {
 			createdAt: now,
 			kind: "report",
