@@ -13,6 +13,9 @@
 > (§"Owner's decisions"); everything else follows the settled tickets. Ready to build in
 > the slices at the end.
 
+`porting/…` paths are in the redesign handoff (`design/handoff/porting/` in the prototype
+repository); "open question N" is `porting/open-questions.md`.
+
 Domain terms (root `AGENTS.md` → Glossary): **letter**, **sender**, **recipient**,
 **received** (placed with the recipient, read or not), **acknowledge**. Never "message",
 "note", "DM" or "delivered" (that is outreach's word). A letter push is a
@@ -26,12 +29,13 @@ Letters' UI is on `dev` (S20: #849, #853 and the PR between them), running on fi
 an in-memory store behind one hook module,
 `apps/mobile/src/features/letters/use-letters-data.ts`. A send goes nowhere and no one
 receives anything. `dev` can't be released until letters run on a real contract
-(phasing §4.1: no `letters` flag).
+(`porting/phasing.md` §4.1: no `letters` flag).
 
 ## Solution
 
-1. **A `convex/letters/` domain** with five tables: the letters themselves, one row of
-   letters state per person, sender–recipient blocks, review items, and strikes.
+1. **A `convex/letters/` domain** with six tables: the letters themselves, one row of
+   letters state per person, sender–recipient blocks, review items, strikes, and a
+   one-row `letter_stats` for the invite flag (decision C).
 2. **A check at send** inside a client action: intake's crisis recipe
    (`checkWordsSafety`), a new letters classifier (one Haiku call), and contact/URL
    regexes shared with Stream's blocklist. A letter is never placed unchecked.
@@ -64,6 +68,7 @@ held as hostile). Fixable and at-risk letters are never stored (#750).
 | `createdAt` | `number` | When it was sent |
 | `checkedAt` | `optional(number)` | When it passed the check: the FIFO key and the start of the 72 h aim window |
 | `recheckCount` | `optional(number)` | Background re-checks spent |
+| `recheckDueAt` | `optional(number)` | Unchecked letters only: when the next re-check is due. The sweep runs one itself once it is `RECHECK_OVERDUE_MS` late (§5.4) |
 | `recipientProfileId` | `optional(id)` | Set at placement |
 | `receivedAt`, `openedAt`, `acknowledgedAt`, `hiddenAt` | `optional(number)` | The recipient's side. Hide is reversible (`hiddenAt` cleared) |
 | `reportedAt` | `optional(number)` | Gone from the recipient at once; kept for review |
@@ -91,15 +96,16 @@ No row = opt-in `unset`, never sent.
 | `lastReceivedAt` | `0` until their first letter, so never-received sorts first |
 | `tiebreak` | A random number, redrawn at each placement: the random last rank |
 | `unopenedLetterId` | The letter waiting to be opened; it blocks another |
-| `lastSentDay` | The sender's local day (`YYYY-MM-DD`) of their last stored letter: the 1-a-day cap, which a withdraw doesn't give back |
-| `pausedUntil`, `pausedBy` | A silent pause: `"strikes"` or `"admin"` |
+| `lastSentDay` | The sender's local day (`YYYY-MM-DD`) of their last stored letter, held ones included: the 1-a-day cap, which a withdraw doesn't give back |
+| `pausedUntil`, `pausedBy` | A silent pause, `"strikes"` or `"admin"`. It ends at `pausedUntil` on its own, or earlier when an admin lifts it |
 
 Matching indexes: `by_pool_aim` `[pool, language, aim, band, lastReceivedAt, tiebreak]`
 and `by_pool_band` `[pool, language, band, lastReceivedAt, tiebreak]`.
 
-**`letter_blocks`**: `{ recipientProfileId, senderProfileId, createdAt, cause: "hide" | "report" }`,
-indexes `by_pair` and `by_sender` (account deletion). That sender is never matched to
-that recipient again (#750). Unhide doesn't remove it.
+**`letter_blocks`**:
+`{ recipientProfileId, senderProfileId, createdAt, cause: "hide" | "report" }`, indexes
+`by_pair` and `by_sender` (account deletion). That sender is never matched to that
+recipient again (#750). Unhide doesn't remove it.
 
 **`letter_reviews`**: what a person may read (#750: only reported letters and held
 ones). `{ letterId, kind: "held" | "report", reason?, reporterProfileId?, createdAt,
@@ -111,18 +117,35 @@ admin's Clerk subject). `reason` is the report's: `"unkind" | "selling" | "priva
 **`letter_strikes`**: `{ senderProfileId, at, cause: "held" | "report", reviewId }`,
 indexes `by_sender_at` and `by_at` (the 120-day cleanup). No text.
 
+**`letter_stats`**: one row, `{ invite: boolean, updatedAt }`, written by the hourly sweep
+(decision C) so `status.get` reads one document. No row = `invite: true`.
+
 **Widened, additive:**
 
 - `escalation_events.source`: add `"letter"` to `escalationSourceValidator`. The row has
   no `sessionId` and stores trigger evidence only, never the letter (#750).
 - `age_declarations.surface` and `age.declarations.declare`'s `surface` arg: add
   `"letters"` (#749).
-- `consent_records.consentType`: add `"letters_receive"`. The opt-in is consent (#748);
-  each answer appends a record, as `telegram_outreach` does.
+- `consent_records.consentType` (the schema's union): add `"letters_receive"`. The opt-in
+  is consent (#748): Yes appends a `granted` record, and a No that withdraws a Yes a
+  `revoked` one (a first No consents to nothing). Only `letters.optIn.set` writes them:
+  `consentTypeValidator`, the arg of the generic `consent.grant` / `consent.revoke`, does
+  **not** gain the literal, so those refuse `letters_receive` and a client can't record
+  a letters consent that `letter_profiles.optIn` doesn't match.
 - `preferences.notifications.letters`: `optional(boolean)`, absent = on, like `chat`.
 - `admin_audit_log.action`: add `"letter_viewed"`, with an optional `letterReviewId`.
   `targetClerkUserId` becomes optional: a letter whose sender deleted their account has
   no one to name. Existing rows and `viewUserOutreach` still set it.
+  - **Kept 1 year** (`LETTER_VIEW_AUDIT_KEEP_DAYS`, 365), then deleted by the daily
+    `letters.retention.run` through a new `by_action_at` index. Long enough to answer
+    "who read this person's words" for any review the person could still ask about; the
+    row holds no text.
+  - **On the sender's account deletion** their `letter_viewed` rows (`by_target`) lose
+    `targetClerkUserId`, so the log keeps which admin opened which review and when, but
+    no longer names a deleted person. A data wipe leaves them: the wipe doesn't remove
+    the account, and the log records what admins did, not what the sender said.
+  - Not built yet (slice 5 follow-up). `outreach_viewed` rows have no retention either;
+    that is outreach's to settle.
 
 ### 2. A letter's life
 
@@ -152,28 +175,40 @@ letter can't be sent" and kept their words). The recipient sees a letter from
 2. **Same held words?** If the trimmed text hashes to one of this sender's held letters,
    answer `held` again with no model call and no second strike.
 3. **Regexes** (pure, no spend): contact details and URLs from the shared helper
-   (`convex/lib/contactPatterns.ts`, §3.1). A hit is fixable, and the classifier is
-   skipped; the safety half still runs, so a phone number never hides a sender at risk.
+   (`convex/lib/contactPatterns.ts`, §3.1). A hit is fixable, but **both halves of
+   step 4 still run**: a phone number never hides a sender at risk, and a hostile letter
+   with a link in it is held, not handed back to be fixed.
 4. **In parallel, each with its own deadline:**
    - `checkWordsSafety(text)` from `ai/intake/read.ts` (phrase floor, OpenAI
      moderation, the Haiku safeguard; 8 s);
    - the letters classifier (`ai/letters/check.ts`, one Haiku call, 8 s): returns
-     `{ hostile, fixable: category | null, language, confidence }` (off-topic is one
-     of the fixable categories).
+     `{ hostile, fixable: category | null, language }` (off-topic is one of the fixable
+     categories). The letter goes inside tags the prompt calls data to judge, never
+     instructions, and any tag in the text is neutralised first.
+
+   A half that throws counts as unavailable for that half; `send` never rejects
+   because a check call failed.
 5. **Decide**, first that applies:
    - safeguard `elevated` or `crisis` → **`risk`**: an escalation row (`source:
      "letter"`, the verdict's `peak` as evidence, never the text), nothing stored.
-   - classifier `hostile` (harassment, hate, sexual content, threats) → **`held`**:
-     stored `held` with `textHash`, a `letter_reviews` row, a strike (§8).
+   - classifier `hostile` (harassment, hate, sexual content, threats), or the safety
+     half's moderation rejecting the text on content policy → **`held`**: stored
+     `held` with `textHash`, a `letter_reviews` row, a strike (§8).
    - classifier `language` not in `LETTER_LANGUAGES` (`["en"]`) → **`lang`**.
-   - a `fixable` category → **`fixable`** with that category's fixed line.
+   - a `fixable` category, from a regex hit (step 3) or the classifier →
+     **`fixable`** with that category's fixed line. A regex hit decides this even
+     when the classifier couldn't answer.
    - the safeguard or the classifier unavailable → **`unavailable`**: stored
      `unchecked`, re-checked in the background (§5.4). Reads to the sender as pass.
      Either half, not only both: one guards the sender, the other the reader, and
      #750 places nothing a check didn't finish on.
    - otherwise → **`pass`**: stored `waiting`, then a match is tried at once (§5).
 6. **Store** (internal mutation): re-check the caps (a lost race answers `limit`), insert,
-   set `lastSentDay`, capture analytics.
+   set `lastSentDay`, capture analytics. A **held** letter skips the caps (it's kept for
+   review whatever else was sent) but still sets `lastSentDay`, so a sender adds at most
+   one held letter a day to the review queue, paused or not, and then meets the same
+   `limit: today` as anyone. The same held words twice, even from two devices at once,
+   are one row and one strike.
 
 `send`'s args: `{ text: string, aim?: letterAim }`. `returns` (the S20 `SendOutcome`,
 as a union validator):
@@ -222,13 +257,13 @@ towns, employers), and whether the text is a letter to a reader at all.
 
 Every client function: `requireAuth`, validators on `args` and `returns`, ownership
 checked on every letter it touches, indexed reads only. No function returns the other
-side's identity, a date, why a letter was placed, or its aim (backend.md §2.3, "never
-receive"). A letter that isn't the caller's reads as not found, exactly like a letter
-that doesn't exist.
+side's identity, a date, why a letter was placed, or its aim (`porting/backend.md` §2.3,
+"never receive"). A letter that isn't the caller's reads as not found, exactly like a
+letter that doesn't exist.
 
 | Function | Kind | Args | Returns |
 |---|---|---|---|
-| `letters.status.get` | query | — | `{ optIn: "unset" \| "yes" \| "no", writeLimit: "today" \| "three" \| null, unopenedId: Id<"letters"> \| null, invite: boolean }` (`invite`: decision C) |
+| `letters.status.get` | query | — | `{ optIn: "unset" \| "yes" \| "no", writeLimit: "today" \| "three" \| null, unopenedId: Id<"letters"> \| null, invite: boolean, lastSentDay: string \| null }` (`invite`: decision C) |
 | `letters.send.send` | action | `{ text, aim? }` | `SendOutcome` (§3) |
 | `letters.sent.list` | query | — | `{ id, line, status: "waiting" \| "received" \| "acknowledged" \| "returned", seen }[]`, newest first, at most 50 |
 | `letters.sent.dismiss` | mutation | `{ id }` | `null`; a returned letter leaves Sent and its row is deleted |
@@ -247,12 +282,17 @@ that doesn't exist.
 Notes:
 
 - **`writeLimit`** is computed on the sender's local day (`profileTimezone`, as streaks
-  do): `today` if `lastSentDay` is today, else `three` if three letters are `waiting` or
-  `unchecked`. A pause never shows here (#750: silent).
+  do): `today` if `lastSentDay` is today (held letters count), else `three` if three
+  letters are `waiting` or `unchecked`. A pause never shows here (#750: silent).
+- **`lastSentDay`** (`YYYY-MM-DD` in the sender's timezone, or `null`) is returned because
+  Convex doesn't re-run a query when the clock passes midnight: the client compares it
+  with its own local day and treats `writeLimit: "today"` as lifted once they differ.
+- **`invite`** is always present (`true` until the sweep first writes `letter_stats`).
 - **`unopenedId`** is only set while `optIn` is `yes`, matching S20's `unopenedOf`.
 - **`line`** is cut on the server with the same rule as `openingLine` (first paragraph,
   ≤ 46 characters at a word), so the Sent list never ships the whole text.
-- **`seen`** is `status === "waiting"` or `senderSeen === status` (`senderSeen` also takes `"returned"`).
+- **`seen`** is `status === "waiting"` or `senderSeen === status` (`senderSeen` also takes
+  `"returned"`).
 - **The 5 s undo stays on the client** (S20 holds Acknowledge and Hide for 5 s before
   calling), so the server needs no undo and the sender's push never waits.
 - **Turning receiving off** (`choice: "no"` after `"yes"`): the person leaves the pool
@@ -293,39 +333,63 @@ the earliest of freshness ending and the 7-day rest ending.
 `letters.match.place({ letterId })` (internal mutation). A letter in its aim window
 (`checkedAt` + `AIM_WINDOW_HOURS`, 72) reads `by_pool_aim` with its aim, `heavier`
 first, then `lighter`; after the window (or with no aim) it reads `by_pool_band`,
-`heavier` first. Each read takes at most `CANDIDATES_PER_READ` (25) in index order
-(longest since a letter, then `tiebreak`), and each candidate is checked live:
+`heavier` first. Candidates are read lazily in index order (longest since a letter, then
+`tiebreak`), at most `CANDIDATES_TRIED_MAX` (100) per band, and each is checked live:
 
-- not the sender, no `letter_blocks` row for the pair;
-- not inside their quiet window now (`quietWindowEndsAt`, `outreach/quietWindow.ts`);
-  skipped, not reserved (#749);
-- no open acute or escalation-derived follow-up (`follow_up_cards` indexes);
-- still `ready` (another placement in the same sweep may have taken them).
+- not the sender, no `letter_blocks` row for the pair (turned away **for this sender**);
+- may still receive at all (`mayReceive`: opted in, adult, the account active and not
+  being deleted or wiped), not inside their quiet window now (`quietWindowEndsAt`,
+  `outreach/quietWindow.ts`; skipped, not reserved, #749), and no open acute or
+  escalation-derived follow-up (`follow_up_cards` indexes) (turned away **for
+  themselves**).
 
 The first that passes gets the letter: `status: received`, `recipientProfileId`,
 `receivedAt`, the recipient's `unopenedLetterId`, `lastReceivedAt`, a new `tiebreak`,
 `pool: out`, and both pushes are scheduled (§6). No candidate: the letter stays
 `waiting`. A paused sender's letters are skipped before any read (#750: silent).
 
+**Turned away for themselves means out of the pool until it clears**, so the next letter
+doesn't read them again and a pool head of sleepers can't starve everyone behind it.
+After the walk (never during it, so no row moves under the index), each such candidate
+is refreshed: `pool: out` with `poolCheckAt` at the end of their quiet window, or
+`FOLLOW_UP_LOOK_AGAIN_MS` (1 h, one sweep) later while a hard follow-up is open, capped
+by freshness ending. Someone turned away only for this sender stays `ready` for others
+and is stepped past. Each try is about ten reads; a placement runs in its own mutation.
+
 #### 5.3 The hourly sweep
 
-`crons.ts` → `letters.sweep.run` every `SWEEP_EVERY_HOURS` (1):
+`crons.ts` → `letters.sweep.run` every `SWEEP_EVERY_HOURS` (1). `run` only starts a
+chain of internal mutations, each working in bounded pages (`SWEEP_BATCH`, 50) that
+schedule their own next page, and starting the next step when done:
 
-1. refresh pool rows whose `poolCheckAt` passed (bounded batches, rescheduling itself);
-2. walk `waiting` letters by `checkedAt` (FIFO, #749) and `place` each, in batches,
-   stopping a batch once the pool has nothing left for a language;
-3. return letters still waiting `LETTER_WAIT_DAYS` (30) after they passed (decision C);
-4. schedule re-checks for `unchecked` letters that are due.
+1. **`refreshDue`**: pool rows whose `poolCheckAt` passed. A refresh always moves
+   `poolCheckAt` on, so the walk ends.
+2. **`placeWaiting`**: `waiting` letters by `checkedAt` (FIFO, #749), through a keyset
+   cursor (the last `checkedAt` and id). A letter waiting `LETTER_WAIT_DAYS` (30) since
+   it passed is **returned** (decision C); returns and skips are cheap and run a page to
+   a mutation. A **placement reads the pool, so each runs in a mutation of its own** and
+   the next is scheduled after it. Once a letter finds no one, the rest of this sweep
+   skips its language (inside an aim window, its language and aim): the next letter
+   would read the same pool.
+3. **`uncheckedDue`**: `unchecked` letters. One unchecked `LETTER_WAIT_DAYS` after it was
+   written is returned; otherwise, once its `recheckDueAt` is `RECHECK_OVERDUE_MS`
+   (10 min) past (the scheduled re-check didn't land, or failed before it wrote), the
+   sweep starts one itself and moves `recheckDueAt` on, at most `RECHECK_SWEEP_MAX` (25)
+   a sweep: during a classifier outage every unchecked letter is due at once.
+4. **`invite`**: works out decision C's flag and writes `letter_stats`.
+
+Two sweeps overlapping only repeat work: every write re-reads the row it changes.
 
 #### 5.4 Re-checks
 
 An `unchecked` letter is re-checked by `letters.check.recheck` (internal action) at
-growing intervals (5 min, 30 min, 2 h, then each sweep), with the same check as send
-minus the parts that need the sender in the room. It is never placed unchecked. A late
-`pass` makes it `waiting`; a late `risk` writes the escalation and deletes the letter; a
-late `held` holds it (review, strike); a late `fixable` or `lang` is decision C's
-"returned" path. An unchecked letter still unchecked `LETTER_WAIT_DAYS` (30) after it was
-written is returned too.
+growing intervals (`RECHECK_DELAYS_MS`: 5 min, 30 min, 2 h, then each sweep), with the
+same check as send minus the parts that need the sender in the room. Each attempt sets
+`recheckDueAt` to when the next is due, which is how the sweep (§5.3) finds one that
+never ran. It is never placed unchecked. A late `pass` makes it `waiting`; a late `risk`
+writes the escalation and deletes the letter; a late `held` holds it (review, strike); a
+late `fixable` or `lang` is decision C's "returned" path. An unchecked letter still
+unchecked `LETTER_WAIT_DAYS` (30) after it was written is returned too.
 
 #### 5.5 Aims
 
@@ -338,14 +402,17 @@ hopelessness, numbness, demotivation). The UI's "Anyone" sends no aim.
 
 ### 6. Pushes
 
-Three pushes (backend.md §2.3), all through `letters.push.send` (internal mutation),
-modelled on `chatNotifications.send`: `sendPushToProfile` directly, not outreach's
-`enqueue` (the glossary: a letter isn't outreach, and its pushes aren't Xolace reaching
-out). It honours `notifications.enabled` and `notifications.letters !== false`, and the
-quiet window: inside it, the same mutation is scheduled for `quietWindowEndsAt` and runs
-its checks again then (open question 31: quiet hours decide). With no `preferences` row
-it sends nothing, as chat does. The pushes use the gentle Reflections channel and sound
-(`NUDGE_NOTIFICATION_SOUND`). It is the one place that knows how a letter push goes out, so moving letters onto outreach later changes only its body (owner decision E).
+Three pushes (`porting/backend.md` §2.3), all through `letters.push.send` (internal
+mutation), modelled on `chatNotifications.send`: `sendPushToProfile` directly, not
+outreach's `enqueue` (the glossary: a letter isn't outreach, and its pushes aren't Xolace
+reaching out). It honours `notifications.enabled` and `notifications.letters !== false`,
+and the quiet window: inside it, the same mutation is scheduled for `quietWindowEndsAt`
+and runs its checks again then (open question 31: quiet hours decide). With no
+`preferences` row it sends nothing, as chat does. The pushes use the gentle Reflections
+channel and sound (`NUDGE_NOTIFICATION_SOUND`). Its args are `{ to, type, letterId }`,
+`letterId` required: every letter push is about one letter, and re-reading it is how a
+push drops itself. It is the one place that knows how a letter push goes out, so moving
+letters onto outreach later changes only its body (owner decision E).
 
 | `type` | To | When | Copy (`LETTERS.push`, open question 28) | `data` |
 |---|---|---|---|---|
@@ -357,6 +424,16 @@ At send time each push re-reads the letter and drops itself if it no longer appl
 (the recipient already opened it, the letter was reported, the sender deleted their
 account). Ids only, never text. The client routes are S20's
 (`apps/mobile/src/lib/notification-tap.ts`).
+
+**The two pushes at placement don't go out together.** The sender's Sent row turns
+`received` the moment a letter is placed; if the recipient's phone buzzed at that moment
+too, a sender beside someone they know (likely at launch, when the team and beta users
+are much of the pool) could tell who received it. So `letter_for_you` is scheduled a
+random `RECIPIENT_PUSH_DELAY_MS` (15 min to 2 h) after placement, on top of any quiet
+window; `letter_received` goes at once. Letters aren't urgent, and the letter is in For
+you from placement, so opening the app finds it sooner. Acknowledge is left as is: it
+flips the sender's row at once whatever the push does, and linking it needs watching
+the recipient's screen, not their phone.
 
 ### 7. Opt-in, age and the push switch
 
@@ -380,7 +457,8 @@ account). Ids only, never text. The client routes are S20's
   writes a `letter_strikes` row. `STRIKES_TO_PAUSE` (2) within `STRIKE_WINDOW_DAYS` (90)
   sets `pausedUntil = now + PAUSE_DAYS` (30), `pausedBy: "strikes"`. Silent.
 - **Dismissing a held review** deletes the strike it earned. A pause that strike caused
-  stays until an admin lifts it, and the letter is still never placed.
+  isn't lifted with it: it runs to its `pausedUntil` unless an admin lifts it, and the
+  letter is still never placed.
 - **Escalation:** a `risk` outcome writes `escalation_events` through
   `raiseEscalation` with `source: "letter"` (one per profile per day, the channel dedupe
   that already exists). It waits for the escalation review the outreach work plans; no
@@ -398,7 +476,7 @@ server finds the sender.
 | `openReview` | `adminMutation` | The letter's text for one review; writes an `admin_audit_log` row (`letter_viewed`) |
 | `decide` | `adminMutation` | `{ reviewId, decision: "confirm" \| "dismiss" }`. Confirm on a report adds a strike (and may pause) |
 | `pauseSender` / `liftPause` | `adminMutation` | By `reviewId`; `liftPause` also takes `listPauses`' `pauseRef`. `pausedBy: "admin"` |
-| `listPauses` | `adminQuery` | Active pauses: `{ pauseRef, until, pausedBy, strikes }` (an opaque ref, not a profile id) |
+| `listPauses` | `adminQuery` | Active pauses: `{ pauseRef, until, pausedBy, strikes }` (`pauseRef` is the `letter_profiles` row's id: stable across calls, so `liftPause` can take it, and never the person's `emotional_profiles` id) |
 
 ### 10. Deletion, wipe and retention
 
@@ -431,9 +509,9 @@ row is deleted once neither side holds it and no review is open. How the build r
 
 ### 11. Analytics
 
-As decided in D (§"Owner's decisions"). Server-side PostHog captures in the mutations that see each event, as
-`age_declared` does (a failed capture never rolls back the write). Never the text, a
-letter id, or anything that links a sender's event to a recipient's.
+As decided in D (§"Owner's decisions"). Server-side PostHog captures in the mutations that
+see each event, as `age_declared` does (a failed capture never rolls back the write).
+Never the text, a letter id, or anything that links a sender's event to a recipient's.
 
 ### 12. Store-gap notes
 
@@ -443,6 +521,9 @@ letter id, or anything that links a sender's event to a recipient's.
   treat an unknown value as "not session". The build greps every reader.
 - `age.declarations.declare` gains a literal on an existing arg: old clients still send
   `"xolacer_chat"`.
+- `preferences.update`'s `notifications` arg gains an optional `letters: boolean`,
+  merged like the other flags; old clients never send it. The letters screen's own
+  switch is `letters.settings.setPush`.
 - The pipeline hook (§5.1) is a scheduled call; it changes nothing a client reads.
 - Scheduled functions (pushes held for the quiet window, re-checks) keep accepting the
   args they were scheduled with.
@@ -452,18 +533,25 @@ letter id, or anything that links a sender's event to a recipient's.
 S21 replaces the bodies in `use-letters-data.ts` and deletes `letters-memory.ts`; the
 hook names, returns and call signatures stay, except where marked.
 
+**Anonymity requirement for S21:** analytics must not carry a letter id either. The root
+layout sends `posthog.screen(pathname)` on every route change
+(`apps/mobile/src/app/_layout.tsx:155`), and `letters/read/[id]` puts the id in the
+pathname, which would tie a letter to the recipient's PostHog person. Letters routes
+report the route pattern (`/letters/read/[id]`), not the filled-in pathname; S21 adds a
+test that no captured screen name contains a letter id.
+
 | S20 seam | Contract | Change in the seam |
 |---|---|---|
-| `useLettersStatus` | `letters.status.get` | `unopenedId` is an `Id<"letters">` (a string on the client) |
+| `useLettersStatus` | `letters.status.get` | `unopenedId` is an `Id<"letters">` (a string on the client). **Gains** `invite` (decision C: `endCardOffer` offers the session-end write card only while it's `true`) and `lastSentDay` (§4: compare it with the device's local day to lift `writeLimit: "today"` after midnight) |
 | `useSentLetters` | `letters.sent.list` | — |
 | `useReceivedLetters` | `letters.received.list` | — |
 | `useReceivedLetter(id)` | `letters.received.get` | Pass the route param as it is: the server normalizes it, and a bad id reads `null` |
 | `useLettersPush` / `setPush` | `letters.settings.getPush` / `setPush` | — |
 | `send(draft)` | `letters.send.send` | `forWho: LetterFor` becomes `aim?: letterAim` (Anyone → absent); the UI's "For" list takes the contract's keys and labels. A network error or `rate_limited` throws (keep the words, Try again) |
-| `withdraw`, `markSeen`, `open`, `acknowledge`, `hide`, `unhide` | the mutations above | — |
+| `withdraw`, `markSeen`, `open`, `acknowledge`, `hide`, `unhide` | the mutations above | A letter that's gone (reported from another device, say) refuses with `ConvexError` `letter_not_found`: drop the row, don't show an error |
 | `report(id, reason)` | `letters.received.report` | — |
-| `setOptIn(choice)` | `letters.optIn.set` | **Changes:** sends `locale` and `promptVersion`, and handles `age_required` / `age_restricted` by opening Connect's age gate (`surface: "letters"`). Send handles the same errors |
-| (none) | `returned` (decision C) | `SentStatus` gains `"returned"`: its row says "Not placed. No one it fit came along this time." and can be dismissed (`letters.sent.dismiss`, a mutation added with decision C). It frees a waiting slot |
+| `setOptIn(choice)` | `letters.optIn.set` | **Changes:** sends `locale` and `promptVersion`, and handles `age_required` / `age_restricted` by opening Connect's age gate (`surface: "letters"`). Send handles the same errors. `promptVersion` is a client constant beside the offer's copy in `features/letters/copy.ts` (`LETTERS_OFFER_VERSION`, like `TELEGRAM_OUTREACH_CONSENT_VERSION`), bumped whenever the offer's wording changes |
+| (none) | `returned` (decision C) | `SentStatus` gains `"returned"`: its row says "Not placed. No one it fit came along this time." and can be dismissed (`letters.sent.dismiss`, a mutation added with decision C). It frees a waiting slot. `LettersCalls` **gains** `dismiss: (id: string) => Promise<void>` |
 
 ---
 
@@ -474,10 +562,10 @@ every recommendation (19 November 2026)**, with E's pushes kept movable to outre
 
 ### A. Sparks and achievements
 
-**Decided (the recommendation):** sending a letter earns one achievement, **First letter** (10 sparks, the
-smallest size), when a first letter is stored as `waiting` (the check passed). Nothing
-else: a letter doesn't count as showing up, there's no ladder (5, 10, 25 letters), and
-nothing for being received, acknowledged, or receiving one.
+**Decided (the recommendation):** sending a letter earns one achievement, **First letter**
+(10 sparks, the smallest size), when a first letter is stored as `waiting` (the check
+passed). Nothing else: a letter doesn't count as showing up, there's no ladder (5, 10, 25
+letters), and nothing for being received, acknowledged, or receiving one.
 
 - *Why:* "rewards showing up and trying things" fits trying letters once. A streak credit
   would make a daily letter the cheapest way to keep a streak, and the people paying for
@@ -514,9 +602,9 @@ cap stops volume, but not letters written for the streak.
   when they can no longer change anything. Escalations follow their existing rule
   (anonymised, kept).
 
-**Alternative (not taken):** a received letter is deleted when its sender deletes their account, so
-nothing written by a deleted account survives anywhere. Simpler to promise; the
-recipient's letter disappears from their list without explanation.
+**Alternative (not taken):** a received letter is deleted when its sender deletes their
+account, so nothing written by a deleted account survives anywhere. Simpler to promise;
+the recipient's letter disappears from their list without explanation.
 
 ### C. Supply and demand
 
@@ -528,25 +616,26 @@ recipient's letter disappears from their list without explanation.
   the sender can dismiss it. Late re-check failures (fixable, not English) end the same
   way. A paused sender's letters expire like anyone's, so a pause stays silent.
 - **More letters than recipients** (likely at launch: receiving is off by default, and a
-  recipient gets one a week): `letters.status.get` gains an optional `invite: boolean`,
+  recipient gets one a week): `letters.status.get` gains `invite: boolean`,
   false while the waiting pool is more than `INVITE_BACKLOG_DAYS` (7) of recent
   placements, and the session-end write card (not Connect's Write) stays away while it's
   false. The hourly sweep works it out (`waiting ≤ placements in the last 7 days`) and
   keeps it on a one-row `letter_stats` table, so `status.get` reads one document; it is
-  `true` until the sweep first runs. Xolace stops asking for letters nobody will receive, and writing stays open.
+  `true` until the sweep first runs. Xolace stops asking for letters nobody will
+  receive, and writing stays open.
 - **More recipients than letters:** recipients wait; nothing promised them a letter.
 - **No seeding:** Xolace never writes letters, and never with AI (Koko, #744). Before
   launch, the team and beta users write real letters through the ordinary flow on
   staging and then production.
 
-**Alternative (not taken):** no expiry. A letter waits until it's placed or withdrawn; the sender's
-three slots can stay full, so a sender may be unable to write for weeks when supply runs
-ahead.
+**Alternative (not taken):** no expiry. A letter waits until it's placed or withdrawn; the
+sender's three slots can stay full, so a sender may be unable to write for weeks when
+supply runs ahead.
 
 ### D. The success measure
 
-**Decided (the recommendation):** one primary measure, read monthly, with guardrails, and no per-person
-counts.
+**Decided (the recommendation):** one primary measure, read monthly, with guardrails, and
+no per-person counts.
 
 - **Primary, "reached":** acknowledged ÷ opened, over letters opened in the period.
 - **Guardrails** (each should stay low): reported ÷ opened, hidden ÷ opened, receiving
@@ -559,21 +648,20 @@ counts.
 - **Never measured:** letters per sender, streaks of writing, a recipient's sessions or
   feelings after a letter (that would use emotional data for analytics, invariant 6).
 
-**Alternative (not taken):** primary = recipients who come back for a session within 14 days of
-opening a letter, against opted-in recipients who didn't get one. It measures what we
-hope letters do, but it's an engagement metric, and pressure to raise it pushes towards
+**Alternative (not taken):** primary = recipients who come back for a session within 14
+days of opening a letter, against opted-in recipients who didn't get one. It measures what
+we hope letters do, but it's an engagement metric, and pressure to raise it pushes towards
 sending more letters to more people.
 
 ### E. The contract shape
 
-**Decided (the recommendation):** this spec as written: own tables in `convex/letters/`, the opt-in in
-`letter_profiles` plus an appended consent record, the push switch in
-`preferences.notifications`, pushes through a letters push mutation on
-`sendPushToProfile` (a notification, as chat's are), and the client undo kept on the
-client.
+**Decided (the recommendation):** this spec as written: own tables in `convex/letters/`,
+the opt-in in `letter_profiles` plus an appended consent record, the push switch in
+`preferences.notifications`, pushes through a letters push mutation on `sendPushToProfile`
+(a notification, as chat's are), and the client undo kept on the client.
 
 **Pushes (owner, 19 Nov 2026): plain push for now, free to move to outreach later.** Every
-letter push goes through one function, `letters/push.ts` `send({ to, type, letterId? })`,
+letter push goes through one function, `letters/push.ts` `send({ to, type, letterId })`,
 and nothing else in `convex/letters/` knows how a push is sent. Moving letters onto
 outreach's `enqueue` later means rewriting that one function's body (three push-only
 intents, Telegram excluded); callers, the client's tap routes and the `data` payloads
@@ -601,11 +689,11 @@ The cost is one more table and one read where Settings shows the toggle
 (`letters.status.get` already returns `optIn`). The push switch is a plain notification
 preference, so it does go in `preferences.notifications.letters`.
 
-**Alternative (not taken):** fewer new pieces: the opt-in as a top-level `preferences` field (it
-could be indexed there), the pool state on a separate letters row, and the three pushes
-as new push-only intents on outreach's `enqueue` (quiet window, dedupe and the deletion
-gate for free). It files letter pushes under outreach, which the glossary says they
-aren't, and splits the opt-in from the state it governs.
+**Alternative (not taken):** fewer new pieces: the opt-in as a top-level `preferences`
+field (it could be indexed there), the pool state on a separate letters row, and the three
+pushes as new push-only intents on outreach's `enqueue` (quiet window, dedupe and the
+deletion gate for free). It files letter pushes under outreach, which the glossary says
+they aren't, and splits the opt-in from the state it governs.
 
 ---
 
@@ -658,6 +746,12 @@ Small gaps the tickets left. Change them in review if they're wrong.
   sent with Yes is enough to start; the classifier's session language (#749) is slice 6,
   after launch. The match reads `language` first whenever it exists.
 - **Admin acts by review id**, so an admin never handles a profile id.
+- **A held letter uses the sender's day** (§3 step 6), which bounds the review queue at
+  one held letter per sender a day without telling a paused sender anything.
+- **The recipient's push is delayed at random** (§6) so the two placement pushes can't
+  be matched up by when they arrive.
+- **`letter_viewed` audit rows are kept a year** and lose the sender's Clerk id when the
+  sender deletes their account (§1).
 - **First letter's copy** is "You wrote something kind for a stranger." It ships once its
   badge art is approved (`scripts/badges/manifest.json` must list `first-letter`).
 
