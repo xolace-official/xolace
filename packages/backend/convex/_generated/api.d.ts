@@ -171,6 +171,7 @@ import type * as feedback from "../feedback.js";
 import type * as followUpResponses from "../followUpResponses.js";
 import type * as followUps from "../followUps.js";
 import type * as followUps_resolve from "../followUps/resolve.js";
+import type * as followUps_waiting from "../followUps/waiting.js";
 import type * as http from "../http.js";
 import type * as imports_apply from "../imports/apply.js";
 import type * as imports_compare from "../imports/compare.js";
@@ -539,6 +540,7 @@ declare const fullApi: ApiFromModules<{
   followUpResponses: typeof followUpResponses;
   followUps: typeof followUps;
   "followUps/resolve": typeof followUps_resolve;
+  "followUps/waiting": typeof followUps_waiting;
   http: typeof http;
   "imports/apply": typeof imports_apply;
   "imports/compare": typeof imports_compare;

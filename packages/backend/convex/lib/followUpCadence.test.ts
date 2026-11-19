@@ -4,9 +4,12 @@ import {
 	computeRequiresFollowUp,
 	followUpCadence,
 	followUpTier,
+	isCardWaiting,
 	minReturnGapForTier,
 	shouldEmitReturn,
 	shouldSupersede,
+	WAITING_CARD_LIFETIME_MS,
+	waitingSince,
 } from "./followUpCadence";
 
 describe("followUpTier", () => {
@@ -211,5 +214,43 @@ describe("minReturnGapForTier", () => {
 		expect(minReturnGapForTier("acute")).toBe(30 * 60 * 1000); // 30min
 		expect(minReturnGapForTier("elevated")).toBe(8 * 60 * 60 * 1000); // 8h
 		expect(minReturnGapForTier("standard")).toBe(8 * 60 * 60 * 1000); // 8h
+	});
+});
+
+describe("waitingSince / isCardWaiting (Coming back v2)", () => {
+	const DAY = 24 * 60 * 60 * 1000;
+	const now = 100 * DAY;
+
+	it("is 3 days", () => {
+		expect(WAITING_CARD_LIFETIME_MS).toBe(3 * DAY);
+	});
+
+	it("starts a shown card's wait at its first showing, not the latest", () => {
+		const card = {
+			createdAt: now - 9 * DAY,
+			firstShownAt: now - 2 * DAY,
+			shownAt: now,
+			status: "shown",
+		};
+		expect(waitingSince(card)).toBe(now - 2 * DAY);
+		expect(isCardWaiting(card, now)).toBe(true);
+		expect(isCardWaiting(card, now + DAY)).toBe(false);
+	});
+
+	it("starts a ready card's wait when the person came back", () => {
+		const card = { createdAt: now - 9 * DAY, readyAt: now, status: "ready" };
+		expect(waitingSince(card)).toBe(now);
+		expect(isCardWaiting(card, now + 3 * DAY - 1)).toBe(true);
+	});
+
+	it("falls back to shownAt, then createdAt, on cards from before B1", () => {
+		expect(waitingSince({ createdAt: 1, shownAt: 5, status: "shown" })).toBe(5);
+		expect(waitingSince({ createdAt: 1, status: "ready" })).toBe(1);
+	});
+
+	it("never counts a pending or closed card", () => {
+		for (const status of ["pending", "resolved", "expired", "superseded"]) {
+			expect(isCardWaiting({ createdAt: now, status }, now)).toBe(false);
+		}
 	});
 });
