@@ -313,27 +313,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			},
 		],
 		[
-			"react-native-share",
-			{
-				android: [
-					"com.whatsapp",
-					"com.instagram.android",
-					"com.facebook.katana",
-					"org.telegram.messenger",
-					"com.twitter.android",
-				],
-				ios: [
-					"whatsapp",
-					"instagram",
-					"instagram-stories",
-					"fb",
-					"facebook-stories",
-					"tg",
-					"twitter",
-				],
-			},
-		],
-		[
 			"@sentry/react-native/expo",
 			{
 				organization: "xolace-inc",

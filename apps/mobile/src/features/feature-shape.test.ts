@@ -45,30 +45,30 @@ const graphOf = (entries: Record<string, Import[]>): ImportGraph =>
 describe("oldFolderImportsFromNewCode", () => {
 	it("flags a ported folder or a lower layer importing an old folder, types included", () => {
 		const graph = graphOf({
-			"components/shared/card.tsx": [local("features/quotes/tile.tsx")],
+			"components/shared/card.tsx": [local("features/intake/tile.tsx")],
 			"design/type.ts": [local("features/streak/faces.ts", true)],
 			"features/today/today-screen.tsx": [
-				local("features/quotes/components/quotes-screen.tsx"),
+				local("features/intake/components/intake-screen.tsx"),
 			],
 		});
 		expect(oldFolderImportsFromNewCode(graph)).toEqual([
-			"components/shared/card.tsx -> features/quotes/tile.tsx",
+			"components/shared/card.tsx -> features/intake/tile.tsx",
 			"design/type.ts -> features/streak/faces.ts",
-			"features/today/today-screen.tsx -> features/quotes/components/quotes-screen.tsx",
+			"features/today/today-screen.tsx -> features/intake/components/intake-screen.tsx",
 		]);
 	});
 
 	it("allows old folders among themselves, inside one folder, the hub, routes and purchases", () => {
 		const graph = graphOf({
 			"app/(protected)/(tabs)/today/index.tsx": [
-				local("features/quotes/components/quotes-screen.tsx"),
+				local("features/intake/components/intake-screen.tsx"),
+			],
+			"features/intake/quotes-screen.tsx": [
+				local("features/browse/browse-home.tsx"),
+				local("features/intake/tile.tsx"),
 			],
 			"features/navigation/root-screens.ts": [
 				local("features/streak/screens.ts"),
-			],
-			"features/quotes/quotes-screen.tsx": [
-				local("features/browse/browse-home.tsx"),
-				local("features/quotes/tile.tsx"),
 			],
 			"features/today/today-screen.tsx": [
 				local("features/purchases/use-paywall.ts"),
@@ -267,10 +267,10 @@ describe("crossFeatureImportsFromPorted", () => {
 
 	it("allows the shared modules, lower layers, old folders and the navigation hub", () => {
 		const graph = graphOf({
+			"features/intake/quote-screen.tsx": [local("features/streak/x.ts")],
 			"features/navigation/root-screens.ts": [
 				local("features/today/screens.ts"),
 			],
-			"features/quotes/quote-screen.tsx": [local("features/streak/x.ts")],
 			"features/today/today-screen.tsx": [
 				local("features/purchases/use-paywall.ts"),
 				local("components/shared/app-text.tsx"),
@@ -282,7 +282,7 @@ describe("crossFeatureImportsFromPorted", () => {
 
 describe("staleListings", () => {
 	it("names listed folders that no longer exist", () => {
-		expect(staleListings(["navigation", "streak"])).toContain("quotes");
+		expect(staleListings(["navigation", "streak"])).toContain("intake");
 		expect(staleListings(["navigation", "streak"])).not.toContain("streak");
 	});
 });
@@ -290,14 +290,14 @@ describe("staleListings", () => {
 describe("portedFolderImportsFromOldCode", () => {
 	it("flags an old folder importing a ported one, types included", () => {
 		const graph = graphOf({
-			"features/quotes/library-strip.tsx": [
+			"features/intake/library-strip.tsx": [
 				local("features/today/rail/rail.tsx"),
 				local("features/letters/letter-model.ts", true),
 			],
 		});
 		expect(portedFolderImportsFromOldCode(graph)).toEqual([
-			"features/quotes/library-strip.tsx -> features/today/rail/rail.tsx",
-			"features/quotes/library-strip.tsx -> features/letters/letter-model.ts",
+			"features/intake/library-strip.tsx -> features/today/rail/rail.tsx",
+			"features/intake/library-strip.tsx -> features/letters/letter-model.ts",
 		]);
 	});
 
@@ -306,7 +306,7 @@ describe("portedFolderImportsFromOldCode", () => {
 			"app/(protected)/(tabs)/today/index.tsx": [
 				local("features/today/today-screen.tsx"),
 			],
-			"features/quotes/library-strip.tsx": [
+			"features/intake/library-strip.tsx": [
 				local("features/browse/use-open-track.ts"),
 				local("features/navigation/tabs.ts"),
 				local("features/purchases/use-paywall.ts"),

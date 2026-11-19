@@ -138,30 +138,6 @@
 
 	--font-poppins-medium: "Poppins-Medium";
 
-	/* Poster — the quotes poster is a printed object: its palette is the
-     * content, not the container, so it does not follow the active theme.
-     * Fixed on purpose; see the fixed-palette convention in CLAUDE.md.
-     * The two values a token cannot express (the gradient stop array and the
-     * Skia grain opacity) live in src/features/quotes/poster-palette.ts. */
-	--color-poster-paper: #f4f3f1;
-	--color-poster-plate: #ffffff;
-	--color-poster-ink: #141414;
-	--color-poster-ink-soft: #5d5d5d;
-	--color-poster-ink-faint: #6b6b6b;
-	--color-poster-hairline: rgba(0, 0, 0, 0.1);
-	--color-poster-shadow: #000000;
-	/* the design's Resonate fill and the deeper ink it sets its label in */
-	--color-poster-resonate: #f5726a;
-	--color-poster-ink-deep: #2b1414;
-	/* The deck: the poster's second sheet, not themed chrome. It is what keeps
-     * the hero from being an isolated lit rectangle on a dark chrome (#305). */
-	--color-poster-deck: #cbc9c5;
-	/* The composer on the deck: the field it is typed into, and the send pill
-     * — the only saturated colour outside the hero, so it takes the poster's
-     * own yellow rather than the accent (#305/#313). */
-	--color-poster-field: #e4e2de;
-	--color-poster-send: #f0e94d;
-
 	/* Player — the Browse player (#340) is lit by the track's own artwork,
      * blurred into the backdrop, so its ink is fixed white-on-black whatever
      * the theme. Fixed on purpose; see the fixed-palette convention in
@@ -289,16 +265,6 @@
 	--color-reader-night-line: rgba(230, 220, 203, 0.12);
 	--color-reader-night-accent: #c9b6ff;
 	--color-reader-night-on-accent: #1b1714;
-	/* The archive card's chip fill — ink at 7%, so one value sits on every tint */
-	--color-poster-chip: rgba(20, 20, 20, 0.07);
-	/* The archive card tints, cycled by item index (#296). Fixed objects inside
-     * a themed container — only the index picks one, so the array that walks
-     * them is assembled at the call site. */
-	--color-archive-tint-1: #f4e9b8;
-	--color-archive-tint-2: #f3d3dc;
-	--color-archive-tint-3: #e7e5e2;
-	--color-archive-tint-4: #dce6de;
-
 	/* The Xolace face is a printed brand object: its features are the logo's,
      * whatever the theme, so a worried look reads the same everywhere. Fixed
      * on purpose; see the fixed-palette convention in CLAUDE.md. The body
@@ -434,13 +400,6 @@
 	--color-vent-ash: #9399a8;
 	--color-vent-ember: #c4883f;
 	--color-vent-amber: #e8a84c;
-
-	/* The poster's voice is fixed too: the `--font-<role>` variables follow
-     * the theme's font pair, and a printed object does not change typeface
-     * with the chrome behind it. The redesign's poster uses `font-poster*`
-     * (type.generated.css); these two stay until the old poster goes. */
-	--font-poster-display: "SpaceGrotesk-Bold";
-	--font-poster-body: "SpaceGrotesk-Regular";
 }
 
 @theme static {
@@ -865,4 +824,49 @@
 	--color-letter-stamp-rim: rgba(255, 235, 200, 0.35);
 	/* Ink on the ember button (Send, Write a letter). */
 	--color-letter-on-ember: #2a1805;
+}
+
+@theme static {
+	/* Quotes (S11): the words over a background you choose are a printed object, the same in
+     * every theme. Two inks: light text over the scrim on photos and loops, dark text on the
+     * Poster. JS reads them with `useQuoteInk` (features/quotes/chrome/quote-ink.ts); the
+     * gradient stops a token can't express (the Poster wash, the scrim) live in
+     * features/quotes/quotes-palette.ts. */
+	--color-quote-light-text: #fffdf8;
+	--color-quote-light-text-2: rgba(255, 253, 248, 0.84);
+	--color-quote-light-glass: rgba(24, 20, 32, 0.3);
+	--color-quote-light-glass-line: rgba(255, 255, 255, 0.2);
+	--color-quote-light-glass-icon: #ffffff;
+	--color-quote-light-sheet: rgba(24, 20, 32, 0.82);
+	--color-quote-light-sheet-text: #f6f3fb;
+	--color-quote-light-sheet-text-2: rgba(246, 243, 251, 0.68);
+	--color-quote-light-fill: rgba(255, 255, 255, 0.08);
+	--color-quote-light-line: rgba(255, 255, 255, 0.1);
+	--color-quote-light-button: #f6f3fb;
+	--color-quote-light-button-text: #17141c;
+	--color-quote-dark-text: #17141c;
+	--color-quote-dark-text-2: rgba(23, 20, 28, 0.72);
+	--color-quote-dark-glass: rgba(255, 255, 255, 0.55);
+	--color-quote-dark-glass-line: rgba(255, 255, 255, 0.8);
+	--color-quote-dark-glass-icon: #17141c;
+	--color-quote-dark-sheet: rgba(255, 253, 249, 0.9);
+	--color-quote-dark-sheet-text: #17141c;
+	--color-quote-dark-sheet-text-2: rgba(23, 20, 28, 0.64);
+	--color-quote-dark-fill: rgba(23, 20, 28, 0.06);
+	--color-quote-dark-line: rgba(23, 20, 28, 0.09);
+	--color-quote-dark-button: #17141c;
+	--color-quote-dark-button-text: #fffdf8;
+	/* Night, the one solid background; the heart when it resonates; the "+" pill. */
+	--color-quote-night: #15121c;
+	--color-quote-resonate: #ff6f82;
+	--color-quote-plus: #f5b04f;
+	--color-quote-plus-ink: #2b1600;
+	/* Light ink's soft shadow, and the shadows under sheets and cards. */
+	--color-quote-shadow: rgba(0, 0, 0, 0.34);
+	--color-quote-drop: #000000;
+	/* Words you kept: the veil over the softened background, its white pill's ink. */
+	--color-quote-kept-veil: rgba(10, 8, 16, 0.32);
+	--color-quote-kept-ink: #fffdf8;
+	--color-quote-kept-pill-ink: #17141c;
+	--color-quote-kept-soft: rgba(255, 255, 255, 0.14);
 }

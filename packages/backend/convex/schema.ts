@@ -578,6 +578,12 @@ export default defineSchema({
 		// hasPremium() in dailyQuotes.getToday. Always false for curated quotes.
 		isPremium: v.boolean(),
 
+		// The quote background (a `quote_backgrounds` key) the user had on when
+		// they kept this quote, so Words you kept shows each card as it was kept
+		// (S11). Set by `save`, cleared by `unsave`. A key the catalogue no longer
+		// lists is drawn as Poster by the app.
+		keptBackground: v.optional(v.string()),
+
 		// User reaction. Null until the user reacts.
 		// DEPRECATED(remove-after: app >= 1.10.0): the "not_today" literal only —
 		// #303 ships no control for it, so no client writes it any more. Narrowing

@@ -77,8 +77,50 @@
     "plus": true
   },
   {
-    "key": "dusk-clouds",
-    "name": "Dusk clouds",
+    "key": "ink-wash",
+    "name": "Ink wash",
+    "kind": "still",
+    "ink": "dark",
+    "plus": true
+  },
+  {
+    "key": "watercolour",
+    "name": "Watercolour",
+    "kind": "still",
+    "ink": "dark",
+    "plus": true
+  },
+  {
+    "key": "silk",
+    "name": "Silk",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "reading-nook",
+    "name": "Reading nook",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "rooftops",
+    "name": "Rooftops",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "nebula",
+    "name": "Nebula",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "night-earth",
+    "name": "Night Earth",
     "kind": "still",
     "ink": "light",
     "plus": true
@@ -114,41 +156,6 @@
   {
     "key": "forest-rain",
     "name": "Forest rain",
-    "kind": "loop",
-    "ink": "light",
-    "plus": true
-  },
-  {
-    "key": "golden-meadow",
-    "name": "Golden meadow",
-    "kind": "loop",
-    "ink": "light",
-    "plus": true
-  },
-  {
-    "key": "snowfall",
-    "name": "Snowfall",
-    "kind": "loop",
-    "ink": "light",
-    "plus": true
-  },
-  {
-    "key": "night-sky",
-    "name": "Night sky",
-    "kind": "loop",
-    "ink": "light",
-    "plus": true
-  },
-  {
-    "key": "stream",
-    "name": "Stream",
-    "kind": "loop",
-    "ink": "light",
-    "plus": true
-  },
-  {
-    "key": "above-clouds",
-    "name": "Above clouds",
     "kind": "loop",
     "ink": "light",
     "plus": true

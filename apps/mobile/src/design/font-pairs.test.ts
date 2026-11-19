@@ -7,7 +7,6 @@ import {
 	FONT_PAIR_IDS,
 	FONT_PAIRS,
 	FONT_ROLES,
-	LEGACY_FACES,
 	launchFaces,
 	pairFaces,
 } from "./font-pairs";
@@ -92,11 +91,10 @@ describe("font pairs", () => {
 		expect(variantFonts(null)).toBe(DEFAULT_FONT_PAIR);
 	});
 
-	it("every face a pair, a fixed face or a legacy screen needs has a source and a file", () => {
+	it("every face a pair, or a fixed face needs has a source and a file", () => {
 		const needed = new Set([
 			...FONT_PAIR_IDS.flatMap(pairFaces),
 			...Object.values(FIXED_FACES),
-			...LEGACY_FACES,
 		]);
 		for (const face of needed) {
 			expect(sources, face).toMatch(
@@ -114,8 +112,8 @@ describe("font pairs", () => {
 			expect(faces).toContain(face);
 		}
 		expect(faces).not.toContain(FONT_PAIRS.playful.normal);
-		// On Default: Default's pair and the legacy Space Grotesk, nothing else.
-		expect(launchFaces("warm")).toHaveLength(12);
+		// On Default: Default's pair, nothing else.
+		expect(launchFaces("warm")).toEqual(pairFaces("warm"));
 		expect(launchFaces("warm")).not.toContain(FONT_PAIRS.clear.normal);
 		// Fixed faces load where they're drawn, never at launch.
 		for (const face of [

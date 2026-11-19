@@ -19,12 +19,10 @@ import { variantFonts } from "./themes";
 
 /**
  * Font loading. At launch, before the splash hides: Default's pair (also
- * night's), the active theme's pair, and the Space Grotesk faces old screens
- * still draw (`LEGACY_FACES`). Other pairs load when a theme switches to them
+ * night's) and the active theme's pair. Other pairs load when a theme switches to them
  * (`setThemeWithFonts`), so text never shows a face that isn't there yet.
  * Fixed faces (mirror, letter, poster, reader) load on the screen that draws
- * them (`useFixedFaces`); nothing in production draws them yet, so none of
- * them hold the splash.
+ * them (`useFixedFaces`), so none of them hold the splash.
  */
 
 function sourcesFor(names: readonly string[]): Record<string, number> {

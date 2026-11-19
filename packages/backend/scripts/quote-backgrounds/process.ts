@@ -1,13 +1,14 @@
 // Turns the owner's generated art into what ships (B18):
 //
 //   <in>/stills/<key>.{png,jpg,jpeg,webp}  →  apps/mobile/assets/quotes/stills/<key>.webp
-//       1080 × 1920 cover crop, WebP sized to ~150–250 KB (bundled in the app)
-//   <in>/loops/<key>.mp4                   →  media/<key>.mp4, .webp, .m4a
+//       1080 × 1920 cover crop, WebP q90 + sharp YUV, under 450 KB (bundled in the app)
+//   <in>/loops/<key>.{mp4,mov}             →  media/<key>.mp4, .webp, .m4a
 //       the video with its seam crossfaded, H.264 720 × 1280, ~1–1.5 MB, silent;
 //       its first frame as a WebP poster; its sound as a ~30 s seamless
 //       ambient track, AAC 96 kbps (the three are hosted: upload.ts)
 //
 // Keys come from manifest.json; a key with no art file is skipped and named.
+// Extensions match in any case (`hearth.MP4`); the owner's files are never renamed.
 // Needs ffmpeg and ffprobe on PATH. Repeatable: it overwrites its outputs.
 //
 // Usage (from packages/backend):
@@ -20,6 +21,7 @@ import {
 	existsSync,
 	mkdirSync,
 	mkdtempSync,
+	readdirSync,
 	readFileSync,
 	rmSync,
 	statSync,
@@ -31,6 +33,7 @@ import sharp from "sharp";
 import { type ManifestEntry, parseManifest, pick } from "./manifest";
 import {
 	AUDIO,
+	artFileName,
 	audioPlan,
 	chainFilter,
 	gainDb,
@@ -105,9 +108,11 @@ const hasAudio = (file: string) =>
 const kb = (file: string) => `${Math.round(statSync(file).size / 1000)} KB`;
 
 function findArt(dir: string, key: string, exts: string[]): string | undefined {
-	return exts
-		.map((ext) => path.join(dir, `${key}.${ext}`))
-		.find((file) => existsSync(file));
+	if (!existsSync(dir)) {
+		return undefined;
+	}
+	const name = artFileName(readdirSync(dir), key, exts);
+	return name && path.join(dir, name);
 }
 
 async function processStill(source: string, key: string): Promise<string> {
@@ -116,10 +121,15 @@ async function processStill(source: string, key: string): Promise<string> {
 		.rotate()
 		.resize(STILL.width, STILL.height, { fit: "cover" });
 	let quality: number = STILL.quality;
-	let webp = await resized.clone().webp({ effort: 6, quality }).toBuffer();
+	const encode = (q: number) =>
+		resized
+			.clone()
+			.webp({ effort: 6, quality: q, smartSubsample: STILL.smartSubsample })
+			.toBuffer();
+	let webp = await encode(quality);
 	while (webp.length > STILL.maxBytes && quality > STILL.minQuality) {
 		quality = nextStillQuality(quality);
-		webp = await resized.clone().webp({ effort: 6, quality }).toBuffer();
+		webp = await encode(quality);
 	}
 	writeFileSync(out, webp);
 	return `still → ${kb(out)} (q${quality})`;

@@ -66,10 +66,20 @@ describe("the committed manifest", () => {
 		]);
 	});
 
-	it("has the art plan's ten stills and ten loops, besides Poster and Night", () => {
+	it("lists only the backgrounds whose art has landed: sixteen stills and five loops, besides Poster and Night", () => {
 		const stills = list.filter((e) => e.kind === "still");
-		expect(stills).toHaveLength(12);
-		expect(list.filter((e) => e.kind === "loop")).toHaveLength(10);
-		expect(list.find((e) => e.key === "poster")?.ink).toBe("dark");
+		expect(stills).toHaveLength(18);
+		expect(list.filter((e) => e.kind === "loop").map((e) => e.key)).toEqual([
+			"rain-window",
+			"quiet-lake",
+			"shoreline",
+			"hearth",
+			"forest-rain",
+		]);
+	});
+
+	it("gives the pale art dark ink, and everything else light", () => {
+		const dark = list.filter((e) => e.ink === "dark").map((e) => e.key);
+		expect(dark).toEqual(["poster", "ink-wash", "watercolour"]);
 	});
 });
