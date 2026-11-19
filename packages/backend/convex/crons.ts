@@ -1,5 +1,6 @@
 import { cronJobs } from "convex/server";
 import { internal } from "./_generated/api";
+import { SWEEP_EVERY_HOURS } from "./letters/rules";
 import { retentionRunIntervalHours } from "./privacy/retentionCutoff";
 
 // Set CONVEX_ENV=production on the prod deployment, leave unset (or "development") on dev.
@@ -52,6 +53,14 @@ crons.interval(
 );
 
 // Retry deleting ElevenLabs' copy of talks the webhook missed (#595).
+// Letters: refresh the pool, place waiting letters, return old ones (letters spec §5.3).
+crons.interval(
+	"sweep letters",
+	isProd ? { hours: SWEEP_EVERY_HOURS } : { hours: 12 },
+	internal.letters.sweep.run,
+	{}
+);
+
 crons.interval(
 	"sweep talk provider copies",
 	isProd ? { hours: 1 } : { hours: 12 },

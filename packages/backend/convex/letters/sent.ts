@@ -31,7 +31,9 @@ async function ownLetter(
 
 /**
  * Newest first, at most 50, from the newest {@link SENT_LIST_READ_MAX} rows.
- * Held letters never show (the sender kept their words).
+ * Held letters show only when a late re-check held them (`held`, "This
+ * letter can't be sent"); one held at send never shows (the sender kept their
+ * words).
  */
 export const list = query({
 	args: {},
@@ -119,7 +121,12 @@ export const markSeen = mutation({
 	returns: v.null(),
 });
 
-/** A returned letter leaves Sent: its row is deleted (decision C). */
+/**
+ * A returned letter leaves Sent: its row is deleted (decision C). A late-held
+ * one leaves Sent too, and its row stays for its review. A late-held row with
+ * no review is deleted: none is written now (a late copy of words already
+ * held is deleted at the re-check), but a row from before that may remain.
+ */
 export const dismiss = mutation({
 	args: { id: v.id("letters") },
 	handler: async (ctx, args) => {
@@ -127,6 +134,14 @@ export const dismiss = mutation({
 		const letter = await ownLetter(ctx, profile._id, args.id);
 		if (letter?.status === "returned") {
 			await ctx.db.delete("letters", letter._id);
+		} else if (letter?.status === "held" && letter.heldLate) {
+			const review = await ctx.db
+				.query("letter_reviews")
+				.withIndex("by_letter", (q) => q.eq("letterId", letter._id))
+				.first();
+			await (review
+				? ctx.db.patch("letters", letter._id, { heldLate: undefined })
+				: ctx.db.delete("letters", letter._id));
 		}
 		return null;
 	},

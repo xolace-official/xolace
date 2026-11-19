@@ -34,12 +34,17 @@ export const letterStatusValidator = v.union(
 );
 export type LetterStatus = Infer<typeof letterStatusValidator>;
 
-/** What a sender's Sent row says. `unchecked` reads as `waiting`. */
+/**
+ * What a sender's Sent row says. `unchecked` reads as `waiting`. `held`
+ * appears only for a letter a late re-check held after the sender was told it
+ * was on its way: "This letter can't be sent", until they dismiss it.
+ */
 export const sentStatusValidator = v.union(
 	v.literal("waiting"),
 	v.literal("received"),
 	v.literal("acknowledged"),
-	v.literal("returned")
+	v.literal("returned"),
+	v.literal("held")
 );
 export type SentStatus = Infer<typeof sentStatusValidator>;
 
@@ -47,7 +52,14 @@ export type SentStatus = Infer<typeof sentStatusValidator>;
 export const senderSeenValidator = v.union(
 	v.literal("received"),
 	v.literal("acknowledged"),
-	v.literal("returned")
+	v.literal("returned"),
+	v.literal("held")
+);
+
+/** A late re-check's risk, for the care shown at the sender's next open. */
+export const lateRiskValidator = v.union(
+	v.literal("elevated"),
+	v.literal("crisis")
 );
 
 export const optInValidator = v.union(v.literal("yes"), v.literal("no"));

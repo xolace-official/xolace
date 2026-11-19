@@ -24,9 +24,15 @@ export const SUGGESTION_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
  * Hard suppression. Overrides any other match — routing one of these to a
  * volunteer because the session *also* tagged `family` is the single worst
  * failure this feature can produce, and it is exactly what the non-clinical
- * specialty taxonomy exists to prevent.
+ * specialty taxonomy exists to prevent. Letters share it (a recipient is never
+ * matched off one of these sessions).
  */
-const SUPPRESSED_THEMES = new Set(["trauma", "abuse", "neglect", "body-image"]);
+export const SUPPRESSED_THEMES: ReadonlySet<string> = new Set([
+	"trauma",
+	"abuse",
+	"neglect",
+	"body-image",
+]);
 
 /**
  * Theme wins over emotion: a specialty describes a situation someone has sat
@@ -91,7 +97,10 @@ const EMOTION_SPECIALTY = new Map<string, Specialty>([
  * reason. The entry mode is a fact about what the user did; the tags are a
  * model output about what it meant.
  */
-const TAP_ONLY_ENTRY_TYPES = new Set(["word_cloud", "body_scan"]);
+export const TAP_ONLY_ENTRY_TYPES: ReadonlySet<string> = new Set([
+	"word_cloud",
+	"body_scan",
+]);
 
 export type SuggestionInput = {
 	thematicTags: string[];

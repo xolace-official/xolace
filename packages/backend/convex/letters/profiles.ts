@@ -42,6 +42,14 @@ export async function ensureLetterProfile(
 	return made;
 }
 
+/** `"en-GB"` → `"en"`; anything unreadable → undefined. */
+export function languageOfLocale(
+	locale: string | undefined
+): string | undefined {
+	const code = locale?.trim().toLowerCase().split(/[-_]/)[0];
+	return code && /^[a-z]{2,3}$/.test(code) ? code : undefined;
+}
+
 /** Today on the sender's own calendar, as streaks count it. */
 export async function senderToday(
 	ctx: QueryCtx,

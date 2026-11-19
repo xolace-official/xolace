@@ -4,6 +4,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import {
 	bandValidator,
+	lateRiskValidator,
 	letterAimValidator,
 	letterStatusValidator,
 	optInValidator,
@@ -1566,6 +1567,10 @@ export default defineSchema({
 		// The sender's local day (YYYY-MM-DD) of their last stored letter: the
 		// 1-a-day cap. A withdraw doesn't give it back.
 		lastSentDay: v.optional(v.string()),
+		// A late re-check found this sender at risk after they were told their
+		// letter was on its way: intake's care shows at their next open, then
+		// `letters.status.lateRiskShown` clears it.
+		lateRisk: v.optional(lateRiskValidator),
 		// The device locale sent with Yes.
 		locale: v.optional(v.string()),
 		metadataAt: v.optional(v.number()),
@@ -1623,6 +1628,13 @@ export default defineSchema({
 		.index("by_state_created", ["state", "createdAt"])
 		.index("by_letter", ["letterId"]),
 
+	// One row: what the hourly sweep last worked out for every client (§9).
+	letter_stats: defineTable({
+		// False while more letters wait than a week of placements.
+		invite: v.boolean(),
+		updatedAt: v.number(),
+	}),
+
 	// A held letter, or a report a person confirmed. Two in 90 days pause the
 	// sender's letters for 30 (§8). No text.
 	letter_strikes: defineTable({
@@ -1651,6 +1663,9 @@ export default defineSchema({
 		// When it passed the check: the FIFO key and the aim window's start.
 		checkedAt: v.optional(v.number()),
 		createdAt: v.number(),
+		// Held by a late re-check, after the sender was told it was on its way:
+		// its Sent row reads "This letter can't be sent" until they dismiss it.
+		heldLate: v.optional(v.boolean()),
 		hiddenAt: v.optional(v.number()),
 		// From the check ("en" at launch).
 		language: v.string(),
@@ -1658,6 +1673,10 @@ export default defineSchema({
 		receivedAt: v.optional(v.number()),
 		// Background re-checks spent on an unchecked letter.
 		recheckCount: v.optional(v.number()),
+		// When an unchecked letter's next re-check should have run. The sweep
+		// re-checks one well past it, so a re-check that failed before writing
+		// its outcome isn't lost until the letter is returned.
+		recheckDueAt: v.optional(v.number()),
 		// Set at placement.
 		recipientProfileId: v.optional(v.id("emotional_profiles")),
 		// Gone from the recipient at once; kept for review.
@@ -1678,7 +1697,9 @@ export default defineSchema({
 		.index("by_sender_status", ["senderProfileId", "status"])
 		.index("by_sender_hash", ["senderProfileId", "textHash"])
 		.index("by_recipient_received", ["recipientProfileId", "receivedAt"])
-		.index("by_status_checked", ["status", "checkedAt"]),
+		.index("by_status_checked", ["status", "checkedAt"])
+		// Recent placements, for the invite backlog (§9).
+		.index("by_received", ["receivedAt"]),
 
 	library_entries: defineTable({
 		active: v.boolean(),

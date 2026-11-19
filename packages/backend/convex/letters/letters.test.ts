@@ -495,6 +495,25 @@ describe("letters caps", () => {
 		expect(await send(user, OTHER_LETTER)).toEqual({ kind: "pass" });
 	});
 
+	it("of two different held letters stored at once, the second answers today", async () => {
+		const user = await writer();
+		const storeHeld = (textHash: string) =>
+			user.root.mutation(internal.letters.send.store, {
+				language: "en",
+				profileId: user.profileId,
+				status: "held",
+				text: KIND_LETTER,
+				textHash,
+			});
+		expect(await storeHeld("first")).toBeNull();
+		expect(await storeHeld("second")).toBe("today");
+		const reviews = await user.root.run((ctx) =>
+			ctx.db.query("letter_reviews").collect()
+		);
+		expect(reviews).toHaveLength(1);
+		expect(await lettersOf(user)).toHaveLength(1);
+	});
+
 	it("a paused sender meets the same limit as anyone, and nothing else", async () => {
 		const user = await writer();
 		await user.root.run(async (ctx) => {
@@ -802,6 +821,7 @@ describe("letters.optIn", () => {
 		expect(await user.t.query(api.letters.status.get, {})).toEqual({
 			invite: true,
 			lastSentDay: null,
+			lateRisk: null,
 			optIn: "unset",
 			unopenedId: null,
 			writeLimit: null,
