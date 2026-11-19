@@ -200,10 +200,14 @@ saw "This letter can't be sent" and kept their words). One a re-check held later
      crosses "and", "but", "so" or a new "I", "I'm used to" is never a past habit, and
      an attempt in a letter that says anything was recent ("last night", "last week",
      "two days ago") is never cut. Whatever is left is floored as talk's floor does, so
-     "since my brother's suicide I want to kill myself too" still raises. **A cut
-     never passes a letter on its own** (fail-safe, step 5): when it lowered the floor's
-     level, the letter passes only if the classifier confirms the mention is past or
-     someone else's. Intake's floor is unchanged;
+     "since my brother's suicide I want to kill myself too" still raises. Someone
+     else's death may be named with a pronoun or a noun ("my friend died by suicide").
+     **A cut never passes a letter on its own** (fail-safe, step 5): when it lowered
+     the floor's level, the letter passes only if the classifier confirms the mention
+     is past or someone else's. Intake's floor is unchanged. The verdict also says
+     when moderation's self-harm scores alone raised it to `elevated`
+     (`selfHarmScoresOnly`: no other moderation category and not the safeguard
+     classifier's intensity);
    - the letters classifier (`ai/letters/check.ts`, one Haiku call, 8 s; its model,
      `LETTER_CHECK_MODEL`, sits beside the prompt version there, not in
      `ai/providers/anthropic.ts`, so changing it is a letters change only): returns
@@ -218,10 +222,19 @@ saw "This letter can't be sent" and kept their words). One a re-check held later
 5. **Decide**, first that applies:
    - safeguard `elevated` or `crisis` → **`risk`**: an escalation row (`source:
      "letter"`, the verdict's `peak` as evidence, never the text), nothing stored.
+     One exception (owner, item B): an `elevated`, never `crisis`, verdict goes on
+     down this list as if the safeguard said none when all four hold: the letters floor
+     cut a mention and what's left raises nothing; moderation's self-harm scores alone
+     raised it (`selfHarmScoresOnly`); and the classifier answered `past_or_others`.
+     That is the past mention moderation still scores ("I used to think about hurting
+     myself most nights", self-harm 0.45).
    - the letters floor cut a mention that lowered its level, and the classifier didn't
      answer `past_or_others` (it said `none` or `current`, or was down, timed out or
      unparseable) → **`risk`** at the level talk's floor gives the whole letter. Never
      `pass` or `unavailable`.
+   - A `risk` with a cut routes at the higher of the safeguard's level and talk's floor
+     level for the whole letter, so a cut never lowers `crisis` to `elevated` ("I
+     tried to kill myself and I want to die.").
    - classifier `hostile` (harassment, hate, sexual content, threats), or the safety
      half's moderation rejecting the text on content policy → **`held`**: stored
      `held` with `textHash`, a `letter_reviews` row, a strike (§8).
@@ -808,7 +821,10 @@ Six calls on the built slices, each now in the code and tested:
    hurting myself") don't reach `risk` on the phrase floor alone; present-tense crisis
    phrases still do. A letters-specific floor; intake's is untouched (§3). Fail-safe
    (review of the built slice): the cut alone never passes; the letters classifier must
-   answer that the mention is past or someone else's, or the letter is `risk`.
+   answer that the mention is past or someone else's, or the letter is `risk`, at
+   `crisis` whenever the uncut letter is. Item B (owner): a past mention that
+   moderation's self-harm scores alone raise to `elevated` passes on those same terms
+   (§3 step 5).
 2. **Moderation down means unavailable.** If OpenAI moderation can't answer, a missing
    key included, the letter is `unavailable` even when the safeguard answered (§3).
 3. **A wipe keeps both sides' records.** A sender's wipe keeps open reviews (report or
@@ -861,8 +877,13 @@ Six calls on the built slices, each now in the code and tested:
   (removing the guard turns those tests red). Every present-tense sentence from the
   review ("I'm used to wanting to kill myself", "I survived today and I want to die",
   "I tried to kill myself last week", and the rest) keeps talk's level at the floor and
-  is `risk` through the check, the classifier silent or confirming. Moderation down is
-  unavailable (F2).
+  is `risk` through the check, the classifier silent or confirming. A crisis sentence
+  beside a cut mention ("I tried to kill myself and I want to die.") stays `crisis`,
+  through #858's `raiseRisk` to `crisis_line_presented`. Item B: the "used to" letter
+  with moderation's scores from the eval passes when the classifier confirms it, and
+  is `risk` with the classifier silent, `none` or `current`, with moderation at crisis,
+  or raised by the classifier's intensity; dropping any of the four conditions turns a
+  test red. Moderation down is unavailable (F2).
 - **Late outcomes** (F5): a late risk is returned once and cleared, and an `elevated`
   `shown` never clears a `crisis`; a late hold shows in Sent until dismissed and keeps
   its row; a late hold of words already held deletes its copy, adding no review or
