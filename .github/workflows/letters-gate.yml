@@ -3,8 +3,8 @@ name: Letters gate
 # #750: a change to the letters check (its classifier prompt, parser or model,
 # the decision, the contact patterns, or the words-safety code it reuses) must
 # pass the letters eval before it ships. Calls live Haiku (one request per
-# case) and, with OPENAI_API_KEY set, the whole check end to end on a few kind
-# letters, so it only runs when one of these moves.
+# case) and live moderation for the whole check end to end on a few kind
+# letters, so it only runs when one of these moves. Both keys are required.
 on:
   pull_request:
     branches: [dev, main]
@@ -65,13 +65,14 @@ jobs:
           fi
 
       # The end-to-end block needs moderation too. Without it that block
-      # skips and only the classifier is gated, so say so on the run.
-      - name: Check OPENAI_API_KEY
+      # skips and only the classifier is gated, which would also read green.
+      - name: Require OPENAI_API_KEY
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           if [ -z "$OPENAI_API_KEY" ]; then
-            echo "::warning::OPENAI_API_KEY secret is not set; the letters end-to-end cases are skipped."
+            echo "::error::OPENAI_API_KEY secret is not set; the letters end-to-end cases cannot run."
+            exit 1
           fi
 
       - name: Run letters eval
