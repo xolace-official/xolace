@@ -13,9 +13,9 @@ import { Reader } from "./reader";
  * push. A letter you've opened opens already open. Reported (from the sheet), it leaves at once:
  * the reader keeps drawing it while it closes. While it loads, it waits: nothing but the header.
  * A letter that isn't there (gone before it loaded, or not yours) closes it too, saying so. With
- * nothing under it (a push opened it cold), it leaves to the Letters screen.
+ * nothing under it, or opened by a push tap, it leaves to the Letters screen.
  */
-export function ReadScreen() {
+export function ReadScreen({ fromPush = false }: { fromPush?: boolean }) {
 	const { state } = useReaderScreen();
 	const header = useHeaderOptions("small");
 	const reduced = useEffectiveReducedMotion();
@@ -30,9 +30,9 @@ export function ReadScreen() {
 	useEffect(() => {
 		if (gone) {
 			AccessibilityInfo.announceForAccessibility(readerGoneLine(hadIt));
-			leaveReader();
+			leaveReader(fromPush);
 		}
-	}, [gone, hadIt]);
+	}, [gone, hadIt, fromPush]);
 	return (
 		<View className="flex-1 bg-background">
 			<Stack.Screen options={{ ...header, title: "" }} />

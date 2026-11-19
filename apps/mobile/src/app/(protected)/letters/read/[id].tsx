@@ -3,10 +3,13 @@ import { ReaderData } from "@/features/letters/read/read-data";
 import { ReadScreen } from "@/features/letters/read/read-screen";
 
 export default function ReadLetterRoute() {
-	const { id = "" } = useLocalSearchParams<{ id?: string }>();
+	const { id = "", from } = useLocalSearchParams<{
+		id?: string;
+		from?: string;
+	}>();
 	return (
 		<ReaderData id={id}>
-			<ReadScreen />
+			<ReadScreen fromPush={from === "push"} />
 		</ReaderData>
 	);
 }

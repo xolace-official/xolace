@@ -92,9 +92,10 @@ export function PrivacyScreen({
 				<Section note={C.lettersNote} title={C.letters}>
 					<SettingsCard>
 						<SettingsSwitchRow
+							disabled={state.receiveLetters === null}
 							label={C.lettersRow}
 							onChange={actions.setReceiveLetters}
-							value={state.receiveLetters}
+							value={state.receiveLetters ?? false}
 						/>
 					</SettingsCard>
 				</Section>

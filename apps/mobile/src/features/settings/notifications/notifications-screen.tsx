@@ -132,10 +132,10 @@ export function NotificationsScreen({
 				<Section note={C.lettersNote} title={C.letters}>
 					<SettingsCard>
 						<SettingsSwitchRow
-							disabled={state.blocked}
+							disabled={state.blocked || state.letters === null}
 							label={C.lettersRow}
 							onChange={actions.setLetters}
-							value={state.letters}
+							value={state.letters ?? false}
 						/>
 					</SettingsCard>
 				</Section>

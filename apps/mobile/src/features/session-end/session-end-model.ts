@@ -188,6 +188,51 @@ export type NextInput = {
 	waitedOut: boolean;
 };
 
+/** The session doc's safeguard fields (`sessions.getById` returns the whole doc). */
+export type SafeguardFields = {
+	escalationTriggered?: boolean;
+	safeguardLevel?: "none" | "gentle" | "elevated" | "crisis";
+};
+
+/**
+ * The safeguard, as `plusOffers.offerContext` reads it: off the session in play, which at a
+ * session end is the one that just closed (the session end only opens from a finished path, with
+ * its id). Mirrored here because that query returns null for Xolace+, which would leave letters'
+ * cards unreachable for subscribers. Its answer still counts where it has one.
+ */
+const sessionSafeguard = (s: SafeguardFields): boolean =>
+	s.escalationTriggered === true ||
+	s.safeguardLevel === "elevated" ||
+	s.safeguardLevel === "crisis";
+
+/**
+ * This session's safeguard for letters' cards; undefined (the slot holds) until both the session
+ * and the offer context are read. Null context (Xolace+) reads the session alone; a missing
+ * session (null: not this user's) counts as a safeguard, so no letter card can show.
+ */
+export function endSafeguard(
+	session: SafeguardFields | null | undefined,
+	context: { safeguardActive: boolean } | null | undefined
+): boolean | undefined {
+	if (session === undefined || context === undefined) {
+		return;
+	}
+	if (session === null) {
+		return true;
+	}
+	return sessionSafeguard(session) || context?.safeguardActive === true;
+}
+
+/** Letters' two cards for the slot: what letters offer given this session's safeguard, once known. */
+export function endLetterOffer(
+	session: SafeguardFields | null | undefined,
+	context: { safeguardActive: boolean } | null | undefined,
+	offer: (safeguard: boolean) => LetterOffer | undefined
+): LetterOffer | undefined {
+	const safeguard = endSafeguard(session, context);
+	return safeguard === undefined ? undefined : offer(safeguard);
+}
+
 /** A letter card follows only a steady answer (the same or lighter), never late. Unanswered isn't steady. */
 const steadyFor = (late: boolean, step: number | null): boolean =>
 	!late && step !== null && step >= 0;

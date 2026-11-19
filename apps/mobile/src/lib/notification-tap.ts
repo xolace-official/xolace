@@ -76,7 +76,11 @@ export type TapNavigation =
 				| "/(protected)/quotes"
 				| "/(protected)/kindling"
 				| "/profile/insights"
-				| { pathname: "/letters/read/[id]"; params: { id: string } };
+				| {
+						pathname: "/letters/read/[id]";
+						/** `from: "push"`: a gone letter goes to Letters, not back to Today. */
+						params: { id: string; from: "push" };
+				  };
 	  };
 
 export type NotificationTapPlan = {
@@ -156,7 +160,11 @@ export function notificationTapPlan(
 		if (letterId) {
 			plan.navigation = {
 				action: "push",
-				href: { params: { id: letterId }, pathname: "/letters/read/[id]" },
+				// `from`: if the letter is gone, the reader goes to Letters, not back to Today.
+				href: {
+					params: { from: "push", id: letterId },
+					pathname: "/letters/read/[id]",
+				},
 			};
 		}
 	} else if (LETTER_SENT_TYPES.has(data?.type)) {

@@ -161,11 +161,14 @@ export function useNotifications(
 			setLetters: (on) => {
 				// A blocked phone can't deliver it: the same alert as the other switches. Until the
 				// letters contract (S21), the switch is all letters keep; nothing registers a token.
+				if (loading || letters === null) {
+					return;
+				}
 				if (on && osBlocked) {
 					setAlertOpen(true);
 					return;
 				}
-				letters?.set(on);
+				letters.set(on);
 			},
 			setQuiet: (on) => {
 				if (loading) {
@@ -196,7 +199,7 @@ export function useNotifications(
 			alertOpen,
 			blocked: osBlocked,
 			chat: chatNotifications,
-			letters: !osBlocked && (letters?.on ?? false),
+			letters: loading || letters === null ? null : !osBlocked && letters.on,
 			loading,
 			quiet: toQuiet(window),
 			reach: notifications?.reach ?? "warm",

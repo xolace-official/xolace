@@ -226,7 +226,10 @@ describe("notificationTapPlan", () => {
 		).toEqual({
 			navigation: {
 				action: "push",
-				href: { params: { id: "lt1" }, pathname: "/letters/read/[id]" },
+				href: {
+					params: { from: "push", id: "lt1" },
+					pathname: "/letters/read/[id]",
+				},
 			},
 		});
 	});

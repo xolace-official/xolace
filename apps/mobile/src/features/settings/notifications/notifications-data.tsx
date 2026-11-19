@@ -23,8 +23,9 @@ export type Notifications = {
 		/** As shown: off while the phone blocks them. */
 		reminders: boolean;
 		chat: boolean;
-		/** Letters' push switch (composed in by the route): off while the phone blocks it. */
-		letters: boolean;
+		/** Letters' push switch (composed in by the route): off while the phone blocks it; null
+		 * while it, or the screen, loads. */
+		letters: boolean | null;
 		reach: Reach;
 		quiet: Quiet | null;
 		reachMeOn: ReachMeOn | null;

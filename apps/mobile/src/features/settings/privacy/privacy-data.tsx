@@ -16,8 +16,8 @@ export type Privacy = {
 		memory: boolean;
 		/** `contributeByDefault`. */
 		share: boolean;
-		/** Letters' opt-in (composed in by the route): off until it's "yes". */
-		receiveLetters: boolean;
+		/** Letters' opt-in (composed in by the route): off until it's "yes"; null while it loads. */
+		receiveLetters: boolean | null;
 		/** `dataRetentionPreference`, as saved. */
 		retention: Retention;
 		/** A shorter period being counted or asked about; the list shows it meanwhile. */

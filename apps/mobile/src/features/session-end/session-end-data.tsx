@@ -31,7 +31,9 @@ export type EndLetters = {
 	writeShown: () => void;
 	/** Left without taking it: the third pass running rests it 30 days. */
 	writePassed: () => void;
-	/** The waiting letter, in the reader. */
+	/** The waiting-letter card was kept: it opens that letter all visit, even once it's opened. */
+	readShown: () => void;
+	/** The waiting letter, in the reader; the Letters screen if it's gone. */
 	openRead: () => void;
 	/** Taken: its passes start over, and the writing screen opens. */
 	openWrite: () => void;

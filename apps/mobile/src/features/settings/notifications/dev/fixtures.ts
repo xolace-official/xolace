@@ -79,7 +79,7 @@ export const NOTIFY_REACH_PUSH: State = {
 export const NOTIFY_LOADING: State = {
 	...NOTIFY_HELD,
 	chat: false,
-	letters: false,
+	letters: null,
 	loading: true,
 	quiet: null,
 	reminders: false,

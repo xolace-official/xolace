@@ -138,7 +138,7 @@ export function usePrivacy(letters: ComposedSwitch): Privacy {
 			past,
 			pending,
 			policyOpen,
-			receiveLetters: letters?.on ?? false,
+			receiveLetters: letters ? letters.on : null,
 			retention,
 			share: preferences?.contributeByDefault ?? false,
 		},

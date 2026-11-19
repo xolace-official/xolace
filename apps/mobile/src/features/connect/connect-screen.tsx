@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Segmented } from "@/components/shared/segmented";
 import { useConnectScreen } from "./connect-data";
@@ -32,16 +32,24 @@ export function ConnectScreen({
 }) {
 	const { state, actions, deleting } = useConnectScreen();
 
+	// Chat is off; letters don't depend on it, so their card stays above the note.
 	if (state.phase === "disabled") {
 		return (
-			<View className="flex-1 items-center justify-center gap-2 bg-background px-8">
-				<AppText center variant="headline">
-					{COPY.disabled.title}
-				</AppText>
-				<AppText center color="muted" variant="callout">
-					{COPY.disabled.body}
-				</AppText>
-			</View>
+			<ScrollView
+				className="flex-1 bg-background"
+				contentContainerClassName="grow"
+				contentInsetAdjustmentBehavior="automatic"
+			>
+				{letters ? <View className="px-4 pt-2">{letters}</View> : null}
+				<View className="flex-1 items-center justify-center gap-2 px-8 py-10">
+					<AppText center variant="headline">
+						{COPY.disabled.title}
+					</AppText>
+					<AppText center color="muted" variant="callout">
+						{COPY.disabled.body}
+					</AppText>
+				</View>
+			</ScrollView>
 		);
 	}
 

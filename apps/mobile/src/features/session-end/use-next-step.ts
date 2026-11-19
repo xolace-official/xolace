@@ -5,7 +5,12 @@ import { useEffect, useState } from "react";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useAppStore } from "@/store/store";
 import type { EndLetters } from "./session-end-data";
-import { type NextInput, pitchAllowed } from "./session-end-model";
+import {
+	endLetterOffer,
+	type NextInput,
+	pitchAllowed,
+	type SafeguardFields,
+} from "./session-end-model";
 import { type ListenerMatch, useListenerMatch } from "./use-listener-match";
 
 export type NextStep = {
@@ -23,6 +28,8 @@ const SLOT_WAIT_MS = 2000;
 
 export function useNextStep(
 	sessionId: Id<"sessions"> | null,
+	/** The session doc (`sessions.getById`): undefined while it loads. */
+	session: SafeguardFields | null | undefined,
 	letters: EndLetters
 ): NextStep {
 	const listener = useListenerMatch(sessionId);
@@ -66,8 +73,8 @@ export function useNextStep(
 		listener,
 		slot: {
 			kindlingReady: active != null && active.sessionId === sessionId,
-			// The write card waits on the safeguard (in the offer context), as the pitch does.
-			letters: context ? letters.offer(context.safeguardActive) : undefined,
+			// The safeguard comes off the session too: the offer context is null for Xolace+.
+			letters: endLetterOffer(session, context, letters.offer),
 			// No backend pick for a track yet (open question 8): the slot never offers one.
 			listen: false,
 			listener: listener.status,

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	PLUS_OFFER_COOLDOWN_MS,
 	PLUS_OFFER_FULL_STOP_MS,
@@ -16,6 +16,8 @@ import {
 	continueStep,
 	ctaLabel,
 	dayOf,
+	endLetterOffer,
+	endSafeguard,
 	fromOf,
 	keptAtMoment2,
 	letterPassed,
@@ -211,6 +213,69 @@ describe("nextKey with letters", () => {
 		expect(nextKey(input(LETTER_WRITE.slot, { step: 0 }))).toBe("letterWrite");
 		// A step of −1 or −2 still allows the free pitch, as production did.
 		expect(nextKey(input(LETTER_WRITE.slot, { step: -1 }))).toBe("kfree");
+	});
+
+	it("offers the waiting letter on the same answer (step 0), not only a lighter one", () => {
+		expect(nextKey(input(LETTER_WAITING.slot, { step: 0 }))).toBe("letterRead");
+		expect(nextKey(input({ ...STATE.slot, letters: READ }, { step: 0 }))).toBe(
+			"letterRead"
+		);
+	});
+
+	it("gives a late Xolace+ session its kindling, not the waiting letter", () => {
+		const plus = { ...STATE.slot, letters: READ };
+		expect(nextKey(input(plus, { late: true }))).toBe("kindling");
+		expect(
+			nextKey(input({ ...plus, kindlingReady: false }, { late: true }))
+		).toBe("kindlingSettingUp");
+	});
+
+	it("gives Xolace+ its kindling once 2 s pass with letters still unread", () => {
+		const unread = { ...STATE.slot, letters: undefined };
+		expect(nextKey(input(unread))).toBe("loading");
+		expect(nextKey(input({ ...unread, waitedOut: true }))).toBe("kindling");
+	});
+});
+
+describe("the letters' slot and the safeguard", () => {
+	const READ = { waiting: true, write: true };
+	const STEADY = { safeguardLevel: "gentle" as const };
+	const offerWith = () => vi.fn((_safeguard: boolean) => READ);
+
+	it("reaches Xolace+, whose offer context is null, off the session alone", () => {
+		const offer = offerWith();
+		const letters = endLetterOffer(STEADY, null, offer);
+		expect(offer).toHaveBeenCalledWith(false);
+		expect(nextKey(input({ ...STATE.slot, letters }))).toBe("letterRead");
+	});
+
+	it("mirrors offerContext's rule: an escalation, elevated or crisis", () => {
+		expect(endSafeguard({ escalationTriggered: true }, null)).toBe(true);
+		expect(endSafeguard({ safeguardLevel: "elevated" }, null)).toBe(true);
+		expect(endSafeguard({ safeguardLevel: "crisis" }, null)).toBe(true);
+		expect(endSafeguard({ safeguardLevel: "gentle" }, null)).toBe(false);
+		expect(endSafeguard({ safeguardLevel: "none" }, null)).toBe(false);
+		expect(endSafeguard({}, null)).toBe(false);
+	});
+
+	it("passes a Xolace+ safeguard to letters, so they can withhold both cards", () => {
+		const offer = offerWith();
+		endLetterOffer({ safeguardLevel: "crisis" }, null, offer);
+		expect(offer).toHaveBeenCalledWith(true);
+	});
+
+	it("keeps a free user's offer context as well as the session", () => {
+		const active = { safeguardActive: true };
+		expect(endSafeguard(STEADY, active)).toBe(true);
+		expect(endSafeguard(STEADY, { safeguardActive: false })).toBe(false);
+	});
+
+	it("holds the slot until both are read, and treats a missing session as a safeguard", () => {
+		const offer = offerWith();
+		expect(endLetterOffer(undefined, null, offer)).toBeUndefined();
+		expect(endLetterOffer(STEADY, undefined, offer)).toBeUndefined();
+		expect(offer).not.toHaveBeenCalled();
+		expect(endSafeguard(null, null)).toBe(true);
 	});
 });
 

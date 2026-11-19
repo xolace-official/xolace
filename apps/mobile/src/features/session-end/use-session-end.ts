@@ -58,7 +58,7 @@ export function useSessionEndData({
 	const canAsk = useQuery(api.feedback.canAskContextual);
 	const record = useMutation(api.sessions.recordPostSessionFeedback);
 	const markUnlockSeen = useMutation(api.compounding.unlocks.markSeen);
-	const next = useNextStep(sessionId, letters);
+	const next = useNextStep(sessionId, session, letters);
 	const openPaywall = usePaywall((s) => s.open);
 	const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
 	const recordPlusOfferShown = useAppStore((s) => s.recordPlusOfferShown);
@@ -156,6 +156,8 @@ export function useSessionEndData({
 			posthog.capture("xolacer_suggestion_shown", { variant });
 		} else if (key === "letterWrite") {
 			letters.writeShown();
+		} else if (key === "letterRead") {
+			letters.readShown();
 		}
 	};
 
