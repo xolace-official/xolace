@@ -51,12 +51,18 @@ export const HEAVIER_FROM = 6;
 /** A letter's aim steers matching for this long after it passes the check. */
 export const AIM_WINDOW_HOURS = 72;
 /**
- * Candidates one placement may try per band before it gives up for now. It
- * steps past those the live checks turn away (quiet hours, an open hard
- * follow-up), so a full first page can't starve everyone behind it. Each try
- * is about seven index reads, and a placement runs in its own mutation.
+ * Candidates one placement may try per band before it gives up for now. Those
+ * turned away for this sender alone (a block) stay in the pool and are stepped
+ * past; those turned away for themselves (quiet hours, an open hard follow-up)
+ * are refreshed out of it. Each try is about ten reads, and a placement runs
+ * in its own mutation.
  */
 export const CANDIDATES_TRIED_MAX = 100;
+/**
+ * How long someone with an open hard follow-up stays out of the pool before a
+ * refresh looks again: one sweep.
+ */
+export const FOLLOW_UP_LOOK_AGAIN_MS = HOUR_MS;
 /** A letter still waiting this long after it passed is returned (decision C). */
 export const LETTER_WAIT_DAYS = 30;
 /**
@@ -81,6 +87,17 @@ export const RECHECK_DELAYS_MS = [
 ] as const;
 
 export const AIM_WINDOW_MS = AIM_WINDOW_HOURS * HOUR_MS;
+
+/**
+ * How far past its due time a re-check must be before the sweep runs it
+ * itself: room for the scheduled one to land first.
+ */
+export const RECHECK_OVERDUE_MS = 10 * MINUTE_MS;
+/**
+ * The most re-checks one sweep starts. During a classifier outage every
+ * unchecked letter is due at once; the rest wait for the next sweep.
+ */
+export const RECHECK_SWEEP_MAX = 25;
 
 /**
  * The opening line the Sent list shows, cut the way S20's `openingLine` cuts

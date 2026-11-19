@@ -1,8 +1,9 @@
 /**
  * The recipient pool (spec §5.1). A `letter_profiles` row is `ready` only
- * while every hard filter that doesn't change by the minute holds; matching
- * then checks the minute-by-minute ones (quiet window, open follow-ups,
- * blocks) live, at placement.
+ * while every filter on the person holds, as of its last refresh. Matching
+ * checks them again live, with the pair's own blocks, and refreshes anyone it
+ * turns away, so the next letter doesn't read them again (no starvation
+ * behind a page of people in quiet hours or with an open hard follow-up).
  */
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
@@ -12,14 +13,19 @@ import {
 	SUPPRESSED_THEMES,
 	TAP_ONLY_ENTRY_TYPES,
 } from "../lib/xolacerSuggestion";
+import { quietWindowEndsAt } from "../outreach/quietWindow";
 import { letterAimOf } from "./aims";
 import { languageOfLocale, letterProfileOf } from "./profiles";
 import {
 	DAY_MS,
+	FOLLOW_UP_LOOK_AGAIN_MS,
 	HEAVIER_FROM,
 	METADATA_FRESH_DAYS,
 	RECIPIENT_REST_DAYS,
 } from "./rules";
+
+/** Follow-up states a person can still see and answer. */
+const OPEN_FOLLOW_UP = ["pending", "ready", "shown", "superseded"] as const;
 
 /** The row's pool fields when this person can't be matched. */
 const OUT = {
@@ -53,7 +59,7 @@ async function unmatchable(
 }
 
 /** Whether the person behind this row may receive at all, today. */
-async function mayReceive(
+export async function mayReceive(
 	ctx: MutationCtx,
 	row: Doc<"letter_profiles">
 ): Promise<boolean> {
@@ -79,9 +85,71 @@ async function mayReceive(
 	return (await effectiveAgeStatus(ctx, { profile, user })) === "adult";
 }
 
+/** An open acute or escalation-derived follow-up: no letter now (#749). */
+async function hasOpenHardFollowUp(
+	ctx: MutationCtx,
+	emotionalProfileId: Id<"emotional_profiles">
+): Promise<boolean> {
+	for (const status of OPEN_FOLLOW_UP) {
+		for await (const card of ctx.db
+			.query("follow_up_cards")
+			.withIndex("by_profile_status", (q) =>
+				q.eq("emotionalProfileId", emotionalProfileId).eq("status", status)
+			)) {
+			if (card.tier === "acute" || card.escalationDerived) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+/**
+ * When to look again at someone who can't take a letter this minute: the end
+ * of their quiet window, or a sweep from now while a hard follow-up is open.
+ * Null when nothing stands in the way. Skipped, never reserved (#749).
+ */
+export async function awayUntil(
+	ctx: MutationCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	now: number
+): Promise<number | null> {
+	const preferences = await ctx.db
+		.query("preferences")
+		.withIndex("by_profile", (q) =>
+			q.eq("emotionalProfileId", emotionalProfileId)
+		)
+		.unique();
+	const quietEnds = quietWindowEndsAt(preferences?.notifications, now);
+	if (quietEnds !== null) {
+		return quietEnds;
+	}
+	return (await hasOpenHardFollowUp(ctx, emotionalProfileId))
+		? now + FOLLOW_UP_LOOK_AGAIN_MS
+		: null;
+}
+
+/** Patch only what changed: a refresh that changes nothing writes nothing. */
+async function patchRow(
+	ctx: MutationCtx,
+	row: Doc<"letter_profiles">,
+	fields: Partial<Doc<"letter_profiles">>
+): Promise<void> {
+	const changed = (Object.keys(fields) as (keyof typeof fields)[]).some(
+		(key) => row[key] !== fields[key]
+	);
+	if (changed) {
+		await ctx.db.patch("letter_profiles", row._id, fields);
+	}
+}
+
 /**
  * Recompute one person's pool state from their latest session. Safe to call
  * for anyone: no row (never answered the offer) changes nothing.
+ *
+ * `language` is the language letters are matched in: copied from the locale
+ * at Yes (or here, if Yes came without one), until sessions write their own
+ * (slice 6), which then wins.
  */
 export async function refreshPool(
 	ctx: MutationCtx,
@@ -108,21 +176,24 @@ export async function refreshPool(
 		!(await mayReceive(ctx, row)) ||
 		(await unmatchable(ctx, metadata))
 	) {
-		await ctx.db.patch("letter_profiles", row._id, OUT);
+		await patchRow(ctx, row, OUT);
 		return;
 	}
 
 	const restUntil = row.lastReceivedAt + RECIPIENT_REST_DAYS * DAY_MS;
-	const resting = restUntil > now;
-	await ctx.db.patch("letter_profiles", row._id, {
+	const back =
+		restUntil > now
+			? restUntil
+			: await awayUntil(ctx, row.emotionalProfileId, now);
+	await patchRow(ctx, row, {
 		aim: letterAimOf(metadata),
 		band: metadata.intensity >= HEAVIER_FROM ? "heavier" : "lighter",
 		language,
 		metadataAt: metadata.createdAt,
-		pool: resting ? "out" : "ready",
-		// Resting: back in when the week is up. Ready: out when the session
-		// goes stale.
-		poolCheckAt: resting ? restUntil : freshUntil,
+		pool: back === null ? "ready" : "out",
+		// Resting or away: back in when that's over. Ready: out when the
+		// session goes stale.
+		poolCheckAt: back === null ? freshUntil : Math.min(back, freshUntil),
 	});
 }
 

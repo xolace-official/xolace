@@ -1665,6 +1665,10 @@ export default defineSchema({
 		receivedAt: v.optional(v.number()),
 		// Background re-checks spent on an unchecked letter.
 		recheckCount: v.optional(v.number()),
+		// When an unchecked letter's next re-check should have run. The sweep
+		// re-checks one well past it, so a re-check that failed before writing
+		// its outcome isn't lost until the letter is returned.
+		recheckDueAt: v.optional(v.number()),
 		// Set at placement.
 		recipientProfileId: v.optional(v.id("emotional_profiles")),
 		// Gone from the recipient at once; kept for review.

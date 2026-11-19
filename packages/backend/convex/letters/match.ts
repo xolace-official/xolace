@@ -3,18 +3,21 @@
  * longest since a letter first, then a random tiebreak) and gives the letter
  * to the first candidate who passes the live checks. Never places an
  * unchecked or held letter, and never a paused sender's (silently, #750).
+ *
+ * A candidate turned away for something about them (quiet hours, an open hard
+ * follow-up, an account being deleted) is refreshed out of the pool until it
+ * clears, so the next letter doesn't read them again. One turned away only for
+ * this sender (their own letter, a block) stays for other senders.
  */
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { internalMutation, type MutationCtx } from "../_generated/server";
-import { quietWindowEndsAt } from "../outreach/quietWindow";
 import { captureLetterEvent, waitBucketOf } from "./analytics";
+import { awayUntil, mayReceive, refreshPool } from "./pool";
 import { letterProfileOf } from "./profiles";
 import { AIM_WINDOW_MS, CANDIDATES_TRIED_MAX } from "./rules";
 
-/** Follow-up states a person can still see and answer. */
-const OPEN_FOLLOW_UP = ["pending", "ready", "shown", "superseded"] as const;
 const BANDS = ["heavier", "lighter"] as const;
 
 export type PlaceResult =
@@ -30,35 +33,19 @@ export type PlaceResult =
 	/** Not a waiting letter (any more). */
 	| "gone";
 
-/** An open acute or escalation-derived follow-up: no letter now (#749). */
-async function hasOpenHardFollowUp(
-	ctx: MutationCtx,
-	emotionalProfileId: Id<"emotional_profiles">
-): Promise<boolean> {
-	for (const status of OPEN_FOLLOW_UP) {
-		for await (const card of ctx.db
-			.query("follow_up_cards")
-			.withIndex("by_profile_status", (q) =>
-				q.eq("emotionalProfileId", emotionalProfileId).eq("status", status)
-			)) {
-			if (card.tier === "acute" || card.escalationDerived) {
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-/** The checks that change by the minute, run on each candidate at placement. */
-async function passesLiveChecks(
+/**
+ * Why a candidate can't have this letter now: `"pair"` for this sender only
+ * (their own letter, a block), `"person"` for anyone's (see the module doc).
+ */
+async function turnedAway(
 	ctx: MutationCtx,
 	candidate: Doc<"letter_profiles">,
 	senderProfileId: Id<"emotional_profiles">,
 	now: number
-): Promise<boolean> {
+): Promise<"pair" | "person" | null> {
 	const recipientProfileId = candidate.emotionalProfileId;
 	if (recipientProfileId === senderProfileId) {
-		return false;
+		return "pair";
 	}
 	const block = await ctx.db
 		.query("letter_blocks")
@@ -69,19 +56,16 @@ async function passesLiveChecks(
 		)
 		.first();
 	if (block) {
-		return false;
+		return "pair";
 	}
-	const preferences = await ctx.db
-		.query("preferences")
-		.withIndex("by_profile", (q) =>
-			q.eq("emotionalProfileId", recipientProfileId)
-		)
-		.unique();
-	// Skipped, not reserved: someone else may fit now (#749).
-	if (quietWindowEndsAt(preferences?.notifications, now) !== null) {
-		return false;
+	// Live, not just as of the last refresh: an account deleted or wiped a
+	// minute ago never receives, and its sender is never told it did.
+	if (!(await mayReceive(ctx, candidate))) {
+		return "person";
 	}
-	return !(await hasOpenHardFollowUp(ctx, recipientProfileId));
+	return (await awayUntil(ctx, recipientProfileId, now)) === null
+		? null
+		: "person";
 }
 
 /** The ready rows, in the order matching takes them, read as they're tried. */
@@ -168,6 +152,8 @@ export async function placeLetter(
 	}
 
 	const inAimWindow = now < letter.checkedAt + AIM_WINDOW_MS;
+	const away: Id<"emotional_profiles">[] = [];
+	let chosen: Doc<"letter_profiles"> | null = null;
 	for (const band of BANDS) {
 		let tried = 0;
 		for await (const candidate of readyCandidates(
@@ -176,15 +162,30 @@ export async function placeLetter(
 			band,
 			inAimWindow
 		)) {
-			if (await passesLiveChecks(ctx, candidate, senderProfileId, now)) {
-				await give(ctx, letter, candidate, senderProfileId, now);
-				return "placed";
+			const why = await turnedAway(ctx, candidate, senderProfileId, now);
+			if (why === null) {
+				chosen = candidate;
+				break;
+			}
+			if (why === "person") {
+				away.push(candidate.emotionalProfileId);
 			}
 			tried += 1;
 			if (tried >= CANDIDATES_TRIED_MAX) {
 				break;
 			}
 		}
+		if (chosen) {
+			break;
+		}
+	}
+	// After the reads, so no row moves under the index walk.
+	for (const id of away) {
+		await refreshPool(ctx, id, now);
+	}
+	if (chosen) {
+		await give(ctx, letter, chosen, senderProfileId, now);
+		return "placed";
 	}
 	return { aimOnly: Boolean(letter.aim && inAimWindow), none: true };
 }

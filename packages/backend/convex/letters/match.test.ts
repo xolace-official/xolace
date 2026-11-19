@@ -30,6 +30,8 @@ import {
 	DAY_MS,
 	LETTER_WAIT_DAYS,
 	RECHECK_DELAYS_MS,
+	RECHECK_OVERDUE_MS,
+	RECHECK_SWEEP_MAX,
 	SWEEP_BATCH,
 } from "./rules";
 
@@ -320,6 +322,8 @@ describe("letters.pool", () => {
 		["a crisis session", { safeguardLevel: "crisis" as const }],
 		["a trauma theme", { thematicTags: ["trauma"] }],
 		["a body-image theme", { thematicTags: ["Body-Image"] }],
+		["an abuse theme", { thematicTags: ["abuse"] }],
+		["a neglect theme", { thematicTags: ["neglect"] }],
 	])("keeps someone out after %s", async (_name, metadata) => {
 		const user = await recipient(1, asUnauthed(), metadata);
 		expectOut(await rowOf(user));
@@ -507,9 +511,26 @@ describe("letters.match.place", () => {
 			timezone: "UTC",
 		});
 		const awake = await recipient(3, root);
+		// The sleeper comes first in the pool, so they're tried and skipped.
+		for (const [user, tiebreak] of [
+			[sleeping, 0],
+			[awake, 0.9],
+		] as const) {
+			const row = await rowOf(user);
+			await root.run((ctx) =>
+				ctx.db.patch("letter_profiles", row!._id, { tiebreak })
+			);
+		}
 		const id = await waitingLetter(sender);
 		expect(await place(root, id)).toBe(true);
 		expect((await letter(root, id))?.recipientProfileId).toBe(awake.profileId);
+		// Out until the window ends, so the next letter doesn't read them again.
+		expect(await rowOf(sleeping)).toMatchObject({
+			pool: "out",
+			poolCheckAt: Date.UTC(2026, 10, 19, 13),
+		});
+		vi.setSystemTime(Date.UTC(2026, 10, 19, 13));
+		await root.mutation(internal.letters.sweep.refreshDue, {});
 		expect((await rowOf(sleeping))?.pool).toBe("ready");
 	});
 
@@ -529,6 +550,44 @@ describe("letters.match.place", () => {
 		const sessionId = await seedSession(root, reader.profileId);
 		await openFollowUp(reader, sessionId, card);
 		expect(await place(root, await waitingLetter(sender))).toBe(false);
+		// Out of the pool while it's open, and a refresh keeps them out.
+		expect(await rowOf(reader)).toMatchObject({
+			pool: "out",
+			poolCheckAt: NOW + HOUR_MS,
+		});
+		await refresh(reader);
+		expect((await rowOf(reader))?.pool).toBe("out");
+	});
+
+	it("never places with an account deleted since its last refresh", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const leaving = await recipient(2, root);
+		await root.run((ctx) =>
+			ctx.db.patch("users", leaving.userId, {
+				accountStatus: "deleted",
+			})
+		);
+		expect((await rowOf(leaving))?.pool).toBe("ready");
+		expect(await place(root, await waitingLetter(sender))).toBe(false);
+		expectOut(await rowOf(leaving));
+		expect(stub.pushes).toEqual([]);
+	});
+
+	it("only places a letter with someone matched in its language", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const english = await recipient(2, root);
+		const id = await waitingLetter(sender, { language: "fr" });
+		expect(await place(root, id)).toBe(false);
+		const french = await recipient(3, root);
+		const row = await rowOf(french);
+		await root.run((ctx) =>
+			ctx.db.patch("letter_profiles", row!._id, { language: "fr" })
+		);
+		expect(await place(root, id)).toBe(true);
+		expect((await letter(root, id))?.recipientProfileId).toBe(french.profileId);
+		expect((await rowOf(english))?.unopenedLetterId).toBeUndefined();
 	});
 
 	it("doesn't skip for a standard follow-up", async () => {
@@ -809,10 +868,7 @@ describe("letters.check.recheck", () => {
 				language: "en",
 			},
 		],
-		[
-			"not English",
-			{ confidence: 0.9, fixable: null, hostile: false, language: "fr" },
-		],
+		["not English", { fixable: null, hostile: false, language: "fr" }],
 	])("a late %s verdict returns it", async (_name, verdict) => {
 		const { id, root } = await unchecked();
 		stub.verdict = verdict;
@@ -840,6 +896,7 @@ describe("letters.check.recheck", () => {
 			.map((j) => j.scheduledTime - NOW);
 		expect(rechecks).toEqual([...RECHECK_DELAYS_MS]);
 
+		vi.setSystemTime(NOW + RECHECK_OVERDUE_MS);
 		await root.mutation(internal.letters.sweep.uncheckedDue, {});
 		const after = (
 			await root.run((ctx) =>
@@ -847,6 +904,53 @@ describe("letters.check.recheck", () => {
 			)
 		).filter((j) => j.name.includes("letters/check"));
 		expect(after).toHaveLength(RECHECK_DELAYS_MS.length + 1);
+	});
+
+	it("the sweep picks up a re-check that failed before it wrote anything, once", async () => {
+		const { id, root } = await unchecked();
+		const rechecksScheduled = async () =>
+			(
+				await root.run((ctx) =>
+					ctx.db.system.query("_scheduled_functions").collect()
+				)
+			).filter((j) => j.name.includes("letters/check")).length;
+		// The 5-minute re-check never wrote its outcome; not overdue yet.
+		vi.setSystemTime(NOW + RECHECK_DELAYS_MS[0]);
+		await root.mutation(internal.letters.sweep.uncheckedDue, {});
+		expect(await rechecksScheduled()).toBe(1);
+
+		vi.setSystemTime(NOW + RECHECK_DELAYS_MS[0] + RECHECK_OVERDUE_MS);
+		await root.mutation(internal.letters.sweep.uncheckedDue, {});
+		expect(await rechecksScheduled()).toBe(2);
+		// An overlapping sweep doesn't start a second.
+		await root.mutation(internal.letters.sweep.uncheckedDue, {});
+		expect(await rechecksScheduled()).toBe(2);
+		expect((await letter(root, id))?.status).toBe("unchecked");
+	});
+
+	it("starts at most RECHECK_SWEEP_MAX re-checks a sweep", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		await root.run(async (ctx) => {
+			for (let i = 0; i < RECHECK_SWEEP_MAX + 5; i++) {
+				await ctx.db.insert("letters", {
+					createdAt: NOW - DAY_MS,
+					language: "en",
+					recheckCount: RECHECK_DELAYS_MS.length,
+					recheckDueAt: NOW - DAY_MS,
+					senderProfileId: sender.profileId,
+					status: "unchecked",
+					text: KIND_LETTER,
+				});
+			}
+		});
+		await root.mutation(internal.letters.sweep.uncheckedDue, {});
+		const jobs = await root.run((ctx) =>
+			ctx.db.system.query("_scheduled_functions").collect()
+		);
+		expect(jobs.filter((j) => j.name.includes("letters/check"))).toHaveLength(
+			RECHECK_SWEEP_MAX
+		);
 	});
 
 	it("does nothing for a letter withdrawn meanwhile", async () => {
@@ -970,6 +1074,61 @@ describe("letters.sweep", () => {
 
 		expect(await place(root, id)).toBe(true);
 		expect((await rowOf(reader))?.unopenedLetterId).toBe(id);
+	});
+
+	it("skips a language for the rest of a pass once a letter in it finds no one", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const reader = await recipient(2, root);
+		for (let i = 0; i < 3; i++) {
+			await waitingLetter(sender, { language: "fr" }, 3 * HOUR_MS - i);
+		}
+		const english = await waitingLetter(sender, {}, HOUR_MS);
+		// One search in French that finds no one, one placement, one last run.
+		expect(await sweepPlace(root)).toBe(3);
+		expect((await rowOf(reader))?.unopenedLetterId).toBe(english);
+	});
+
+	it("runs its steps in order, and two sweeps at once place each letter once", async () => {
+		const root = asUnauthed();
+		const sender = await adult(1, root);
+		const second = await adult(3, root);
+		await recipient(2, root);
+		await recipient(4, root);
+		const a = await waitingLetter(sender, {}, 2 * HOUR_MS);
+		const b = await waitingLetter(second, {}, HOUR_MS);
+
+		const sweepJobs = async () =>
+			(
+				await root.run((ctx) =>
+					ctx.db.system.query("_scheduled_functions").collect()
+				)
+			)
+				.map((j) => j.name)
+				.filter((n) => n.startsWith("letters/sweep:"));
+		await root.mutation(internal.letters.sweep.run, {});
+		// Only the first step is scheduled; it starts the next when it's done.
+		expect(await sweepJobs()).toEqual(["letters/sweep:refreshDue"]);
+
+		await root.mutation(internal.letters.sweep.run, {});
+		await root.finishAllScheduledFunctions(vi.runAllTimers);
+
+		const placed = await root.run((ctx) =>
+			ctx.db
+				.query("letter_profiles")
+				.collect()
+				.then((rows) => rows.map((r) => r.unopenedLetterId).filter(Boolean))
+		);
+		expect(placed.sort()).toEqual([a, b].sort());
+		const names = await sweepJobs();
+		// Both chains ran to the end, in §5.3's order.
+		expect(names.filter((n) => n === "letters/sweep:invite")).toHaveLength(2);
+		expect(names.indexOf("letters/sweep:placeWaiting")).toBeGreaterThan(
+			names.indexOf("letters/sweep:refreshDue")
+		);
+		expect(names.indexOf("letters/sweep:uncheckedDue")).toBeGreaterThan(
+			names.indexOf("letters/sweep:placeWaiting")
+		);
 	});
 
 	it("stops inviting letters while more wait than a week of placements", async () => {

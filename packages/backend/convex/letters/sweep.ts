@@ -1,8 +1,10 @@
 /**
- * The hourly sweep (spec §5.3): pool rows due a refresh, waiting letters in
- * the order they passed (FIFO, #749), letters waiting too long, unchecked
- * letters due a re-check, and the invite flag. Each step works in bounded
- * pages and schedules its own next page.
+ * The hourly sweep (spec §5.3), one step after another: pool rows due a
+ * refresh, then waiting letters in the order they passed (FIFO, #749) with
+ * those waiting too long returned, then unchecked letters due a re-check, then
+ * the invite flag. Each step works in bounded pages, schedules its own next
+ * page, and starts the next step when it's done. Two sweeps overlapping only
+ * repeat work: every write re-reads the row it changes.
  */
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
@@ -17,6 +19,8 @@ import {
 	INVITE_COUNT_MAX,
 	LETTER_WAIT_DAYS,
 	RECHECK_DELAYS_MS,
+	RECHECK_OVERDUE_MS,
+	RECHECK_SWEEP_MAX,
 	SWEEP_BATCH,
 } from "./rules";
 
@@ -24,9 +28,6 @@ export const run = internalMutation({
 	args: {},
 	handler: async (ctx) => {
 		await ctx.scheduler.runAfter(0, internal.letters.sweep.refreshDue, {});
-		await ctx.scheduler.runAfter(0, internal.letters.sweep.placeWaiting, {});
-		await ctx.scheduler.runAfter(0, internal.letters.sweep.uncheckedDue, {});
-		await ctx.scheduler.runAfter(0, internal.letters.sweep.invite, {});
 		return null;
 	},
 	returns: v.null(),
@@ -46,9 +47,9 @@ export const refreshDue = internalMutation({
 		for (const row of due) {
 			await refreshPool(ctx, row.emotionalProfileId, now);
 		}
-		if (due.length === SWEEP_BATCH) {
-			await ctx.scheduler.runAfter(0, internal.letters.sweep.refreshDue, {});
-		}
+		await (due.length === SWEEP_BATCH
+			? ctx.scheduler.runAfter(0, internal.letters.sweep.refreshDue, {})
+			: ctx.scheduler.runAfter(0, internal.letters.sweep.placeWaiting, {}));
 		return null;
 	},
 	returns: v.null(),
@@ -112,12 +113,12 @@ export const placeWaiting = internalMutation({
 				break;
 			}
 		}
-		if (last) {
-			await ctx.scheduler.runAfter(0, internal.letters.sweep.placeWaiting, {
-				after: last,
-				skip: [...skip],
-			});
-		}
+		await (last
+			? ctx.scheduler.runAfter(0, internal.letters.sweep.placeWaiting, {
+					after: last,
+					skip: [...skip],
+				})
+			: ctx.scheduler.runAfter(0, internal.letters.sweep.uncheckedDue, {}));
 		return null;
 	},
 	returns: v.null(),
@@ -142,13 +143,18 @@ async function returnUnplaced(
 }
 
 /**
- * Unchecked letters: returned past the wait, otherwise re-checked once their
- * scheduled re-checks are spent.
+ * Unchecked letters: returned past the wait, otherwise re-checked once the
+ * re-check they're due is overdue (past the scheduled ones, or one that failed
+ * before it wrote anything), at most `RECHECK_SWEEP_MAX` a sweep.
  */
 export const uncheckedDue = internalMutation({
-	args: { cursor: v.optional(v.string()) },
+	args: {
+		cursor: v.optional(v.string()),
+		started: v.optional(v.number()),
+	},
 	handler: async (ctx, args) => {
 		const now = Date.now();
+		let started = args.started ?? 0;
 		const page = await ctx.db
 			.query("letters")
 			.withIndex("by_status_checked", (q) => q.eq("status", "unchecked"))
@@ -162,17 +168,27 @@ export const uncheckedDue = internalMutation({
 						properties: { why: "unchecked" },
 					});
 				}
-			} else if ((letter.recheckCount ?? 0) >= RECHECK_DELAYS_MS.length) {
+			} else if (
+				started < RECHECK_SWEEP_MAX &&
+				(letter.recheckDueAt ?? letter.createdAt + RECHECK_DELAYS_MS[0]) +
+					RECHECK_OVERDUE_MS <=
+					now
+			) {
+				// Due again from now, so an overlapping sweep doesn't start a
+				// second, and the next one retries if this one fails too.
+				await ctx.db.patch("letters", letter._id, { recheckDueAt: now });
 				await ctx.scheduler.runAfter(0, internal.letters.check.recheck, {
 					letterId: letter._id,
 				});
+				started += 1;
 			}
 		}
-		if (!page.isDone) {
-			await ctx.scheduler.runAfter(0, internal.letters.sweep.uncheckedDue, {
-				cursor: page.continueCursor,
-			});
-		}
+		await (page.isDone
+			? ctx.scheduler.runAfter(0, internal.letters.sweep.invite, {})
+			: ctx.scheduler.runAfter(0, internal.letters.sweep.uncheckedDue, {
+					cursor: page.continueCursor,
+					started,
+				}));
 		return null;
 	},
 	returns: v.null(),

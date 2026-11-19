@@ -162,7 +162,9 @@ export const store = internalMutation({
 			senderProfileId: args.profileId,
 			status: args.status,
 			text: args.text,
-			...(args.status === "waiting" && { checkedAt: now }),
+			...(args.status === "waiting"
+				? { checkedAt: now }
+				: { recheckDueAt: now + RECHECK_DELAYS_MS[0] }),
 			...(args.aim && { aim: args.aim }),
 		});
 		await spendTheDay();

@@ -137,9 +137,12 @@ export const apply = internalMutation({
 				}
 				break;
 			default: {
-				await ctx.db.patch("letters", letterId, { recheckCount });
 				const next = RECHECK_DELAYS_MS[recheckCount];
-				// Past the last delay, each sweep tries again.
+				// Past the last delay, each sweep tries again: due now.
+				await ctx.db.patch("letters", letterId, {
+					recheckCount,
+					recheckDueAt: now + (next ?? 0),
+				});
 				if (next !== undefined) {
 					await ctx.scheduler.runAfter(next, internal.letters.check.recheck, {
 						letterId,
