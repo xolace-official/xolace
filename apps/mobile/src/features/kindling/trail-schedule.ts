@@ -57,6 +57,13 @@ export function trailSchedule(deps: ScheduleDeps) {
 		deps.play(i, last, () => moveOn(MOVE_ON_MS, ticket));
 
 	return {
+		/**
+		 * The screen lost focus: the batch's plays not started are forgotten with their tickets. Coming
+		 * back finds them afresh, on a new ticket, so the card moves on once they land.
+		 */
+		blur: () => {
+			queued = new Map();
+		},
 		/** They chose a card (opened a stop, acted, skipped, undid): no move-on already scheduled lands. */
 		choose: () => {
 			choices = chosen(choices);

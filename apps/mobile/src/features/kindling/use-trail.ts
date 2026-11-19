@@ -167,6 +167,7 @@ export function useTrail(
 	const key = `${view.id}:${now.join()}`;
 	useEffect(() => {
 		if (!focused) {
+			schedule.blur();
 			return;
 		}
 		return schedule.playBatch(

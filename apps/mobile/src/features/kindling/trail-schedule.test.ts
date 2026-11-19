@@ -88,6 +88,18 @@ describe("tends played on return", () => {
 		expect(moveCard).not.toHaveBeenCalled();
 	});
 
+	it("left mid-batch (a stop opened, Again, Browse), coming back plays them on a new ticket and moves the card", () => {
+		const { moveCard, played, s } = setup();
+		const cancel = s.playBatch([1, 2]);
+		s.choose();
+		cancel();
+		s.blur();
+		s.playBatch([1, 2]);
+		vi.runAllTimers();
+		expect(played).toEqual([1, 2]);
+		expect(moveCard).toHaveBeenCalled();
+	});
+
 	it("a tend first found after the choice takes a new ticket, and moves the card", () => {
 		const { moveCard, s } = setup();
 		const cancel = s.playBatch([0]);
