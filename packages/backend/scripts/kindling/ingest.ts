@@ -63,6 +63,8 @@ type SharedFields = {
 	durationSec: number;
 	sha256: string;
 	newUntil?: number;
+	// Explore's "For the hour" (B6): the times of day it suits. Leave out to keep what's stored.
+	bestAt?: ("dawn" | "day" | "evening" | "late")[];
 	// measure-loudness.ts; sent only while it was measured on this audio
 	loudness?: { lufs: number; sha256: string; truePeak: number };
 };
