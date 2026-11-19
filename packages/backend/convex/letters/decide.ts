@@ -22,7 +22,7 @@ export const LETTER_LANGUAGES: readonly string[] = ["en"];
 /** What the check decided, first that applies, in this order. */
 export type LetterCheck =
 	/** The sender may be at risk: care, an escalation, nothing stored. */
-	| { kind: "risk"; peak: TalkPeak | null }
+	| { kind: "risk"; level: "elevated" | "crisis"; peak: TalkPeak | null }
 	/**
 	 * Hostile, by the classifier or by moderation's content-policy rejection:
 	 * stored for review, a strike, never placed.
@@ -110,10 +110,17 @@ export function decideLetterCheck(input: {
 		safety.selfHarmScoresOnly === true &&
 		confirmedPast;
 	if ((engineRisk && !pastMentionFlagged) || (discounted && !confirmedPast)) {
-		const enginePeak = engineRisk ? (safety.peak ?? null) : null;
-		const uncutHigher =
-			discounted && (!engineRisk || levelAbove(discounted.level, safety.level));
-		return { kind: "risk", peak: uncutHigher ? discounted : enginePeak };
+		if (
+			discounted &&
+			(!engineRisk || levelAbove(discounted.level, safety.level))
+		) {
+			return { kind: "risk", level: discounted.level, peak: discounted };
+		}
+		return {
+			kind: "risk",
+			level: safety.level === "crisis" ? "crisis" : "elevated",
+			peak: safety.peak ?? null,
+		};
 	}
 	if (verdict?.hostile || safety.rejected) {
 		return { kind: "held" };

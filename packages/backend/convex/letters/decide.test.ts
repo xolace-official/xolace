@@ -47,6 +47,7 @@ describe("decideLetterCheck", () => {
 		(level) => {
 			expect(decide({ ...SAFE, level, peak: PEAK }, KIND)).toEqual({
 				kind: "risk",
+				level,
 				peak: PEAK,
 			});
 		}
@@ -355,7 +356,7 @@ describe("checkLetterText", () => {
 		const d = deps(KIND, { ...SAFE, level: "crisis", peak: PEAK });
 		expect(
 			await checkLetterText("call me 0244 123 4567, i won't be here", d)
-		).toEqual({ kind: "risk", peak: PEAK });
+		).toEqual({ kind: "risk", level: "crisis", peak: PEAK });
 		expect(d.safety).toHaveBeenCalledOnce();
 	});
 

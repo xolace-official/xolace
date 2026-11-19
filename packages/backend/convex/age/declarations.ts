@@ -21,7 +21,8 @@ export const declare = mutation({
 		dateOfBirth: v.string(),
 		platform: platformValidator,
 		promptVersion: v.string(),
-		surface: v.literal("xolacer_chat"),
+		// "letters" from the letters opt-in and send (#749).
+		surface: v.union(v.literal("xolacer_chat"), v.literal("letters")),
 	},
 	handler: async (ctx, args) => {
 		const { profile, user } = await requireAuth(ctx);

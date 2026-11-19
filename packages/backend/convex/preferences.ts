@@ -157,6 +157,9 @@ const updateArgs = {
 			chat: v.optional(v.boolean()),
 			enabled: v.boolean(),
 			gentleReturn: v.boolean(),
+			// Accepted so a spread of the stored object stays legal; written only
+			// through `letters.settings.setPush`.
+			letters: v.optional(v.boolean()),
 			milestone: v.boolean(),
 			patternNudge: v.boolean(),
 			quietWindow: v.optional(

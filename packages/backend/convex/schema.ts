@@ -2,6 +2,15 @@ import { vWorkflowId } from "@convex-dev/workflow";
 import { vWorkIdValidator } from "@convex-dev/workpool";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+	bandValidator,
+	letterAimValidator,
+	letterStatusValidator,
+	optInValidator,
+	poolValidator,
+	reportReasonValidator,
+	senderSeenValidator,
+} from "./letters/validators";
 import { specialtyValidator } from "./lib/specialties";
 import {
 	activityActionTypeValidator,
@@ -136,7 +145,7 @@ export default defineSchema({
 		promptVersion: v.string(),
 		source: v.literal("self"),
 		// Which gate asked.
-		surface: v.literal("xolacer_chat"),
+		surface: v.union(v.literal("xolacer_chat"), v.literal("letters")),
 		userId: v.id("users"),
 	}).index("by_user_declared", ["userId", "declaredAt"]),
 
@@ -488,7 +497,8 @@ export default defineSchema({
 			v.literal("anonymized_research"),
 			v.literal("voice_processing"), // Phase 2
 			v.literal("therapy_summary_sharing"), // Phase 3
-			v.literal("telegram_outreach") // Linking Telegram (#760)
+			v.literal("telegram_outreach"), // Linking Telegram (#760)
+			v.literal("letters_receive") // Receiving letters (#748)
 		),
 
 		createdAt: v.number(),
@@ -1531,6 +1541,145 @@ export default defineSchema({
 		...intakeRowAnswerValidators,
 	}).index("by_profile", ["emotionalProfileId"]),
 
+	// Who blocked whom: hiding or reporting a letter means its sender is
+	// never matched to that recipient again (#750). Unhide keeps it.
+	letter_blocks: defineTable({
+		cause: v.union(v.literal("hide"), v.literal("report")),
+		createdAt: v.number(),
+		recipientProfileId: v.id("emotional_profiles"),
+		senderProfileId: v.id("emotional_profiles"),
+	}).index("by_pair", ["recipientProfileId", "senderProfileId"]),
+
+	// One row per person who has answered the offer or sent a letter: the
+	// opt-in, the matching pool state, and the sender's caps. No row = opt-in
+	// unset, never sent. Server-only: no client reads it whole.
+	letter_profiles: defineTable({
+		// Copied from the latest eligible session (§5); cleared when not.
+		aim: v.optional(letterAimValidator),
+		band: v.optional(bandValidator),
+		emotionalProfileId: v.id("emotional_profiles"),
+		// Resolved recipient language: their sessions' (slice 6), else their
+		// locale's. Absent = unknown, never matched.
+		language: v.optional(v.string()),
+		// 0 until their first letter, so never-received sorts first.
+		lastReceivedAt: v.number(),
+		// The sender's local day (YYYY-MM-DD) of their last stored letter: the
+		// 1-a-day cap. A withdraw doesn't give it back.
+		lastSentDay: v.optional(v.string()),
+		// The device locale sent with Yes.
+		locale: v.optional(v.string()),
+		metadataAt: v.optional(v.number()),
+		optIn: v.optional(optInValidator),
+		optInAt: v.optional(v.number()),
+		pausedBy: v.optional(v.union(v.literal("strikes"), v.literal("admin"))),
+		// A silent pause on placing this sender's letters.
+		pausedUntil: v.optional(v.number()),
+		// Whether matching may pick them now. Always "out" unless optIn is yes.
+		pool: poolValidator,
+		// When `pool` may next change on its own.
+		poolCheckAt: v.optional(v.number()),
+		// Random, redrawn at each placement: the last rank.
+		tiebreak: v.number(),
+		// The letter waiting to be opened; it blocks another.
+		unopenedLetterId: v.optional(v.id("letters")),
+	})
+		.index("by_profile", ["emotionalProfileId"])
+		.index("by_pool_check", ["poolCheckAt"])
+		.index("by_pool_aim", [
+			"pool",
+			"language",
+			"aim",
+			"band",
+			"lastReceivedAt",
+			"tiebreak",
+		])
+		.index("by_pool_band", [
+			"pool",
+			"language",
+			"band",
+			"lastReceivedAt",
+			"tiebreak",
+		]),
+
+	// What a person may read (#750): reported letters and held ones, nothing
+	// else.
+	letter_reviews: defineTable({
+		createdAt: v.number(),
+		decidedAt: v.optional(v.number()),
+		// The deciding admin's Clerk subject.
+		decidedBy: v.optional(v.string()),
+		kind: v.union(v.literal("held"), v.literal("report")),
+		letterId: v.id("letters"),
+		// A report's reason.
+		reason: v.optional(reportReasonValidator),
+		// Cut when the reporter deletes their account (decision B).
+		reporterProfileId: v.optional(v.id("emotional_profiles")),
+		state: v.union(
+			v.literal("open"),
+			v.literal("confirmed"),
+			v.literal("dismissed")
+		),
+	})
+		.index("by_state_created", ["state", "createdAt"])
+		.index("by_letter", ["letterId"]),
+
+	// A held letter, or a report a person confirmed. Two in 90 days pause the
+	// sender's letters for 30 (§8). No text.
+	letter_strikes: defineTable({
+		at: v.number(),
+		cause: v.union(v.literal("held"), v.literal("report")),
+		reviewId: v.id("letter_reviews"),
+		senderProfileId: v.id("emotional_profiles"),
+	}).index("by_sender_at", ["senderProfileId", "at"]),
+
+	// ===========================================================
+	// LETTERS (B12, #743)
+	// ===========================================================
+	//
+	// Short anonymous letters one person writes for a stranger; Xolace picks
+	// who receives each. Spec: docs/plan/letters.md. Keyed on emotional
+	// profiles, like every content table. Nothing here is ever returned that
+	// tells a recipient who wrote a letter, or a sender who received it.
+	//
+	// One row per letter that was stored: passed, couldn't be checked, or held
+	// as hostile. Fixable and at-risk letters are never stored (#750).
+	letters: defineTable({
+		// Received or acknowledged, the recipient side's last change.
+		acknowledgedAt: v.optional(v.number()),
+		// The sender's "For"; absent = anyone. Steers matching only.
+		aim: v.optional(letterAimValidator),
+		// When it passed the check: the FIFO key and the aim window's start.
+		checkedAt: v.optional(v.number()),
+		createdAt: v.number(),
+		hiddenAt: v.optional(v.number()),
+		// From the check ("en" at launch).
+		language: v.string(),
+		openedAt: v.optional(v.number()),
+		receivedAt: v.optional(v.number()),
+		// Background re-checks spent on an unchecked letter.
+		recheckCount: v.optional(v.number()),
+		// Set at placement.
+		recipientProfileId: v.optional(v.id("emotional_profiles")),
+		// Gone from the recipient at once; kept for review.
+		reportedAt: v.optional(v.number()),
+		// Optional so a deleted sender's received letter can stay with its
+		// recipient, cut from the account (decision B).
+		senderProfileId: v.optional(v.id("emotional_profiles")),
+		// The latest Sent status the sender has seen.
+		senderSeen: v.optional(senderSeenValidator),
+		status: letterStatusValidator,
+		// Trimmed, 40 to 500 characters.
+		text: v.string(),
+		// Held letters only: SHA-256 of the trimmed text, so the same words are
+		// refused again without a model call or a second strike.
+		textHash: v.optional(v.string()),
+	})
+		.index("by_sender_created", ["senderProfileId", "createdAt"])
+		.index("by_sender_status", ["senderProfileId", "status"])
+		.index("by_sender_hash", ["senderProfileId", "textHash"])
+		.index("by_recipient_received", ["recipientProfileId", "receivedAt"])
+		.index("by_status_checked", ["status", "checkedAt"]),
+
 	library_entries: defineTable({
 		active: v.boolean(),
 		// Curator-only — never returned to readers (#387, #404).
@@ -2134,6 +2283,9 @@ export default defineSchema({
 			chat: v.optional(v.boolean()),
 			enabled: v.boolean(),
 			gentleReturn: v.boolean(), // "It's been a while..."
+			// Letter pushes: one reached you, yours was received or acknowledged.
+			// Optional; absent means on, like `chat`.
+			letters: v.optional(v.boolean()),
 			milestone: v.boolean(), // "30 days of showing up"
 			patternNudge: v.boolean(), // "Sunday evening..."
 			// Quiet Window: suppress notifications outside these local hours (0–23).

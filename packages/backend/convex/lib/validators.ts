@@ -158,7 +158,10 @@ export const talkIssueValidator = v.object({
 /** Where an escalation was raised (#772). */
 export const escalationSourceValidator = v.union(
 	v.literal("session"),
-	v.literal("telegram")
+	v.literal("telegram"),
+	// The check at send found the letter's writer may be at risk (#750). No
+	// sessionId, and never the letter's words.
+	v.literal("letter")
 );
 
 export const actionTakenValidator = v.union(
@@ -508,6 +511,7 @@ export const preferencesDocValidator = v.object({
 		chat: v.optional(v.boolean()),
 		enabled: v.boolean(),
 		gentleReturn: v.boolean(),
+		letters: v.optional(v.boolean()),
 		milestone: v.boolean(),
 		patternNudge: v.boolean(),
 		quietWindow: v.optional(
