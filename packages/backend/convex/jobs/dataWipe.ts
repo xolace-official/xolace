@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
 import { purgeReplyEntries } from "../episodicMemory";
+import { wipeLetters } from "../letters/erasure";
 import { rankReplace } from "../lib/aggregates";
 import { purgeSessions } from "../lib/sessionCascade";
 import { drainPromptStates } from "../monthlyEvents/prompt";
@@ -22,6 +23,7 @@ const BATCH_SIZE = 100;
  *          reflection_resonances, notification_log, library_reads,
  *          monthly_event_states, activity_log,
  *          frozen_days, compounding_stretches, steadiness_insights, outreach,
+ *          the letters they sent and received (letters/erasure.ts),
  *          outreach_deliveries, the linked chats' inbound_events, an unused
  *          channel_link_tokens row, and the bot's last 48 h of Telegram
  *          messages (#773)
@@ -144,6 +146,12 @@ export const wipe = internalMutation({
 		// What they chose on a month's prompt is theirs too. The current
 		// month's prompt waits for them again.
 		if (await drainPromptStates(ctx, emotionalProfileId)) {
+			hasMore = true;
+		}
+
+		// ── Letters (B12, decision B) ────────────────────────────────
+		// What they sent and received; the opt-in and day cap stay.
+		if (await wipeLetters(ctx, emotionalProfileId)) {
 			hasMore = true;
 		}
 

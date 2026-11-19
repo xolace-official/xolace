@@ -11,6 +11,7 @@ import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { auditClerkIdOf } from "../letters/erasure";
 import { ensureLetterProfile, letterProfileOf } from "../letters/profiles";
 import { DAY_MS, PAUSE_DAYS, STRIKE_WINDOW_DAYS } from "../letters/rules";
 import { addStrike } from "../letters/strikes";
@@ -38,19 +39,31 @@ async function reviewOf(
 	return { letter: await ctx.db.get("letters", review.letterId), review };
 }
 
+/**
+ * The sender behind a review: the letter's, or the review's own once a wipe
+ * cut them from the letter. `undefined` once they deleted their account.
+ */
+function senderBehind(
+	review: Doc<"letter_reviews">,
+	letter: Doc<"letters"> | null
+): Id<"emotional_profiles"> | undefined {
+	return letter?.senderProfileId ?? review.senderProfileId;
+}
+
 /** The sender behind a review, or `sender_gone` once they deleted their account. */
 async function senderOf(
 	ctx: QueryCtx,
 	reviewId: Id<"letter_reviews">
 ): Promise<Id<"emotional_profiles">> {
-	const { letter } = await reviewOf(ctx, reviewId);
-	if (!letter?.senderProfileId) {
+	const { letter, review } = await reviewOf(ctx, reviewId);
+	const sender = senderBehind(review, letter);
+	if (!sender) {
 		throw new ConvexError({
 			code: "sender_gone",
 			message: "This letter's sender no longer has an account",
 		});
 	}
-	return letter.senderProfileId;
+	return sender;
 }
 
 /** A sender's strikes inside the window, up to `STRIKES_SHOWN_MAX`. */
@@ -85,11 +98,12 @@ export const listQueue = adminQuery({
 		const page = [];
 		for (const review of result.page) {
 			const letter = await ctx.db.get("letters", review.letterId);
+			const sender = senderBehind(review, letter);
 			page.push({
 				createdAt: review.createdAt,
 				kind: review.kind,
-				priorStrikes: letter?.senderProfileId
-					? await strikesOf(ctx, letter.senderProfileId, review.createdAt)
+				priorStrikes: sender
+					? await strikesOf(ctx, sender, review.createdAt)
 					: 0,
 				reviewId: review._id,
 				...(review.reason && { reason: review.reason }),
@@ -130,19 +144,21 @@ async function senderClerkId(
 			q.eq("emotionalProfileId", senderProfileId)
 		)
 		.unique();
-	return user?.authProviderAccountId;
+	return auditClerkIdOf(user);
 }
 
 /**
  * One review's letter, words included. A mutation so every read writes its
  * audit row (which admin, whose words, which review, when). `null` once the
- * letter itself is gone.
+ * letter itself is gone. `closedBy` on a decided review: `"admin"` when a
+ * person decided it, `"account_deleted"` when its sender's deletion closed it
+ * as dismissed.
  */
 export const openReview = adminMutation({
 	args: { reviewId: v.id("letter_reviews") },
 	handler: async (ctx, args) => {
 		const { letter, review } = await reviewOf(ctx, args.reviewId);
-		const target = await senderClerkId(ctx, letter?.senderProfileId);
+		const target = await senderClerkId(ctx, senderBehind(review, letter));
 		await ctx.db.insert("admin_audit_log", {
 			action: "letter_viewed",
 			adminClerkUserId: ctx.identity.subject,
@@ -153,16 +169,24 @@ export const openReview = adminMutation({
 		if (!letter) {
 			return null;
 		}
+		let closedBy: "admin" | "account_deleted" | undefined;
+		if (review.state !== "open") {
+			closedBy = review.decidedBy ? "admin" : "account_deleted";
+		}
 		return {
 			kind: review.kind,
 			state: review.state,
 			text: letter.text,
+			...(closedBy && { closedBy }),
 			...(review.reason && { reason: review.reason }),
 		};
 	},
 	returns: v.union(
 		v.null(),
 		v.object({
+			closedBy: v.optional(
+				v.union(v.literal("admin"), v.literal("account_deleted"))
+			),
 			kind: reviewKindValidator,
 			reason: v.optional(reportReasonValidator),
 			state: v.union(
@@ -221,7 +245,7 @@ export const decide = adminMutation({
 			decidedBy: ctx.identity.subject,
 			state: args.decision === "confirm" ? "confirmed" : "dismissed",
 		});
-		const sender = letter?.senderProfileId;
+		const sender = senderBehind(review, letter);
 		if (args.decision === "confirm" && review.kind === "report" && sender) {
 			await addStrike(ctx, {
 				at: now,

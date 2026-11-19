@@ -124,7 +124,11 @@ export default defineSchema({
 		targetClerkUserId: v.optional(v.string()),
 	})
 		.index("by_target", ["targetClerkUserId", "at"])
-		.index("by_admin", ["adminClerkUserId", "at"]),
+		.index("by_admin", ["adminClerkUserId", "at"])
+		// letter_viewed rows go after a year (letters spec §10).
+		.index("by_action_at", ["action", "at"])
+		// A sender's deletion clears their id from letter_viewed rows.
+		.index("by_action_target", ["action", "targetClerkUserId"]),
 
 	// ===========================================================
 	// AGE DECLARATIONS (#716)
@@ -1553,7 +1557,10 @@ export default defineSchema({
 		createdAt: v.number(),
 		recipientProfileId: v.id("emotional_profiles"),
 		senderProfileId: v.id("emotional_profiles"),
-	}).index("by_pair", ["recipientProfileId", "senderProfileId"]),
+	})
+		.index("by_pair", ["recipientProfileId", "senderProfileId"])
+		// A sender's account deletion (decision B).
+		.index("by_sender", ["senderProfileId"]),
 
 	// One row per person who has answered the offer or sent a letter: the
 	// opt-in, the matching pool state, and the sender's caps. No row = opt-in
@@ -1625,6 +1632,11 @@ export default defineSchema({
 		reason: v.optional(reportReasonValidator),
 		// Cut when the reporter deletes their account (decision B).
 		reporterProfileId: v.optional(v.id("emotional_profiles")),
+		// The sender, once a wipe or their retention setting cut them from the
+		// letter while this review was open (or a report came after their wipe,
+		// from `letters.wipedSenderProfileId`), so a decision can still strike
+		// them. Cleared when they delete their account.
+		senderProfileId: v.optional(v.id("emotional_profiles")),
 		state: v.union(
 			v.literal("open"),
 			v.literal("confirmed"),
@@ -1632,7 +1644,13 @@ export default defineSchema({
 		),
 	})
 		.index("by_state_created", ["state", "createdAt"])
-		.index("by_letter", ["letterId"]),
+		.index("by_letter", ["letterId"])
+		// A reporter's deletion or wipe cuts them from their reports.
+		.index("by_reporter", ["reporterProfileId"])
+		// A sender's deletion closes the reviews a wipe moved them onto.
+		.index("by_sender", ["senderProfileId"])
+		// Reviewed text goes 30 days after the decision (decision B).
+		.index("by_decided", ["decidedAt"]),
 
 	// One row: what the hourly sweep last worked out for every client (§9).
 	letter_stats: defineTable({
@@ -1648,7 +1666,10 @@ export default defineSchema({
 		cause: v.union(v.literal("held"), v.literal("report")),
 		reviewId: v.id("letter_reviews"),
 		senderProfileId: v.id("emotional_profiles"),
-	}).index("by_sender_at", ["senderProfileId", "at"]),
+	})
+		.index("by_sender_at", ["senderProfileId", "at"])
+		// Strikes past `STRIKE_KEEP_DAYS` go (decision B).
+		.index("by_at", ["at"]),
 
 	// ===========================================================
 	// LETTERS (B12, #743)
@@ -1698,6 +1719,11 @@ export default defineSchema({
 		// Held letters only: SHA-256 of the trimmed text, so the same words are
 		// refused again without a model call or a second strike.
 		textHash: v.optional(v.string()),
+		// Server-only: the sender of a received letter their data wipe cut from
+		// it (owner, 19 Nov 2026). Read only by the recipient's hide and report,
+		// so the block is still written and a confirmed report still strikes.
+		// Never returned, thrown or pushed; cleared on the sender's deletion.
+		wipedSenderProfileId: v.optional(v.id("emotional_profiles")),
 	})
 		.index("by_sender_created", ["senderProfileId", "createdAt"])
 		.index("by_sender_status", ["senderProfileId", "status"])
@@ -1705,7 +1731,9 @@ export default defineSchema({
 		.index("by_recipient_received", ["recipientProfileId", "receivedAt"])
 		.index("by_status_checked", ["status", "checkedAt"])
 		// Recent placements, for the invite backlog (§9).
-		.index("by_received", ["receivedAt"]),
+		.index("by_received", ["receivedAt"])
+		// A sender's deletion clears the link their wipe left (decision B).
+		.index("by_wiped_sender", ["wipedSenderProfileId"]),
 
 	library_entries: defineTable({
 		active: v.boolean(),
