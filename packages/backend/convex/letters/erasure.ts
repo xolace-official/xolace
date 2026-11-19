@@ -9,9 +9,9 @@
  * 19 Nov 2026): a wipe or the retention setting moves the sender onto the
  * review, so a person can still strike or clear them; account deletion
  * closes the review as dismissed, and the text then goes on the decided
- * clock (`retention.ts`). A wipe also leaves a server-only link on the
- * letters its recipients keep (`wipedSenderProfileId`), so their hide or
- * report still blocks and can strike; deletion removes it.
+ * clock (`retention.ts`). A wipe or the retention setting also leaves a
+ * server-only link on the letters recipients keep (`wipedSenderProfileId`),
+ * so their hide or report still blocks and can strike; deletion removes it.
  *
  * Every drain removes one bounded batch and says whether it was full, the
  * shape `jobs/accountDeletion.ts` calls each step in.
@@ -19,22 +19,19 @@
 
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { clerkUserIdOf } from "../jobs/clerkUserDeletion";
 import { letterProfileOf } from "./profiles";
 import { ERASE_BATCH as BATCH } from "./rules";
 
 type ProfileId = Id<"emotional_profiles">;
 
 /**
- * The Clerk user id a `letter_viewed` audit row names, from the verified
- * `tokenIdentifier` (`iss|sub`). Not `users.authProviderAccountId`: rows from
- * before that field was server-set can hold a client placeholder (see
- * `jobs/clerkUserDeletion.ts`). Writing and clearing the audit target both go
- * through here, so they always agree.
+ * The Clerk user id a `letter_viewed` audit row names: account deletion's
+ * `clerkUserIdOf`, from the verified `tokenIdentifier`. Writing and clearing
+ * the audit target both go through here, so they always agree.
  */
 export function auditClerkIdOf(user: Doc<"users"> | null): string | undefined {
-	const token = user?.tokenIdentifier;
-	const subject = token?.slice(token.lastIndexOf("|") + 1);
-	return subject?.startsWith("user_") ? subject : undefined;
+	return (user && clerkUserIdOf(user.tokenIdentifier)) ?? undefined;
 }
 
 /** Delete a letter and every review of it. */
@@ -101,9 +98,10 @@ type SenderRelease = "deletion" | "wipe" | "retention";
  * Anything else is the sender's alone (waiting, unchecked, returned, held, or
  * reported and so gone from the recipient) and is deleted, with its reviews.
  *
- * On a wipe, a letter its recipient keeps holds the sender in
+ * On a wipe or retention, a letter its recipient keeps holds the sender in
  * `wipedSenderProfileId`, server-only, so the recipient's hide or report still
- * blocks and can still lead to a strike (owner, 19 Nov 2026).
+ * blocks and can still lead to a strike (owner, 19 Nov 2026). Deletion leaves
+ * no link.
  */
 export async function releaseAsSender(
 	ctx: MutationCtx,
@@ -129,7 +127,7 @@ export async function releaseAsSender(
 	if (recipientKeeps || open.length > 0) {
 		await ctx.db.patch("letters", letter._id, {
 			senderProfileId: undefined,
-			...(how === "wipe" &&
+			...(how !== "deletion" &&
 				recipientKeeps && { wipedSenderProfileId: letter.senderProfileId }),
 		});
 		return;

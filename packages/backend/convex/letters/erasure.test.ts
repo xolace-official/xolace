@@ -569,13 +569,20 @@ describe("a wipe and the recipient's hide or report", () => {
 		if (!reportReview) {
 			throw new Error("no review");
 		}
-		await asAdmin(9, root).mutation(api.admin.letters.decide, {
+		const admin = asAdmin(9, root);
+		await admin.mutation(api.admin.letters.decide, {
 			decision: "confirm",
 			reviewId: reportReview._id,
 		});
 		expect(await allStrikes(root)).toMatchObject([
 			{ cause: "report", senderProfileId: sender.profileId },
 		]);
+		await admin.mutation(api.admin.letters.pauseSender, {
+			reviewId: reportReview._id,
+		});
+		expect(await profileRow(root, sender.profileId)).toMatchObject({
+			pausedBy: "admin",
+		});
 	});
 
 	it("account deletion removes the link a wipe left", async () => {
@@ -597,7 +604,7 @@ describe("a wipe and the recipient's hide or report", () => {
 		expect(await allBlocks(root)).toEqual([]);
 	});
 
-	it("the retention setting leaves no link", async () => {
+	it("the retention setting keeps the link, so a later hide still blocks", async () => {
 		const { reader, root, sender } = await pair();
 		const received = await letter(root, {
 			recipientProfileId: reader.profileId,
@@ -610,9 +617,18 @@ describe("a wipe and the recipient's hide or report", () => {
 				await releaseAsSender(ctx, row, "retention");
 			}
 		});
-		expect(
-			(await get(root, "letters", received))?.wipedSenderProfileId
-		).toBeUndefined();
+		expect(await get(root, "letters", received)).toMatchObject({
+			wipedSenderProfileId: sender.profileId,
+		});
+		expect((await ends(root, received))?.sender).toBeUndefined();
+
+		await reader.t.mutation(api.letters.received.hide, { id: received });
+		expect(await allBlocks(root)).toMatchObject([
+			{
+				recipientProfileId: reader.profileId,
+				senderProfileId: sender.profileId,
+			},
+		]);
 	});
 });
 
