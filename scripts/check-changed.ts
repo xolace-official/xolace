@@ -32,7 +32,7 @@ import {
  * Every branch is cut from dev, so dev is the base; main only as a last resort
  * (a clone without dev). origin/dev first: it is what the PR is compared with.
  */
-export const DEFAULT_BASE_CANDIDATES = [
+const DEFAULT_BASE_CANDIDATES = [
 	"origin/dev",
 	"dev",
 	"origin/main",
