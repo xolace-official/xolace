@@ -1,23 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { Presets } from "react-native-pulsar";
 import {
+	useAnimatedReaction,
 	useSharedValue,
 	withSequence,
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
-import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
+import { scheduleOnRN } from "react-native-worklets";
+import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { playAffirmativePress, tap } from "@/lib/haptics";
-import { useClock } from "@/lib/motion/clock";
+import { useClock, useLive } from "@/lib/motion/clock";
 import { KMOTION } from "../kindling-motion";
+import { type Alarm, dueAt, NEVER, nextOf, withoutLeg } from "./alarms";
 import { arrivalOf, type Burn, END, lifeOf, planBurn, planCatch } from "./burn";
 import { EMBERS_S } from "./burn-art";
 import type { Trail } from "./trail-geometry";
 
 const NO_LEG = -1;
 /** Drop a finished burn a beat after its last particle. */
-const DROP_MS = 100;
-const S = 1000;
+const DROP_S = 0.1;
 /** Flux lifts as the fire catches: 1 → 1.06 → 1 over 700 ms. */
 const LIFT = { ms: 700, rise: 0.4, spring: 0.6, to: 1.06 } as const;
 /**
@@ -39,10 +41,15 @@ type Args = {
  * The trail's UI-thread state (handoff §4, §5): one clock, which runs only while the dashes march,
  * a spark burns or embers rise; the burns in flight; Reduce Motion's gold fade; Flux's lift as
  * the fire catches. JS only schedules; every frame is drawn from these values.
+ *
+ * What a tend does later (the spark landing, the burn dropping, the embers going out) is an alarm
+ * on that clock, not a JS timer: away from the screen the clock stops, so it waits and plays on
+ * return. `fxTime` follows the clock only while something burns, so the sparks layer and the gold
+ * do no work on frames where only the dashes march.
  */
 export function useTend({ trail, live, reduced, waiting }: Args) {
 	const burns = useSharedValue<Burn[]>([]);
-	const list = useRef<Burn[]>([]);
+	const listRef = useRef<Burn[]>([]);
 	/** The trail clock when the embers began rising (−1: none). */
 	const embersAt = useSharedValue(-1);
 	const lift = useSharedValue(1);
@@ -55,34 +62,73 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 		undefined,
 		moving ? undefined : MARCH_FPS
 	);
+	const fxTime = useSharedValue(0);
 	const motion = live && !reduced;
-
-	const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-	const later = (ms: number, fn: () => void) => {
-		timers.current.push(setTimeout(fn, ms));
+	// A haptic plays only while the screen is in front (Reduce Motion's fade runs on JS timers).
+	const front = useLive(false);
+	const frontRef = useRef(front);
+	useEffect(() => {
+		frontRef.current = front;
+	});
+	const feel = (play: () => void) => {
+		if (frontRef.current) {
+			play();
+		}
 	};
+
+	const alarms = useRef<Alarm[]>([]);
+	const nextAt = useSharedValue(NEVER);
+	const setAlarms = (list: Alarm[]) => {
+		alarms.current = list;
+		nextAt.set(nextOf(list));
+	};
+	const at = (alarm: Alarm) => setAlarms([...alarms.current, alarm]);
+	const ring = (t: number) => {
+		const { due, rest } = dueAt(alarms.current, t);
+		setAlarms(rest);
+		for (const a of due) {
+			a.ring();
+		}
+	};
+	useAnimatedReaction(
+		() => time.get(),
+		(t) => {
+			if (burns.get().length > 0 || embersAt.get() >= 0) {
+				fxTime.set(t);
+			}
+			if (t >= nextAt.get()) {
+				nextAt.set(NEVER);
+				scheduleOnRN(ring, t);
+			}
+		}
+	);
+	// Reduce Motion's gold fade has no clock: a JS timer per tended stop.
+	const fades = useRef(new Map<number, ReturnType<typeof setTimeout>>());
 	useEffect(
 		() => () => {
-			for (const id of timers.current) {
+			for (const id of fades.current.values()) {
 				clearTimeout(id);
 			}
 		},
 		[]
 	);
 
+	const setBurns = (list: Burn[]) => {
+		listRef.current = list;
+		burns.set(list);
+		setFlying(list.length);
+	};
 	const push = (burn: Burn) => {
-		list.current = [...list.current, burn];
-		burns.set(list.current);
-		setFlying((n) => n + 1);
-		later(lifeOf(burn) * S + DROP_MS, () => {
-			list.current = list.current.filter((b) => b !== burn);
-			burns.set(list.current);
-			setFlying((n) => n - 1);
+		setBurns([...listRef.current, burn]);
+		at({
+			at: burn.t0 + lifeOf(burn) + DROP_S,
+			leg: burn.leg,
+			ring: () => setBurns(listRef.current.filter((b) => b !== burn)),
 		});
 	};
 
 	const catchFire = () => {
-		playAffirmativePress();
+		feel(playAffirmativePress);
 		if (!motion) {
 			return;
 		}
@@ -100,11 +146,15 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 				})
 			)
 		);
-		embersAt.set(time.get());
+		const t = time.get();
+		embersAt.set(t);
 		setEmbering(true);
-		later(EMBERS_S * S, () => {
-			embersAt.set(-1);
-			setEmbering(false);
+		at({
+			at: t + EMBERS_S,
+			ring: () => {
+				embersAt.set(-1);
+				setEmbering(false);
+			},
 		});
 	};
 
@@ -113,27 +163,54 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 		if (!motion) {
 			fade.leg.set(i);
 			fade.t.set(0);
-			const ms = reduced ? REDUCED_FADE_MS : KMOTION.goldMs;
-			fade.t.set(withTiming(1, { duration: ms, ...PLAY_AS_CHOSEN }));
-			later(ms, () => {
-				if (toFire) {
-					catchFire();
-				}
-				onArrive();
-			});
+			fade.t.set(
+				withTiming(1, { duration: KMOTION.goldMs, ...PLAY_AS_CHOSEN })
+			);
+			fades.current.set(
+				i,
+				setTimeout(() => {
+					fades.current.delete(i);
+					if (toFire) {
+						catchFire();
+					}
+					onArrive();
+				}, KMOTION.goldMs)
+			);
 			return;
 		}
 		const burn = planBurn(trail, i, time.get(), toFire);
 		push(burn);
-		tap();
-		later(arrivalOf(burn) * S, () => {
-			if (burn.end === END.catch) {
-				catchFire();
-			} else if (burn.end === END.stop) {
-				Presets.dewdrop();
-			}
-			onArrive();
+		feel(tap);
+		at({
+			at: burn.t0 + arrivalOf(burn),
+			leg: i,
+			ring: () => {
+				if (burn.end === END.catch) {
+					catchFire();
+				} else if (burn.end === END.stop) {
+					feel(Presets.dewdrop);
+				}
+				onArrive();
+			},
 		});
+	};
+
+	/**
+	 * The server refused stop i's tend: its burn goes, with its landing (and so any catch) and its
+	 * drop, and Reduce Motion's gold goes back.
+	 */
+	const cancel = (i: number) => {
+		setBurns(withoutLeg(listRef.current, i));
+		setAlarms(withoutLeg(alarms.current, i));
+		const fadeTimer = fades.current.get(i);
+		if (fadeTimer !== undefined) {
+			clearTimeout(fadeTimer);
+			fades.current.delete(i);
+		}
+		if (fade.leg.get() === i) {
+			fade.leg.set(NO_LEG);
+			fade.t.set(1);
+		}
 	};
 
 	/** The last waiting twig was passed: the fire catches where it is, with no run (§5). */
@@ -144,7 +221,17 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 		catchFire();
 	};
 
-	return { burns, catchInPlace, embersAt, fade, lift, tend, time };
+	return {
+		burns,
+		cancel,
+		catchInPlace,
+		embersAt,
+		fade,
+		fxTime,
+		lift,
+		tend,
+		time,
+	};
 }
 
 export type Tend = ReturnType<typeof useTend>;
