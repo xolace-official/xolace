@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { type LayoutChangeEvent, View } from "react-native";
 import {
 	Tabs,
@@ -14,10 +14,10 @@ import { WeekCard } from "@/features/you/home/week/week-card";
 import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useScrollCommand } from "./use-scroll-command";
 
 const UNDER_PILLS = 12;
 const PAST_DOCK = 2;
-const SCROLL_AFTER_MS = 220;
 const TAB_BAR_ROOM = 110;
 
 export function InsightsTab({ minHeader }: { minHeader: number }) {
@@ -28,31 +28,18 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 	const { scrollRef } = useTabPageContext();
 	const { collapseRangeSV, tabBarHeight } = useCollapsingTabsContext();
 	const cardY = useRef({ days: 0, top: 0, week: 0 });
-	const tabBar = useRef(tabBarHeight);
-	useEffect(() => {
-		tabBar.current = tabBarHeight;
-	}, [tabBarHeight]);
 	const measure = (card: "days" | "week") => (e: LayoutChangeEvent) => {
 		cardY.current[card] = e.nativeEvent.layout.y;
 	};
 
-	useEffect(() => {
-		if (!scrollTo) {
-			return;
-		}
-		const timer = setTimeout(() => {
-			const dock = collapseRangeSV.get() + PAST_DOCK;
-			const y = Math.max(
-				dock,
-				cardY.current[scrollTo.target] -
-					minHeader -
-					tabBar.current -
-					UNDER_PILLS
-			);
-			scrollRef.current?.scrollTo({ animated: !reduced, y });
-		}, SCROLL_AFTER_MS);
-		return () => clearTimeout(timer);
-	}, [scrollTo, collapseRangeSV, minHeader, scrollRef, reduced]);
+	useScrollCommand(scrollTo, (target) => {
+		const dock = collapseRangeSV.get() + PAST_DOCK;
+		const y = Math.max(
+			dock,
+			cardY.current[target] - minHeader - tabBarHeight - UNDER_PILLS
+		);
+		scrollRef.current?.scrollTo({ animated: !reduced, y });
+	});
 
 	return (
 		<Tabs.ScrollView

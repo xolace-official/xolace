@@ -3,7 +3,7 @@ import { validateSpaceName } from "@xolace/backend/convex/lib/spaceName";
 import type { Id } from "@xolace/backend/dataModel";
 import { useMutation } from "convex/react";
 import { type Href, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Linking } from "react-native";
 import { toast } from "@/components/shared/toast";
 import { useFullContext } from "@/lib/convex/use-full-context";
@@ -33,10 +33,6 @@ export function useWhereNext(m: Machine) {
 	const clearReplySeed = useAppStore((s) => s.clearReplySeed);
 	const [heard, setHeard] = useState<Id<"sessions"> | null>(null);
 	const endHref = useSessionEndHref(heard);
-	const screen = useRef(m.state.screen);
-	useEffect(() => {
-		screen.current = m.state.screen;
-	});
 	const going = useSingleFlight();
 
 	if (heard && m.state.screen === "error") {
@@ -72,8 +68,10 @@ export function useWhereNext(m: Machine) {
 				await m.handleSelectExit();
 				return;
 			}
-			await (path === "solo" ? m.handleSelectSolo() : m.handleSelectPeers());
-			if (screen.current !== "error") {
+			const selected = await (path === "solo"
+				? m.handleSelectSolo()
+				: m.handleSelectPeers());
+			if (selected) {
 				router.replace(ACTIVITY[path]);
 			}
 		});

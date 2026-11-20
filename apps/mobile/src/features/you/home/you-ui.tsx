@@ -1,11 +1,13 @@
 import {
 	createContext,
 	type ReactNode,
+	type RefObject,
 	use,
 	useEffect,
 	useRef,
 	useState,
 } from "react";
+import type { CollapsingTabsRef } from "react-native-collapsible-tab";
 
 const RING_MS = 2600;
 
@@ -32,8 +34,8 @@ type YouUi = {
 	tapWeek: () => void;
 	scrollTo: { target: ScrollTarget; key: number } | null;
 	weekHeld: number | null;
-
-	tab: { name: YouTab; key: number } | null;
+	startTab: YouTab | undefined;
+	tabs: RefObject<CollapsingTabsRef | null>;
 };
 
 const UiContext = createContext<YouUi | null>(null);
@@ -51,9 +53,7 @@ export function YouUiProvider({
 		const target = startTarget(start);
 		return target ? { key: 1, target } : null;
 	});
-	const [tab, setTab] = useState<YouUi["tab"]>(
-		start?.tab ? { key: 0, name: start.tab } : null
-	);
+	const tabs = useRef<CollapsingTabsRef>(null);
 	const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 	useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -61,12 +61,12 @@ export function YouUiProvider({
 		closeTip: () => setTip((t) => (t.open ? { ...t, open: false } : t)),
 		placeTip: (top) => setTip((t) => (t.top === top ? t : { ...t, top })),
 		scrollTo,
-		tab,
+		startTab: start?.tab,
+		tabs,
 		tapWeek: () => {
-			const key = Date.now();
 			setTip((t) => ({ ...t, open: false }));
-			setTab({ key, name: "insights" });
-			setScrollTo({ key, target: "days" });
+			tabs.current?.jumpToTab("insights", false);
+			setScrollTo({ key: Date.now(), target: "days" });
 			setWeekRing(true);
 			clearTimeout(timer.current);
 			timer.current = setTimeout(() => setWeekRing(false), RING_MS);

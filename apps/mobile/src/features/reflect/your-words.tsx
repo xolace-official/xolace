@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useRef } from "react";
 import { View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
@@ -31,13 +31,17 @@ export function YourWords({ lift, at, children }: Props) {
 	const { liftFrom, reduced } = useReflectDraw();
 	const { state } = useReflect();
 	const sent = state.yourWords.map(([t]) => t).join("");
-	const [textY, setTextY] = useState<number | null>(null);
+	const laidOut = useRef(false);
 	const flying = lift && !reduced;
 	const p = useSharedValue(flying ? 0 : 1);
 	const from = useSharedValue({ dx: 0, dy: DEFAULT_DROP });
 
-	useEffect(() => {
-		if (!flying || textY === null) {
+	const liftOff = (textY: number) => {
+		if (laidOut.current) {
+			return;
+		}
+		laidOut.current = true;
+		if (!flying) {
 			return;
 		}
 		const f = liftFrom.get();
@@ -51,7 +55,7 @@ export function YourWords({ lift, at, children }: Props) {
 				withSpring(1, { ...FLY.spring, ...PLAY_AS_CHOSEN })
 			)
 		);
-	}, [flying, textY, liftFrom, from, p, at.x, at.y]);
+	};
 
 	const fly = useAnimatedStyle(() => {
 		const q = p.get();
@@ -90,7 +94,7 @@ export function YourWords({ lift, at, children }: Props) {
 				<PickedChips words={state.sentPicks} />
 			</Animated.View>
 			<Animated.View
-				onLayout={(e) => textY === null && setTextY(e.nativeEvent.layout.y)}
+				onLayout={(e) => liftOff(e.nativeEvent.layout.y)}
 				style={fly}
 			>
 				{children ??

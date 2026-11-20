@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { COPY } from "../../copy";
 import { reportFailure } from "../../session/report-failure";
@@ -27,17 +27,19 @@ export function useDictationTakes(m: Machine, text: string) {
 		}
 	}, [upsellOpen]);
 
-	const { isRecording, startVoiceFromTyping } = m;
-	useEffect(() => {
-		if (!isRecording) {
-			return;
-		}
+	const stopReleasedTake = useEffectEvent(() => {
 		starting.current = false;
 		if (stopOnStart.current) {
 			stopOnStart.current = false;
-			void startVoiceFromTyping();
+			void m.startVoiceFromTyping();
 		}
-	}, [isRecording, startVoiceFromTyping]);
+	});
+	const { isRecording } = m;
+	useEffect(() => {
+		if (isRecording) {
+			stopReleasedTake();
+		}
+	}, [isRecording]);
 
 	return {
 		cancel: () => {

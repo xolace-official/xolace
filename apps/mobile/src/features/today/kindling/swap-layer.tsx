@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useEffectEvent } from "react";
 import Animated, {
 	Easing,
 	useAnimatedStyle,
@@ -21,8 +21,8 @@ type Props = {
 export function SwapLayer({ out, fadeIn, reduced, children }: Props) {
 	const opacity = useSharedValue(fadeIn ? 0 : 1);
 	const leaving = out !== null;
-	useEffect(() => {
-		if (leaving) {
+	const fade = useEffectEvent((out: boolean) => {
+		if (out) {
 			opacity.set(
 				withTiming(0, {
 					duration: reduced ? REDUCED_FADE_MS : SWAP.outMs,
@@ -35,13 +35,16 @@ export function SwapLayer({ out, fadeIn, reduced, children }: Props) {
 		if (opacity.get() === 1) {
 			return;
 		}
-		const fade = withTiming(1, {
+		const fadeIn = withTiming(1, {
 			duration: reduced ? REDUCED_FADE_MS : SWAP.inMs,
 			easing: EASE_OUT,
 			...PLAY_AS_CHOSEN,
 		});
-		opacity.set(reduced ? fade : withDelay(SWAP.inAt, fade));
-	}, [leaving, opacity]);
+		opacity.set(reduced ? fadeIn : withDelay(SWAP.inAt, fadeIn));
+	});
+	useEffect(() => {
+		fade(leaving);
+	}, [leaving]);
 	const style = useAnimatedStyle(() => ({ opacity: opacity.get() }));
 
 	return (

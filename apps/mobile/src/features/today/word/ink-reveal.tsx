@@ -1,5 +1,5 @@
 import { Canvas, RadialGradient, Rect, vec } from "@shopify/react-native-skia";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
 import {
 	useDerivedValue,
 	useSharedValue,
@@ -29,18 +29,12 @@ export function InkReveal({ w, h, cover, onCovered, onDone }: Props) {
 	const r = useSharedValue(0);
 	const reach = Math.hypot(w * (1 - ORIGIN.x), h * ORIGIN.y);
 
-	const done = useRef(onDone);
-	useEffect(() => {
-		done.current = onDone;
-	});
-	const covered = useRef(onCovered);
-	useEffect(() => {
-		covered.current = onCovered;
-	});
+	const done = useEffectEvent(onDone);
+	const covered = useEffectEvent(onCovered);
 	useEffect(() => {
 		let second = 0;
 		const first = requestAnimationFrame(() => {
-			second = requestAnimationFrame(() => covered.current());
+			second = requestAnimationFrame(() => covered());
 		});
 		return () => {
 			cancelAnimationFrame(first);
@@ -49,7 +43,7 @@ export function InkReveal({ w, h, cover, onCovered, onDone }: Props) {
 	}, []);
 
 	useEffect(() => {
-		const finish = () => done.current();
+		const finish = () => done();
 		r.set(
 			withDelay(
 				DELAY_MS,

@@ -1,9 +1,8 @@
 import Settings from "@expo/material-symbols/settings.xml";
 import { Stack } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
-import { useEffect, useRef } from "react";
 import { View } from "react-native";
-import { type CollapsingTabsRef, Tabs } from "react-native-collapsible-tab";
+import { Tabs } from "react-native-collapsible-tab";
 import { COPY } from "@/features/you/copy";
 import { FollowUpsTab } from "@/features/you/home/follow-ups/follow-ups-tab";
 import { YouHeader } from "@/features/you/home/header/you-header";
@@ -20,15 +19,8 @@ const FOLLOW_UPS: YouTab = "follow-ups";
 export function YouScreen() {
 	const header = useHeaderOptions("small");
 	const headerHeight = useHeaderHeight();
-	const tabs = useRef<CollapsingTabsRef>(null);
 	const { state, actions } = useYouHome();
-	const { tab } = useYouUi();
-
-	useEffect(() => {
-		if (tab) {
-			tabs.current?.jumpToTab(tab.name, false);
-		}
-	}, [tab]);
+	const { startTab, tabs } = useYouUi();
 
 	return (
 		<View className="flex-1 bg-background">
@@ -51,7 +43,7 @@ export function YouScreen() {
 			{headerHeight > 0 ? (
 				<Tabs.Container
 					headerBackgroundColor="transparent"
-					initialTabName={tab?.name}
+					initialTabName={startTab}
 					minHeaderHeight={headerHeight}
 					ref={tabs}
 					renderHeader={() => <YouHeader topBarHeight={headerHeight} />}

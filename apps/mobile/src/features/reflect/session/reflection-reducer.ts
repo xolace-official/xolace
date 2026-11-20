@@ -2,6 +2,7 @@ import type {
 	EntryType,
 	ReflectionAction,
 	ReflectionState,
+	TypingClock,
 } from "@/features/reflect/session/types";
 import { MAX_TEXTURES } from "@/features/reflect/texture-sets";
 import { joinDictation } from "@/lib/speech/dictation-transcript";
@@ -16,7 +17,43 @@ export const initialState: ReflectionState = {
 	missReason: null,
 	screen: "idle",
 	selectedTextures: [],
+	typing: { froze: false, frozeAt: null, frozeMs: undefined, startedAt: null },
 };
+
+/** `reducer`, plus the typing clock, stamped with when the action was dispatched. */
+export function timedReducer(
+	state: ReflectionState,
+	action: ReflectionAction & { at: number }
+): ReflectionState {
+	const next = reducer(state, action);
+	if (next.screen === state.screen) {
+		return next;
+	}
+	const typing = clockTyping(next.typing, next.screen, action.at);
+	return typing === next.typing ? next : { ...next, typing };
+}
+
+function clockTyping(
+	clock: TypingClock,
+	screen: ReflectionState["screen"],
+	at: number
+): TypingClock {
+	if (screen === "typing-nudge") {
+		return { ...clock, froze: true, frozeAt: at };
+	}
+	if (screen !== "typing") {
+		return clock;
+	}
+	const resumed =
+		clock.frozeAt === null
+			? clock
+			: {
+					...clock,
+					frozeAt: null,
+					frozeMs: (clock.frozeMs ?? 0) + (at - clock.frozeAt),
+				};
+	return resumed.startedAt === null ? { ...resumed, startedAt: at } : resumed;
+}
 
 export function reducer(
 	state: ReflectionState,

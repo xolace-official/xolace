@@ -140,7 +140,6 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 					current={kin.current}
 					nodes={geo.nodes}
 					onPeek={kin.peekAt}
-					peek={kin.peek}
 					shown={kin.shown}
 					twigs={kindling.twigs}
 				/>

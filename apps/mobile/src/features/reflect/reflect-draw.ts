@@ -9,7 +9,6 @@ export type ReflectDraw = {
 	light: LightValues;
 	liftFrom: SharedValue<{ x: number; y: number }>;
 	low: boolean;
-	setLow: (low: boolean) => void;
 };
 
 export const ReflectDrawContext = createContext<ReflectDraw | null>(null);

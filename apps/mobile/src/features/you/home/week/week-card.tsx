@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { COPY } from "@/features/you/copy";
@@ -28,15 +28,10 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 	const { fontScale } = useWindowDimensions();
 	const [info, setInfo] = useState(false);
 	const [held, setHeld] = useState<number | null>(weekHeld);
-	const seen = useRef(false);
-	const { weekSeen } = actions;
-
+	const seen = useEffectEvent(actions.weekSeen);
 	useEffect(() => {
-		if (!seen.current) {
-			seen.current = true;
-			weekSeen();
-		}
-	}, [weekSeen]);
+		seen();
+	}, []);
 
 	const current = week.offset === 0;
 	const sentence = weekSentence({

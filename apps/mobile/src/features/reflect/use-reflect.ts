@@ -6,6 +6,7 @@ import {
 import { useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
+import { Presets } from "react-native-pulsar";
 import { toast } from "@/components/shared/toast";
 import { useSessionMode } from "@/context/session-mode-context";
 import { usePaywall } from "@/features/purchases/use-paywall";
@@ -161,7 +162,9 @@ export function useReflectData(): Reflect {
 					return;
 				}
 				setUi((u) => ({ ...u, pickMode: false, sel: line }));
-				m.handleNotQuite();
+				if (m.handleNotQuite()) {
+					Presets.wobble();
+				}
 			},
 			openHelp: next.openHelp,
 			openResource: next.openResource,
@@ -182,7 +185,13 @@ export function useReflectData(): Reflect {
 			resourcesSeen: () => void m.handleEscalationContinue(),
 			retry: () => void m.handleRetry(),
 			saveSpaceName: next.saveSpaceName,
-			sayMore: () => (talk ? talk.open() : m.handleSayMore()),
+			sayMore: () => {
+				if (talk) {
+					talk.open();
+				} else if (m.handleSayMore()) {
+					Presets.wobble();
+				}
+			},
 			seePlus: () => openPaywall("rate_limit"),
 			send: () => {
 				const words = s.entryText.trim();

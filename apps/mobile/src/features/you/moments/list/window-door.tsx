@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
@@ -34,9 +34,10 @@ export function WindowDoor({
 }) {
 	const { bottom } = useSafeAreaInsets();
 	const reduced = useEffectiveReducedMotion();
+	const seen = useEffectEvent(onSeen);
 	useEffect(() => {
-		onSeen();
-	}, [onSeen]);
+		seen();
+	}, []);
 	return (
 		// Glass stops rendering under an animated opacity, so the fade runs only where there is
 		// no glass. Ease ignores Reduce Motion: reduced, it's simply there.

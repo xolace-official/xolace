@@ -1,5 +1,4 @@
 import { useIsFocused } from "expo-router";
-import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import Animated, {
@@ -20,9 +19,8 @@ import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { useToday } from "../today-data";
 import { easeOutFn } from "../today-motion";
+import { useStreakIgnite } from "./use-streak-ignite";
 
-const SETTLE_MS = 450;
-const ROLL_AFTER_MS = 150;
 const IGNITE_MS = 900;
 const GLOW_MS = 1300;
 const GLOW: readonly (readonly [number, number])[] = [
@@ -47,41 +45,24 @@ export function StreakChip({ clock, running, elevated, reduced }: Props) {
 	const still = useSharedValue(0);
 	const glow = useSharedValue(1);
 	const count = state.streak?.count ?? 0;
-	const igniteKey = state.streak?.igniteKey ?? 0;
-	const seen = useRef(igniteKey);
-	const [shown, setShown] = useState(count);
-
-	useEffect(() => {
-		if (!focused) {
-			return;
-		}
-		if (igniteKey === seen.current) {
-			setShown(count);
-			return;
-		}
-		seen.current = igniteKey;
-		const timers = [
-			setTimeout(() => {
-				if (!elevated) {
-					playSessionComplete();
-				}
-				if (reduced) {
-					return;
-				}
-				const linear = { easing: Easing.linear, ...PLAY_AS_CHOSEN };
-				ignite.set(0);
-				ignite.set(withTiming(1, { duration: IGNITE_MS, ...linear }));
-				glow.set(0);
-				glow.set(withTiming(1, { duration: GLOW_MS, ...linear }));
-			}, SETTLE_MS),
-			setTimeout(() => setShown(count), SETTLE_MS + ROLL_AFTER_MS),
-		];
-		return () => {
-			for (const id of timers) {
-				clearTimeout(id);
+	const shown = useStreakIgnite({
+		count,
+		focused,
+		igniteKey: state.streak?.igniteKey ?? 0,
+		play: () => {
+			if (!elevated) {
+				playSessionComplete();
 			}
-		};
-	}, [igniteKey, elevated, focused, glow, ignite, reduced, count]);
+			if (reduced) {
+				return;
+			}
+			const linear = { easing: Easing.linear, ...PLAY_AS_CHOSEN };
+			ignite.set(0);
+			ignite.set(withTiming(1, { duration: IGNITE_MS, ...linear }));
+			glow.set(0);
+			glow.set(withTiming(1, { duration: GLOW_MS, ...linear }));
+		},
+	});
 
 	const glowStyle = useAnimatedStyle(() => ({
 		opacity: keyframes(glow.get(), GLOW, easeOutFn),

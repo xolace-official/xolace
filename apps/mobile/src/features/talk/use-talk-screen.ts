@@ -72,24 +72,21 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 		}
 	});
 	useEffect(() => startReopened(), []);
-	useEffect(() => {
-		if (talk.error) {
-			justEnded.current = false;
+	// Only an error that arrives after "Just end" cancels the toast: one from earlier in the
+	// talk stays set until the next start.
+	const errorAtEnd = useRef<string | null>(null);
+	const leave = useEffectEvent(() => {
+		if (justEnded.current && talk.error === errorAtEnd.current) {
+			toast(TALK_COPY.live.ended);
 		}
-	}, [talk.error]);
-	useEffect(
-		() => () => {
-			if (justEnded.current) {
-				toast(TALK_COPY.live.ended);
-			}
-		},
-		[]
-	);
+	});
+	useEffect(() => () => leave(), []);
 
 	return {
 		actions: {
 			begin: () =>
 				void runStart(async () => {
+					justEnded.current = false;
 					setStartError(null);
 					preview.stop();
 					if (isLow(week) || talk.started) {
@@ -116,6 +113,7 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			},
 			justEnd() {
 				justEnded.current = true;
+				errorAtEnd.current = talk.error;
 				talk.endWithoutMirror();
 			},
 			openHelp: () => router.push("/crisis-resources?from=talk"),

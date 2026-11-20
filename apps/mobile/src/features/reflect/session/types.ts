@@ -46,6 +46,14 @@ export type ReflectionAction =
 	| { type: "BACK_TO_MIRROR" }
 	| { type: "CLEAR_TEXTURES" };
 
+/** When writing started and how long the typing nudge held it, for the submit's telemetry. */
+export type TypingClock = {
+	startedAt: number | null;
+	froze: boolean;
+	frozeAt: number | null;
+	frozeMs: number | undefined;
+};
+
 export interface ReflectionState {
 	clarifyText: string;
 	entryText: string;
@@ -56,4 +64,5 @@ export interface ReflectionState {
 	missReason: MissReason | null;
 	screen: ReflectionStateName;
 	selectedTextures: string[];
+	typing: TypingClock;
 }
