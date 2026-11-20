@@ -4,6 +4,18 @@ All notable changes to Xolace are documented here.
 
 ---
 
+## [1.17.0] - Unreleased
+
+### Added
+
+- **What's New and a rating ask** — the first plain open after an update shows that release's notes, once. A "Help someone find Xolace" screen may follow, or come on its own after a session that ended lighter or the same: it asks the store for a rating, links to writing a review, and has a Tell us form for anything that's not quite right. It waits while someone is hurting (a much heavier session or check-in in the last 48 hours, a heavier follow-up still open, Get help now in the last 7 days), shows at most once every 90 days, and not for a year after a rating or review. Settings has a What's new row (#884).
+
+### Changed
+
+- **One What's New** — the shake menu's "What's new" opens the same screen, showing only the newest release instead of the whole history (#884).
+
+---
+
 ## [1.16.0] - Unreleased
 
 ### Added
