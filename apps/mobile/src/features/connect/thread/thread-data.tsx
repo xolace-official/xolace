@@ -13,7 +13,7 @@ export type ReportSubject = {
 	conversationId?: Id<"xolacer_conversations">;
 };
 
-/** The concern tray, handed in by the route: the tray is its own feature. */
+/** The feedback sheet, opened by the route: it is its own feature. */
 export type ReportTo = (subject: ReportSubject) => void;
 
 export type ThreadState =

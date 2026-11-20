@@ -8,6 +8,9 @@ vi.mock("@/features/achievements/arrival/arrivals-host", () => ({
 vi.mock("@/features/player/now-playing/now-playing-host", () => ({
 	NowPlayingHost: () => null,
 }));
+vi.mock("@/features/feedback/shake/feedback-shake", () => ({
+	FeedbackShake: () => null,
+}));
 vi.mock("@/features/connect/age-gate/age-ask-host", () => ({
 	AgeAskHost: () => null,
 }));

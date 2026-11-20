@@ -6,7 +6,7 @@ import { useObserve } from "expo-observe";
 import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect } from "react";
 import { View } from "react-native";
-import { useFeedbackShake } from "@/features/feedback-tray/feedback-tray-provider";
+import { useFeedbackShake } from "@/features/feedback/shake/use-feedback-shake";
 import { echoOf } from "@/features/intake/v2/heard";
 import { ReflectData, useReflect } from "@/features/reflect/reflect-data";
 import { ReflectScreen } from "@/features/reflect/reflect-screen";

@@ -9,21 +9,20 @@ import { useConvexAuth } from "convex/react";
 import { Observe, ObserveRoot } from "expo-observe";
 import { Stack, useGlobalSearchParams, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Settings } from "react-native-pulsar";
-import {
-	UpdateBottomSheet,
-	type UpdateBottomSheetMode,
-} from "@/components/shared/update-bottom-sheet";
 import { useLaunchFonts } from "@/design/fonts";
+import { useUpdatePrompt } from "@/features/app-update/use-update-prompt";
 import { LaunchCover } from "@/features/launch/launch-cover";
 import { LaunchHold } from "@/features/launch/launch-hold";
+import { useLaunchRevealed } from "@/features/launch/launch-store";
+import { isPresentedRoute } from "@/features/navigation/presented-routes";
 import { isGroupOpen, rootGate } from "@/features/navigation/root-gate";
 import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
-import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
-import { useVersionCheck } from "@/helpers/hooks/use-version-check";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import { fitSheet } from "@/lib/root-screen";
 import { OBSERVE_FILTERED_PARAMS, screenName } from "@/lib/screen-name";
 import { ChatLocalDataGuard } from "@/lib/stream-chat/chat-local-data-guard";
 import { usePostHogIdentity } from "@/lib/use-posthog-identity";
@@ -90,6 +89,21 @@ const NO_HEADER = { headerShown: false };
 // replacement reads as a push into home, so group swaps cut instead.
 const ROOT_SCREEN_OPTIONS = { animation: "none", headerShown: false } as const;
 
+/** The update notice, the root's own sheet, on the redesign's form sheet. It is a root route
+ * because it opens signed out too. It slides up as sheets do: the root's `animation: "none"` is for group swaps only. */
+function useRootSheet() {
+	const surface = useThemeColor("surface");
+	return {
+		...fitSheet({
+			background: "",
+			liquidGlass: false,
+			reducedMotion: false,
+			surface,
+		}),
+		animation: "default",
+	} as const;
+}
+
 const AppContent = () => {
 	const introSeen = useAppStore((s) => s.introSeen);
 	const seatHeld = useAppStore((s) => s.seatHeld);
@@ -115,6 +129,15 @@ const AppContent = () => {
 		onboardingComplete,
 		seatHeld,
 	});
+	const pathname = usePathname();
+	const revealed = useLaunchRevealed();
+	// A root sheet can't present over a group's own sheet or modal, so the notice waits for it.
+	useUpdatePrompt({
+		gateLoading: gate === "loading",
+		presented: isPresentedRoute(pathname),
+		revealed,
+	});
+	const rootSheet = useRootSheet();
 
 	// Breadcrumb the route-group guard's inputs: a wrong (first-run) landing on a cold
 	// start is either a Clerk cache miss or a Clerk/Convex desync.
@@ -148,7 +171,6 @@ const AppContent = () => {
 		onboardingComplete,
 		seatHeld,
 	]);
-	const pathname = usePathname();
 	const params = useGlobalSearchParams();
 	const previousPathname = useRef<string | undefined>(undefined);
 
@@ -184,6 +206,7 @@ const AppContent = () => {
 				<Stack.Protected guard={isGroupOpen(gate, "(protected)")}>
 					<Stack.Screen name="(protected)" options={NO_HEADER} />
 				</Stack.Protected>
+				<Stack.Screen name="update" options={rootSheet} />
 			</Stack>
 		</>
 	);
@@ -191,37 +214,6 @@ const AppContent = () => {
 
 /** `NavThemeProvider` must sit inside `RootProvider`, which owns the theme context it reads. */
 function RootLayout() {
-	const setIsVersionChecked = useAppStore((s) => s.setIsVersionChecked);
-	const setIsNewVersionAvailable = useAppStore(
-		(s) => s.setIsNewVersionAvailable
-	);
-	const isVersionChecked = useAppStore((s) => s.isVersionChecked);
-	const isNewVersionAvailable = useAppStore((s) => s.isNewVersionAvailable);
-	const [updateSheetOpen, setUpdateSheetOpen] = useState(false);
-	const [updateSheetMode, setUpdateSheetMode] =
-		useState<UpdateBottomSheetMode>("new-version");
-
-	const handleVersionChecked = (isNew: boolean) => {
-		setIsVersionChecked(true);
-		setIsNewVersionAvailable(isNew);
-		if (isNew) {
-			setUpdateSheetMode("new-version");
-			setUpdateSheetOpen(true);
-		}
-	};
-
-	const handleOtaUpdateReady = () => {
-		setUpdateSheetMode("ota-update");
-		setUpdateSheetOpen(true);
-	};
-
-	useVersionCheck({ onVersionChecked: handleVersionChecked });
-	useOtaUpdate({
-		isNewVersionAvailable,
-		isVersionChecked,
-		onUpdateReady: handleOtaUpdateReady,
-	});
-
 	// The theme's font pair, Default's and the fixed faces (src/design/fonts.ts). The launch
 	// cover (src/features/launch) stays up until they're in; if they hang past it, the hold shows
 	// its quiet spinner rather than an empty window.
@@ -233,11 +225,6 @@ function RootLayout() {
 				<RootProvider>
 					<NavThemeProvider>
 						<AppContent />
-						<UpdateBottomSheet
-							isOpen={updateSheetOpen}
-							mode={updateSheetMode}
-							onOpenChange={setUpdateSheetOpen}
-						/>
 					</NavThemeProvider>
 				</RootProvider>
 			) : (
