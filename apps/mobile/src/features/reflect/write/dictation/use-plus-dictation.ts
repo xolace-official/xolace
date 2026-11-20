@@ -12,27 +12,23 @@ import {
 import { useMeteringRecorder } from "@/lib/audio/use-metering-recorder";
 import { useVoiceProcessingConsent } from "@/lib/consent/use-voice-processing-consent";
 import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
+import { uploadWithConsent } from "./consented-upload";
 
-/** One take's ceiling; the server rejects anything larger (convex/dictation/plus.ts). */
 const MAX_TAKE_MS = 180_000;
 // Mono 32kbps AAC ≈ 4KB/s → a full take is ~720KB, under Convex's 1MB v.bytes().
 const DICTATION_BIT_RATE = 32_000;
 // Scribe's own 30s timeout plus room for the upload; offline, an action waits
 // for the socket indefinitely.
 const UPLOAD_TIMEOUT_MS = 45_000;
-// The countdown shows whole seconds.
 const COUNTDOWN_TICK_MS = 1000;
 
 export type PlusDictationPhase = "idle" | "listening" | "writing";
 
-/** What the composer needs to draw a take: the waveform, countdown or "writing it down". */
 export type PlusDictationView = {
 	phase: PlusDictationPhase;
 	metering: SharedValue<number>;
 	remainingMs: number;
-	/** One line on why the mic fell back to on-device, or that a take was lost. */
 	note: string | null;
-	/** Ends the take and writes it down — the same as tapping the mic. */
 	stop: () => void;
 };
 
@@ -47,16 +43,11 @@ const deleteRecording = (uri: string | null) => {
 	}
 };
 
-/**
- * Plus dictation (#557): record on device, Scribe transcribes. `start` is false (#558): on device.
- */
 export function usePlusDictation(onTranscript: (text: string) => void) {
 	const [phase, setPhase] = useState<PlusDictationPhase>("idle");
 	const [note, setNote] = useState<string | null>(null);
-	// Once Scribe fails, on-device for the rest of this screen.
 	const [scribeFailed, setScribeFailed] = useState(false);
 	const cappedOn = useQuery(api.dictation.plus.status)?.cappedOn ?? null;
-	// Loading reads as under the cap; the server refuses an over-cap take anyway.
 	const convex = useConvex();
 	const { startRecording, stopRecording, metering, getDurationMs } =
 		useMeteringRecorder(DICTATION_BIT_RATE);
@@ -64,12 +55,9 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 	const transcribe = useAction(api.dictation.plus.transcribe);
 	const { ensureConsent } = useVoiceProcessingConsent();
 	const consentRef = useRef<Promise<void> | null>(null);
-	// An aborted take's recorder stop, which the next start must wait out.
 	const abandonedStopRef = useRef<Promise<void> | null>(null);
-	// Bumped by abort so a transcript still in flight is dropped, not appended.
 	const takeRef = useRef(0);
 	const phaseRef = useRef<PlusDictationPhase>("idle");
-	// A start still waiting on the mic permission or recorder setup.
 	const startingRef = useRef(false);
 	const isFocused = useIsFocused();
 
@@ -78,7 +66,6 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		setPhase(next);
 	};
 
-	/** False when this take should go to on-device dictation instead. */
 	const start = async (): Promise<boolean> => {
 		if (phaseRef.current !== "idle" || startingRef.current) {
 			return true;
@@ -97,7 +84,6 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		await abandonedStopRef.current;
 		const started = await startRecording();
 		startingRef.current = false;
-		// Dismissed or submitted while the mic was still setting up.
 		if (take !== takeRef.current) {
 			if (started) {
 				abandonedStopRef.current = stopRecording().then(deleteRecording);
@@ -109,7 +95,6 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 			return true;
 		}
 		playAffirmativePress();
-		// Started now so the write lands while they speak; the upload waits on it.
 		const consent = ensureConsent();
 		consent.catch(() => {});
 		consentRef.current = consent;
@@ -125,22 +110,17 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		const takeMs = getDurationMs();
 		setPhaseSynced("writing");
 		const uri = await stopRecording();
-		// Only a failure at Scribe sends later takes on device; a local one doesn't.
 		let reachedScribe = false;
-		const upload = async () => {
-			if (!uri) {
-				throw new Error("no recording");
-			}
-			// No audio reaches ElevenLabs before voice_processing consent is on record.
-			await (consentRef.current?.catch(ensureConsent) ?? ensureConsent());
-			const bytes = await new File(uri).bytes();
-			const audioBytes = bytes.buffer.slice(
-				bytes.byteOffset,
-				bytes.byteOffset + bytes.byteLength
-			);
-			reachedScribe = true;
-			return transcribe({ audioBytes, durationMs: takeMs });
-		};
+		const upload = () =>
+			uploadWithConsent(uri, {
+				consent: () =>
+					consentRef.current?.catch(ensureConsent) ?? ensureConsent(),
+				readBytes: (path) => new File(path).bytes(),
+				send: (audioBytes) => {
+					reachedScribe = true;
+					return transcribe({ audioBytes, durationMs: takeMs });
+				},
+			});
 		let timer: ReturnType<typeof setTimeout> | undefined;
 		try {
 			const text = await Promise.race([
@@ -183,10 +163,8 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		}
 	};
 
-	// For when the text must not change any more (dismiss, submit).
 	const abort = () => {
 		setNote(null);
-		// Bumped even when idle: it also cancels a start still setting up.
 		takeRef.current += 1;
 		if (phaseRef.current === "idle") {
 			return;
@@ -211,7 +189,6 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		return () => clearTimeout(t);
 	}, [phase]);
 
-	// The countdown ticks once a second; the recorder itself never re-renders this.
 	const tickCountdown = useEffectEvent(() =>
 		setRemainingMs(Math.max(0, MAX_TAKE_MS - getDurationMs()))
 	);
@@ -226,8 +203,6 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		};
 	}, [phase]);
 
-	// Leaving the screen ends the take but keeps what was said, including a take
-	// that began after they had already gone.
 	useEffect(() => {
 		if (!isFocused && phase === "listening") {
 			endTake();
