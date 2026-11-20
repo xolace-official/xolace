@@ -40,7 +40,7 @@ export function WritingBox({ running, reduced, onWriting, inputRef }: Props) {
 	const [warm, setWarm] = useState<Warmth | null>(null);
 	const stamp = useRef(0);
 
-	// A sheet over Write (the starter bubble) would sit behind the keyboard: the field gives the
+	// A home sheet over Write would sit behind the keyboard: the field gives the
 	// keyboard up while it's open and takes focus again once it resolves.
 	const { sheetOpen } = state;
 	useEffect(() => {

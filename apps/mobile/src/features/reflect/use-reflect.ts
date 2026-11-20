@@ -61,7 +61,7 @@ export function useReflectData(): Reflect {
 	const posthog = usePostHog();
 	const replySeed = useAppStore((st) => st.replySeed);
 	const pending = useAppStore((st) => st.pendingEventPrompt);
-	// The route's starter bubble raises it while it's up over Write.
+	// A home sheet raises it while it's up over Write.
 	const sheetOpen = useAppStore((st) => st.homeSheetOpen);
 	const submitFeedback = useMutation(api.feedback.submit);
 	const audio = useMirrorAudio(m.sessionId);
@@ -105,7 +105,6 @@ export function useReflectData(): Reflect {
 		s.screen,
 		holdsArrivals(stage),
 		s.entryText.trim().length > 0,
-		m.isLoading,
 		dispatch
 	);
 

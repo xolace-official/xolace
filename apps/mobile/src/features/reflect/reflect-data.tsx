@@ -35,7 +35,7 @@ export type Reflect = {
 		nudge: boolean;
 		/** Dictation is taking words. */
 		listening: boolean;
-		/** A sheet is over Write (the starter bubble): the field leaves the keyboard down. */
+		/** A home sheet is over Write: the field leaves the keyboard down. */
 		sheetOpen: boolean;
 		/** A Plus take: `writing` after the mic lets go (send waits), its countdown, a fallback's note. */
 		take: { writing: boolean; remainingMs: number | null; note: string | null };

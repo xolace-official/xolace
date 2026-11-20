@@ -11,6 +11,9 @@ import {
 	LISTENER,
 	LOADING,
 	STATE,
+	UNLOCK,
+	UPSELL,
+	XOLACER,
 } from "./dev/fixtures";
 import {
 	continueStep,
@@ -19,6 +22,7 @@ import {
 	endLetterOffer,
 	endSafeguard,
 	fromOf,
+	isPitch,
 	keptAtMoment2,
 	letterPassed,
 	momentGate,
@@ -379,5 +383,77 @@ describe("keptAtMoment2", () => {
 		expect(opened).toEqual({ value: null });
 		// The session lands after the 4 s fallback: "Go gently." stays.
 		expect(keptAtMoment2(opened, 2, "late words")).toBe(opened);
+	});
+});
+
+describe("nextKey with C2's cards (session-end-extras.md)", () => {
+	const READ = { waiting: true, write: true };
+	const WRITE = { waiting: false, write: true };
+
+	it("offers the Xolacer suggestion first, above the unlock", () => {
+		expect(nextKey(input({ ...XOLACER.slot, unlock: true }))).toBe("listener");
+	});
+
+	it("puts the unlock after a waiting letter and above kindling and writing one", () => {
+		expect(nextKey(input(UNLOCK.slot))).toBe("unlock");
+		expect(nextKey(input({ ...UNLOCK.slot, letters: READ }))).toBe(
+			"letterRead"
+		);
+		expect(nextKey(input({ ...UNLOCK.slot, letters: WRITE }))).toBe("unlock");
+		expect(nextKey(input({ ...UNLOCK.slot, kindlingReady: false }))).toBe(
+			"unlock"
+		);
+		expect(nextKey(input({ ...UPSELL.slot, unlock: true }))).toBe("unlock");
+	});
+
+	it("shows the unlock only on a steady session, every plan", () => {
+		expect(nextKey(input({ ...UNLOCK.slot, plus: false }))).toBe("unlock");
+		expect(nextKey(input(UNLOCK.slot, { late: true }))).toBe("kindling");
+		expect(nextKey(input(UNLOCK.slot, { step: -1 }))).toBe("kindling");
+		expect(nextKey(input(UNLOCK.slot, { step: null }))).toBe("kindling");
+	});
+
+	it("gives the free pitch's place to the upsell, under the pitch's rules", () => {
+		expect(nextKey(input(UPSELL.slot))).toBe("upsell");
+		expect(nextKey(input(UPSELL.slot, { step: -2 }))).toBe("upsell");
+		expect(nextKey(input(UPSELL.slot, { late: true }))).toBe("none");
+		expect(nextKey(input(UPSELL.slot, { step: -3 }))).toBe("none");
+		expect(nextKey(input({ ...UPSELL.slot, pitchAllowed: false }))).toBe(
+			"none"
+		);
+	});
+
+	it("doesn't need the session to qualify for kindling to show the upsell", () => {
+		expect(nextKey(input({ ...UPSELL.slot, qualifies: false }))).toBe("upsell");
+	});
+
+	it("keeps a letter to write above the upsell, and the upsell from Xolace+", () => {
+		expect(nextKey(input({ ...UPSELL.slot, letters: WRITE }))).toBe(
+			"letterWrite"
+		);
+		expect(nextKey(input({ ...UPSELL.slot, plus: true }))).toBe(
+			"kindlingSettingUp"
+		);
+	});
+
+	it("holds the slot for the unlock and the upsell, 2 s at most", () => {
+		expect(nextKey(input({ ...UPSELL.slot, upsell: undefined }))).toBe(
+			"loading"
+		);
+		expect(nextKey(input({ ...UNLOCK.slot, unlock: undefined }))).toBe(
+			"loading"
+		);
+		expect(
+			nextKey(input({ ...UPSELL.slot, upsell: undefined, waitedOut: true }))
+		).toBe("kfree");
+	});
+
+	it("counts the upsell as the ending's one pitch", () => {
+		expect(isPitch("upsell")).toBe(true);
+		expect(isPitch("kfree")).toBe(true);
+		expect(isPitch("unlock")).toBe(false);
+		expect(isPitch(null)).toBe(false);
+		expect(pitchDismissed("upsell", false)).toBe(true);
+		expect(pitchDismissed("upsell", true)).toBe(false);
 	});
 });

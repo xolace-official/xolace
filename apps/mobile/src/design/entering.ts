@@ -11,6 +11,7 @@ import {
 	type EaseProps,
 	enter,
 	FADE_IN,
+	POP,
 } from "./ease";
 import { EASE_OUT, PLAY_AS_CHOSEN, REDUCED_FADE_MS, SETTLE } from "./springs";
 
@@ -19,6 +20,7 @@ import { EASE_OUT, PLAY_AS_CHOSEN, REDUCED_FADE_MS, SETTLE } from "./springs";
  *
  * - `riseIn`, `fadeUp`: Reanimated `entering` animations, for `<Animated.View entering={…}>`.
  * - `fadeUpProps`: the same fadeUp as EaseView props, for the elements already on Ease.
+ * - `popProps`: a pop in from `from` on the Pop spring, as EaseView props.
  */
 
 /** The reduced enter. Like every enter here it plays as chosen (`PLAY_AS_CHOSEN` in
@@ -112,6 +114,24 @@ export function fadeUpProps(
 		{ opacity: 1, translateY: 0 },
 		timing,
 		timing,
+		delay
+	);
+}
+
+/** Pop on Ease: scale up from `from` on the Pop spring after `delay` ms, opacity over 180 ms. */
+export function popProps(
+	delay: number,
+	reduced: boolean,
+	from = 0.4
+): EaseProps {
+	if (reduced) {
+		return FADE_IN;
+	}
+	return enter(
+		{ opacity: 0, scale: from },
+		{ opacity: 1, scale: 1 },
+		{ duration: 180, easing: EASING.inOutQuad, type: "timing" },
+		POP,
 		delay
 	);
 }

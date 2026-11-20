@@ -1,14 +1,23 @@
-import type { SessionEnd } from "../session-end-data";
+import type { NextParts, SessionEnd } from "../session-end-data";
+
+/** The route composes Connect's and Steadiness's pieces in; the fixture screen draws the real
+ * ones (`@/dev/session-end-slots`), so these only stand in for tests. */
+const PARTS: NextParts = {
+	listenerAvatar: () => null,
+	partIcon: () => "circle",
+	partName: (domain) => domain,
+};
 
 /** The board's defaults: from You're not alone, Xolace+, kindling landed, words to share. */
 export const STATE: SessionEnd["state"] = {
 	canAskFollowUp: true,
+	cards: { listener: null, unlock: null, upsell: null },
 	day: { from: 12, to: 13 },
 	from: "peers",
 	late: false,
 	/** Letters' tile is composed in by the route; the letter states draw the real one. */
 	letterTile: null,
-	listener: null,
+	parts: PARTS,
 	ready: true,
 	slot: {
 		kindlingReady: true,
@@ -18,6 +27,8 @@ export const STATE: SessionEnd["state"] = {
 		pitchAllowed: true,
 		plus: true,
 		qualifies: true,
+		unlock: false,
+		upsell: false,
 		waitedOut: false,
 	},
 	words: "I hold everything together, and nobody sees how tired that makes me.",
@@ -29,11 +40,48 @@ export const FREE: SessionEnd["state"] = {
 	slot: { ...STATE.slot, kindlingReady: false, plus: false },
 };
 
-/** A listener matched (the prototype's fixture listener). */
+/** A listener matched (the prototype's fixture listener): new, so no rating yet. */
 export const LISTENER: SessionEnd["state"] = {
 	...STATE,
-	listener: { listensTo: "anxiety", name: "Maya" },
+	cards: {
+		...STATE.cards,
+		listener: {
+			id: "maya",
+			listensTo: "anxiety",
+			name: "Maya",
+			present: false,
+		},
+	},
 	slot: { ...STATE.slot, listener: "found" },
+};
+
+/** C2: the Xolacer suggestion, rated and here now. */
+export const XOLACER: SessionEnd["state"] = {
+	...LISTENER,
+	cards: {
+		...STATE.cards,
+		listener: {
+			id: "maya",
+			listensTo: "anxiety",
+			name: "Maya",
+			present: true,
+			rating: 4.9,
+		},
+	},
+};
+
+/** C2: a part of life came into focus this session (every plan); it outranks kindling. */
+export const UNLOCK: SessionEnd["state"] = {
+	...STATE,
+	cards: { ...STATE.cards, unlock: ["family"] },
+	slot: { ...STATE.slot, unlock: true },
+};
+
+/** C2, free: the insights upsell takes the kindling pitch's place. */
+export const UPSELL: SessionEnd["state"] = {
+	...FREE,
+	cards: { ...STATE.cards, upsell: "work" },
+	slot: { ...FREE.slot, upsell: true },
 };
 
 /** The listener match still pending: the slot holds a shimmer. */

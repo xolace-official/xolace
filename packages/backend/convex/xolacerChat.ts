@@ -745,6 +745,11 @@ export const xolacerProfile = query({
 export const suggestionValidator = v.object({
 	displayName: v.string(),
 	photoUrl: v.optional(v.string()),
+	/**
+	 * In the app when the match was made: the session end's card shows it. Optional so any
+	 * caller that builds a suggestion without it still validates.
+	 */
+	present: v.optional(v.boolean()),
 	rating: v.optional(v.number()),
 	ratingCount: v.number(),
 	specialties: v.array(specialtyValidator),
@@ -863,6 +868,7 @@ async function eligibleSuggestions(ctx: QueryCtx, sessionId: Id<"sessions">) {
 		candidates: rankSuggestionCandidates(candidates, sessionId).map((c) => ({
 			displayName: c.xolacer.displayName ?? "Xolacer",
 			photoUrl: c.xolacer.photoUrl,
+			present: c.present,
 			specialties: c.xolacer.specialties ?? [],
 			specialty,
 			xolacerProfileId: c.xolacerProfileId,

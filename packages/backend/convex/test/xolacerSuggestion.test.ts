@@ -23,6 +23,7 @@ const stub = vi.hoisted(() => ({
 	embedFails: false,
 	hits: {} as Record<string, number>,
 	limited: false,
+	present: new Set<string>(),
 	searchFails: false,
 }));
 
@@ -39,7 +40,7 @@ vi.mock("../posthog", () => ({
 }));
 vi.mock("../presence", async (orig) => ({
 	...(await orig<typeof import("../presence")>()),
-	presentProfileIds: async () => new Set(),
+	presentProfileIds: async () => stub.present,
 }));
 vi.mock("../rag", () => {
 	const base = ragMock();
@@ -95,6 +96,7 @@ beforeEach(() => {
 	stub.embedFails = false;
 	stub.searchFails = false;
 	stub.limited = false;
+	stub.present = new Set();
 	stub.added = [];
 	stub.deleted = [];
 	stub.captured = [];
@@ -159,6 +161,20 @@ describe("xolacer suggestion on meaning", () => {
 		expect(await suggest(seeker, sessionId)).toMatchObject({
 			specialty: "burnout",
 			xolacerProfileId: other,
+		});
+	});
+
+	it("says whether the xolacer is in the app now, for the session end's card", async () => {
+		const { seeker, sessionId } = await seekerSession();
+		const a = await seedXolacer(seeker);
+		expect(await suggest(seeker, sessionId)).toMatchObject({
+			present: false,
+			xolacerProfileId: a,
+		});
+		stub.present = new Set([a]);
+		expect(await suggest(seeker, sessionId)).toMatchObject({
+			present: true,
+			xolacerProfileId: a,
 		});
 	});
 
