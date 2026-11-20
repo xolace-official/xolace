@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import Animated, {
 	FadeIn,
@@ -32,14 +32,16 @@ export function HiddenGroup({
 	const muted = useTokenColor("muted");
 	const reduced = useEffectiveReducedMotion();
 	const turn = useSharedValue(open ? 0 : CLOSED_TURN);
-	useEffect(() => {
+	const toggle = () => {
+		const next = !open;
+		setOpen(next);
 		turn.set(
-			withTiming(open ? 0 : CLOSED_TURN, {
+			withTiming(next ? 0 : CLOSED_TURN, {
 				duration: reduced ? 0 : MS,
 				...PLAY_AS_CHOSEN,
 			})
 		);
-	}, [open, reduced, turn]);
+	};
 	const chevron = useAnimatedStyle(() => ({
 		transform: [{ rotate: `${turn.get()}deg` }],
 	}));
@@ -53,7 +55,7 @@ export function HiddenGroup({
 				accessibilityRole="button"
 				accessibilityState={{ expanded: open }}
 				className="mx-4 min-h-11 flex-row items-center gap-1.5 border-separator border-b px-4 py-2.5"
-				onPress={() => setOpen(!open)}
+				onPress={toggle}
 			>
 				<AppText
 					className="text-[14.5px]"

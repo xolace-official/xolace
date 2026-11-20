@@ -1,4 +1,4 @@
-import { type ComponentRef, useEffect, useRef } from "react";
+import { type ComponentRef, useEffect, useEffectEvent, useRef } from "react";
 import type { LayoutChangeEvent, ScrollView } from "react-native";
 
 const BELOW_FOLD = 72;
@@ -18,13 +18,13 @@ export function useSealedInView(sealed: boolean, top: number) {
 		const y = Math.max(0, Math.min(need, l.y + third - top));
 		ref.current?.scrollTo({ animated: false, y });
 	};
-	const was = useRef(sealed);
+	// On mount nothing is measured yet, so this only moves the letter when it seals in view.
+	const placeNow = useEffectEvent(place);
 	useEffect(() => {
-		if (sealed && !was.current) {
-			place();
+		if (sealed) {
+			placeNow();
 		}
-		was.current = sealed;
-	});
+	}, [sealed]);
 	return {
 		onLetter: (e: LayoutChangeEvent) => {
 			const { y, height } = e.nativeEvent.layout;

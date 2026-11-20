@@ -15,12 +15,15 @@ import {
 import type { KeptCard, QuoteBackground } from "../quotes-model";
 import { tileTap } from "../quotes-model";
 import type { QuotesScreenValue } from "../quotes-screen-data";
-import { isSheetView, useQuoteUi } from "./quote-ui";
+import { isSheetView, type QuoteUiStore } from "./quote-ui";
 
 export type QuoteHandlers = ReturnType<typeof quoteHandlers>;
 
-function quoteHandlers(live: { current: QuotesScreenValue }) {
-	const ui = () => useQuoteUi.getState();
+function quoteHandlers(
+	live: { current: QuotesScreenValue },
+	store: QuoteUiStore
+) {
+	const ui = () => store.getState();
 	const now = () => live.current.state;
 	const act = () => live.current.actions;
 
@@ -74,6 +77,7 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 			return;
 		}
 		playResonanceToggle();
+		ui().popStar();
 		ui().showToast(QUOTE_COPY.toasts.kept);
 		if (!(await act().setSaved(true))) {
 			ui().showToast(QUOTE_COPY.errors.generic);
@@ -222,11 +226,14 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 	};
 }
 
-export function useQuoteHandlers(value: QuotesScreenValue): QuoteHandlers {
+export function useQuoteHandlers(
+	value: QuotesScreenValue,
+	store: QuoteUiStore
+): QuoteHandlers {
 	const live = useRef(value);
 	useLayoutEffect(() => {
 		live.current = value;
 	});
-	const [h] = useState(() => quoteHandlers(live));
+	const [h] = useState(() => quoteHandlers(live, store));
 	return h;
 }

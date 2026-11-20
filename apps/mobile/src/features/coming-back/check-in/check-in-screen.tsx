@@ -3,6 +3,7 @@ import {
 	type ComponentRef,
 	type ReactNode,
 	useEffect,
+	useEffectEvent,
 	useRef,
 	useState,
 } from "react";
@@ -60,30 +61,25 @@ export function CheckInScreen({ offer }: Props) {
 		}
 	}, [missing]);
 
-	const leaving = useRef(actions.leaving);
-	leaving.current = actions.leaving;
+	const leaving = useEffectEvent(actions.leaving);
 	useEffect(() => {
 		// Native stack's own event (not in the generic navigation's event map).
 		const off = navigation.addListener(
 			"transitionStart" as never,
 			(e: { data?: { closing?: boolean } }) => {
 				if (e.data?.closing) {
-					leaving.current();
+					leaving();
 				}
 			}
 		);
 		return () => {
 			off();
-			leaving.current();
+			leaving();
 		};
 	}, [navigation]);
 
 	const step = picked && picked !== "vent" ? picked : null;
-	useEffect(() => {
-		if (step) {
-			scroll.current?.scrollTo({ animated: !reduced, y: 0 });
-		}
-	}, [step, reduced]);
+	const toTop = () => scroll.current?.scrollTo({ animated: !reduced, y: 0 });
 
 	const panelStyle = usePanelRise(step !== null, reduced, height);
 
@@ -132,7 +128,7 @@ export function CheckInScreen({ offer }: Props) {
 				</View>
 				<View className="flex-1" />
 				<View className={cn(flow && "absolute inset-x-0 bottom-0")}>
-					<CheckInCards />
+					<CheckInCards onPicked={toTop} />
 				</View>
 				{flow ? (
 					<Animated.View

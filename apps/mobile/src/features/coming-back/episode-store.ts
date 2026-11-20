@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { playAffirmativePress } from "@/lib/haptics";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import {
 	type GreetMode,
@@ -68,11 +69,17 @@ const FRESH = {
 } as const satisfies State;
 
 let timers: ReturnType<typeof setTimeout>[] = [];
+const clearTimers = () => {
+	for (const t of timers) {
+		clearTimeout(t);
+	}
+	timers = [];
+};
 
 export const useEpisode = create<State & Actions>()(
 	persist(
 		(set, get) => {
-			const tick = (row: Row, prompt?: PromptState) =>
+			const tick = (row: Row, prompt?: PromptState) => {
 				set((st) => ({
 					just: row,
 					outcomes:
@@ -81,6 +88,8 @@ export const useEpisode = create<State & Actions>()(
 							: { ...st.outcomes, prompt: prompt ?? st.outcomes.prompt },
 					tickKey: st.tickKey + 1,
 				}));
+				playAffirmativePress();
+			};
 			const later = (ms: number, fn: () => void) =>
 				timers.push(setTimeout(fn, ms));
 
@@ -88,12 +97,15 @@ export const useEpisode = create<State & Actions>()(
 				...FRESH,
 				answer: (a) =>
 					set((st) => ({ outcomes: { ...st.outcomes, answer: a } })),
-				closeGreeting: () =>
+				closeGreeting: () => {
+					// A row still waiting to tick must not land (and buzz) after the greeting closed.
+					clearTimers();
 					set((st) =>
 						st.open
 							? { closeKey: st.closeKey + 1, open: false, page: "list" }
 							: {}
-					),
+					);
+				},
 				landDeferred: () => {
 					const row = get().deferred;
 					if (row) {
@@ -119,10 +131,7 @@ export const useEpisode = create<State & Actions>()(
 				},
 				markGreeted: (key) => set({ greeted: key }),
 				openGreeting: (mode, snap) => {
-					for (const t of timers) {
-						clearTimeout(t);
-					}
-					timers = [];
+					clearTimers();
 					set({
 						...snap,
 						ciOpen: false,

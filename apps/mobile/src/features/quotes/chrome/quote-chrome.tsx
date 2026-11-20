@@ -28,6 +28,7 @@ export function QuoteChrome({
 			burstKey: s.burstKey,
 			clear: s.clear,
 			paused: s.paused,
+			starKey: s.starKey,
 			toast: s.toast,
 			view: s.view,
 		}))
@@ -62,6 +63,7 @@ export function QuoteChrome({
 				showPause={moving}
 				showSound={moving && Boolean(state.background.audioUrl)}
 				soundOn={state.soundOn}
+				starKey={ui.starKey}
 			/>
 			{ui.clear && (
 				<ClearHint ink={ink} reduced={reduced} text={QUOTE_COPY.clearHint} />

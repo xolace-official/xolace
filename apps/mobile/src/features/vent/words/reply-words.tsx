@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { type LayoutRectangle, PixelRatio, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { BODY_MAX_SCALE } from "@/design/type";
@@ -37,9 +37,6 @@ export function ReplyWords() {
 		}));
 		actions.onWordsLaidOut(rects, FONT * k, LINE * k);
 	};
-	useEffect(() => {
-		report();
-	});
 
 	return (
 		<Animated.View

@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import { useIsFocused } from "expo-router/react-navigation";
 import { openBrowserAsync } from "expo-web-browser";
 import { usePostHog } from "posthog-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
@@ -78,7 +78,7 @@ function useMonthEvent(active: boolean) {
 }
 
 export function useComingBackHost(): {
-	banner: string | null;
+	banner: { content: string; key: string } | null;
 	dismissBanner: () => void;
 } {
 	const focused = useIsFocused();
@@ -137,26 +137,24 @@ export function useComingBackHost(): {
 		});
 	}, [away, card, day, due, event, name, setLive]);
 
-	const snapshot = useRef({ away, items, name });
-	snapshot.current = { away, items, name };
+	const greet = useEffectEvent((greetedKey: string) => {
+		useEpisode.getState().markGreeted(greetedKey);
+		useEpisode.getState().openGreeting("greet", { away, items, name });
+		posthog.capture("welcome_back_shown", {
+			away,
+			check_in: items.card !== null,
+			freeze: items.freeze !== null,
+			prompt: items.event !== null,
+		});
+		router.push("/welcome-back");
+	});
 	useEffect(() => {
 		if (!(focused && due)) {
 			return;
 		}
-		const id = setTimeout(() => {
-			const snap = snapshot.current;
-			useEpisode.getState().markGreeted(key);
-			useEpisode.getState().openGreeting("greet", snap);
-			posthog.capture("welcome_back_shown", {
-				away: snap.away,
-				check_in: snap.items.card !== null,
-				freeze: snap.items.freeze !== null,
-				prompt: snap.items.event !== null,
-			});
-			router.push("/welcome-back");
-		}, GREET_AFTER_MS);
+		const id = setTimeout(() => greet(key), GREET_AFTER_MS);
 		return () => clearTimeout(id);
-	}, [focused, due, key, posthog]);
+	}, [focused, due, key]);
 
 	const setBlocking = useAppStore((s) => s.setHomeSheetBlocking);
 	const setOpen = useAppStore((s) => s.setHomeSheetOpen);
@@ -170,7 +168,11 @@ export function useComingBackHost(): {
 
 	const last = useAppStore((s) => s.lastNotification);
 	const dismissBanner = useAppStore((s) => s.clearLastNotification);
-	return { banner: focused ? (last?.content ?? null) : null, dismissBanner };
+	const banner =
+		focused && last
+			? { content: last.content, key: last.notificationId }
+			: null;
+	return { banner, dismissBanner };
 }
 
 export function useWelcomeBack(): WelcomeBack {

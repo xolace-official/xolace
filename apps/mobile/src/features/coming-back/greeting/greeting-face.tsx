@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Animated, {
 	Easing,
 	useAnimatedStyle,
@@ -12,6 +12,7 @@ import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useWelcomeBack } from "../welcome-back-data";
 import { FACE_GEO, FACE_TIMING, GREET_FACE } from "./return-face";
+import { useTickPose } from "./use-tick-pose";
 
 const RISE_EASE = Easing.bezier(0.25, 1, 0.4, 1);
 const PAGE_EASE = Easing.bezier(0.2, 0.85, 0.25, 1);
@@ -73,17 +74,15 @@ export function GreetingFace({ running }: { running: boolean }) {
 		return () => clearTimeout(id);
 	}, [arriving, rest, to]);
 
-	const seen = useRef(tickKey);
-	useEffect(() => {
-		if (tickKey === seen.current) {
-			return;
-		}
-		seen.current = tickKey;
-		to(acute ? GREET_FACE.soft : GREET_FACE.glad);
-		nod();
-		const id = setTimeout(() => to(rest), FACE_TIMING.gladMs);
-		return () => clearTimeout(id);
-	}, [tickKey, acute, rest, to, nod]);
+	useTickPose({
+		glad: () => {
+			to(acute ? GREET_FACE.soft : GREET_FACE.glad);
+			nod();
+		},
+		gladMs: FACE_TIMING.gladMs,
+		rest: () => to(rest),
+		tickKey,
+	});
 
 	useEffect(() => {
 		const by = page === "prompt" ? sink.by : 0;

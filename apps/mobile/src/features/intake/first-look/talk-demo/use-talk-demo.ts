@@ -44,6 +44,7 @@ export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 	const intro = useTypedLine(opening);
 	const reply = useTypedLine(state.reply ?? "");
 
+	const openedOnSafety = useEffectEvent(onSafety);
 	useEffect(() => {
 		let live = true;
 		let retry: ReturnType<typeof setTimeout> | undefined;
@@ -60,8 +61,12 @@ export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 				}
 				if (isSettling(error)) {
 					retry = setTimeout(() => void run(), SETTLE_RETRY_MS);
-				} else {
-					dispatch(openRefused(error));
+					return;
+				}
+				const refused = openRefused(error);
+				dispatch(refused);
+				if (refused.type === "OPENED_ON_SAFETY") {
+					openedOnSafety();
 				}
 			}
 		};
@@ -78,7 +83,16 @@ export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 			if (answer.route === "safety") {
 				onSafety();
 			}
-			dispatch({ reply: answer, type: "REPLIED" });
+			const replied = { reply: answer, type: "REPLIED" } as const;
+			dispatch(replied);
+			const ended = finishedBy(demoReducer(state, replied));
+			if (ended) {
+				trackTalkDemoFinished(posthog, {
+					endedBy: ended,
+					mode: state.mode,
+					voice: state.voice,
+				});
+			}
 		} catch (error) {
 			dispatch({ reason: refusalOf(error), type: "REPLY_REFUSED" });
 		}
@@ -113,11 +127,9 @@ export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 		}
 	}, [state.phase, state.audioUrl]);
 
-	useEffect(() => {
-		if (status.didJustFinish) {
-			setHeard(true);
-		}
-	}, [status.didJustFinish]);
+	if (status.didJustFinish && !heard) {
+		setHeard(true);
+	}
 
 	useEffect(() => {
 		if (state.phase !== "reply" || !reply.done) {
@@ -130,26 +142,6 @@ export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 		const timer = setTimeout(() => dispatch({ type: "SAID" }), SAID_GRACE_MS);
 		return () => clearTimeout(timer);
 	}, [state.phase, reply.done, heard]);
-
-	const onSupport = state.phase === "safety";
-	const announceSupport = useEffectEvent(() => {
-		if (onSupport) {
-			onSafety();
-		}
-	});
-	useEffect(() => announceSupport(), [onSupport]);
-
-	const ended = finishedBy(state);
-	const track = useEffectEvent(() => {
-		if (ended) {
-			trackTalkDemoFinished(posthog, {
-				endedBy: ended,
-				mode: state.mode,
-				voice: state.voice,
-			});
-		}
-	});
-	useEffect(() => track(), [ended]);
 
 	const stopSound = useEffectEvent(() => {
 		preview.stop();

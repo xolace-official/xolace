@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect } from "react";
 import type { GestureResponderEvent, ViewInstance } from "react-native";
 import Animated, {
 	Easing,
@@ -72,14 +72,13 @@ export function Tipped({
 	children: ReactNode;
 }) {
 	const reduced = useEffectiveReducedMotion();
-	const ref = useRef<ViewInstance>(null);
 	const scale = useSharedValue(1);
 	const seat = useHeld((s) =>
 		s.seat.id === id && s.seat.slot === slot ? s.seat.n : 0
 	);
 
-	useEffect(() => {
-		const v = ref.current;
+	// Registers the tile so a held badge can fly back to it; React 19 calls the cleanup on detach.
+	const register = (v: ViewInstance | null) => {
 		if (!v) {
 			return;
 		}
@@ -89,7 +88,7 @@ export function Tipped({
 				SLOTS.delete(slot);
 			}
 		};
-	}, [slot]);
+	};
 
 	useEffect(() => {
 		if (!seat || reduced) {
@@ -118,7 +117,7 @@ export function Tipped({
 	return (
 		<Animated.View
 			collapsable={false}
-			ref={ref}
+			ref={register}
 			style={[{ height: size, width: size }, style]}
 		>
 			{children}

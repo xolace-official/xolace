@@ -12,7 +12,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { LinearGradient } from "@/components/shared/styled";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { EASE, SOFT, slice, T, useQuoteMotion } from "../motion/quote-motion";
-import type { QuoteBackground as Background } from "../quotes-model";
+import { type QuoteBackground as Background, readyOn } from "../quotes-model";
 import { SCRIM_CLEAR, scrimOf } from "../quotes-palette";
 import { BackgroundLayer } from "./background-layer";
 
@@ -39,6 +39,11 @@ export function QuoteBackground({
 			setBase(top);
 		}
 		setTop(background);
+		setSettling(false);
+	} else if (settling && readyOn(base, play) === "now") {
+		// The new base is already drawn under the revealed top. An image or a loop drops the top
+		// from `onReady` instead, once it has drawn, so the swap never shows an empty frame.
+		setTop(null);
 		setSettling(false);
 	}
 

@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
 	useAnimatedRef,
@@ -38,20 +38,26 @@ export function BadgesScreen({ open }: { open?: OpenOnArrival }) {
 		return resetHeld;
 	}, []);
 
+	const openId = open?.id;
+	const delay = open?.afterMs ?? DEEP_LINK_MS;
+	const missing = useEffectEvent(() => actions.missing());
+	const openNow = useEffectEvent(() => {
+		if (open) {
+			openBadge(open.id, window, { below: true, ...open.opts });
+		}
+	});
+	// A deep link opens its badge once the list has loaded.
 	useEffect(() => {
-		if (!(open && loaded)) {
+		if (!(openId && loaded)) {
 			return;
 		}
 		if (!known) {
-			actions.missing();
+			missing();
 			return;
 		}
-		const id = setTimeout(
-			() => openBadge(open.id, window, { below: true, ...open.opts }),
-			open.afterMs ?? DEEP_LINK_MS
-		);
+		const id = setTimeout(openNow, delay);
 		return () => clearTimeout(id);
-	}, [open?.id, loaded, known]);
+	}, [openId, loaded, known, delay]);
 
 	useEffect(() => {
 		if (!out) {

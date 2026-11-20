@@ -1,11 +1,11 @@
 import { useIsFocused } from "expo-router";
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useEffectEvent } from "react";
 import { View } from "react-native";
 import {
 	DetachedSheet,
 	useSheetClose,
 } from "@/components/shared/detached-sheet";
-import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
+import { playSoftPress } from "@/lib/haptics";
 import { WELCOME_BACK } from "./copy";
 import { GreetingCard } from "./greeting/greeting-card";
 import { GreetingFace } from "./greeting/greeting-face";
@@ -16,11 +16,10 @@ const SETTLE_TAP_MS = 320;
 export function WelcomeBackScreen() {
 	const { state, actions } = useWelcomeBack();
 	const focused = useIsFocused();
-	const { enter, tickKey } = state;
+	const { enter } = state;
 
-	const closed = useRef(actions.closed);
-	closed.current = actions.closed;
-	useEffect(() => () => closed.current(), []);
+	const closed = useEffectEvent(actions.closed);
+	useEffect(() => () => closed(), []);
 
 	useEffect(() => {
 		if (!enter) {
@@ -36,15 +35,6 @@ export function WelcomeBackScreen() {
 			landDeferred();
 		}
 	}, [focused, landDeferred]);
-
-	const seen = useRef(tickKey);
-	useEffect(() => {
-		if (tickKey === seen.current) {
-			return;
-		}
-		seen.current = tickKey;
-		playAffirmativePress();
-	}, [tickKey]);
 
 	return (
 		<DetachedSheet>

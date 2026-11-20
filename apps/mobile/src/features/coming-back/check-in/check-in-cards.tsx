@@ -77,7 +77,8 @@ function AnswerCard({
 	);
 }
 
-export function CheckInCards() {
+/** `onPicked` runs when a tap picks the first answer (later taps change nothing). */
+export function CheckInCards({ onPicked }: { onPicked: () => void }) {
 	const { state, actions } = useCheckIn();
 	const { picks, picked, careful, reduced } = state;
 	const [muted] = useTokenColors(["muted"]);
@@ -95,7 +96,15 @@ export function CheckInCards() {
 					picked={any}
 					reduced={reduced}
 				>
-					<AnswerCard onPick={() => actions.pick(k)} pick={k} />
+					<AnswerCard
+						onPick={() => {
+							actions.pick(k);
+							if (!any) {
+								onPicked();
+							}
+						}}
+						pick={k}
+					/>
 				</Layer>
 			))}
 			<Layer

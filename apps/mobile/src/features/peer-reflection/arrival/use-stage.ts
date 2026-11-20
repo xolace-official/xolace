@@ -1,5 +1,5 @@
 import { useIsFocused } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { AccessibilityInfo } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { useAppActive } from "@/components/shared/use-app-active";
@@ -46,6 +46,21 @@ export function useStage(
 	const [ui, setUi] = useState(false);
 	const title = titleOf(set);
 
+	const sceneRan = useRef(false);
+	const playScene = () => {
+		if (!scene || sceneRan.current) {
+			return;
+		}
+		sceneRan.current = true;
+		if (scene.tap !== undefined) {
+			const i = scene.tap;
+			later(() => press(i), SCENE_MS);
+		}
+		if (scene.scrollEnd) {
+			later(onSceneScroll, SCENE_MS);
+		}
+	};
+
 	const { arrive, end } = useArrival({
 		events: {
 			onLand: (c) => {
@@ -65,6 +80,7 @@ export function useStage(
 					face.alone();
 					AccessibilityInfo.announceForAccessibility(announcementOf(set, 0));
 				}
+				playScene();
 			},
 		},
 		hold: scene?.hold,
@@ -75,7 +91,9 @@ export function useStage(
 
 	const seen = useRef<Map<string, { on: boolean; gone: boolean }>>(new Map());
 	const lit = cards.map((c) => `${c.on ? 1 : 0}${c.gone ? 1 : 0}`).join();
-	useEffect(() => {
+	// A card lights or goes out from a press, and also from the server (a rate-limit flip-back,
+	// an optimistic rollback), so the stars follow `lit` rather than the press.
+	const syncStars = useEffectEvent(() => {
 		cards.forEach((c, i) => {
 			const k = CARD_STAR[i];
 			const was = seen.current.get(c.id);
@@ -88,6 +106,11 @@ export function useStage(
 			}
 			seen.current.set(c.id, { gone: c.gone !== null, on });
 		});
+	});
+	useEffect(() => {
+		if (lit) {
+			syncStars();
+		}
 	}, [lit]);
 
 	const press = (i: number) => {
@@ -112,21 +135,6 @@ export function useStage(
 		playAffirmativePress();
 		actions.done();
 	};
-
-	const sceneRan = useRef(false);
-	useEffect(() => {
-		if (!ui || sceneRan.current || !scene) {
-			return;
-		}
-		sceneRan.current = true;
-		if (scene.tap !== undefined) {
-			const i = scene.tap;
-			later(() => press(i), SCENE_MS);
-		}
-		if (scene.scrollEnd) {
-			later(onSceneScroll, SCENE_MS);
-		}
-	});
 
 	return { arrive, done, end, face, mark, press, reduced, title, ui };
 }

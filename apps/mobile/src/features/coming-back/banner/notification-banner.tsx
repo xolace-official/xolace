@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { Pressable } from "react-native";
 import Animated, {
 	interpolate,
@@ -36,9 +36,9 @@ export function NotificationBanner({
 	const reduced = useEffectiveReducedMotion();
 	const shown = useSharedValue(0);
 
-	useEffect(() => {
-		shown.set(spring("settle", 1, reduced));
-	}, [shown]);
+	// Mount only: re-running on a `reduced` flip would cancel a dismiss mid-fade.
+	const enter = useEffectEvent(() => shown.set(spring("settle", 1, reduced)));
+	useEffect(() => enter(), []);
 
 	const dismiss = () => {
 		shown.set(
@@ -57,10 +57,9 @@ export function NotificationBanner({
 			)
 		);
 	};
-	const later = useRef(dismiss);
-	later.current = dismiss;
+	const timedOut = useEffectEvent(dismiss);
 	useEffect(() => {
-		const id = setTimeout(() => later.current(), T.stay);
+		const id = setTimeout(timedOut, T.stay);
 		return () => clearTimeout(id);
 	}, []);
 

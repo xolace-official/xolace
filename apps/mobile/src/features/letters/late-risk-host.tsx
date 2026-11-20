@@ -35,14 +35,10 @@ export function LateRiskHost({
 	}, []);
 
 	const due = lateCareDue({ armed, covered, risk, showing });
-	useEffect(() => {
-		if (due === null) {
-			return;
-		}
-		heard.current = false;
+	if (due !== null) {
 		setShowing(due);
 		setArmed(false);
-	}, [due]);
+	}
 
 	const reportShown = useEffectEvent((shown: LateRisk) => {
 		heard.current = true;
@@ -70,7 +66,10 @@ export function LateRiskHost({
 		return () => clearTimeout(t);
 	}, [armed]);
 
-	const close = () => setShowing(null);
+	const close = () => {
+		heard.current = false;
+		setShowing(null);
+	};
 	return (
 		<WriteCare
 			onClose={close}

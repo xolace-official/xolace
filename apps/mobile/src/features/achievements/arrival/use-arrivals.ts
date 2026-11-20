@@ -1,7 +1,7 @@
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { router, usePathname } from "expo-router";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 import type { Arrivals } from "@/features/achievements/arrival/arrival-data";
 import {
@@ -51,28 +51,20 @@ export function useArrivals(
 
 	const [plan, setPlan] = useState<ArrivalPlan | null>(null);
 	const [open, setOpen] = useState(false);
-	const opened = useRef(new Set<string>());
+	// Ids already shown this run: a closed plan's badges stay out until the queries catch up.
+	const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set());
 	const mayOpen =
 		foreground &&
 		mayArrive({ homeBusy, pathname, presented: isPresented(pathname) });
 
-	useEffect(() => {
-		if (plan || !mayOpen || summary === undefined || unseen === undefined) {
-			return;
-		}
-		const next = arrivalPlan({
-			opened: opened.current,
-			summary,
-			unseen,
-		});
-		if (!next) {
-			return;
-		}
-		for (const id of next.ids) {
-			opened.current.add(id);
-		}
+	const next =
+		!plan && mayOpen && summary !== undefined && unseen !== undefined
+			? arrivalPlan({ opened, summary, unseen })
+			: null;
+	if (next) {
+		setOpened(new Set([...opened, ...next.ids]));
 		setPlan(next);
-	}, [plan, mayOpen, summary, unseen]);
+	}
 
 	useEffect(() => {
 		if (!plan || open) {
