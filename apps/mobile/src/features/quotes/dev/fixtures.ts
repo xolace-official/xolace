@@ -103,6 +103,7 @@ export function fixtureState(
 	return {
 		active: true,
 		background: shownBackground(key, BACKGROUNDS, plus),
+		backgroundSettled: true,
 		backgrounds: BACKGROUNDS,
 		kept: KEPT,
 		keptCount: 14,
