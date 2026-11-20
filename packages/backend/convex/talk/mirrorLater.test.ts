@@ -258,6 +258,7 @@ describe("talk.session.end with mirrorLater", () => {
 		const sessionId = await talk(user);
 		await user.t.mutation(api.talk.session.end, { sessionId });
 		await user.root.mutation(internal.sessions.failSession, {
+			errorCode: "reflection_rate_limited",
 			errorMessage: "Something interrupted this moment.",
 			sessionId,
 		});
@@ -267,9 +268,12 @@ describe("talk.session.end with mirrorLater", () => {
 		});
 		// Retry with no text from the client: the server reprocesses what it stored.
 		await user.t.mutation(api.sessions.retrySession, { sessionId });
-		expect(await session(user, sessionId)).toMatchObject({
-			state: "processing",
-		});
+		const retried = await session(user, sessionId);
+		expect(retried).toMatchObject({ state: "processing" });
+		// The failure's code and message go with it, or the next failure would
+		// be read as this one.
+		expect(retried?.errorCode).toBeUndefined();
+		expect(retried?.errorMessage).toBeUndefined();
 	});
 
 	it("still makes no mirror when nothing was said", async () => {
