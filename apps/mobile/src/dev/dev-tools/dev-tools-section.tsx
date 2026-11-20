@@ -18,7 +18,6 @@ const I = {
 	deferred: { android: "quiz", ios: "questionmark.bubble" },
 	followUp: { android: "notifications_active", ios: "bell.badge" },
 	intake: { android: "restart_alt", ios: "figure.walk.arrival" },
-	map: { android: "map", ios: "map" },
 	plus: { android: "workspace_premium", ios: "sparkles" },
 	replay: { android: "replay", ios: "play.circle" },
 	reset: { android: "restart_alt", ios: "arrow.counterclockwise" },
@@ -87,18 +86,6 @@ export function DevToolsSection() {
 					icon={I.age}
 					label="Clear date of birth"
 					onPress={dev.clearAgeGate}
-				/>
-				{/* Delete with features/starter-suggestions. */}
-				<TileRow
-					icon={I.map}
-					label="Starter suggestions · as new user"
-					onPress={() => dev.armStarters(true)}
-				/>
-				{/* Delete with features/starter-suggestions. */}
-				<TileRow
-					icon={I.map}
-					label="Starter suggestions · real gate"
-					onPress={() => dev.armStarters(false)}
 				/>
 				<TileRow
 					icon={I.badge}

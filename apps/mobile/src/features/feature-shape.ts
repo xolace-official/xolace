@@ -14,13 +14,7 @@ import {
  * this list when it replaces it in place (rewritten under the same name, in the
  * shape) or deletes it.
  */
-const REPLACED_FEATURES = [
-	"browse",
-	"intake",
-	"reach-me-on",
-	"starter-suggestions",
-	"xolacer-chat",
-];
+const REPLACED_FEATURES = ["browse", "intake", "reach-me-on", "xolacer-chat"];
 
 /**
  * Old folders the redesign keeps: the sweep (C1) restyles them and brings them
@@ -246,6 +240,8 @@ export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
 const DEV_BRIDGES = new Set([
 	// The session end's letter cards draw letters' real tile (a dev state has no route).
 	"dev/letters-slots.ts",
+	// The session end's next cards draw Connect's avatar and Steadiness's part icon and name.
+	"dev/session-end-slots.tsx",
 ]);
 
 const isPortedTarget = (from: string, to: string | null | undefined) =>

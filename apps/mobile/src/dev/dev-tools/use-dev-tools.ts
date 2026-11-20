@@ -45,21 +45,6 @@ export function useDevTools() {
 	};
 
 	return {
-		/** Arms starter suggestions as a new user or on the real gate. */
-		armStarters: (asNewUser: boolean) => {
-			useAppStore.setState({ devStarterEligible: asNewUser });
-			if (userId) {
-				useAppStore
-					.getState()
-					.clearAccountFlags(userId, ["starterSuggestionsSeen"]);
-			}
-			toast(
-				asNewUser
-					? "Starter suggestions armed · new user"
-					: "Starter suggestions · real gate"
-			);
-			router.dismissTo("/reflect");
-		},
 		clearAgeGate: () =>
 			clearAgeDeclarations()
 				.then(() =>

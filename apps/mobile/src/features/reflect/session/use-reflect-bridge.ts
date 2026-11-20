@@ -4,34 +4,20 @@ import { useAppStore } from "@/store/store";
 import { COPY } from "../copy";
 import type { ReflectionAction, ReflectionStateName } from "./types";
 
-const SETTLE_MS = 500;
 const isWriting = (screen: ReflectionStateName) =>
 	screen === "idle" || screen === "typing" || screen === "typing-nudge";
 
 /**
- * Reflect's seams with the rest of the app, as production had them: `reflectSettled` for the
- * starter bubble, `homeComposing` to hold the badge unlock while `composing`, a composer-open request (#462, #707) and
- * the quote-reply seed (#316). Reflect opens on its field, so a request only adds words.
+ * Reflect's seams with the rest of the app, as production had them: `homeComposing` to hold
+ * the badge unlock while `composing`, a composer-open request (#462, #707) and the quote-reply
+ * seed (#316). Reflect opens on its field, so a request only adds words.
  */
 export function useReflectBridge(
 	screen: ReflectionStateName,
 	composing: boolean,
 	hasDraft: boolean,
-	isLoading: boolean,
 	dispatch: (action: ReflectionAction) => void
 ) {
-	const setSettled = useAppStore((s) => s.setReflectSettled);
-	useEffect(() => {
-		if (isLoading) {
-			return;
-		}
-		const t = setTimeout(() => setSettled(true), SETTLE_MS);
-		return () => {
-			clearTimeout(t);
-			setSettled(false);
-		};
-	}, [isLoading, setSettled]);
-
 	// `homeComposing` holds a badge arrival over Reflect (`use-arrivals.ts`).
 	const setComposing = useAppStore((s) => s.setHomeComposing);
 	useEffect(() => {

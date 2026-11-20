@@ -230,7 +230,7 @@ coming back is `features/coming-back/`, composed on Today's route: the greeting
 (`/welcome-back`, once per return: a freeze that held the streak, a waiting check-in, this
 month's prompt), the check-in it opens (`/check-in`, also opened from You's Follow-ups), the
 pill under Today's greeting for what was left, and the in-app banner. Nothing opens the
-check-in on its own. The starter bubble stays with Reflect (its route, `app/(protected)/reflect.tsx`). There is no
+check-in on its own. There is no
 flag: a screen PR replaces the old screen outright. Where a screen PR adds to the shell:
 
 - **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`,

@@ -88,9 +88,6 @@ type TogglesSlice = {
 	/** One-time flag — once true, the Lantern (library) welcome never shows again. */
 	libraryIntroSeen: boolean;
 	setLibraryIntroSeen: (v: boolean) => void;
-	/** Dev tools only (honoured under `__DEV__`): treat this account as zero-session for
-	 * Starter suggestions (#465). */
-	devStarterEligible: boolean;
 	/** Last resolved `xolacerChat.status().enabled` — lets a returning chat user connect before
 	 * the live query answers (#342). */
 	chatEnabledCached: boolean;
@@ -180,9 +177,6 @@ export type IntakeFirstAnswer = { text: string; userId: string };
 /** Ephemeral. Something outside the reflect screen (#462) asking it to open the card; see
  * useReflectBridge. */
 type ComposerOpenSlice = {
-	/** The reflect screen has loaded and its card has finished arriving. */
-	reflectSettled: boolean;
-	setReflectSettled: (v: boolean) => void;
 	composerOpenRequested: boolean;
 	/** Words to open the card with, e.g. intake v2's first answer (#707). Raw user text. */
 	composerOpenText: string | null;
@@ -229,7 +223,6 @@ export const useAppStore = create<AppState>()(
 
 				colorThemeId: "default",
 
-				devStarterEligible: false,
 				dictationUpsellSeen: false,
 
 				homeComposing: false,
@@ -327,8 +320,6 @@ export const useAppStore = create<AppState>()(
 				readerTextSize: 18,
 				readingMode: "classic",
 
-				reflectSettled: false,
-
 				replySeed: null,
 				requestComposerOpen: (text) =>
 					set({ composerOpenRequested: true, composerOpenText: text ?? null }),
@@ -339,7 +330,6 @@ export const useAppStore = create<AppState>()(
 				setReadByFire: (on) => set({ readByFire: on }),
 				setReaderTextSize: (n) => set({ readerTextSize: n }),
 				setReadingMode: (m) => set({ readingMode: m }),
-				setReflectSettled: (v) => set({ reflectSettled: v }),
 				setReplySeed: (reply) => set({ replySeed: reply }),
 				setTextureSetId: (id) => set({ textureSetId: id }),
 
@@ -358,7 +348,6 @@ export const useAppStore = create<AppState>()(
 					bridgeIntroSeen: s.bridgeIntroSeen,
 					chatEnabledCached: s.chatEnabledCached,
 					colorThemeId: s.colorThemeId,
-					devStarterEligible: s.devStarterEligible,
 					dictationUpsellSeen: s.dictationUpsellSeen,
 					hiddenProfileCards: s.hiddenProfileCards,
 					introSeen: s.introSeen,
