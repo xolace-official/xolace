@@ -8,16 +8,16 @@ import {
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { Flame } from "@/components/shared/flame";
-import { RollingNumber } from "@/components/shared/rolling-number";
+import { QUICK_ROLL_MS, RollDigits } from "@/components/shared/roll-digits";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useClock } from "@/lib/motion/clock";
-import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { HEARD_MOTION } from "../motion";
 
 /** The flame's ignite (flame.tsx): 0 → 1 over .9 s. */
 const IGNITE_MS = 900;
-const COUNT_SIZE = 15;
+/** The count's line: 15 pt callout, 20 tall. */
+const COUNT_LINE = 20;
 
 /**
  * The streak chip under Heard: a lit flame and the day count, which the server has already
@@ -32,7 +32,6 @@ export function HeardStreak({
 	live: boolean;
 	reduced: boolean;
 }) {
-	const emberInk = useTokenColor("ember-ink");
 	const clock = useClock(live);
 	const ignite = useSharedValue(1);
 
@@ -58,7 +57,17 @@ export function HeardStreak({
 			className="h-[38px] flex-row items-center gap-[5px] rounded-full bg-ember-wash pr-3 pl-[9px]"
 		>
 			<Flame clock={clock} ignite={ignite} reduced={reduced} running={live} />
-			<RollingNumber color={emberInk} quick size={COUNT_SIZE} value={streak} />
+			{/* Plain views: the chip rises in, and a SwiftUI-hosted number is left behind by it. */}
+			<RollDigits
+				className="text-ember-ink tabular-nums"
+				durationMs={QUICK_ROLL_MS}
+				lineHeight={COUNT_LINE}
+				maxScale={1}
+				rollIn={false}
+				value={streak}
+				variant="callout"
+				weight="bold"
+			/>
 			<AppText
 				className="ml-0.5 text-[15px]"
 				color="emberInk"
