@@ -15,19 +15,11 @@ import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** The room left under the pills when Your days scrolls up. */
 const UNDER_PILLS = 12;
-/** Just past the collapse range, so the header stays docked. */
 const PAST_DOCK = 2;
-/** After the container's own restore of this tab's offset (the tap may have switched tabs). */
 const SCROLL_AFTER_MS = 220;
 const TAB_BAR_ROOM = 110;
 
-/**
- * Insights (you.md §5): Steadiness, Your days, the chips, Your patterns, Among the fires, This
- * week, then the one Xolace+ row for free users. Production's gates; the words card is gone.
- * Hidden cards stay hidden.
- */
 export function InsightsTab({ minHeader }: { minHeader: number }) {
 	const insets = useSafeAreaInsets();
 	const reduced = useEffectiveReducedMotion();
@@ -36,7 +28,6 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 	const { scrollRef } = useTabPageContext();
 	const { collapseRangeSV, tabBarHeight } = useCollapsingTabsContext();
 	const cardY = useRef({ days: 0, top: 0, week: 0 });
-	// A ref, not a dep: `scrollTo` is never cleared, so a dep would scroll again on each change.
 	const tabBar = useRef(tabBarHeight);
 	useEffect(() => {
 		tabBar.current = tabBarHeight;
@@ -45,14 +36,10 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 		cardY.current[card] = e.nativeEvent.layout.y;
 	};
 
-	// The header's week asks for Your days (a dev state for another card): scroll it up under
-	// the pills, docked (a jump under Reduce Motion).
 	useEffect(() => {
 		if (!scrollTo) {
 			return;
 		}
-		// The collapse range, the cards' y and the tab bar's height are read when it fires (the
-		// header and cards may still be laying out); the native header's height is the one now.
 		const timer = setTimeout(() => {
 			const dock = collapseRangeSV.get() + PAST_DOCK;
 			const y = Math.max(

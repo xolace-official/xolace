@@ -9,11 +9,6 @@ import type { SegmentedProps } from "@/components/shared/choice-props";
 import { ThemedHost } from "@/components/shared/themed-host";
 import { cn } from "@/lib/cn";
 
-/**
- * Android: Material 3 segmented buttons (Expo UI's Compose), as Talk's view
- * switch. iOS draws SwiftUI's control (`segmented.ios.tsx`).
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function Segmented<T extends string>({
 	options,
 	value,

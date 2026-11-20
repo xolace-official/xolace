@@ -12,33 +12,21 @@ import {
 } from "./coming-back-model";
 import type { Answer, Away } from "./copy";
 
-/**
- * The return episode on this device (handoff §1): the greeting's UI across its two routes and
- * Today's pill. Server truth (the waiting card, this month's event, the freeze) comes from the
- * data hook, which pins what an opening lists here; no Convex call is made from this store.
- * Only `greeted` is kept across launches, so a return greets once.
- */
 type State = {
 	open: boolean;
 	mode: GreetMode;
 	page: "list" | "prompt";
-	/** The greeting plays its entrance (off when reopened by a dev state). */
 	enter: boolean;
 	away: Away;
 	name: string | null;
 	items: Items;
 	outcomes: Outcomes;
 	ciOpen: boolean;
-	/** A tick that lands when the greeting is in front again (after Vent or crisis help). */
 	deferred: Row | null;
-	/** The row that just ticked, bumped per tick so the row and the face replay. */
 	just: Row | null;
 	tickKey: number;
-	/** Bumped each time the greeting closes, so the pill rises again. */
 	closeKey: number;
-	/** What this return holds on the server now, and whether Today is about to greet (set by Today's host). */
 	live: { away: Away; name: string | null; items: Items; due: boolean };
-	/** `<account>|<episode>` last greeted (kept). */
 	greeted: string | null;
 };
 
@@ -51,9 +39,7 @@ type Actions = {
 	setPage: (page: State["page"]) => void;
 	setCheckInOpen: (open: boolean) => void;
 	answer: (a: Answer) => void;
-	/** The check-in is leaving. `later`: the tick waits for the greeting to be in front. */
 	leaveCheckIn: (later: boolean) => void;
-	/** Back (read) or Let it pass from the prompt page. */
 	leavePrompt: (how: Exclude<PromptState, "waiting" | "written">) => void;
 	writePrompt: () => void;
 	landDeferred: () => void;
@@ -61,7 +47,6 @@ type Actions = {
 	markGreeted: (key: string) => void;
 };
 
-/** Board `finishCk` / `pmLeave`: the tick lands 440 ms after the check-in starts closing, 320 ms after the prompt page. */
 const TICK_AFTER = { ck: 440, pm: 320 } as const;
 
 const FRESH = {

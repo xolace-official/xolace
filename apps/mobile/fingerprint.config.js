@@ -1,7 +1,3 @@
-// Expo fingerprint settings. The fingerprint is the production runtimeVersion
-// and drives the `native-change` PR label, so it must change only when the
-// native app does.
-//
 // app.config.ts copies per-environment values into `extra`. They differ between
 // the development, preview and production EAS environments (and are missing in
 // CI), so they used to flip the fingerprint with no native change. `extra`
@@ -12,9 +8,6 @@
 // EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME stays in: the @clerk/expo-google-signin
 // config plugin writes it into Info.plist CFBundleURLTypes at prebuild, which is
 // a real native change.
-//
-// When you add a key to `extra`, add it here only if no config plugin or native
-// code reads it.
 /** @type {readonly string[]} */
 const JS_ONLY_EXTRA_KEYS = [
 	"EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID",

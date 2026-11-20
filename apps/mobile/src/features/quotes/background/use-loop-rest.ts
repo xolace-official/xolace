@@ -13,7 +13,6 @@ function loadBattery(): BatteryModule | null {
 }
 const battery = loadBattery();
 
-/** Low Power Mode, live; false when the binary has no expo-battery. */
 function useLowPower(): boolean {
 	const [low, setLow] = useState(false);
 	useEffect(() => {
@@ -36,7 +35,6 @@ function useLowPower(): boolean {
 	return low;
 }
 
-/** Loops rest in the background and in Low Power Mode. Reduce Motion and pause are the screen's. */
 export function useLoopRest(): { lowPower: boolean; active: boolean } {
 	return { active: useAppActive(), lowPower: useLowPower() };
 }

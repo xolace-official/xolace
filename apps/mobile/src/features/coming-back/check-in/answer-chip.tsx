@@ -14,17 +14,12 @@ import { cn } from "@/lib/cn";
 import { useTokenColors } from "@/lib/use-token-color";
 import { ANSWER_LABEL, type CheckInPick } from "../copy";
 
-/** Board `.achip`: 36 tall, 12 under the headline; rises from 30 / .9, .45 s from .12 s. */
 export const CHIP_GAP = 12;
 const T = { at: 120, fade: 250, from: 30, ms: 450, scale: 0.9 } as const;
 const EASE = Easing.bezier(0.2, 0.85, 0.25, 1);
 const CHIP_TEXT = { fontSize: 14 } as const;
 const GLYPH = 14;
 
-/**
- * Board `.a-*` tints, on themed tokens so the chip follows light and dark. Still has no blue
- * wash/ink pair: frost at 14% under a frost icon, the label in foreground.
- */
 const CHIP: Record<
 	CheckInPick,
 	{ bg: string; text: string; icon: IconName; tint: string }
@@ -55,7 +50,6 @@ const CHIP: Record<
 	},
 };
 
-/** Your answer, under the question once you've picked. */
 export function AnswerChip({
 	picked,
 	reduced,

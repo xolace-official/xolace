@@ -27,7 +27,6 @@ const css = [
 	.map((f) => readFileSync(f, "utf8"))
 	.join("\n");
 
-/** Names declared as `--<namespace>-<name>:` in our CSS. */
 const declared = (namespace: string) => [
 	...new Set(
 		[...css.matchAll(new RegExp(`--${namespace}-([a-z0-9-]+):`, "g"))].map(
@@ -43,8 +42,6 @@ describe("cn", () => {
 	});
 
 	it("lets a caller's face class beat AppText's default body face", () => {
-		// Uniwind ranks by stylesheet, where font-normal sorts after these: only
-		// the merge can drop it.
 		for (const face of [
 			"font-mirror",
 			"font-letter",
@@ -75,7 +72,6 @@ describe("cn", () => {
 		expect(cn("font-[Poppins-Medium]", "font-bold")).toBe("font-bold");
 		expect(cn("font-semibold", "font-[600]")).toBe("font-semibold font-[600]");
 		expect(cn("font-display", "font-mirror")).toBe("font-mirror");
-		// Weight keywords replace a role, as plain tailwind-merge did (system face).
 		expect(cn("font-normal", "font-light")).toBe("font-light");
 	});
 

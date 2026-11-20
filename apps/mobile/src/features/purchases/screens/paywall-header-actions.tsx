@@ -17,11 +17,8 @@ const CLOSE_ICON_NAME = {
 
 type CloseProps = {
 	surface?: PaywallSurface;
-	/** Paired with `paywall_opened`'s. `null` while loading, never 0 (a real cohort: intake). */
 	sessionCount?: number | null;
-	/** Overrides the route close; see PaywallScreen's `onExit`. */
 	onClose?: () => void;
-	/** Set once an exit is in flight, so a second tap cannot fire a second `paywall_dismissed`. */
 	isDisabled?: boolean;
 };
 
@@ -56,7 +53,6 @@ export function PaywallCloseButton({
 }
 
 type RestoreProps = {
-	/** Told as a restore starts, before the store is called, and as it ends. */
 	onRestoring?: (active: boolean) => void;
 };
 
@@ -74,9 +70,6 @@ export function PaywallRestoreButton({ onRestoring }: RestoreProps) {
 		});
 	};
 
-	// Android's native header truncates the label ("Restor") without a fixed width; iOS
-	// must stay intrinsic or its glass capsule inflates. The spinner keeps the width
-	// constant so the header never re-measures.
 	return (
 		<PressableFeedback
 			accessibilityLabel="Restore purchases"

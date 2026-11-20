@@ -10,7 +10,6 @@ import { useTokenColors } from "@/lib/use-token-color";
 import { AnimatedCarouselCard } from "./animated-carousel-card";
 import { CarouselPaginator } from "./carousel-paginator";
 
-/** The carousel's height: the resting card plus the paginator row (40). */
 export const carouselHeightFor = (cardHeight: number) => cardHeight + 40;
 
 const STACK_OFFSET = 8;
@@ -21,7 +20,6 @@ const PAGINATOR_SPACING = 10;
 type StackedCarouselProps<T> = {
 	data: T[];
 	renderCard: (item: T, index: number) => React.ReactNode;
-	/** Fires on a tap-release (not a drag) over card `index`. */
 	onCardPress?: (item: T, index: number) => void;
 	cardWidth?: number;
 	cardHeight?: number;
@@ -35,8 +33,6 @@ export const StackedCarousel = <T,>({
 	cardHeight = 180,
 }: StackedCarouselProps<T>) => {
 	const { width: screenWidth } = useWindowDimensions();
-	// Production mixed alpha into the theme's hex; themes aren't all hex, so the dots take
-	// the ink at an opacity (paginator) and the shadow is fixed.
 	const [cardBackground, dotColor, hairline, shadowColor] = useTokenColors([
 		"surface",
 		"foreground",
@@ -44,9 +40,6 @@ export const StackedCarousel = <T,>({
 		"today-moment-shadow",
 	]);
 
-	// Every child is absolute, so the container needs an explicit height: the
-	// resting card plus the paginator row. Overflow is clipped, so the scale-1.15
-	// swipe peak crops instead of needing headroom.
 	const carouselHeight = carouselHeightFor(cardHeight);
 
 	const scrollX = useSharedValue(0);
@@ -69,8 +62,6 @@ export const StackedCarousel = <T,>({
 	);
 
 	return (
-		// justify-start, not center: the absolute cards take their static position
-		// from this, and centering pulled the card down over the paginator dots.
 		<View
 			className="items-center justify-start overflow-hidden"
 			style={{ height: carouselHeight }}
@@ -94,13 +85,9 @@ export const StackedCarousel = <T,>({
 			{/* Invisible list over the cards: the sole touch target, driving both
 			 * scroll and onCardPress (the card visuals are pointerEvents:none). */}
 			<Animated.FlatList
-				// Prototype: kept from VoiceOver. It is a touch layer of unlabelled pressables
-				// whose scroll bars VoiceOver reads ("Vertical scroll bar, 4 pages"); the cards
-				// under it carry the words.
 				accessibilityElementsHidden
 				className="absolute z-1000"
 				contentContainerStyle={{
-					// Without a matching paddingRight the last card cannot scroll to center.
 					paddingLeft: (screenWidth - cardWidth) / 2,
 					paddingRight: (screenWidth - cardWidth) / 2,
 					paddingTop: STACK_OFFSET * 3,

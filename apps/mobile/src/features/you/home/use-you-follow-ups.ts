@@ -1,8 +1,3 @@
-/**
- * The Follow-ups tab's reads and taps, production's (`profile/hooks/use-profile-follow-ups.ts`,
- * `follow-up-row.tsx`): the open groups, the paged history, opening a check-in and closing a
- * card no check-in is coming for.
- */
 import { api } from "@xolace/backend/api";
 import { useMutation, usePaginatedQuery, useQuery } from "convex/react";
 import { router } from "expo-router";
@@ -37,7 +32,6 @@ export function useYouFollowUps() {
 		}
 	};
 
-	// The check-in (`/check-in`, coming back's) takes the answer, with its steps per tier.
 	const checkIn = (card: FollowUpCard) => {
 		markShown({ cardId: card._id }).catch(() => undefined);
 		posthog.capture("follow_up_shown", {

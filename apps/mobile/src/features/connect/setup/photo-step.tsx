@@ -11,11 +11,6 @@ import { SETUP } from "./copy";
 const PHOTO = 128;
 const CAMERA = { android: "photo_camera", ios: "camera" } as const;
 
-/**
- * The photo: a dashed circle with a camera until one is picked, then the photo itself. Picking
- * opens the library (iOS asks for access with its own prompt) and uploads straight away; a veil
- * and a spinner cover the circle meanwhile. Edit adds a line that the swap is immediate.
- */
 export function PhotoStep({
 	photoUrl,
 	uploading,

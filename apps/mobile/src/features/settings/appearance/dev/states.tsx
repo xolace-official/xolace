@@ -1,5 +1,3 @@
-/** Settings › Appearance on fixtures: `xolace://dev/settings/<id>` (handoff settings.md §9–§10). */
-
 import { themeVariant } from "@/design/themes";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureAppearance } from "@/features/settings/appearance/dev/fixture-appearance";
@@ -11,7 +9,6 @@ import {
 	APPEARANCE_TOP,
 } from "@/features/settings/appearance/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Appearance" };
 const ROSE_DARK = themeVariant("rose", "dark");
 

@@ -19,25 +19,12 @@ import {
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** Day letters sit 6 pt under the bars, 12 pt tall: the bars' baseline from the bottom. */
 const BASE = 18;
-/** Before the readout claims the touch, as on Your days. */
 const HOLD_MS = 180;
-/**
- * The scale labels' gutter (§6), and their line height before Dynamic Type. AppText caps body
- * text at `BODY_MAX_SCALE` (1.8), so a label is at most 19.8 pt tall: the four, 24 pt apart,
- * never crowd, and all four stay at every text size. A label wider than the gutter shrinks.
- */
 const GUTTER = 64;
 const LABEL_LINE = 11;
 const LABEL_MIN_SCALE = 0.6;
 
-/**
- * The plot: your usual behind seven bars, the scale in its own right gutter with each label on
- * its level. Press and hold, then drag, to read a day (`onHeld` only when the day changes, with
- * a selection haptic). Weeks page with the arrows only: a swipe here would fight the tabs'
- * own swipe (Insights ↔ Follow-ups), which the native pager owns.
- */
 export function WeekPlot({
 	days,
 	usual,
@@ -68,7 +55,6 @@ export function WeekPlot({
 			scheduleOnRN(onHeld, i);
 		}
 	};
-	// `onStart`, not `onBegin`: a scroll swipe mustn't light a bar.
 	const hold = Gesture.Pan()
 		.minDistance(0)
 		.activateAfterLongPress(HOLD_MS)
@@ -81,8 +67,6 @@ export function WeekPlot({
 			held.set(-1);
 			scheduleOnRN(onHeld, null);
 		});
-	// iOS scales `lineHeight` itself, so the line stays fixed; only the offset follows the
-	// text's own (capped) scale.
 	const labelH = LABEL_LINE * Math.min(fontScale, BODY_MAX_SCALE);
 
 	return (

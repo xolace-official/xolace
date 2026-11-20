@@ -7,14 +7,11 @@ import { COPY } from "../copy";
 import { LAYOUT } from "../session-look";
 
 const L = LAYOUT;
-/** The small labels grow with Dynamic Type, capped as the titles are. */
 const LABEL_MAX = 1.25;
-/** A 14 pt label's line (the ends, the not-sure line). */
 export const LINE = 18;
 
 type Styled = { style: ReturnType<typeof useAnimatedStyle> };
 
-/** Board `.unh`: "That's okay. It can take a while to land.", only while unsure. */
 export function NotSureLine({ style }: Styled) {
 	return (
 		<Animated.View
@@ -41,7 +38,6 @@ export function NotSureLine({ style }: Styled) {
 	);
 }
 
-/** Board `.ends`: "heavier" and "lighter" under the track. VoiceOver reads the slider instead. */
 export function MoodLabels({ style }: Styled) {
 	return (
 		<Animated.View
@@ -72,7 +68,6 @@ export function MoodLabels({ style }: Styled) {
 	);
 }
 
-/** Board `.ns`: a 44 pt "Not sure", violet when chosen. */
 export function NotSureButton({
 	selected,
 	onPress,

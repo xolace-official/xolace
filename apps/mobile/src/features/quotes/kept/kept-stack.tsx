@@ -20,7 +20,6 @@ import {
 import { CARD, CARD_IN_STACK, KeptCard } from "./kept-card";
 import { KeptHeader, KeptNav } from "./kept-nav";
 
-/** Header at the top inset + 6; the stack 76 pt under it. */
 const STACK_BELOW_TOP = 76;
 const BELOW_CARD = 26;
 const SWIPE = 50;
@@ -31,7 +30,6 @@ const A11Y = QUOTE_COPY.accessibility;
 
 type Props = {
 	cards: readonly Card[];
-	/** How many are kept in all (more may still be loading). */
 	total: number;
 	index: number;
 	backgrounds: readonly QuoteBackground[];
@@ -41,7 +39,6 @@ type Props = {
 	onReflect: (c: Card) => void;
 };
 
-/** Words you kept: a stack of cards over the softened background, each on its own background. */
 export function KeptStack(p: Props) {
 	const insets = useSafeAreaInsets();
 	const { width } = useWindowDimensions();

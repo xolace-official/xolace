@@ -211,7 +211,6 @@ describe("a skip that leaves nothing waiting (§5)", () => {
 
 describe("a chosen stop after a tend (§4, §6)", () => {
 	it("the tend's move-on is ticketed when it plays: a stop tapped during the ~2.4 s burn keeps the card", () => {
-		// "I did this" is a choice; the tend plays 160 ms later and takes its ticket then.
 		const atPlay = chosen(NO_CHOICES);
 		const tappedStop3 = chosen(atPlay);
 		expect(moveOnLands(atPlay, tappedStop3)).toBe(false);

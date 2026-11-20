@@ -1,7 +1,6 @@
 import { Skia, type SkPath } from "@shopify/react-native-skia";
 import { cubicBetween, nodesFor, PATH_W } from "./kindling-model";
 
-/** Flattened once to an arc-length table (trail-route-card), measured with ContourMeasure.getPosTan. */
 const SAMPLES = 48;
 export type Table = { xs: number[]; ys: number[]; len: number };
 export type PathGeometry = {
@@ -24,10 +23,6 @@ function flatten(path: SkPath): Table {
 }
 
 const cache = new Map<string, PathGeometry>();
-/**
- * The board draws the path 322 pt wide; wider cards stretch it along x only (points
- * move, strokes and circles keep their shape). Built once per width and count.
- */
 export function pathGeometry(width: number, count: number): PathGeometry {
 	const sx = Math.round((width / PATH_W) * 1000) / 1000;
 	const key = `${sx}:${count}`;
@@ -54,7 +49,6 @@ export function pathGeometry(width: number, count: number): PathGeometry {
 	return geo;
 }
 
-/** A point `u` (0…1 of the arc length) along a flattened stretch. */
 export function alongX(t: Table | undefined, u: number) {
 	"worklet";
 	if (!t) {

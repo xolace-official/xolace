@@ -8,7 +8,6 @@ import { answerOf, draftAfter, type SendAnswer } from "../letters-model";
 import { useLettersCalls, useLettersStatus } from "../use-letters-data";
 import type { LettersWrite, WriteOpens } from "./write-data";
 
-/** The app always opens it writing. */
 const OPENS: WriteOpens = {
 	care: false,
 	focus: false,
@@ -17,13 +16,8 @@ const OPENS: WriteOpens = {
 	stage: "edit",
 };
 
-/**
- * A send that never reached the check (or outran its ceiling) comes back to the words, with
- * nothing to fix.
- */
 const NOT_SENT: SendAnswer = { held: false, line: "", next: "back" };
 
-/** The writing screen on the letters data module and the device's draft. */
 export function useWrite(): LettersWrite {
 	const text = useKeptField("text");
 	const forWho = useKeptField("forWho");
@@ -40,12 +34,10 @@ export function useWrite(): LettersWrite {
 				const result = await check.run(
 					async () => {
 						try {
-							// What's sent is trimmed, as both limits count it.
 							return answerOf(
 								await calls.send({ ...draft, text: draft.text.trim() })
 							);
 						} catch (error) {
-							// Refused on age: the seam opened the age ask; the words stay for Send.
 							if (isAgeRefusal(error)) {
 								return null;
 							}
@@ -59,7 +51,6 @@ export function useWrite(): LettersWrite {
 						}
 					},
 					(answer) => {
-						// The words may have changed since (Write closed and opened again mid-check).
 						const change = draftAfter(answer, draft.text, draftNow());
 						if (change && "clear" in change) {
 							clearDraft();

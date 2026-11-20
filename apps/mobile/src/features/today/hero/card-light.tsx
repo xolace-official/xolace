@@ -16,10 +16,8 @@ import { CardRim } from "./card-rim";
 import { BLEED, useCardTextures } from "./card-textures";
 import { CARD_TOKENS, HERO, LIGHT } from "./hero-model";
 
-/** The Flux spectrum: the edge light by day and the hold rim. */
 const SPECTRUM = ["peach", "rose", "lilac", "sky"] as const;
 
-/** The edge light's breath: its width .96 → 1 (scaleX about the card's centre). */
 const EDGE_NARROW = 0.96;
 const BREATH_MS = HERO.breathS * 1000;
 
@@ -27,31 +25,13 @@ type Props = {
 	w: number;
 	h: number;
 	late: boolean;
-	/** The light breathes (4.8 s): Today live and the card on screen. */
 	breathing: boolean;
 	reduced: boolean;
-	/** Hold progress 0 → 1; the rim fills clockwise from 12 o'clock. */
 	rim: SharedValue<number>;
-	/** 1 while holding, .45 once the doors are open. */
 	rimOpacity: SharedValue<number>;
-	/** Quality gate failed: no blurred rim copy. */
 	low: boolean;
 };
 
-/**
- * The card, lit from within: its shadow, the edge light behind its lower edge, the surface,
- * the inner light rising from its floor, the hairline and the hold rim, in that order.
- *
- * The surface and hairline are the only theme colours here, and they are plain views
- * (`bg-surface`, `border-separator`), not Skia. A Skia canvas shows the last picture it was
- * sent; a theme change made while Today sat frozen behind another tab could reach the card
- * without that picture being redrawn, leaving last theme's surface under this theme's text.
- * Views take the new colour from Uniwind like the rest of the page. The
- * blurred lights are drawn once into textures and each sits in its own canvas, drawn once;
- * the breath is the opacity (and the edge's width) of the views around those two canvases,
- * a native loop (react-native-ease), so at rest nothing is redrawn. Only a hold draws the
- * rim live.
- */
 export function CardLight({
 	w,
 	h,
@@ -83,7 +63,6 @@ export function CardLight({
 		w,
 	});
 
-	// Stopping (off screen, Reflect in front) eases the light back to rest; starting again remounts.
 	const run = useLoopRun(breathing && !reduced);
 	const edgeBreath = loopOrSettle({
 		from: { opacity: edge.low, scaleX: EDGE_NARROW },

@@ -17,16 +17,10 @@ import { ink } from "../first-run-palette";
 import type { SEng } from "../story/story-scene";
 import { seatAge, seatedOut } from "./seat-in";
 
-/** Each link's own touch target: 15 pt over and under its 15 pt line makes it about 44 pt. */
 const LINK_SLOP = { bottom: 15, left: 8, right: 8, top: 15 };
 
-/** The lead-in's words, each its own piece so the row wraps word by word at large type. */
 const LEAD = SEAT.termsBefore.trim().split(" ");
 
-/**
- * "By continuing you agree to the Terms and Privacy Policy." Each link opens production's legal
- * sheet. VoiceOver reads the lead-in once, from its first word.
- */
 export function SeatTerms({ eng }: { eng: SharedValue<SEng> }) {
 	const [doc, setDoc] = useState<LegalDocument | null>(null);
 	const style = useAnimatedStyle(() => {

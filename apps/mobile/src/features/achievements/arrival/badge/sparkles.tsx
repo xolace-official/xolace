@@ -13,19 +13,15 @@ import {
 } from "@/features/achievements/arrival/arrival-motion";
 import { easeOut, seg, TAU } from "@/features/achievements/motion-math";
 
-/** A four-point star, `r` 10 in a −10…10 box (production's `starPath`, waist .22). */
 const STAR = "M0-10Q2.2-2.2 10 0Q2.2 2.2 0 10Q-2.2 2.2-10 0Q-2.2-2.2 0-10Z";
 const STAR_BOX = 24;
-/** On a ring at 1.2 × the radius, faded in 760–1060 ms. */
 const RING = 1.2;
 const FADE_IN = { from: 760, to: 1060 } as const;
-/** Grows from 40% as it lights, turning .6 rad. */
 const MIN_SCALE = 0.4;
 const SPIN = 0.6;
 
 type Sparkle = (typeof SPARKLES)[number];
 
-/** Production's five rim sparkles (`badge-fx.tsx`), lit sin² in turn, as small views. */
 export function Sparkles({
 	eng,
 	fa,
@@ -77,7 +73,6 @@ function SparkleView({
 		const lit = l > 0 ? l * l : 0;
 		const ang = s.turn * TAU;
 		const reach = c.r * RING;
-		// The star's tip-to-tip is r × the coin's diameter, drawn in a 24 pt box.
 		const size = (s.r * c.r * 2 * 2) / STAR_BOX;
 		return {
 			opacity: lit * on,

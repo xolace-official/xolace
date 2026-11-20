@@ -1,8 +1,6 @@
-/** The You tab on fixtures: `xolace://dev/you/<id>` (P/design/handoff/you.md §10). */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureYou } from "@/features/you/home/dev/fixture-you";
 
-/** The tab draws its own see-through header with the gear, as in the app. */
 const OPTIONS = { headerTransparent: true, title: "" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

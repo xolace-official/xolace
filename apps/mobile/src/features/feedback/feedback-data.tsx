@@ -8,15 +8,12 @@ import { useFeedback } from "./use-feedback";
 
 export type FeedbackState = {
 	step: FeedbackStep;
-	/** Back to the menu: only when the sheet opened on it. */
 	canGoBack: boolean;
 	kind: FeedbackKind;
-	/** A concern's person, for "About …". */
 	subjectName: string | null;
 	text: string;
 	saving: boolean;
 	error: string | null;
-	/** Today's budget for this kind is spent. */
 	limited: boolean;
 	whatsNewUnseen: boolean;
 };
@@ -52,7 +49,6 @@ export function useFeedbackScreen(): FeedbackScreen {
 	return screen;
 }
 
-/** Fills the sheet from Convex: where it opened, and the screen it was raised on. */
 export function FeedbackData({
 	start,
 	from,

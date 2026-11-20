@@ -7,7 +7,6 @@ import type { Topics } from "@/features/explore/topics/topics-data";
 
 const NO_ACTIONS = {};
 
-/** Topics' data: the grid, alphabetical, and production's open event. */
 export function useTopics(): Topics {
 	const posthog = usePostHog();
 	const topics = useQuery(api.browse.topics.getTopics, {});

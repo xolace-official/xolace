@@ -15,7 +15,6 @@ import {
 import type { SharedValue } from "react-native-reanimated";
 import { clearOf } from "@/design/clear-of";
 
-/** `.cd .lit`: the floor light, 120% × 80% at 50% / 118%; its stops. */
 const FLOOR = {
 	cx: 0.5,
 	cy: 1.18,
@@ -23,17 +22,10 @@ const FLOOR = {
 	rx: 1.2,
 	ry: 0.8,
 } as const;
-/** `.lv .edge`: the spectrum pill under the card (Peers' edge). */
 const EDGE = { below: 10, blur: 22, height: 40, inset: 40 } as const;
 
-/** Room around the edge pill for its blur (σ 22, about 3σ). */
 const BLEED = 70;
 
-/**
- * Board `.cd .lit`: the floor light, a radial 120% × 80% of the card at 50% / 118%, clipped to the
- * card, under the text (Peers' `PeerInnerLight` with this board's centre and values). Static: only its
- * opacity moves, so the canvas redraws only while it fades.
- */
 export function FloorLight({
 	w,
 	h,
@@ -69,10 +61,6 @@ export function FloorLight({
 	);
 }
 
-/**
- * Board `.lv .edge`: the spectrum pill under the card's lower edge, blurred 22, drawn behind the card
- * (Peers' `PeerEdgeGlow`). The blur is baked once; it only fades (held .26, ready .36).
- */
 export function EdgeGlow({
 	w,
 	h,

@@ -14,9 +14,7 @@ export function nextCollapse({
 	offset,
 }: {
 	range: number;
-	/** The range before this change; null on the first run, which only reads it. */
 	before: number | null;
-	/** The active tab's scroll offset; undefined before its list registers. */
 	offset: number | undefined;
 }) {
 	"worklet";

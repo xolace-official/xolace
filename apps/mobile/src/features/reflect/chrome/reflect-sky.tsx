@@ -3,11 +3,6 @@ import { useScheme } from "@/design/scheme";
 import { useTokenColors } from "@/lib/use-token-color";
 import { useBoardY } from "../layout";
 
-/**
- * Board `.rsky`: the evening sky's last light at the top of Reflect (late: dusk, opaque). On a
- * dark theme the same light is a faint wash: at the board's .6 it lit the top of a dark page
- * nearly white, right behind the placeholder and the header's buttons.
- */
 const SKY = {
 	evening: {
 		locations: [0, 0.38, 0.62, 1],

@@ -11,11 +11,8 @@ import { ProfileCta } from "./profile-cta";
 import { XolacerBlockDialog, XolacerToolbar } from "./xolacer-chrome";
 import { useXolacerScreen } from "./xolacer-data";
 
-/** A Xolacer: the facts in front of you before you ask, including what they'll see of you. The
- * page scrolls under the header; the call to action stays at the bottom. */
 export function XolacerScreen() {
 	const { state, actions } = useXolacerScreen();
-	// See-through on iOS, so the glow runs under it; opaque on Android.
 	const header = (
 		<Stack.Screen options={{ ...useHeaderOptions("small"), title: "" }} />
 	);

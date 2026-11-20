@@ -32,30 +32,24 @@ import { COPY } from "@/features/achievements/copy";
 import { playAffirmativePress, playErrorNotice, tap } from "@/lib/haptics";
 import { useLater } from "@/lib/use-later";
 
-/** The board's phone: positions are from its top, on a 54 pt status bar. */
 const BOARD_STATUS = 54;
 const HELD_Y = 400;
 const TITLE_Y = 134;
-/** A still state (a dev state's held frame) starts this far in. */
 const STILL_AGE = 5000;
 const MAX_DT = 64;
 const AXIS_LOCK = 10;
 const TAP_MS = 350;
-/** A pan from the left edge puts the badge back instead of leaving the screen. */
 const EDGE = 24;
 const EDGE_CLOSE = 60;
 const EDGE_SPEED = 500;
 const CLOSE_PAST = 90;
 const CLOSE_SPEED = 700;
-/** Pulled down: `300 · (1 − e^(−dy/300))`; pushed up, a stiff 14 pt at most. */
 const PULL = 300;
 const PULL_UP = 14;
 const PULL_UP_SOFT = 40;
 const FOCUS_MS = 60;
-/** The pan's axis: undecided, turning, pulling, refused (locked or reduced), the left edge. */
 const AXIS = { edge: 4, none: 0, pull: 2, refused: 3, turn: 1 } as const;
 
-/** Where the page puts things on this screen: the board's tops shifted by the status bar. */
 export const geo = (top: number, width: number) => {
 	const dy = top - BOARD_STATUS;
 	return { dy, hx: width / 2, hy: HELD_Y + dy, ty: TITLE_Y + dy };
@@ -103,20 +97,12 @@ type Args = {
 	badge: BadgeView | undefined;
 	open: boolean;
 	pose: SharedValue<Pose>;
-	/** The safe area's top and the window's width, for `geo`. */
 	top: number;
 	width: number;
 	reduced: boolean;
-	/** The title, for VoiceOver focus as the badge comes out. */
 	title: RefObject<TextInstance | null>;
 };
 
-/**
- * One clock while a badge is out (native-cook's use-vault-motion): a frame
- * callback steps the engine on the UI thread and writes the pose. React hears
- * landing, faces, rattles and seating. The page stays mounted; each open (a new
- * `out.n`) starts a fresh engine and the clock.
- */
 export function useBadgeEngine({
 	out,
 	badge,
@@ -136,7 +122,6 @@ export function useBadgeEngine({
 	useEffect(() => {
 		cur.current = { badge, out };
 	});
-	// The open whose clock has stopped (idle or seated); a touch or a new open restarts it.
 	const [stopped, setStopped] = useState(0);
 	const running = open && out !== null && stopped !== out.n;
 
@@ -186,7 +171,6 @@ export function useBadgeEngine({
 		clock.setActive(running);
 	}, [running, clock]);
 
-	// A new badge out: a fresh engine, its first pose, focus on the title.
 	const n = open && out ? out.n : 0;
 	useEffect(() => {
 		const o = cur.current.out;
@@ -242,11 +226,6 @@ function focusNow(node: ViewInstance | TextInstance | null) {
 	}
 }
 
-/**
- * Pan (axis lock after 10 pt: sideways turns, down puts back, from the left
- * edge goes back) and tap. The React Compiler keeps them across renders, so a
- * new badge doesn't reconfigure the native handlers.
- */
 function useGestures(eng: SharedValue<Engine | null>, wake: () => void) {
 	const axis = useSharedValue<number>(AXIS.none);
 	const touched = () => {

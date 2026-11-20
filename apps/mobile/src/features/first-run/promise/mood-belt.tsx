@@ -16,11 +16,6 @@ import {
 const TAP_SLOP = 6;
 const MS = 1000;
 
-/**
- * The mood marquee: production's eight cards and arc, drifting 18 pt/s. Drag them and they follow
- * the finger; let go and they fly at its speed (≤ 6000 pt/s), leaning, then ease back to the drift.
- * Tap one to name it. All on the UI thread: the engine holds the offset, speed and lean.
- */
 export function MoodBelt({
 	eng,
 	stage,
@@ -72,7 +67,6 @@ export function MoodBelt({
 				}
 				return e;
 			});
-			// A flick as a card is named; nothing is stored.
 			if (tapped >= 0) {
 				flick();
 			}

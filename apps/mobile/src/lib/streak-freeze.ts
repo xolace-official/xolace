@@ -1,10 +1,3 @@
-/**
- * Why a streak freeze can't be bought, as `achievements/sparks.buyFreeze` decides it. In
- * `src/lib` because two screens sell freezes (Achievements and You's freeze explanation) and
- * features can't import each other; one copy keeps their reasons from drifting apart.
- */
-
-/** The fields of `achievements/display.shelf` the checks read. */
 type FreezeShelf = {
 	balance: number;
 	freezeCap: number;
@@ -25,11 +18,6 @@ const FREEZE_COPY = {
 		`${plural(sparks, "more spark", "more sparks")} to buy one.`,
 } as const;
 
-/**
- * Why the buy is off, null when it's on. The checks run in the order the server's run them
- * (`buyFreeze` in `packages/backend/convex/achievements/sparks.ts`): an ended streak, then
- * too few sparks, then the cap. Keep the two in step.
- */
 export function freezeReason(shelf: FreezeShelf): string | null {
 	if (shelf.streakLapsed) {
 		return FREEZE_COPY.lapsed;
@@ -44,7 +32,6 @@ export function freezeReason(shelf: FreezeShelf): string | null {
 	return null;
 }
 
-/** What a refused buy says: a race the screen hadn't caught up with, or a failure. */
 export function freezeRefusal(code: unknown, freezeCap: number): string {
 	switch (code) {
 		case "freeze_cap_reached":

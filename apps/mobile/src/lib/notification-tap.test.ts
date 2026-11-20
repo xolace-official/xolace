@@ -15,7 +15,6 @@ function response(
 	return { notification: { request: { content: { body, data }, identifier } } };
 }
 
-/** A fake emitter that lets a test choose cold-start or warm delivery ordering. */
 function source(launch: TapResponse | null) {
 	let listener: ((r: TapResponse) => void) | null = null;
 	let cached = launch;
@@ -47,8 +46,6 @@ function source(launch: TapResponse | null) {
 	return src;
 }
 
-/** The cold-start bug: the launch tap fires before `(protected)` subscribes, so only `getLast`
- * still holds it. */
 describe("subscribeToNotificationTaps", () => {
 	it("delivers the launch tap the listener never fires for (cold start)", () => {
 		const onTap = vi.fn();
@@ -57,7 +54,6 @@ describe("subscribeToNotificationTaps", () => {
 			type: "chat_message",
 		});
 
-		// The defining property of a cold start: nothing is ever emitted.
 		subscribeToNotificationTaps(source(launch), onTap);
 
 		expect(onTap).toHaveBeenCalledTimes(1);
@@ -125,7 +121,6 @@ describe("subscribeToNotificationTaps", () => {
 	});
 });
 
-/** Where a tap usually comes in: a tab, nothing in progress. */
 const ON_TABS = "/today";
 
 describe("notificationTapPlan", () => {
@@ -143,7 +138,6 @@ describe("notificationTapPlan", () => {
 				pathname: "/chat/[conversationId]",
 			},
 		});
-		// Conversation notifications carry no analytics row.
 		expect(plan.logId).toBeUndefined();
 	});
 
@@ -174,7 +168,6 @@ describe("notificationTapPlan", () => {
 					.navigation
 			).toBeUndefined();
 		}
-		// The Connect-tab types never read the id, so they still route.
 		expect(
 			notificationTapPlan({ type: "chat_expired" }, null, 1000, ON_TABS)
 				.navigation
@@ -208,8 +201,6 @@ describe("notificationTapPlan", () => {
 			action: "push",
 			href: "/(protected)/quotes",
 		});
-		// Back to Reflect, never `navigate` or `push`: over the tabs or a thread
-		// those stack a second copy of it.
 		for (const type of [
 			"gentle_return",
 			"pattern_nudge",
@@ -386,7 +377,6 @@ describe("notificationTapPlan", () => {
 			"/voice-vent",
 			"/talk",
 			"/crisis-resources",
-			// Reflect is pushed over the tabs: home would pop a reflection in progress.
 			"/reflect",
 			"/chat/c1",
 			"/xolace-channel",

@@ -6,13 +6,9 @@ import { useCallback, useState } from "react";
 import type { ActiveKindling, ServerTwig } from "./kindling-model";
 import { twigHref } from "./twig-links";
 
-/** Where a xolacer twig goes (#570): the closest person by meaning (asked at tap, never
- * stored), else the roster filtered to the specialty. `pendingId` holds through the push so
- * the button never flips back mid-transition, and clears when the screen is in front again. */
 export function useXolacerMatch() {
 	const suggest = useAction(api.ai.xolacers.suggest.sessionSuggestion);
 	const [pendingId, setPendingId] = useState<string | null>(null);
-	// useFocusEffect needs a stable callback (code-style's listed exception to no useCallback).
 	useFocusEffect(useCallback(() => setPendingId(null), []));
 	const resolve = async (
 		twig: ServerTwig,
@@ -21,7 +17,6 @@ export function useXolacerMatch() {
 		const roster = twigHref(twig, sessionId);
 		setPendingId(twig._id);
 		const person = await suggest({ sessionId }).catch((e: unknown) => {
-			// The roster is the fallback; the miss is worth knowing about.
 			Sentry.captureException(e);
 			return null;
 		});

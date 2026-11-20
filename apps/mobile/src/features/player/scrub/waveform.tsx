@@ -21,8 +21,6 @@ type BarProps = {
 	reduced: boolean;
 };
 
-/** One bar: rest 4 + peak × 28, touched 4 + peak × 36, swelling near the finger; played bars
- * are full white. All on the UI thread. */
 function Bar({ i, v, bars, head, boxW, reduced }: BarProps) {
 	const style = useAnimatedStyle(() => {
 		const g = head.grow.get();
@@ -46,7 +44,6 @@ function Bar({ i, v, bars, head, boxW, reduced }: BarProps) {
 	);
 }
 
-/** The waveform scrubber for spoken tracks (§2): thin bars, 32 pt at rest. */
 export function Waveform({
 	peaks,
 	duration,
@@ -90,7 +87,6 @@ export function Waveform({
 							boxW={boxW}
 							head={head}
 							i={i}
-							// The bars never reorder: a track's peaks are fixed.
 							key={`bar-${i.toString()}`}
 							reduced={reduced}
 							v={v}

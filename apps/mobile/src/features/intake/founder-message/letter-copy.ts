@@ -1,13 +1,8 @@
-// The founder's own words (#264). Edit only with him. One message for everyone (#236);
-// returning users (sessionCount > 0) get the same message plus a highlighted callout.
-
 export type Segment = { text: string; highlight?: true };
 export type AudienceKey = "new" | "existing";
 
-/** The heart of the message, identical for everyone. */
 export const FOUNDER_MESSAGE = {
 	closing: "with care,",
-	/** One CTA for everyone; the callout is the only sanctioned audience split. */
 	cta: "I’m ready",
 	greeting: "hey friend, I’m Nathaniel; Xolace’s CEO.",
 	paragraphs: [
@@ -42,12 +37,10 @@ export const FOUNDER_MESSAGE = {
 		],
 	] as Segment[][],
 	signature: "Nathaniel & the Xolace team ♡",
-	/** The line that hands off to the rest of intake. */
 	transition:
 		"In a minute we’ll ask you a few short questions, so Xolace can meet you where you actually are.",
 };
 
-/** Returning-user callout between the message and the hand-off line, only when sessionCount > 0. */
 export const RETURNING_CALLOUT_LABEL = "since you’ve been here";
 
 export const RETURNING_CALLOUT: Segment[] = [

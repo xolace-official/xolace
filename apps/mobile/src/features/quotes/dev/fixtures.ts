@@ -1,4 +1,3 @@
-/** Quotes on fixtures: what the dev states draw and the model tests read. */
 import { STILLS } from "@/features/quotes/background/stills";
 import {
 	type CatalogueRow,
@@ -9,7 +8,6 @@ import {
 } from "@/features/quotes/quotes-model";
 import type { QuotesState } from "@/features/quotes/quotes-screen-data";
 
-/** The catalogue's stills as B18 seeds them. Loops are hosted, so fixtures leave them out. */
 const CATALOGUE: readonly CatalogueRow[] = [
 	{ ink: "dark", key: "poster", kind: "still", name: "Poster", plus: false },
 	{
@@ -97,7 +95,6 @@ const KEPT: readonly KeptCard[] = [
 	},
 ];
 
-/** A Xolace+ account on today's session quote, over `key`. */
 export function fixtureState(
 	key = "poster",
 	patch: Partial<QuotesState> = {}

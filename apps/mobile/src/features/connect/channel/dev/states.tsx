@@ -1,9 +1,7 @@
-/** The Xolace channel on fixtures: `xolace://dev/connect/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import type { DevMessage } from "../../thread/dev/dev-messages";
 import { FixtureChannel } from "./fixture-channel";
 
-/** The channel sets its own title; the stack gives it the minimal back button. */
 const CHANNEL = {
 	headerBackButtonDisplayMode: "minimal" as const,
 	headerLargeTitle: false,
@@ -19,7 +17,6 @@ const BADGES: DevMessage = {
 	text: "Badges are here\n\nEverything you did before today counts. Have a look in You.",
 };
 
-/** The prototype's two posts, newest last. */
 const POSTS: DevMessage[] = [
 	BADGES,
 	{
@@ -33,7 +30,6 @@ const POSTS: DevMessage[] = [
 	},
 ];
 
-/** A few weeks of posts, for scrolling, paging and the date separators. */
 const LONG: DevMessage[] = [
 	{
 		ago: 21 * DAY_MIN,
@@ -59,7 +55,6 @@ const LONG: DevMessage[] = [
 	...POSTS,
 ];
 
-/** A post the broadcaster removed, and one they edited, between the two. */
 const CHANGED: DevMessage[] = [
 	{ ...BADGES, ago: 3 * DAY_MIN },
 	{
@@ -78,7 +73,6 @@ const CHANGED: DevMessage[] = [
 	},
 ];
 
-/** Posts with links and markdown, as Stream renders them on a card. */
 const FORMATTED: DevMessage[] = [
 	BADGES,
 	{
@@ -89,7 +83,6 @@ const FORMATTED: DevMessage[] = [
 	},
 ];
 
-/** The broadcaster's own post that didn't reach Stream, under one that did. */
 const NOT_SENT: DevMessage[] = [
 	...POSTS,
 	{

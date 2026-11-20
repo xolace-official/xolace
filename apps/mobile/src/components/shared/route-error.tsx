@@ -10,18 +10,12 @@ import { AppText } from "@/components/shared/app-text";
 import { ErrorRetry } from "@/components/shared/error-retry";
 import { releaseNativeAppearance } from "@/lib/native-appearance";
 
-// Root route error fallback, rendered outside RootProvider: no HeroUI, Clerk, Convex or
-// theme context, so plain RN and global tokens only (`ErrorRetry` reads none of them). Reports the error itself; the
-// message is never shown in production.
 export function RouteError({ error, retry }: ErrorBoundaryProps) {
 	const insets = useSafeAreaInsets();
 
 	useEffect(() => {
 		Sentry.captureException(error);
 		Observe.reportError(error);
-		// A crash in the root layout takes the launch cover with it, which would otherwise have
-		// hidden the native splash and released native appearance (left held, every later write
-		// would wait for a cover that never leaves).
 		SplashScreen.hideAsync().catch(() => undefined);
 		releaseNativeAppearance();
 	}, [error]);

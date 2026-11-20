@@ -18,11 +18,6 @@ import { continuePct } from "@/features/lantern/lantern-model";
 import { LS } from "@/features/lantern/lantern-style";
 import { useHeaderOptions } from "@/lib/header-options";
 
-/**
- * Lantern's home (handoff §2), in production's order: Continue reading, Reading as… on a first
- * visit, For you, Hubs, What kind of light, A–Z. One scroll view under the large title, with Saved
- * and Reading as in the bar. A first visit opens the welcome first; after it the sections rise in.
- */
 export function HomeScreen() {
 	const { state, actions } = useHomeScreen();
 	const header = useHeaderOptions();
@@ -40,7 +35,6 @@ export function HomeScreen() {
 				contentInsetAdjustmentBehavior="automatic"
 			>
 				{home === undefined ? <HomeSkeleton /> : null}
-				{/* Keyed by the arrival, so the sections mount again and rise in. */}
 				<View key={arrival}>
 					{home?.continue ? (
 						<Section enter={enter} order={1}>

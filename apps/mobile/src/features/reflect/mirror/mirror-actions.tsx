@@ -19,7 +19,6 @@ import { ACTIONS } from "../motion";
 import { useReflect } from "../reflect-data";
 import { useReflectDraw } from "../reflect-draw";
 
-/** Board `.macts.hide`: away in .3 s, 16 pt down, while Not quite or Say more is open. */
 const HIDE = { drop: 16, ms: 300 } as const;
 const STEP = { button: 2, hint: 1, row: 3 } as const;
 
@@ -30,17 +29,11 @@ function hintFor(pickMode: boolean, atCap: boolean): string {
 	return atCap ? COPY.mirror.capHint : COPY.mirror.hint;
 }
 
-/**
- * The mirror's actions (S19c, production's action row): the hint, That's it, then Say more and
- * Not quite, rising 8 pt and fading in over .4 s at 200, 400 and 600 ms after `startMs`. After
- * two tries, Leave it here takes their place (production's `gave_up`).
- */
 export function MirrorActions({ startMs }: { startMs: number }) {
 	const { state, actions } = useReflect();
 	const { reduced } = useReflectDraw();
 	const { nq, sayMore, pickMode, atCap, canSayMore, sayMoreHelps, landN } =
 		state;
-	// Production's turn cap: one compassionate hold as the last mirror offers no more turns.
 	useEffect(() => {
 		if (atCap) {
 			playCompassionateHold();

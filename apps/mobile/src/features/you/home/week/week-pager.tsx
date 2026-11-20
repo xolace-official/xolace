@@ -11,7 +11,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 const GATE_H = 64;
 
-/** Xolace+'s week pager, in the title row as the board draws it: two 28 pt round buttons. */
 export function WeekArrows({
 	canPrev,
 	canNext,
@@ -70,10 +69,6 @@ function Arrow({
 	);
 }
 
-/**
- * Production's frosted "earlier weeks" navigator for free users, the card's one gated
- * element: the week above reads free. A tap opens the paywall.
- */
 export function EarlierWeeksGate({ onPress }: { onPress: () => void }) {
 	const accent = useTokenColor("accent");
 	const muted = useTokenColor("muted");

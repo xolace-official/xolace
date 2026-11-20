@@ -1,4 +1,3 @@
-/** Settings' main screen on fixtures: `xolace://dev/settings/<id>` (handoff settings.md §10). */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureHome } from "@/features/settings/home/dev/fixture-home";
 import {
@@ -8,7 +7,6 @@ import {
 	HOME_UPDATED,
 } from "@/features/settings/home/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Settings" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

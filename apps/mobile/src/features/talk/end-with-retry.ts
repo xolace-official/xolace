@@ -1,10 +1,5 @@
-// Ending a talk has to land: a "Just end" lost to one failed call leaves the
-// mirror to open on home after all. `talk.session.end` and `markMirrorLater`
-// are idempotent, so they can go again.
-
 import { ConvexError } from "convex/values";
 
-/** Waits before each retry; all well inside the talk's idle window. */
 const END_RETRY_MS = [1000, 3000, 10_000];
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -18,7 +13,6 @@ export async function endWithRetry<T>(
 		try {
 			return await end();
 		} catch (e) {
-			// The server's answer (not the person's talk, say) won't change.
 			if (e instanceof ConvexError) {
 				throw e;
 			}

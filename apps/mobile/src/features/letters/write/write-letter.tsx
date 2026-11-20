@@ -12,29 +12,18 @@ import { BAND, Band, EMBER, Spark } from "./write-bands";
 
 const M = LETTER_MOTION;
 const H = SHEET.write.height;
-/** The glow behind the folded letter: 30 pt wider than the phone, 300 pt tall, on the middle band. */
 const GLOW = { height: 300, spill: SHEET.margin + 15 };
 const SPARK_XS = [-14, 10, -4];
-/** It breathes once folded and lit: the fold (2 steps) and the ignite play first. */
 const BREATHE_AFTER = M.fold.stepMs * 2 + M.mark.igniteMs;
 const FILL = { inset: 0, position: "absolute" } as const;
 
 type Props = {
 	phase: LetterPhase;
 	reduced: boolean;
-	/** The words on the folding paper (what was sent, not the live field). */
 	text: string;
-	/** The field, shown only in `edit`. */
 	children: ReactNode;
 };
 
-/**
- * The write sheet (handoff §5, board `.wst`): the field while writing, and from Send the same
- * paper cut in three bands that fold, bottom then top. Folded, it shows the paper's back. The glow
- * behind it is drawn once: Reanimated lights and drains it, and while the check runs an Ease loop
- * breathes it (1 ↔ .85), which stops the moment the check answers. Reduced: the sheet and the
- * folded letter crossfade, 200 ms, and the glow fades without breathing.
- */
 export function WriteLetter({ phase, reduced, text, children }: Props) {
 	const ink = useLetterInk();
 	const f = useLetterFold(phase, reduced);
@@ -148,7 +137,6 @@ export function WriteLetter({ phase, reduced, text, children }: Props) {
 							{f.sparks.map((sp, i) => (
 								<Spark
 									fill={ink.spark}
-									// The three sparks are fixed; their order never changes.
 									key={SPARK_XS[i]}
 									t={sp}
 									x={SPARK_XS[i] ?? 0}

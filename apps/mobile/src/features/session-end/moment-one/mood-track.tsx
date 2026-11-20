@@ -23,19 +23,15 @@ const SWELL = { ...SLIDER.swellSpring, ...PLAY_AS_CHOSEN };
 
 type Props = {
 	slider: MoodSlider;
-	/** ms into moment 1. */
 	clock: SharedValue<number>;
-	/** The track has been touched (the nudge never plays again). */
 	touched: SharedValue<number>;
 	colors: SessionColors;
 	reduced: boolean;
 	unsure: boolean;
-	/** VoiceOver's value: the word. */
 	word: string;
 	step: number | null;
 };
 
-/** `nudge`: 0 → −12 (30%) → +8 (62%) → 0, each leg on cubic-bezier(.4, 0, .2, 1). */
 function nudgeAt(u: number) {
 	"worklet";
 	const n = T1.nudge;
@@ -51,12 +47,6 @@ function nudgeAt(u: number) {
 	return n.b * (1 - EASE.nudge((u - 0.62) / 0.38));
 }
 
-/**
- * Board `.trk`: a 10 pt rail in the cool → warm gradient, a 2 × 24 notch, a
- * white 40 pt thumb. While held the rail swells ×1.5 (spring 300/21) and the
- * thumb grows to 1.12 (120 ms). Before any touch the thumb nudges once at 2 s.
- * One adjustable element for VoiceOver; increment and decrement move one step.
- */
 export function MoodTrack(p: Props) {
 	const { slider, clock, touched, colors, reduced, unsure, word, step } = p;
 	const { pos, width, grab, gesture } = slider;

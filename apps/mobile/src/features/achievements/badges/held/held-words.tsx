@@ -19,7 +19,6 @@ import {
 import { type Pose, RV } from "@/features/achievements/coin/pose";
 import { COPY } from "@/features/achievements/copy";
 import { cn } from "@/lib/cn";
-/** The board's tops (on its 844 pt phone); `dy` shifts them by the status bar. */
 export const TOP = {
 	chrome: 56,
 	date: 556,
@@ -30,7 +29,6 @@ export const TOP = {
 	sparksLocked: 618,
 };
 
-/** The badge page's words: the title growing out of the label, then the line, the date or progress, the sparks and the hint. */
 export function HeldWords({
 	pose,
 	badge,

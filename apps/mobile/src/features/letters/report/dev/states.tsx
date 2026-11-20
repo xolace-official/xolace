@@ -1,14 +1,9 @@
-/** The report sheet on fixtures: `xolace://dev/letters/report`. */
 import { View } from "react-native";
 import type { DevState } from "@/dev/dev-state";
 import type { ReportReason } from "../../copy";
 import { ReportProvider } from "../report-data";
 import { ReportSheet } from "../report-sheet";
 
-/**
- * Report does nothing here: there's no letter to remove. The real route is a header-less sheet;
- * a state opens pushed, so the sheet sits at the bottom of the screen instead.
- */
 const OPTIONS = { headerShown: false };
 const sheet = (reason: ReportReason | null) => () => (
 	<ReportProvider

@@ -11,11 +11,6 @@ import { MAX_SPECIALTIES } from "./setup-model";
 
 const CHECK = { android: "check", ios: "checkmark" } as const;
 
-/**
- * Pick one to four. Picked chips fill with the ink and gain a check; at four the rest dim to 40%
- * and stop taking taps, and the line under them says how to swap. The step's description already
- * says "up to four", so until the cap the line holds only the count.
- */
 export function SpecialtyChips({
 	picked,
 	onToggle,

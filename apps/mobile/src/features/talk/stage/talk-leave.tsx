@@ -15,7 +15,6 @@ const ZOOM_FROM = 0.94;
 const BLUR = 12;
 const IN = FadeIn.duration(FADE_MS).reduceMotion(PLAY_AS_CHOSEN.reduceMotion);
 const OUT = FadeOut.duration(FADE_MS).reduceMotion(PLAY_AS_CHOSEN.reduceMotion);
-/** The three buttons: 46 tall, round ends. */
 const BUTTON = "h-11.5 items-center justify-center rounded-full";
 
 type Props = {
@@ -25,16 +24,9 @@ type Props = {
 	onKeep: () => void;
 };
 
-/**
- * Leaving mid-talk asks first (production's leave dialog): make the mirror now, just end
- * (it waits in the timeline), or keep talking. A centred card (320 wide) over a blurred
- * talk, dimmed by its scrim (`--color-talk-scrim`). Back or swipe-back would otherwise hang up and make the
- * mirror without a word.
- */
 export function TalkLeave({ reduced, onMirror, onJustEnd, onKeep }: Props) {
 	const scheme = useScheme();
 	const { leave, justEnd } = TALK_COPY.live;
-	// Android's back while the card is up keeps talking, like tapping outside it.
 	const keep = useEffectEvent(() => onKeep());
 	useEffect(() => {
 		const sub = BackHandler.addEventListener("hardwareBackPress", () => {

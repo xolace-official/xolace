@@ -1,18 +1,12 @@
 import type { TodayPhase } from "./today-model";
 
-/**
- * Every string Today shows (design/handoff/today.md §3, the TodayAlive board). The
- * board's "Thursday" and "Ama" are the device's weekday and the user's display name.
- */
 export const COPY = {
-	/** The campfire (board `.camp`): this week's cohort, from `cohort.getWeeklyCohortCard`. */
 	campfire: {
 		campers: (n: number) => (n === 1 ? " camper" : " campers"),
 		count: (emotion: string) => ` sat with ${emotion} by the fire this week.`,
 		lighter: (percent: number) =>
 			`When they say how they feel afterwards, ${percent}% say lighter.`,
 		link: "You are not alone.",
-		/** The v2 intake's count when there's no cohort yet (`intake.campfireStats`). */
 		stats: (n: number) =>
 			n === 1
 				? " person has sat by this fire."
@@ -20,22 +14,17 @@ export const COPY = {
 		warming: (emotion: string) =>
 			`Others have sat with ${emotion} by this fire too.`,
 	},
-	/** The Reflect card (board `.hero`): its question by phase, the field's rotating lines and the hint. */
 	card: {
-		/** VoiceOver only; `doors` is the doors' list ("Talk and Vent"). */
 		a11yHint: (doors: string, count: number) =>
 			`Opens Reflect. ${doors} ${count === 1 ? "is" : "are"} in actions.`,
 		and: "and",
-		/** The session didn't go through (`error`). Reflect's card says why: a retry, a limit or a no. */
 		failed: {
 			body: "Something got in the way. Open it to see what you can do.",
 			hint: "Tap to open it",
 			title: "That one didn't go through",
 		},
 		hint: (doors: string) => `Hold the card for ${doors}`,
-		/** The month's prompt on the card while it's carried this week (board `.ph.wrote .tref`). */
 		monthLabel: "THIS MONTH",
-		/** The mirror is confirmed and Where to from here is open (`confirmed`). */
 		next: {
 			body: "Your mirror landed. The next step is yours to choose.",
 			hint: "Tap to pick up where you left off",
@@ -60,21 +49,18 @@ export const COPY = {
 			evening: "What's sitting with you right now?",
 			late: "What's carrying over?",
 		} satisfies Record<TodayPhase, string>,
-		/** The mirror came back while you were away (board `restReady`). Kept only a while. */
 		ready: {
 			body: "It's here for a little while, when you're ready.",
 			hint: "Tap to open it",
 			title: "Your mirror is ready",
 		},
 		speak: "Speak instead",
-		/** Your words are with the mirror (board `restWaiting`): the card is a way back to them. */
 		waiting: {
 			body: "Finding the words. It'll be here when you're back.",
 			hint: "Tap to wait with it",
 			title: "Still with your words",
 		},
 	},
-	/** Hold the card: the doors rise out of the hint line. */
 	doors: {
 		sit: { label: "Sit with this", sub: "Breathe first" },
 		talk: { label: "Talk", sub: "Out loud" },
@@ -82,7 +68,6 @@ export const COPY = {
 		vent: { label: "Vent", sub: "Let it rip" },
 		writeInstead: "Write instead",
 	},
-	/** The greeting, with the display name when there is one. */
 	greeting: {
 		dawn: (name: string | null) =>
 			name ? `Good morning, ${name}` : "Good morning",
@@ -93,9 +78,7 @@ export const COPY = {
 		late: (name: string | null) => (name ? `Still up, ${name}?` : "Still up?"),
 	} satisfies Record<TodayPhase, (name: string | null) => string>,
 	help: "Get help now",
-	/** Your kindling (board `.kin`, `P/src/fixtures/kindling.ts` KINDLING_TODAY). */
 	kindling: {
-		/** VoiceOver: each step's state, and the count. */
 		a11y: {
 			count: (k: number, n: number) => `${k} of ${n} tended`,
 			later: "Later",
@@ -107,17 +90,11 @@ export const COPY = {
 		all: (n: number) =>
 			`ALL ${n === 3 ? "THREE" : n === 4 ? "FOUR" : n} TENDED`,
 		allTitle: "The fire's kept. Flux saved it.",
-		/** A kind of step this build doesn't know yet. */
 		anyKind: { length: "WHEN YOU'RE READY", title: "A small step" },
 		begin: "Begin",
 		done: "DONE",
 		doneEyebrow: "THIS KINDLING IS DONE",
-		/**
-		 * The card with no kindling (`P/design/handoff/kindling.md` §11.1, `KINDLING_TODAY.empty`).
-		 * VoiceOver reads each as one element.
-		 */
 		empty: {
-			/** Free: kindling is part of Xolace+. */
 			free: {
 				action: "See how",
 				eyebrow: "PART OF XOLACE+",
@@ -125,7 +102,6 @@ export const COPY = {
 				label: "Your kindling, part of Xolace+. A few steps after each talk.",
 				title: "A few steps after each talk",
 			},
-			/** Xolace+, none right now: never had one, or the last was finished or put out. */
 			plus: {
 				action: "Talk",
 				eyebrow: "NONE RIGHT NOW",
@@ -133,14 +109,12 @@ export const COPY = {
 				label: "Your kindling. None right now. Your next talk lights one.",
 				title: "Your next talk lights one",
 			},
-			/** Xolace+, a qualifying session just ended and its kindling is being made. */
 			settingUp: {
 				eyebrow: "SETTING UP",
 				label: "Your kindling is being set up. It lands here when it’s ready.",
 				title: "It lands here when it’s ready",
 			},
 		},
-		/** Each kind of step: its title when the server sends none, and how long it asks (production's twig eyebrows). */
 		kinds: {
 			audio: { length: "SOMETHING TO HEAR", title: "A voice for this" },
 			breathing: { length: "A FEW MINUTES", title: "Sit with this" },
@@ -155,7 +129,6 @@ export const COPY = {
 		},
 		later: (length: string) => `LATER · ${length}`,
 		next: (length: string) => `NEXT · ${length}`,
-		/** Follows the rolling count: "{k} of 4 tended". */
 		of: (n: number) => ` of ${n} tended`,
 		open: "Open your kindling",
 		passed: "PASSED BY",
@@ -166,13 +139,10 @@ export const COPY = {
 		sub: "People you can reach, any time",
 		title: "If tonight is heavy",
 	},
-	/** The listening rail (board `.rail`), from the hub's New shelf. */
 	listen: {
 		family: { music: "Music", support: "Support audio" },
-		/** VoiceOver: where a tile goes (holding to preview is touch only). */
 		hint: "Opens the player",
 		lateTitle: "For the quiet",
-		/** A free member's tile: it opens Xolace+. */
 		locked: ", Xolace+",
 		lockedHint: "Part of Xolace+",
 		playing: ", playing",
@@ -180,17 +150,13 @@ export const COPY = {
 		seeAllLabel: "See all in Explore",
 		title: "Something to listen to",
 	},
-	/** Your moments (production's carousel). */
 	moments: {
-		/** VoiceOver: what a moment card does. */
 		openHint: "Opens this moment",
 		seeAll: "See all",
 		seeAllLabel: "See all moments",
 		title: "Your moments",
 	},
-	/** VoiceOver only: the toolbar's Reflect pill. */
 	opensReflect: "Opens Reflect",
-	/** The eyebrow's second half, after the weekday ("Thursday · evening"). */
 	partOfDay: {
 		dawn: "early",
 		day: "afternoon",
@@ -198,7 +164,6 @@ export const COPY = {
 		late: "late",
 	} satisfies Record<TodayPhase, string>,
 	reflect: "Reflect",
-	/** A streak that broke yesterday, revived with one saver (production's chip and sheet). */
 	rekindle: {
 		ask: "Use 1 streak saver",
 		chip: "Tap to rekindle",
@@ -214,10 +179,8 @@ export const COPY = {
 	streakHint: "Opens You",
 	streakLabel: (n: number) => (n === 1 ? "1 day streak" : `${n} day streak`),
 	title: "Today",
-	/** A word for today: today's quote, into Quotes. */
 	word: {
 		eyebrow: "TODAY'S WORD",
-		/** Production's quotes card line, when there's no quote to show yet. */
 		fallback:
 			"Curated lines for the day, and the ones your own sessions left behind.",
 		label: "Open daily quotes",

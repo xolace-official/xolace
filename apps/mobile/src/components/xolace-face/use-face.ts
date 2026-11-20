@@ -1,6 +1,3 @@
-// Drives a Pose on the UI thread. Moves spring between poses (a little overshoot reads as
-// life), with blinking, an idle breath, quick gaze overrides, a nod and a hop on top.
-
 import { useCallback, useEffect } from "react";
 import {
 	ReduceMotion,
@@ -15,8 +12,6 @@ import { isUIRuntime, scheduleOnUI } from "react-native-worklets";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { lerpPose, NEUTRAL, type Pose } from "./pose";
 
-// Tuned by feel in the prototypes (proto/xolace-face): underdamped on purpose, a character
-// settling rather than UI snapping.
 export const MOVE_SPRING = { damping: 11, mass: 0.9, stiffness: 120 };
 const LOOK_SPRING = { damping: 16, stiffness: 260 };
 const REDUCED_MOVE_MS = 200;
@@ -31,7 +26,6 @@ const LISTEN_BROW = 0.35;
 const LISTEN_LEAN = 0.2;
 const HOP_UP_MS = 180;
 
-/** Out to 1 and springs back: a nod or a hop. */
 const pulse = (outMs: number) => {
 	"worklet";
 	return withSequence(
@@ -43,7 +37,6 @@ const MS_PER_S = 1000;
 const FRAME_MS = 16;
 const MAX_FRAME_MS = 48;
 
-/** `running: false` stops the clock and the blinks, so a hidden face costs nothing. */
 export function useFace(initial: Pose = NEUTRAL, running = true) {
 	const reduced = useEffectiveReducedMotion();
 	const from = useSharedValue(initial);
@@ -55,12 +48,8 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 	const nodAmount = useSharedValue(0);
 	const hopAmount = useSharedValue(0);
 	const clock = useSharedValue(0);
-	// The user's live voice level, 0–1, set by whoever owns the audio (Talk's level): it
-	// leans in and lifts the brows a little.
 	const listen = useSharedValue(0);
 
-	// Accumulated from frame deltas, so stopping and starting again resumes where it left off;
-	// a dropped frame is clamped so a hitch doesn't play back as a lurch.
 	const frame = useFrameCallback((info) => {
 		const delta = Math.min(
 			info.timeSincePreviousFrame ?? FRAME_MS,
@@ -135,9 +124,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		[from, reduced, t, target]
 	);
 
-	// Stable, because placements call these from effects keyed on them.
-	/** Moves to a new pose from wherever the face is now. A worklet too, so a gesture can
-	 * drive it on the UI thread. */
 	const to = useCallback(
 		(next: Pose) => {
 			"worklet";
@@ -150,8 +136,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		[move]
 	);
 
-	/** Shows a pose exactly, cancelling any move. For a caller that springs the pose's input
-	 * itself every frame: `to` per frame restarts its spring from rest, so it lags. */
 	const hold = useCallback(
 		(next: Pose) => {
 			"worklet";
@@ -162,7 +146,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		[from, t, target]
 	);
 
-	/** Glances away from the pose's own gaze; `look(0, 0)` returns to it. */
 	const look = useCallback(
 		(x: number, y: number) => {
 			"worklet";
@@ -172,8 +155,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		[lookX, lookY]
 	);
 
-	/** Sets the glance at once, with no spring: for a caller that drives it every frame (the
-	 * wait's eyes following the brush). `look`'s spring would restart each frame and lag. */
 	const lookNow = useCallback(
 		(x: number, y: number) => {
 			"worklet";
@@ -183,7 +164,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		[lookX, lookY]
 	);
 
-	/** One gentle nod. Reduced motion drops it; the pose change still explains the moment. */
 	const nod = useCallback(() => {
 		"worklet";
 		if (reduced) {
@@ -192,7 +172,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		nodAmount.set(pulse(NOD_DOWN_MS));
 	}, [nodAmount, reduced]);
 
-	/** One small happy hop. Dropped under reduced motion, like the nod. */
 	const hop = useCallback(() => {
 		"worklet";
 		if (!reduced) {

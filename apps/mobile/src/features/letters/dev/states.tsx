@@ -1,4 +1,3 @@
-/** Letters on fixtures: `xolace://dev/letters/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { PiecesScreen } from "./pieces-screen";
 

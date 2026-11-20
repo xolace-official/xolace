@@ -18,10 +18,6 @@ const STEPS = {
 	report: ReportForm,
 } as const;
 
-/**
- * Shake to send feedback: a form sheet (`fitSheet`) that grows to each step. The menu or a form; a
- * form opened from the menu has a way back to it. What's new opens What's New over the sheet.
- */
 export function FeedbackSheet() {
 	const { state, actions } = useFeedbackScreen();
 	const insets = useSafeAreaInsets();

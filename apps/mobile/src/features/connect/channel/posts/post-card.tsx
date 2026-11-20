@@ -15,11 +15,6 @@ const PLUS = { android: "add", ios: "plus" } as const;
 const CARD_RADIUS = 24;
 const LINK_ACTION = "link-";
 
-/**
- * One announcement as the prototype's card (`channel-screen.tsx`): title, body, the reactions
- * people left and a "+" for yours. Replaces Stream's bubble (`MessageItemView`), so the list,
- * paging, read state and the hold overlay stay Stream's.
- */
 export function PostCard() {
 	const { anchor, hold, openLink, resend, toggle, view } = usePost();
 	const muted = useTokenColor("muted");
@@ -29,7 +24,6 @@ export function PostCard() {
 	}
 	return (
 		<View className="px-3.5 pb-3">
-			{/* Stream types its anchor against its own RN types; it is a plain View ref. */}
 			<View ref={anchor as never}>
 				<Card className="gap-2 p-4" flat radius={CARD_RADIUS}>
 					{/* The words are the hold target and one VoiceOver stop; the reactions stay
@@ -86,7 +80,6 @@ export function PostCard() {
 								</PressScale>
 							</>
 						)}
-						{/* Already in the post's label. */}
 						<AppText
 							accessibilityElementsHidden
 							className="ml-auto"
@@ -123,8 +116,6 @@ function ReactionChip({
 			onPress={onPress}
 		>
 			<AppText variant="callout">{r.emoji}</AppText>
-			{/* Plain text, not a SwiftUI-hosted number: a native host escapes the list's clip
-			    and floats over the header once the card scrolls under it. */}
 			<AppText className="tabular-nums" variant="footnote" weight="semibold">
 				{r.count}
 			</AppText>

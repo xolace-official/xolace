@@ -11,7 +11,6 @@ import { riseOf } from "../clock/phases";
 import type { SitClock } from "../clock/use-sit-clock";
 import { SoftCopy } from "../soft-copy";
 
-/** Board `.cap`: Newsreader italic 21/1.38, ink2; `.cap.sync`: 24, ink. */
 const CAPTION = {
 	fontFamily: FONTS.mirror,
 	fontSize: 21,
@@ -32,14 +31,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * A breath beat's caption, one line per phase (fix: production shows both of
- * Make room's lines at once): the in-line on the inhale, the out-line on the
- * exhale. Both are stacked and the clock picks one and rises it, so the
- * caption changes in the same frame as the phase. It leaves with the beat.
- * VoiceOver reaches only the line that's up (one small render per phase, for
- * Make room's two lines only).
- */
 export function BreathCaption({ text, sync, serial, clock, reduced }: Props) {
 	const lines = typeof text === "string" ? [text] : [...text];
 	const { leave, at } = clock;
@@ -61,7 +52,6 @@ export function BreathCaption({ text, sync, serial, clock, reduced }: Props) {
 		}
 	);
 	const type = sync ? SYNC : CAPTION;
-	// The longest line holds the space, so the caption never reflows between phases.
 	const longest = lines.reduce((a, b) => (b.length > a.length ? b : a), "");
 	return (
 		<Animated.View style={out}>
@@ -91,7 +81,6 @@ export function BreathCaption({ text, sync, serial, clock, reduced }: Props) {
 
 type LineProps = {
 	text: string;
-	/** Not the line that's up: VoiceOver skips it. */
 	hidden: boolean;
 	index: number;
 	serial: number;

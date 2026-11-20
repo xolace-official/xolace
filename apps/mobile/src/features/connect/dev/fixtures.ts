@@ -1,5 +1,3 @@
-/** Connect on fixtures: the prototype's people (Maya, Kojo, Esi) as production rows. Feeds the
- * dev states and the model tests. */
 import type { Id } from "@xolace/backend/dataModel";
 import type { ChatStatus } from "../connect-model";
 import type {
@@ -11,7 +9,6 @@ import type { DirectoryRow } from "../roster/roster-model";
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
-/** 9:41 pm on a Sunday, so "Tue" and "Oct 28" land as the board drew them. */
 export const NOW = new Date(2026, 10, 15, 21, 41).getTime();
 
 const profile = (id: string) => id as Id<"emotional_profiles">;
@@ -28,7 +25,6 @@ export const PEOPLE = {
 const pair = (
 	over: Partial<PairConversation> & Pick<PairConversation, "id">
 ): PairConversation =>
-	// The row type is a union by role; a fixture names its role in `over`.
 	({
 		archived: false,
 		closedReason: undefined,
@@ -48,7 +44,6 @@ const pair = (
 		...over,
 	}) as PairConversation;
 
-/** `status` for someone who isn't a Xolacer, and the Xolacer variants. */
 export const SEEKER: ChatStatus = {
 	enabled: true,
 	isXolacer: false,
@@ -121,7 +116,6 @@ export const REN_ARCHIVED = pair({
 	streamChannelId: "ch_ren",
 	xolacerProfileId: PEOPLE.ren,
 });
-/** A request to a Xolacer, seen from the Xolacer's side. */
 export const SEEKER_REQUEST = pair({
 	counterpartName: "Camper 7K2F",
 	counterpartProfileId: profile("profile_seeker"),
@@ -132,7 +126,6 @@ export const SEEKER_REQUEST = pair({
 	status: "requested",
 	xolacerProfileId: profile("profile_me"),
 });
-/** A seeker asked this Xolacer directly, from the roster. */
 export const DIRECT_REQUEST = pair({
 	counterpartName: "Camper 3QJ9",
 	counterpartProfileId: profile("profile_direct"),
@@ -151,7 +144,6 @@ export const CONVERSATIONS: ConversationRow[] = [
 	ADE_DECLINED,
 	REN_ARCHIVED,
 ];
-/** `myConversations`' ceiling: 200 pair rows, every lifecycle state, to scroll, hold and swipe. */
 const MANY_STATES = ["open", "requested", "resting", "closed"] as const;
 const MANY_NAMES = ["Maya", "Kojo", "Esi", "Ade", "Ren", "Ama", "Kofi", "Yaa"];
 const MANY_COUNT = 200;

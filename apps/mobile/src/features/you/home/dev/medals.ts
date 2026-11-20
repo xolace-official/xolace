@@ -1,8 +1,3 @@
-/**
- * Stand-ins for badge art in the dev states: the board's medallions (`MED_ART`), a spectrum rim
- * round a pale face, as SVG data URIs `BadgeArt` loads like any other art. Fixed printed
- * colours, dev only.
- */
 const ART = {
 	ember: { face: "#FFF6E6", rim: ["#F5B04F", "#F2D27A", "#E8743A"] },
 	mint: { face: "#EFFBF6", rim: ["#6EE7C8", "#F2D27A", "#F2A0B4"] },

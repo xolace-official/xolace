@@ -1,5 +1,3 @@
-// "See what's building": Insights' rings for three parts of life, with example values that
-// fill once per opening. The heavier one is in ember.
 import { View } from "react-native";
 import Animated, {
 	Easing,
@@ -15,7 +13,6 @@ import { LineIcon } from "./line-icon";
 import { useAct } from "./use-act";
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
-/** An open-bottom 270° arc, radius 26 on a 64 box. */
 const ARC = "M13.6 50.4A26 26 0 1 1 50.4 50.4";
 const ARC_LEN = 26 * 1.5 * Math.PI;
 const FILL_FROM_MS = 150;

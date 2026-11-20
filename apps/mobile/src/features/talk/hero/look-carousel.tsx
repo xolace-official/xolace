@@ -22,7 +22,6 @@ const NEAR_FADE = 0.5;
 
 type Shared = {
 	carousel: LookCarousel;
-	/** The start → talk timeline (ms): the neighbours fade and shrink in its first 160 ms. */
 	go: SharedValue<number>;
 	glowOpacity: SharedValue<number>;
 	glowScale: SharedValue<number>;
@@ -36,10 +35,6 @@ type SlotProps = Shared & {
 	width: number;
 };
 
-/**
- * One look. Only the centred one gets the live face (production's rule from its look
- * tiles); the rest hold a still face of their own. Scale and opacity come from the row's `x`.
- */
 function Slot({
 	i,
 	look,
@@ -54,7 +49,6 @@ function Slot({
 	const still = useFace(NEUTRAL, false);
 	const left = width / 2 - face / 2 + i * LAYOUT.slot;
 	const glowSize = face + LAYOUT.glowInset * 2;
-	// Only the shared value crosses into the worklets (not the gesture beside it).
 	const { x, goTo } = carousel;
 
 	const slot = useAnimatedStyle(() => {
@@ -67,7 +61,6 @@ function Slot({
 			? 1 - NEAR_FADE * d
 			: Math.max(0, NEAR_FADE - NEAR_FADE * (d - 1));
 		if (d >= NEAR_FADE) {
-			// Start pressed: the neighbours fade out and shrink to 0.4.
 			const out = seg(go.get(), 0, GO.neighbours);
 			opacity *= 1 - out;
 			scale += (FAR_SCALE - scale) * out;
@@ -120,11 +113,9 @@ type Props = Shared & {
 	index: number;
 	hero: FaceHandle;
 	width: number;
-	/** One adjustable control for VoiceOver ("Look, Moss, 3 of 7"), before the talk only. */
 	accessible: boolean;
 };
 
-/** The seven looks in a snapping row; the centred face is the companion (handoff §2.2). */
 export function LookCarouselView({
 	index,
 	hero,

@@ -1,5 +1,3 @@
-/** The feedback sheet on fixtures: `xolace://dev/feedback/<id>`. The real sheet opens with
- * `xolace://feedback` (or a shake); these draw its frame in a pushed screen. */
 import type { DevState } from "@/dev/dev-state";
 import { feedbackSheet } from "./fixture-feedback";
 

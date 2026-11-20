@@ -1,9 +1,3 @@
-/**
- * The You tab's icon: someone's avatar, cropped to a circle (iOS doesn't clip tab images) and
- * drawn in its own colours, plus a second image with a 1.5 pt accent ring for the selected tab
- * (the prototype's `scripts/avatars/avatar.html`). Drawn with Skia at @3x, handed to the tab
- * bar as PNG data URIs.
- */
 import {
 	ClipOp,
 	ImageFormat,
@@ -12,10 +6,8 @@ import {
 	Skia,
 } from "@shopify/react-native-skia";
 
-/** The icon's box, in points. */
 const ICON = 30;
 const SCALE = 3;
-/** Plain: the art inset 1 pt. Ringed: a 1.5 pt ring, a 1.5 pt clear gap, the art inset 3 pt. */
 const PLAIN_INSET = 1;
 const RINGED_INSET = 3;
 const RING = 1.5;
@@ -45,7 +37,6 @@ function draw(art: SkImage, ring: string | null): string | null {
 		ClipOp.Intersect,
 		true
 	);
-	// Cover: the art's middle square fills the circle.
 	const side = Math.min(art.width(), art.height());
 	canvas.drawImageRect(
 		art,
@@ -81,7 +72,6 @@ const source = (uri: string): TabIconSource => ({
 	width: ICON,
 });
 
-/** The plain and the ringed icon for an avatar's image URL; null if it can't be drawn. */
 export async function avatarTabIcons(
 	url: string,
 	ring: string

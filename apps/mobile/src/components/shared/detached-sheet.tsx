@@ -17,21 +17,9 @@ const SCRIM_IN_MS = 260;
 const CLOSE_MS = 240;
 const DRAG_FROM = 8;
 
-/** Closes the sheet it's inside with its own slide-out (outside a sheet: back). */
 const SheetClose = createContext<() => void>(() => router.back());
-/**
- * Call from inside a DetachedSheet's content to close it ("I'm here").
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export const useSheetClose = () => use(SheetClose);
 
-/**
- * A floating sheet that lets things overflow its top edge (Flux pops over it).
- * It settles in on the Settle spring and drags down to dismiss; with reduced
- * motion it fades in and out instead. Its route takes `DETACHED_SHEET`
- * (`src/lib/root-screen.ts`), a transparent modal, so the screen behind stays put.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function DetachedSheet({
 	children,
 	onClosed,
@@ -67,7 +55,6 @@ export function DetachedSheet({
 		const closed = () => {
 			scheduleOnRN(close);
 		};
-		// Reduced, the sheet only fades; otherwise it slides out under the fading scrim.
 		if (reduced) {
 			shown.set(withTiming(0, timing, closed));
 			return;

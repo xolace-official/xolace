@@ -9,7 +9,6 @@ import { LS } from "@/features/lantern/lantern-style";
 
 const COVER = { height: LS.hubCover, width: "100%" } as const;
 
-/** The cover under the bar (a 28% wash for the status bar), then the title, intro and count. */
 export function HubHeader({ hub }: { hub: HubView | null | undefined }) {
 	return (
 		<>

@@ -64,13 +64,10 @@ describe("offer → revive", () => {
 			Promise.reject({ data: { code: "no_revive_available" } })
 		);
 		expect(result).toEqual({ failure: "gone", ok: false });
-		// The hook keeps the offer it was made from as expired.
 		let expired: number | undefined = 12;
 		expect(rekindleOffer(12, keptExpiry(12, expired))).toBeNull();
-		// Midnight: the query drops the offer, and the expiry goes with it.
 		expired = keptExpiry(undefined, expired);
 		expect(rekindleOffer(undefined, expired)).toBeNull();
-		// A later break at the same count is offered again.
 		expect(rekindleOffer(12, keptExpiry(12, expired))).toBe(12);
 	});
 

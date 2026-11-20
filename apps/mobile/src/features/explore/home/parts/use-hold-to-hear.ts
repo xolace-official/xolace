@@ -10,7 +10,6 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 
 export type Hold = {
 	hearing: boolean;
-	/** 1 while the finger is down: the cover settles to .97. */
 	pressed: SharedValue<number>;
 	press: Pick<
 		PressableProps,
@@ -19,12 +18,6 @@ export type Hold = {
 	a11y: Pick<PressableProps, "accessibilityActions" | "onAccessibilityAction">;
 };
 
-/**
- * Hold to hear (handoff §13): 350 ms held starts a preview, letting go ends it, 8 s at most. A
- * press under 350 ms is a tap and opens. A drag hands the touch to the scroll view, which ends the
- * press like a release. `slug` is the held track's, null for Lantern covers and rows that only
- * open; a free listener has no preview (`canPreview`).
- */
 export function useHoldToHear(
 	key: string,
 	slug: string | null,
@@ -35,7 +28,6 @@ export function useHoldToHear(
 	const pressed = useSharedValue(0);
 	const cap = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const on = slug !== null && state.canPreview;
-	// The latest end, for the unmount below: a cover scrolled away mid-hold still ends it.
 	const ending = useRef<() => void>(() => undefined);
 
 	const end = () => {

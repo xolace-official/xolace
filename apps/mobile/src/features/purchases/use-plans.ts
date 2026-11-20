@@ -4,7 +4,6 @@ import type { Plans } from "@/features/purchases/plans";
 import { useRevenueCat } from "@/features/purchases/revenuecat-context";
 import { useIntroEligibility } from "@/features/purchases/use-intro-eligibility";
 
-/** The current offering's two plans, each with this user's intro eligibility. */
 export function usePlans() {
 	const { isLoading, offerings, purchase, refreshOfferings } = useRevenueCat();
 	const annual = offerings?.current?.annual ?? null;
@@ -22,7 +21,6 @@ export function usePlans() {
 	// Payments live but nothing to sell: never a purchasable-looking button (App Review 2.1).
 	const unavailable = appConfig.features.payments && !annual && !monthly;
 
-	// Retry a failed cold-start fetch as the step opens, as the paywall does.
 	useEffect(() => {
 		if (unavailable && !isLoading) {
 			refreshOfferings();

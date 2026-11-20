@@ -12,12 +12,6 @@ const WITHDRAW = "withdraw";
 const DISMISS = "dismiss";
 const HIT = 10;
 
-/**
- * One sent letter: its opening line, its status and the received mark. Nothing about the
- * recipient. The mark lights (800 ms along the ignite curve) the first time the sender sees a new
- * status: the first time this screen is in front with `seen` false. Then it's marked seen and
- * stays lit. A returned or late-held letter says so, keeps its mark unlit, and can be dismissed.
- */
 export function SentRow({
 	letter,
 	onSeen,
@@ -31,7 +25,6 @@ export function SentRow({
 }) {
 	const focused = useIsFocused();
 	const fresh = !letter.seen;
-	// The key remounts the mark when it lights.
 	const shown = sentShown(letter, focused);
 	useEffect(() => {
 		if (focused && fresh) {
@@ -39,7 +32,6 @@ export function SentRow({
 		}
 	}, [focused, fresh, letter.id, onSeen]);
 
-	// An unknown status from a newer server reads as waiting rather than breaking the row.
 	const status = LETTERS.status[letter.status] ?? LETTERS.status.waiting;
 	const waiting = letter.status === "waiting";
 	const act = waiting

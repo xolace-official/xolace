@@ -9,7 +9,6 @@ import { DateOfBirthPicker } from "./date-of-birth-picker";
 
 const LOCK = { android: "lock", ios: "lock.fill" } as const;
 
-/** The sheet's heading: what happened or what's asked, then why, in one line or two. */
 export function AgeHeading({ title, body }: { title: string; body: string }) {
 	return (
 		<>
@@ -27,10 +26,6 @@ export function AgeHeading({ title, body }: { title: string; body: string }) {
 	);
 }
 
-/**
- * The question: the wheel in a well card, the privacy line, then Continue (40% until the wheel
- * has been turned, as production waits for a pick) and a quiet "Prefer not to say".
- */
 export function AgeAsk() {
 	const { state, actions } = useAgeSheetScreen();
 	const muted = useTokenColor("muted");

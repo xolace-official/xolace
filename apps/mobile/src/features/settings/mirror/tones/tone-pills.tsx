@@ -18,27 +18,19 @@ import { cn } from "@/lib/cn";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/**
- * Tone pills under the card (board `.tones`): 36 tall, the shown one filled in ink. A radio
- * group; Witnessed carries a lock on a free account. The row opens with the shown pill in view.
- */
 export function TonePills({
 	shown,
 	chosen,
 	plus,
 	onPick,
 }: {
-	/** The pill filled in: the chosen tone, or Witnessed while a free account looks at it. */
 	shown: MirrorTone;
-	/** The radio's checked pill: the tone the mirror answers in, never a peek. */
 	chosen: MirrorTone;
 	plus: Entitlement;
 	onPick: (tone: MirrorTone) => void;
 }) {
 	const [background, foreground] = useTokenColors(["background", "foreground"]);
 	const row = useRef<ScrollViewInstance>(null);
-	// The last two pills sit past the edge, so a row opening on one of them starts at its end.
-	// Once: a later size change (larger text) mustn't pull the row back to its end.
 	const scrollsToEnd = useRef(opensAtEnd(shown));
 	return (
 		<ScrollView

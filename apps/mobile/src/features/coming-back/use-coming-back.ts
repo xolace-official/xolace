@@ -24,18 +24,13 @@ import { useEpisode } from "./episode-store";
 import type { ReturnPill } from "./return-pill-data";
 import type { WelcomeBack } from "./welcome-back-data";
 
-/** Let Today land before anything greets you. */
 const GREET_AFTER_MS = 700;
-/** Board `tapCk` / `tapPm`: the press plays, the row opens 130 ms later. */
 const OPEN_AFTER_MS = 130;
-/** Production's `pendingEventPrompt` lifetime: a read or written prompt rides on Reflect for 7 days. */
 const CARRY_MS = 7 * 24 * 60 * 60 * 1000;
 
-/** Device-local "YYYY-MM-DD", as `monthlyEvents.prompt.getWaiting` takes it. */
 const localDay = () => new Date().toLocaleDateString("en-CA");
 const timezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-/** Settles the streak on every focus and foreground; the frozen days still to acknowledge. */
 function useFrozenDays(active: boolean): number | null {
 	const settle = useMutation(api.streaks.state.settle);
 	const [days, setDays] = useState<number | null>(null);
@@ -63,7 +58,6 @@ function useFrozenDays(active: boolean): number | null {
 	return days;
 }
 
-/** This month's event, unless the v1 sheet already showed it (then it's let pass, once). */
 function useMonthEvent(active: boolean) {
 	const event = useQuery(
 		api.monthlyEvents.prompt.getWaiting,
@@ -83,14 +77,7 @@ function useMonthEvent(active: boolean) {
 	return v1Seen ? null : event;
 }
 
-/**
- * Today's side of coming back (handoff §1): checks in with the server on open (`markReturn`,
- * the streak's settle), works out what this return holds, and opens the greeting once, 700 ms
- * after Today is in front. Nothing opens the check-in on its own. Keeps Reflect's starter
- * bubble and the arrivals waiting while the greeting is due or up.
- */
 export function useComingBackHost(): {
-	/** A notification tapped open while the app ran, for the banner over Today. */
 	banner: string | null;
 	dismissBanner: () => void;
 } {
@@ -127,7 +114,6 @@ export function useComingBackHost(): {
 	const loaded =
 		!!profile && frozen !== null && card !== undefined && event !== undefined;
 	const away = profile ? awayOf(profile, now) : "next";
-	// The day of the session the check-in follows up on, in this device's time.
 	const day = card ? dayLabel(card.createdAt, now) : "";
 	const items: Items = {
 		card: card ?? null,
@@ -174,7 +160,6 @@ export function useComingBackHost(): {
 
 	const setBlocking = useAppStore((s) => s.setHomeSheetBlocking);
 	const setOpen = useAppStore((s) => s.setHomeSheetOpen);
-	// A block body: the store's setter returns a value, which React would call as the cleanup.
 	useEffect(() => {
 		setBlocking(due || ep.open);
 	}, [due, ep.open, setBlocking]);
@@ -188,7 +173,6 @@ export function useComingBackHost(): {
 	return { banner: focused ? (last?.content ?? null) : null, dismissBanner };
 }
 
-/** The greeting (both pages) on the episode store and Convex. */
 export function useWelcomeBack(): WelcomeBack {
 	const ep = useEpisode();
 	const reduced = useEffectiveReducedMotion();
@@ -199,7 +183,6 @@ export function useWelcomeBack(): WelcomeBack {
 	const setPending = useAppStore((s) => s.setPendingEventPrompt);
 	const { card, event, freeze } = ep.items;
 
-	// The check-in row is on screen: its 3 days start (once; re-calling never extends them).
 	const cardId = card?._id;
 	useEffect(() => {
 		if (!cardId) {
@@ -290,7 +273,6 @@ export function useWelcomeBack(): WelcomeBack {
 	};
 }
 
-/** What waits on Today, under the greeting. */
 export function useReturnPill(): ReturnPill {
 	const ep = useEpisode();
 	const reduced = useEffectiveReducedMotion();

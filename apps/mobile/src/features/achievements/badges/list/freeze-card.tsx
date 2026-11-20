@@ -6,10 +6,6 @@ import { useBadgesScreen } from "@/features/achievements/badges/badges-data";
 import { COPY } from "@/features/achievements/copy";
 import { cn } from "@/lib/cn";
 
-/**
- * The freeze card at the foot (You v2's): buy a freeze with sparks, with
- * production's refusal reasons. A refused buy still answers, with a toast.
- */
 export function FreezeCard() {
 	const { state, actions } = useBadgesScreen();
 	const { freeze, buying } = state;

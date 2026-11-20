@@ -1,11 +1,8 @@
-/** Talk on fixtures: `xolace://dev/talk/<id>`. The handoff's states (`talk.md` §13) and the
- * prototype's Review jumps, on a scripted talk: no voice service, no backend. */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureKeptSheet, FixtureStyleSheet } from "./fixture-sheets";
 import { FixtureTalk } from "./fixture-talk";
 import { HELP, START_ERROR, WEEK } from "./fixtures";
 
-/** The talk draws its own header (back, the pill, ⋯), as the real route does. */
 const OWN_HEADER = { headerShown: false };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

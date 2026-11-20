@@ -1,8 +1,4 @@
 import * as Sentry from "@sentry/react-native";
-/**
- * A Xolacer's profile on Convex: `xolacerProfile`, the ask flow (age gate, primer, request,
- * Kindling twig), rating, report and block, and the ways on. Production's behaviour and events.
- */
 import { api } from "@xolace/backend/api";
 import { isSpecialty } from "@xolace/backend/convex/lib/specialties";
 import type { Id } from "@xolace/backend/dataModel";
@@ -82,7 +78,6 @@ export function useXolacer(
 			}
 		},
 		openPrimer: ask.openPrimerReference,
-		// The roster narrowed to the same specialty, back on the tab under this screen.
 		others: () => {
 			if (specialty) {
 				playSoftPress();
@@ -98,7 +93,6 @@ export function useXolacer(
 				});
 			}
 		},
-		// A report from a profile is about the person, not an exchange: no conversation.
 		report: () => {
 			if (profile) {
 				playSoftPress();

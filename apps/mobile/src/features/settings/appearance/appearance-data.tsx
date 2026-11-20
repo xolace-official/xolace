@@ -9,30 +9,22 @@ import { useAppearance } from "@/features/settings/appearance/use-appearance";
 import type { MotionPreference } from "@/lib/motion/use-effective-reduced-motion";
 import type { ProfileCardId } from "@/store/store";
 
-/**
- * Everything Settings › Appearance reads and does. Two adapters fill it: the app's
- * (`AppearanceData`: the store, Uniwind, Convex) and fixtures in its dev states (`dev/`).
- */
 export type Appearance = {
 	state: {
 		mode: ThemeMode;
 		modeNote: string;
 		themes: ThemeCard[];
-		/** The strip's first scroll offset, so the active card is in view. */
 		themeStart: number;
-		/** Each preview is drawn in its own theme, in the mode the app shows now. */
 		previewScheme: Scheme;
 		themeNote: string;
 		motion: MotionPreference;
 		motionNote: string;
 		nightMode: boolean;
 		profileCards: ProfileRow[];
-		/** The Replay intro alert. */
 		replayOpen: boolean;
 	};
 	actions: {
 		setMode: (mode: ThemeMode) => void;
-		/** A locked Plus theme opens the paywall instead. */
 		pickTheme: (id: string) => void;
 		setMotion: (motion: MotionPreference) => void;
 		setNightMode: (on: boolean) => void;
@@ -54,7 +46,6 @@ export function AppearanceProvider({
 	return <AppearanceContext value={value}>{children}</AppearanceContext>;
 }
 
-/** The app's adapter. */
 export function AppearanceData({ children }: { children: ReactNode }) {
 	return (
 		<AppearanceProvider value={useAppearance()}>{children}</AppearanceProvider>

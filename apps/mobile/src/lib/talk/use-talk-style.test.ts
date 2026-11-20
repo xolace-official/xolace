@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import { lookOf, TALK_LOOKS } from "@/lib/talk/talk-looks";
 import { talkVoiceOf } from "@/lib/talk/use-talk-style";
 
-// The backend ships before store review clears, so an old build can read a look or voice
-// added after it shipped.
 describe("lookOf", () => {
 	it("keeps a look this build knows", () => {
 		expect(lookOf("moss")).toBe("moss");

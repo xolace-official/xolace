@@ -31,27 +31,16 @@ type Props = {
 	face: FaceHandle;
 	eyes: EyeStyle;
 	late: boolean;
-	/** ms into moment 1, and into moment 2 (< 0 until it starts). */
 	c1: SharedValue<number>;
 	c2: SharedValue<number>;
 	pos: SharedValue<number>;
-	/** The face's breath, 0 → 1 → 0 (the header's, in moment 2). */
 	breath: SharedValue<number>;
-	/** Moment 1 is live (the bob runs). */
 	bobbing: boolean;
-	/** Moment 1's place under large Dynamic Type: the centre moved by `dy`, scaled by `fit`. */
 	dy: number;
 	fit: number;
 	reduced: boolean;
 };
 
-/**
- * Board `.fstage` › `.fmv` › `.fbob`: one `XolaceFace` for both moments, moved
- * by transform only. It comes down from the header slot as moment 1 arrives
- * (.75 s), floats with the answer (−24 lighter, +12 heavier, sprung), bobs
- * (3.6 s, freer as it lightens), and in moment 2 rises to the header slot
- * (translateY −294, scale .2273, so it reads as 40 pt), where it breathes.
- */
 export function FaceStage(p: Props) {
 	const { W, top, face, eyes, late, c1, c2, pos, breath, dy, fit, reduced } = p;
 	const float = useSharedValue(0);
@@ -94,7 +83,6 @@ export function FaceStage(p: Props) {
 		const m2 = c2.get();
 		if (m2 >= 0) {
 			if (reduced) {
-				// A 200 ms fade: out in the middle, in at the header.
 				const f = m2 / REDUCED_MS;
 				const there = f >= 0.5;
 				return {
@@ -130,7 +118,6 @@ export function FaceStage(p: Props) {
 		const amp = FOLLOW.bob.base + FOLLOW.bob.lift * (c2.get() >= 0 ? 0 : u);
 		return { transform: [{ translateY: float.get() - amp * bob.get() }] };
 	});
-	// The header's breath (Peers' header face, read at 40 pt), weighted in as the face arrives there.
 	const breathe = useAnimatedStyle(() => {
 		const m2 = c2.get();
 		const w = m2 < 0 || reduced ? 0 : clamp01((m2 - T2.face.at) / T2.face.ms);

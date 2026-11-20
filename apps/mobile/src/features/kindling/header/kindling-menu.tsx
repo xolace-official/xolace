@@ -6,10 +6,6 @@ import { COPY } from "../copy";
 
 const IOS = process.env.EXPO_OS === "ios";
 
-/**
- * The bar's ⋯ menu (§11.1): "Put this kindling out", behind an alert. While it asks, a skip in
- * its undo window waits (`onAsk`); `onCancel` and `onPutOut` settle it.
- */
 export function KindlingMenu({
 	onAsk,
 	onCancel,

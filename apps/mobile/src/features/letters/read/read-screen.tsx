@@ -8,13 +8,6 @@ import { leaveReader } from "../letters-routes";
 import { useReaderScreen } from "./read-data";
 import { Reader } from "./reader";
 
-/**
- * The reader (`/letters/read/[id]`): opened from the shelf, For you, the session-end card and the
- * push. A letter you've opened opens already open. Reported (from the sheet), it leaves at once:
- * the reader keeps drawing it while it closes. While it loads, it waits: nothing but the header.
- * A letter that isn't there (gone before it loaded, or not yours) closes it too, saying so. With
- * nothing under it, or opened by a push tap, it leaves to the Letters screen.
- */
 export function ReadScreen({ fromPush = false }: { fromPush?: boolean }) {
 	const { state } = useReaderScreen();
 	const header = useHeaderOptions("small");

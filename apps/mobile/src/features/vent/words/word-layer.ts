@@ -10,12 +10,6 @@ import { mulberry32 } from "@/features/vent/field/particle-config";
 import { VENT_COLORS } from "@/features/vent/vent-palette";
 import { reachedAt, vnoise } from "@/features/vent/words/burn-shader";
 
-/**
- * The reply, drawn once into an image on the UI thread at the screen's scale, exactly where the
- * real text laid out (each word's frame from React Native), so the burn can take over without a
- * jump. Then 130 ash points are sampled on the letters (handoff §10), each born when the front
- * reaches it.
- */
 export type WordRect = {
 	word: string;
 	x: number;
@@ -41,7 +35,6 @@ const PAD = 4;
 const ASH_N = 130;
 const ASH_TRIES = 20_000;
 const ASH_SEED = 11;
-/** A pixel counts as letter above this alpha (0–255). */
 const INK = 140;
 const LONG_SHARE = 0.36;
 const CREAM = VENT_COLORS.cream;
@@ -54,7 +47,6 @@ type Block = {
 	lineH: number;
 };
 
-/** The burn's reading-order value at a point (the shader's `v`). */
 function valueAt(xp: number, yp: number, k: Block) {
 	"worklet";
 	const li = Math.min(
@@ -162,10 +154,8 @@ export function buildWordLayer(
 		return null;
 	}
 
-	// The theme's body face, as React Native drew the words (the system face until it loads).
 	const font = Skia.Font(typeface ?? undefined, fontSize);
 	const m = font.getMetrics();
-	// React Native centres the glyphs in the line box: the baseline sits half the spare height down.
 	const baseline = (lineH - (m.descent - m.ascent)) / 2 - m.ascent;
 	const paint = Skia.Paint();
 	paint.setColor(Skia.Color(CREAM));
@@ -173,8 +163,6 @@ export function buildWordLayer(
 	const c = surface.getCanvas();
 	c.scale(scale, scale);
 	c.translate(-x0, -y0);
-	// UIKit and Skia can still space glyphs differently, so each word gets the tracking that
-	// makes it fill the width React Native laid it out at: the same glyphs, in the same places.
 	for (const r of rects) {
 		const glyphs = font.getGlyphIDs(r.word);
 		const widths = font.getGlyphWidths(glyphs);

@@ -16,12 +16,6 @@ const RADIUS = {
 	},
 } as const;
 
-/**
- * One third of the reader's sheet. The top third turns down about its bottom edge, the bottom
- * third up about its top edge; past halfway a band shows the paper's back. The words sit above
- * the bands. The middle and bottom thirds draw the crease on their top edge, which turns with the
- * band and fades once, as the words rise.
- */
 export function ReadBand({
 	i,
 	fold,

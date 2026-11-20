@@ -14,8 +14,6 @@ import { FOUNDER_MESSAGE } from "@/features/intake/founder-message/letter-copy";
 import { IntakeBlank } from "@/features/intake/v2/intake-screen";
 import { useFullContext } from "@/lib/convex/use-full-context";
 
-/** The founder message, first screen of intake ("Campfire Stack", #236). No skip; not
- * re-readable later (#264). */
 const BAND_HEIGHT = 220;
 const FADE_HEIGHT = 44;
 
@@ -25,18 +23,11 @@ export default function IntakeIndex() {
 	const { width } = useWindowDimensions();
 	const background = useThemeColor("background") as string;
 
-	// The root gate query (#263): already subscribed and deduped, so reading
-	// `sessionCount` off it costs nothing.
 	const context = useFullContext();
 
-	// Funnel entry (T7, #267), held until the count resolves: firing with a
-	// guessed zero would mislabel every returning user. The latch keeps a
-	// re-render from restarting the clock.
 	const posthog = usePostHog();
 	const started = useRef(false);
 	const leaving = useRef(false);
-	// Re-armed whenever the letter is back on top. Flux holds Android's back, so this is a
-	// second guard: a letter that came back must still begin.
 	useFocusEffect(
 		useCallback(() => {
 			leaving.current = false;
@@ -50,15 +41,12 @@ export default function IntakeIndex() {
 		trackIntakeStarted(posthog, context.profile.sessionCount);
 	}, [context, posthog]);
 
-	// An unresolved count would render a returning user the new-user letter;
-	// the root gate already blocks on this query, so this never flashes.
 	if (context === undefined) {
 		return <IntakeBlank />;
 	}
 
 	const audience = context.profile.sessionCount > 0 ? "existing" : "new";
 
-	// Once: two taps in one frame would push Flux twice.
 	const beginIntake = () => {
 		if (leaving.current) {
 			return;

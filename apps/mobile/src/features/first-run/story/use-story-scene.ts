@@ -3,7 +3,6 @@ import type { SharedValue } from "react-native-reanimated";
 import { DUR, PROV, type SEng } from "./story-scene";
 import type { StoryScene } from "./story-view";
 
-/** A dev state's held moment, written into the engine once it mounts. */
 export function useStoryScene(
 	eng: SharedValue<SEng>,
 	scene: StoryScene | undefined
@@ -26,7 +25,6 @@ export function useStoryScene(
 				e.authAt = 0;
 				e.aHold = aa;
 			}
-			// The bar shows how far into its beat the held moment is.
 			if (at >= 0 && e.hold >= 0) {
 				e.bar = Math.min(at, DUR[e.beat] - 1);
 			}

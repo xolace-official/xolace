@@ -1,9 +1,3 @@
-/**
- * v2: the words burn like paper (handoff §10), native-cook smoke-butterfly-splash's
- * noise-threshold dissolve. One shader samples the reply drawn into an image; a front crosses it
- * in reading order, roughened by value noise, with an amber edge and a charred band behind it.
- * Everything is in points. `thr` is the only uniform that moves: −0.08 + 1.18 × ms / 1300.
- */
 export const WORD_BURN_MS = 1300;
 
 export const thresholdAt = (ms: number) => {
@@ -11,7 +5,6 @@ export const thresholdAt = (ms: number) => {
 	return -0.08 + (ms / WORD_BURN_MS) * 1.18;
 };
 
-/** When the front reaches a point of value v (inverse of `thresholdAt`). */
 export const reachedAt = (v: number) => {
 	"worklet";
 	return ((v + 0.08) / 1.18) * WORD_BURN_MS;
@@ -60,7 +53,6 @@ half4 main(float2 p) {
 }
 `;
 
-/** The same value noise on the CPU, for when each ash point is born. */
 function hash(x: number, y: number) {
 	"worklet";
 	const v = Math.sin(x * 127.1 + y * 311.7) * 43_758.5453;

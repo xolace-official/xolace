@@ -15,10 +15,6 @@ import { KMOTION } from "../kindling-motion";
 
 const FILL = { delay: 300, ms: 500 } as const;
 
-/**
- * The block under the native large title (§2.1): the line under it and the progress row with
- * one segment per twig. The first thing in the scroll, in normal flow.
- */
 export function KindlingHeader({
 	states,
 	keys,
@@ -26,9 +22,7 @@ export function KindlingHeader({
 	reduced,
 }: {
 	states: readonly TwigState[];
-	/** One per twig, to key its segment. */
 	keys: readonly string[];
-	/** "Tuesday", or "your last session". */
 	held: string;
 	reduced: boolean;
 }) {
@@ -66,7 +60,6 @@ export function KindlingHeader({
 	);
 }
 
-/** A segment that just got tended fills left to right (500 ms, from 300 ms). */
 function Segment({ state, reduced }: { state: TwigState; reduced: boolean }) {
 	const done = state === "done";
 	const passed = state === "passed" || state === "undo";

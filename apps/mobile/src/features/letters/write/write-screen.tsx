@@ -37,18 +37,10 @@ import { WriteLetter } from "./write-letter";
 import { WriteLine } from "./write-line";
 import { useWriteStage } from "./write-stage";
 
-/** Above For: room for the check's line (three lines at most), so nothing moves when it shows. */
 const LINE_AREA = 96;
 const ROW_GAP = 18;
-/** Under the starters, room to scroll them clear of Send. */
 const UNDER_STARTERS = 12;
 
-/**
- * Writing a letter (handoff §3, §5; renders 06–15, 33–34): the sheet, For, the starters, the count
- * near the limits and Send, off under 40 characters. The keyboard rule: Send rides 12 pt above
- * the keyboard and the letter lifts just enough to keep its count clear; the rows it leaves
- * behind fade. A tap anywhere but the field puts the keyboard away.
- */
 export function WriteScreen() {
 	const { state, actions } = useWriteScreen();
 	const header = useHeaderOptions("small");
@@ -70,7 +62,6 @@ export function WriteScreen() {
 		send: actions.send,
 		text: state.text,
 	});
-	// Closed mid-check and opened again: it waits, Send off, until that check answers.
 	const stage: WriteStage =
 		state.checking && flow.stage === "edit" ? "wait" : flow.stage;
 	const editing = stage === "edit";
@@ -79,7 +70,6 @@ export function WriteScreen() {
 	const count = countLine(state.text);
 	const sending = stage === "rise" || stage === "sent" || stage === "rest";
 
-	// iOS draws the header over the screen; Android's is opaque, and the screen starts under it.
 	const top = Platform.OS === "ios" ? headerH : 0;
 	const { contentStyle, onCountFoot, onScroll } = useLetterLift({
 		height,

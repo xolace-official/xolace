@@ -15,7 +15,6 @@ export function FixtureWhatsNew() {
 	);
 }
 
-/** The rating screen; Rate turns the pill into Write a review, as in the app. */
 export function FixtureRate({ rated = false }: { rated?: boolean }) {
 	const [isRated, setRated] = useState(rated);
 	const value = rateFixture(isRated);
@@ -31,7 +30,6 @@ export function FixtureRate({ rated = false }: { rated?: boolean }) {
 	);
 }
 
-/** Tell us; the field takes typing, and Send shows the thank-you. */
 export function FixtureTellUs(props: Partial<TellUs["state"]>) {
 	const [text, setText] = useState(props.text ?? "");
 	const [sent, setSent] = useState(props.sent ?? false);

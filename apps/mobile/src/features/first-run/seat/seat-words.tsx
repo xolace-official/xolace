@@ -13,7 +13,6 @@ import { css, ink, STORY_COLORS } from "../first-run-palette";
 import { AUTH, ageAuth, type SEng } from "../story/story-scene";
 import { seatAge } from "./seat-in";
 
-/** The words swap at 1900, dipping out and back over 1700–2100. */
 const SWAP = {
 	at: AUTH.seated + 100,
 	from: AUTH.seated - 100,
@@ -62,10 +61,6 @@ function Words({ eng, after }: { eng: SharedValue<SEng>; after: boolean }) {
 	);
 }
 
-/**
- * "The fire's already lit." and, once signed in, "There's your seat." One header for VoiceOver,
- * which reads whichever is showing.
- */
 export function SeatWords({
 	eng,
 	seated,

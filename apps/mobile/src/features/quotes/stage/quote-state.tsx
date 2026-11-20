@@ -8,12 +8,10 @@ import { type InkPalette, textShadow } from "../chrome/quote-ink";
 import { QUOTE_COPY } from "../copy";
 import { POSTER_MEDIUM } from "./quote-type";
 
-/** Four soft bars pulse .1 → .22 over 1.4 s while the words load (`.skel`). */
 const BARS = [0.62, 0.88, 0.76, 0.4];
 const SHIMMER_MS = 1400;
 const PERCENT = 100;
 
-/** Loading and error: the background stays; only the words area changes. */
 export function QuoteState({
 	status,
 	ink,
@@ -66,7 +64,6 @@ export function QuoteState({
 	);
 }
 
-/** Each bar is a native loop (Ease); mounted together, they stay in step. Reduced: still at .1. */
 function Skeleton({ ink, reduced }: { ink: InkPalette; reduced: boolean }) {
 	const pulse = loopProps({
 		easing: EASING.inOutEase,

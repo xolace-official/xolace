@@ -28,8 +28,6 @@ const LINES: { id: string; icon: SymbolViewProps["name"]; body: string }[] = [
 	},
 ];
 
-/** The Xolacer primer. With `onConfirm` it gates a seeker's first request and the button both
- * acknowledges and sends; without it, reference only. */
 export function XolacerPrimerSheet({
 	isOpen,
 	onClose,

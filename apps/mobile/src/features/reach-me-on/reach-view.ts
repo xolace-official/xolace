@@ -1,14 +1,12 @@
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 
-/** One channel as `outreach.reachMe.listChannels` describes it. */
 export type ChannelEntry = FunctionReturnType<
 	typeof api.outreach.reachMe.listChannels
 >[number];
 
 export type Channel = ChannelEntry["channel"];
 
-/** A card's place in the order; see `orderMark`. */
 export type OrderMark = "first" | "try_first" | null;
 
 export const CHANNEL_NAME: Record<Channel, string> = {
@@ -16,10 +14,6 @@ export const CHANNEL_NAME: Record<Channel, string> = {
 	telegram: "Telegram",
 };
 
-/**
- * The channels in the order the sheet shows them: Telegram first (#733),
- * then the rest as `listChannels` returns them.
- */
 export function sheetOrder(entries: readonly ChannelEntry[]): ChannelEntry[] {
 	return [
 		...entries.filter((e) => e.channel === "telegram"),
@@ -27,10 +21,6 @@ export function sheetOrder(entries: readonly ChannelEntry[]): ChannelEntry[] {
 	];
 }
 
-/**
- * The "Reach me on…" row's value: where check-ins go now. Telegram only when
- * it is linked, active and the channel routing tries first.
- */
 export function reachRowValue(
 	entries: readonly ChannelEntry[] | undefined
 ): string {
@@ -50,7 +40,6 @@ export type TelegramAction =
 	| "unlink"
 	| "get_plus";
 
-/** What the Telegram card shows for one `listChannels` state. */
 export type TelegramCardView = {
 	kind: "not_linked" | "linked" | "paused" | "needs_plus" | "disconnected";
 	actions: TelegramAction[];
@@ -62,10 +51,6 @@ export type TelegramCardView = {
 
 type RevokedReason = NonNullable<ChannelEntry["revokedReason"]>;
 
-/**
- * Why a chat came unlinked, when it wasn't the person unlinking from the app
- * (or deleting their account): those read as plain "not linked".
- */
 const DISCONNECTED_WARNING: Partial<Record<RevokedReason, string>> = {
 	blocked: "Telegram disconnected: the bot was blocked.",
 	relinked: "Telegram disconnected: this chat was linked to another account.",
@@ -80,7 +65,6 @@ const NOT_LINKED: TelegramCardView = {
 	kind: "not_linked",
 };
 
-/** With nothing linked, Telegram switched off for everyone offers no link. */
 const SWITCHED_OFF_DESCRIPTION =
 	"Telegram check-ins are off for now. Check-ins come as notifications.";
 
@@ -88,7 +72,6 @@ function withHandle(label: string, handle: string | undefined): string {
 	return handle ? `${label} · @${handle}` : label;
 }
 
-/** A not-linked card: no link while the channel is off (the kill switch). */
 function unlinkedCard(
 	entry: ChannelEntry,
 	view: TelegramCardView
@@ -105,7 +88,6 @@ export function telegramCard(entry: ChannelEntry): TelegramCardView {
 				actions: ["pause", "unlink"],
 				kind: "linked",
 				statusLine: withHandle("Linked", entry.displayHandle),
-				// Switched off for everyone (the kill switch), not for this person.
 				...(!entry.available && {
 					description:
 						"Telegram check-ins are off for now. Your link is kept; check-ins come as notifications.",
@@ -119,7 +101,6 @@ export function telegramCard(entry: ChannelEntry): TelegramCardView {
 			};
 		case "needs_plus":
 			return {
-				// A kept link can still be ended while it waits for Xolace+.
 				actions: entry.linked ? ["get_plus", "unlink"] : ["get_plus"],
 				description: entry.linked
 					? "Telegram is now part of Xolace+. Your link is kept; check-ins come as notifications until you're on Xolace+."
@@ -142,10 +123,6 @@ export function telegramCard(entry: ChannelEntry): TelegramCardView {
 	}
 }
 
-/**
- * The card's place in the order: **First** on the channel routing tries
- * first, **Try this first** on another one that is linked and open now.
- */
 export function orderMark(entry: ChannelEntry): OrderMark {
 	if (entry.isFirst) {
 		return "first";

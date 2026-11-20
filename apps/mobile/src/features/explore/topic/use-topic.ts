@@ -10,13 +10,11 @@ import type { BrowseFrom } from "@/lib/now-playing/now-playing-store";
 
 type Params = { slug: string; family?: string; from?: string };
 
-/** Where a topic's plays come from: a twig's "More like this" tags its own, else "topic". */
 const fromOf = (param: string | undefined): BrowseFrom =>
 	param === "twig-more-like-this" ? param : "topic";
 
 const NO_ACTIONS = {};
 
-/** A topic's data: the cover (`getTopicHeader`), the rows (`getTopic`), production's event. */
 export function useTopic(): Topic {
 	const { slug, family, from } = useLocalSearchParams<Params>();
 	const posthog = usePostHog();
@@ -56,7 +54,6 @@ function gridTile(
 			?.find((t) => t.slug === slug);
 		return tile && { ...tile, thumbhash: tile.thumbhash };
 	} catch {
-		// A cached error: leave it to `getTopicHeader`.
 		return undefined;
 	}
 }

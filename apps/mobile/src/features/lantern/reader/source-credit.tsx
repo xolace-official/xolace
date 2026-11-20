@@ -19,10 +19,6 @@ const ICON = {
 	pause: { android: "pause", ios: "pause.fill" },
 } as const;
 
-/**
- * Who this is from, keyed on how it was reused (production's `SourceCredit`): Xolace's mark, or
- * the publisher's, which opens the original. The Listen pill sits on its right when there's audio.
- */
 export function SourceCredit() {
 	const { state, actions } = useReaderScreen();
 	const { entry } = state;
@@ -82,7 +78,6 @@ export function SourceCredit() {
 	);
 }
 
-/** Production's `ListenPill`: starts the narration and, with it, the dock. */
 function ListenPill({ min }: { min: number }) {
 	const { state, actions } = useReaderScreen();
 	const [ink] = useTokenColors(["foreground"]);
@@ -116,7 +111,6 @@ function ListenPill({ min }: { min: number }) {
 	);
 }
 
-/** A curator's heads-up, before the body. */
 export function ContentNote({ note }: { note: string }) {
 	const [muted] = useTokenColors(["muted"]);
 	return (

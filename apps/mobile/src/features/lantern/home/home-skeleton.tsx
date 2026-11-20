@@ -13,8 +13,6 @@ function Title() {
 	);
 }
 
-/** The loading home in the shared look: Continue's card, then For you's centred row, its
- * neighbours peeking. */
 export function HomeSkeleton() {
 	const { width } = useWindowDimensions();
 	const itemW = Math.round(width * F.share);

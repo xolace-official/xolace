@@ -16,7 +16,6 @@ describe("kindlingEmptyMode", () => {
 				settingUp: undefined,
 			})
 		).toBeUndefined();
-		// RevenueCat's offerings can still be loading: Xolace+ from the server is enough.
 		expect(
 			kindlingEmptyMode({ isLoading: true, isPlus: true, settingUp: MARK })
 		).toBe("setting-up");
@@ -84,7 +83,6 @@ describe("heldEmptyMode", () => {
 			isPlus: false,
 			settingUp: undefined,
 		});
-		// The purchase lands: settingUp.get starts loading.
 		const loading = kindlingEmptyMode({
 			isLoading: false,
 			isPlus: true,

@@ -1,6 +1,3 @@
-// The Talk demo, full screen over the first look (#714, README § I): Flux tinted by the
-// picked voice, its line and the person's, and the controls for where it stands. Closing it
-// (the X, or "Back to Xolace+") returns to the step as it was.
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { Modal, ScrollView, View } from "react-native";
@@ -25,15 +22,9 @@ const MIN_BOTTOM_PADDING = 16;
 const FLEX_1 = { flex: 1 };
 
 export type TalkDemoProps = {
-	/** "Keep talking", named for the plan it buys. */
 	keepTalkingLabel: string;
-	/** The X, "Back to Xolace+", Android's back, or on from crisis support. */
 	onClose: () => void;
 	onKeepTalking: () => void;
-	/**
-	 * The safeguard ended the demo: its close then goes past the step, nothing sold (#704).
-	 * Can come after the demo closed, while the answer was on its way.
-	 */
 	onSafety: () => void;
 	visible: boolean;
 };
@@ -46,7 +37,6 @@ export function TalkDemo({ visible, ...props }: TalkDemoProps) {
 			presentationStyle="fullScreen"
 			visible={visible}
 		>
-			{/* Mounted per opening: each one opens the demo on the server afresh. */}
 			{visible ? <DemoScreen {...props} /> : null}
 		</Modal>
 	);
@@ -111,7 +101,6 @@ function DemoScreen(props: Omit<TalkDemoProps, "visible">) {
 				</PressableFeedback>
 			</View>
 
-			{/* Crisis support isn't a mascot's moment: Flux steps out of it, and nothing is sold. */}
 			{state.phase === "safety" ? (
 				<SafetyStep onContinue={props.onClose} resources={state.resources} />
 			) : (

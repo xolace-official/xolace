@@ -2,10 +2,6 @@ import type { IconName } from "@/components/shared/icon";
 import type { MotionPreference } from "@/lib/motion/use-effective-reduced-motion";
 import type { ProfileCardId } from "@/store/store";
 
-/**
- * Settings › Appearance (P/design/handoff/settings.md §1 "Appearance"), word for word, except
- * the Profile cards: production's names, the titles You draws them under.
- */
 export const APPEARANCE_COPY = {
 	card: {
 		chip: "heavy",
@@ -67,7 +63,6 @@ export const APPEARANCE_COPY = {
 		"Four themes are free. The six after the line come with Xolace+.",
 } as const;
 
-/** The page's glyphs, with their Android twins. */
 export const APPEARANCE_ICONS = {
 	check: { android: "check", ios: "checkmark" },
 	chevron: { android: "chevron_right", ios: "chevron.right" },

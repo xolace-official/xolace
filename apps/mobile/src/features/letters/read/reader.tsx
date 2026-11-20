@@ -22,16 +22,8 @@ import { useReaderUndo } from "./reader-undo";
 import { useSealedInView } from "./sealed-in-view";
 import { UndoPill } from "./undo-pill";
 
-/** Space under the header, above the fixed line. */
 const UNDER_HEADER = 8;
 
-/**
- * Reading a letter (handoff §1, §3, §5; renders 20–26, 35): the fixed line above it and nothing
- * else about it. Sealed, it opens by dragging up or with Open. Open: This reached me, Hide or
- * Unhide, Report, and the foot to Settings. Nothing sits over the words: the letter scrolls and
- * grows with Dynamic Type, and the bottom bar (Open, or Undo) sits below the scroll view.
- * VoiceOver can do all of it from the letter's actions as well as the buttons.
- */
 export function Reader({
 	letter,
 	reduced,
@@ -40,7 +32,6 @@ export function Reader({
 	reduced: boolean;
 }) {
 	const reader = useReaderScreen();
-	// iOS draws the header over the screen; Android's is opaque and the screen starts under it.
 	const headerH = useHeaderHeight();
 	const top = (Platform.OS === "ios" ? headerH : 0) + UNDER_HEADER;
 	const u = useReaderUndo(reader);

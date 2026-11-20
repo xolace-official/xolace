@@ -12,11 +12,8 @@ import { pathGeometry } from "./kindling-geometry";
 import { BEAT, PATH_H } from "./kindling-model";
 import { KindlingPath } from "./kindling-path";
 
-/** The unlit path sits back: the live card's strokes at this opacity. */
 const UNLIT = 0.55;
-/** The board's four steps, none tended. */
 const NO_STEPS = [false, false, false, false] as const;
-/** The first node's breath is slow: 30 frames a second, as the live card's. */
 const PATH_FPS = 30;
 const TOKENS = [
 	"surface",
@@ -27,7 +24,6 @@ const TOKENS = [
 	"today-kindling-check",
 ] as const;
 
-/** VoiceOver's and TalkBack's double tap runs the button's action: the card is one element. */
 const ACTIVATE = [{ name: "activate" }];
 
 const TEXT = {
@@ -42,20 +38,12 @@ type Props = {
 	onScreen: SharedValue<boolean>;
 };
 
-/**
- * Today's kindling card with no kindling (`P/design/handoff/kindling.md` §11.1): the live
- * card's header, path and bottom row, so Today never moves when one arrives or goes. The
- * path is drawn unlit (every node waiting, no wash, no pulse); while one is being set up the
- * first node takes the violet "current" look and breathes (held still under Reduce Motion:
- * the frame's `live` is off). One VoiceOver element per state.
- */
 export function KindlingEmpty({ mode, width, onScreen }: Props) {
 	const [surface, well, subtle, violet, ember, check] = useTokenColors(TOKENS);
 	const { actions } = useToday();
 	const { live, low } = useTodayFrame();
 	const settingUp = mode === "setting-up";
 	const clock = useClock(live && settingUp, onScreen, PATH_FPS);
-	// Nothing was tended: every tend beat has long finished.
 	const beat = useSharedValue<number>(BEAT.end);
 	const geo = pathGeometry(width, NO_STEPS.length);
 	const text = TEXT[mode];

@@ -1,10 +1,7 @@
-/** Your kindling on fixtures: `xolace://dev/kindling/<id>`. The board's renders
- * (`design/kindling-v2/`, numbered as they are) in Dusk (dark), each with a Daylight twin. */
 import type { DevState } from "@/dev/dev-state";
 import { kindling } from "./fixture-kindling";
 import { BOARD, viewOf, WITH_XOLACER } from "./fixtures";
 
-/** A cold open's read, long enough to see the swap. */
 const LOADS_MS = 1500;
 
 const LIGHT = { theme: "light" } as const;
@@ -16,7 +13,6 @@ const SOME = viewOf(BOARD, ["done", "passed", "done", "done"]);
 const NONE_TENDED = viewOf(BOARD, ["passed", "passed", "passed", "passed"]);
 const TRAIL = viewOf(BOARD);
 const NONE_YET = viewOf(BOARD, ["wait", "wait", "wait", "wait"]);
-/** One left waiting, the second: its tend rides on into the fire, or passing it catches in place. */
 const ONE_LEFT = viewOf(BOARD, ["done", "wait", "done", "done"]);
 const ARRIVE_FIRST = [0] as const;
 const ARRIVE_SECOND = [1] as const;

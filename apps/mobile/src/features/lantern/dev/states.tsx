@@ -1,4 +1,3 @@
-/** Lantern on fixtures: `xolace://dev/lantern/<id>`. */
 import { router } from "expo-router";
 import type { DevState } from "@/dev/dev-state";
 import { COPY } from "@/features/lantern/copy";
@@ -11,7 +10,6 @@ import {
 import { home, hub, ofKind, SAVED } from "@/features/lantern/dev/fixtures";
 import { WelcomeScreen } from "@/features/lantern/welcome/welcome-screen";
 
-/** The screens set their own bars, as their routes do. */
 const OWN_BAR = { title: "" };
 const NO_BAR = { headerShown: false };
 

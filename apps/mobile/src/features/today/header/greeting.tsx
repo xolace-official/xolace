@@ -13,29 +13,19 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColors } from "@/lib/use-token-color";
 import { riseFn, TIMING } from "../today-motion";
 
-/** The glow that passes over each word at 55% of its arrival (`today-gleam`). */
 const GLEAM = { at: 0.55, radius: 16 } as const;
-/** Blur is approximated: a soft copy (faint glyphs, a 5 pt halo) crossfades to the sharp word. */
 const SOFT_RADIUS = 5;
-/** The soft copy: faint glyphs (ink at 19%) under their halo (ink at 63%), as the board's blur. */
 const SOFT = { glyphs: 0.19, halo: 0.63 } as const;
 const RISE = 7;
-/** margin-right .24em at 34 pt: 8. */
 const WORD_GAP = "mr-2";
 
 type Props = {
 	text: string;
 	intro: boolean;
 	reduced: boolean;
-	/** The launch cover is still up: the words wait, hidden (`TodayFrameValue.waiting`). */
 	waiting: boolean;
 };
 
-/**
- * The greeting, word by word (gleam-line-intro's arrival): each word fades up
- * 7 pt out of a blur, 120 ms apart, and a warm gleam passes over it at 55%.
- * Real AppText per word, so the font and Dynamic Type still apply.
- */
 export function Greeting({ text, intro, reduced, waiting }: Props) {
 	const words = text.split(" ");
 	return (
@@ -49,7 +39,6 @@ export function Greeting({ text, intro, reduced, waiting }: Props) {
 				<Word
 					gap={i < words.length - 1}
 					index={i}
-					// By place: a name that loads mid-intro adds its word and the rest play on.
 					key={i}
 					play={intro && !reduced}
 					text={w}
@@ -93,7 +82,6 @@ function Word({
 		);
 	}, [index, p, play, waiting]);
 
-	// CSS keyframes 0 / 55 / 100%, the curve applied within each segment.
 	const wrap = useAnimatedStyle(() => ({
 		transform: [{ translateY: RISE * (1 - riseFn(p.get())) }],
 	}));

@@ -17,14 +17,8 @@ import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const FACE = 48;
-/** The ⓘ's explanation sits under the title row. */
 const TIP_TOP = 44;
 
-/**
- * Steadiness at the top of Insights (you.md §4): the fan with the Xolace face, the score and
- * Xolace+'s trend beside it, and three parts of life with their words. No word for the score.
- * "See all" opens the steadiness screen.
- */
 export function SteadinessCard({
 	card,
 	onSeeAll,

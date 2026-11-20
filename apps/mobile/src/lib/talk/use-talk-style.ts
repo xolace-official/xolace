@@ -1,7 +1,3 @@
-// How the companion sounds in a talk (#603): voice, pace, directness. Saved
-// per person; a talk reads them once, at its start. Also how it looks, and which
-// of a talk's two views they last chose.
-
 import { api } from "@xolace/backend/convex/_generated/api";
 import {
 	TALK_FALLBACK_VOICE,
@@ -31,15 +27,11 @@ export function useTalkStyle() {
 		setPace: (talkPace: TalkPace) => update({ talkPace }),
 		setView: (talkView: TalkView) => update({ talkView }),
 		setVoice: (talkVoice: VoiceSlug) => update({ talkVoice }),
-		// A talk opens on the companion until they choose the transcript (Talk v2).
 		view: prefs?.talkView ?? ("companion" as const),
-		// Unpicked, it speaks in their mirror voice, else Vesper (the server's order).
 		voice: talkVoiceOf(prefs?.talkVoice, prefs?.voice),
 	};
 }
 
-/** The talk's voice, else their mirror voice, else Vesper. A slug this build doesn't know
- * (a voice added after it shipped) is skipped, so the orb and preview always have one. */
 export function talkVoiceOf(
 	talkVoice: string | undefined,
 	mirrorVoice: string | undefined

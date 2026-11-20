@@ -11,7 +11,6 @@ import { COPY } from "../copy";
 import { LAYOUT } from "../sit-look";
 
 const H = LAYOUT.header;
-/** Board `.fbr`: the face rises 1.5 pt and grows 3% / 6% with the breath, from its 92% origin. */
 const BREATH = { rise: 1.5, sx: 0.03, sy: 0.06 } as const;
 const CLOSE_ICON = { android: "close", ios: "xmark" } as const;
 const PAUSE_ICON = { android: "pause", ios: "pause.fill" } as const;
@@ -21,7 +20,6 @@ type Props = {
 	top: number;
 	closeLabel: string;
 	onClose: () => void;
-	/** Pause shows only while timed beats play. */
 	canPause: boolean;
 	paused: boolean;
 	onPause: () => void;

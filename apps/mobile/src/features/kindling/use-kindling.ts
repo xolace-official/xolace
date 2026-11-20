@@ -23,7 +23,6 @@ const report = (error: unknown) => Sentry.captureException(error);
 const tryAgain = (label: string) =>
 	toast(label, { description: COPY.toast.again, variant: "danger" });
 
-/** The kindling screen on Convex (paths-v1 §9, handoff §1): reads, sends, analytics, toasts. */
 export function useKindlingData(): Kindling {
 	const router = useRouter();
 	const navigation = useNavigation();
@@ -33,7 +32,6 @@ export function useKindlingData(): Kindling {
 		withRead: true,
 		withTry: true,
 	});
-	// The last live kindling, so the visit keeps it once its last twig settles (§5).
 	const [last, setLast] = useState<ActiveKindling | null>(null);
 	if (active && active !== last) {
 		setLast(active);
@@ -48,7 +46,6 @@ export function useKindlingData(): Kindling {
 	const dismiss = useMutation(api.paths.dismiss);
 	const xolacer = useXolacerMatch();
 
-	// Once per kindling, not per re-render of the subscription.
 	const opened = useRef<string | null>(null);
 	useEffect(() => {
 		if (!last || opened.current === last._id) {
@@ -78,7 +75,6 @@ export function useKindlingData(): Kindling {
 			twig.kind === "xolacer"
 				? await xolacer.resolve(twig, last.sessionId)
 				: twigHref(twig, last.sessionId);
-		// The match can land after Back or Put out: don't pull them somewhere they left.
 		if (!navigation.isFocused()) {
 			return;
 		}
@@ -95,7 +91,6 @@ export function useKindlingData(): Kindling {
 		router.push(href);
 	};
 
-	/** Sends a twig's state; a twig this visit doesn't know is a no. */
 	const send = async (
 		id: string,
 		run: (stepId: ActiveKindling["twigs"][number]["_id"]) => Promise<unknown>,
@@ -124,12 +119,10 @@ export function useKindlingData(): Kindling {
 
 	return {
 		actions: {
-			// Today itself, not the screen below: arriving from You would land on Steadiness.
 			back: goHome,
 			browse: (id) => {
 				const twig = twigOf(id);
 				const href = twig ? twigBrowseHref(twig) : null;
-				// Lands Explore's home under the topic, so back and a tab re-tap reach it.
 				if (href) {
 					router.push(href, { withAnchor: true });
 				}
@@ -141,9 +134,6 @@ export function useKindlingData(): Kindling {
 				if (!last) {
 					return;
 				}
-				// Home before the read flips to null, so the empty state never flashes; Today's card
-				// then crossfades to "none right now". Today itself, as Back to Today goes: arriving
-				// from You would otherwise land on Steadiness.
 				goHome();
 				dismiss({ pathId: last._id }).catch((error: unknown) => {
 					report(error);

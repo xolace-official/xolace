@@ -7,19 +7,16 @@ import { loopOrSettle, useLoopRun } from "@/design/ease-loops";
 import { useLoopScale } from "@/design/motion";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** One stop of the glow. `color` is a colour string from the theme (`useTokenColor`). */
 export type AuraStop = { color: string; opacity: number; offset: number };
 
 type Props = {
 	width: number;
 	height: number;
 	stops: readonly AuraStop[];
-	/** Drift loop length; 0 holds still. Night slows it by 1.4×. */
 	driftMs?: number;
 	driftX?: number;
 	driftY?: number;
 	driftScale?: number;
-	/** Position only (left/top/right/bottom); the drift owns the transform. */
 	style?: StyleProp<ViewStyle>;
 };
 
@@ -27,12 +24,6 @@ const REST = { scale: 1, translateX: 0, translateY: 0 };
 const DRIFT = { ms: 12_000, scale: 1.07, x: 16, y: -12 } as const;
 const ID_SEPARATORS = /:/g;
 
-/**
- * Light, not wallpaper: a soft radial glow (the You header, a Xolacer's page).
- * Drifts as a native loop, settles back and stops when its screen loses focus,
- * and rests still with reduced motion.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function Aura({
 	width,
 	height,
@@ -48,8 +39,6 @@ export function Aura({
 	const focused = useIsFocused();
 	const periodMs = driftMs * useLoopScale();
 	const running = focused && !reduced;
-	// Settling rather than `paused`: an EaseView mounted paused never starts its loop (Ease 0.9).
-	// `reduced` is in `running` so the key moves when the setting loads as false and the loop starts.
 	const run = useLoopRun(running, periodMs);
 	const drift = loopOrSettle({
 		from: REST,

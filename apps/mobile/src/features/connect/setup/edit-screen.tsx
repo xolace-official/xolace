@@ -22,13 +22,8 @@ import {
 import { SpecialtyChips } from "./specialty-chips";
 
 const IOS = process.env.EXPO_OS === "ios";
-/** Clears the bio's count so it never hides behind the keyboard. */
 const KEYBOARD_OFFSET = 140;
 
-/**
- * Edit a published profile on one page, with setup's field, chips and photo. The photo and the
- * listed switch write straight away and say so, since Cancel can't undo them.
- */
 export function EditScreen() {
 	const { state, actions } = useSetupScreen();
 	const accent = useTokenColor("accent");
@@ -135,7 +130,6 @@ export function EditScreen() {
 	);
 }
 
-/** The page's shape while the profile loads: the photo, then the fields. */
 function EditSkeleton() {
 	return (
 		<View className="flex-1 bg-background pt-safe-offset-16">

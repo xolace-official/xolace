@@ -3,10 +3,6 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { ENTER_EASE, GO, IN_EASE, INTRO, seg } from "../motion/talk-motion";
 import type { TalkMotion } from "../motion/use-talk-motion";
 
-/**
- * One group's entrance (its step in the cascade, §2.8) and its exit (30 ms steps, §6): it
- * fades up 8 pt as the screen opens, and fades out dropping 10 pt as the talk starts.
- */
 export function useGroupStyle(
 	motion: TalkMotion,
 	enter: number,

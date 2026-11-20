@@ -15,10 +15,6 @@ export type HubFixture = {
 	opens?: Partial<LettersHub["state"]["opens"]>;
 };
 
-/**
- * The Letters screen on fixtures. Taps change only this state, so the offer, Turn on and
- * Withdraw play out as they would, and nothing reaches the letters data module.
- */
 export function HubFixtureScreen({ fixture }: { fixture: HubFixture }) {
 	const [status, setStatus] = useState<LettersStatus>({
 		...STATUS_OPEN,

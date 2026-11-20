@@ -4,30 +4,22 @@ import { COPY } from "../copy";
 import type { Kindling } from "../kindling-data";
 import { heldOn, type TrailView, type TwigState } from "../kindling-model";
 
-/** Coming back from a twig's screen: it lands tended a moment after the tap. */
 const RETURN_MS = 700;
-/** "Tend on return": the server's word arrives after the screen has settled. */
 const ARRIVE_MS = 400;
-/** A refused "I did this": the server's no arrives mid-burn. */
 const REFUSE_MS = 900;
 
 export type FixtureProps = {
 	view?: TrailView;
 	status?: Kindling["state"]["status"];
-	/** A xolacer match in flight, on this twig index. */
 	matching?: number;
-	/** Twigs the server marks done once the screen is up: their tends play. */
 	arrive?: readonly number[];
-	/** Loading for this long first (a cold open from a notification), then `status`. */
 	loadsMs?: number;
-	/** The server refuses every "I did this", a moment later. */
 	refuses?: boolean;
 };
 
 const set = (states: readonly TwigState[], i: number, s: TwigState) =>
 	states.map((x, j) => (j === i ? s : x));
 
-/** The kindling on fixtures: taps change the states as the server would, and nothing is sent. */
 export function useFixtureKindling({
 	view,
 	status: given = "ready",

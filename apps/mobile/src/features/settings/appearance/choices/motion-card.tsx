@@ -10,7 +10,6 @@ import {
 } from "@/features/settings/appearance/copy";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** Match my phone, Reduced motion, Full motion: a radio group with a check on the chosen one. */
 export function MotionCard() {
 	const { state, actions } = useAppearanceScreen();
 	const accent = useTokenColor("accent");

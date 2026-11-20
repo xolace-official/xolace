@@ -116,7 +116,6 @@ describe("choosePlusOffer", () => {
 		).toEqual({ moment: 1, show: true, variant: "default" });
 	});
 
-	// A caller persisting the count without the timestamp must not suppress every offer forever.
 	it("treats a missing full-stop timestamp as no stop at all", () => {
 		expect(
 			choosePlusOffer(base({ dismissalCount: 5, fullStopSince: null }))

@@ -23,17 +23,13 @@ import type { FaceFit } from "./fit";
 
 const L = LAYOUT.light;
 const S = LAYOUT.shadow;
-/** Room above and below the box for the blur (σ 36, two σ). */
 const PAD = 72;
 const FLOAT = { ...FOLLOW.floatSpring, ...PLAY_AS_CHOSEN };
 
 type Props = {
 	W: number;
-	/** Board y → device y. */
 	y: (v: number) => number;
-	/** Moment 1's place under large Dynamic Type (the face's centre moved and scaled). */
 	fit: FaceFit;
-	/** The slider's position (u = (pos − .5) · 2). */
 	pos: SharedValue<number>;
 	grab: SharedValue<number>;
 	clock: SharedValue<number>;
@@ -41,12 +37,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * Board `.wash` and `.fsh`: the light behind the face and its shadow, both
- * reading the slider's one value. The three lights are radial gradients
- * (closest side) blurred 36, drawn once each; only their views' opacity moves
- * (.4 s, .15 s while dragging), so nothing redraws during a drag.
- */
 export function FaceLight({
 	W,
 	y,
@@ -103,7 +93,6 @@ export function FaceLight({
 
 	const bw = W - L.side * 2;
 	const [neutral, coolC, warmC] = colors.light;
-	// The shadow's top follows the face's scaled centre under large Dynamic Type.
 	const below = LAYOUT.shadow.top - LAYOUT.face.top - LAYOUT.face.size / 2;
 	return (
 		<View
@@ -158,7 +147,6 @@ type LayerProps = {
 	style?: ReturnType<typeof useAnimatedStyle>;
 };
 
-/** One light: an ellipse filling the box, the colour at its centre to clear at its edge, blurred 36. */
 function Layer({ w, color, opacity, style }: LayerProps) {
 	const h = L.height;
 	const c = vec(w / 2, PAD + h / 2);

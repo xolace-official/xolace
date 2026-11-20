@@ -1,5 +1,3 @@
-/** Account's fixture adapter: the real screen under a provider filled from fixtures. The dialog
- * and the alert can be typed in and closed; nothing reaches the backend. */
 import { useState } from "react";
 import { ScopedTheme, type ThemeName } from "uniwind";
 import {
@@ -15,7 +13,6 @@ export function FixtureAccount({
 	theme,
 }: {
 	state: Account["state"];
-	/** Draw the page in this theme (the header keeps the app's). */
 	theme?: ThemeName;
 }) {
 	const [dialog, setDialog] = useState(state.dialog);

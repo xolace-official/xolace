@@ -11,15 +11,8 @@ import { loopProps } from "@/design/ease-loops";
 import type { VoiceValue } from "@/lib/talk/voice-options";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/**
- * A voice as a still orb (board `.orb`): a radial light → mid → deep (`--color-orb-<voice>-*`)
- * with a soft inner shade. It doesn't drift on this screen (handoff §4). While its clip plays
- * two rings grow out of it (1.6 s, the second 0.8 s behind, an Ease loop); with Reduce Motion
- * one ring holds still instead.
- */
 const RING_MS = 1600;
 const RING_SCALE = 1.55;
-/** The still ring with Reduce Motion: just outside the chosen ring. */
 const STILL_RING_GAP = 7;
 
 function OrbArt({ size, id, c }: { size: number; id: string; c: string[] }) {
@@ -41,7 +34,6 @@ function OrbArt({ size, id, c }: { size: number; id: string; c: string[] }) {
 					<Stop offset={0.55} stopColor={mid} />
 					<Stop offset={1} stopColor={deep} />
 				</RadialGradient>
-				{/* inset 0 3 8 white .35 at the top, inset 0 -6 12 black .18 at the bottom */}
 				<LinearGradient id={`s-${id}`} x1={0} x2={0} y1={0} y2={1}>
 					<Stop offset={0} stopColor={white} stopOpacity={0.3} />
 					<Stop offset={0.22} stopColor={white} stopOpacity={0} />
@@ -88,7 +80,6 @@ function Ring({
 	);
 }
 
-/** A ring `gap` outside the orb, `width` thick. */
 function Halo(p: { size: number; gap: number; width: number; color: string }) {
 	const out = p.gap + p.width;
 	return (
@@ -120,14 +111,11 @@ export function StillOrb({
 }: {
 	voice: VoiceValue;
 	size: number;
-	/** Unique per orb on the screen (the SVG gradient ids). */
 	id: string;
-	/** The chosen ring's colour: 2 pt, `ringGap` out. */
 	ring?: string;
 	ringGap?: number;
 	playing?: boolean;
 	reduced?: boolean;
-	/** A drop shadow in the deep colour (the big orbs). */
 	shadow?: boolean;
 }) {
 	const c = useTokenColors([

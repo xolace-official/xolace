@@ -22,14 +22,8 @@ const CLOSE_TOP = 56;
 const BOARD_STATUS = 54;
 const XMARK: IconName = { android: "close", ios: "xmark" };
 const XMARK_SIZE = 15;
-/** The arrival's reveal order: eyebrow, the badges, the title, the line, the button. */
 const AT = { cta: 860, eye: 300, grid: 450, line: 680, title: 600 } as const;
 
-/**
- * What a user had already earned before badges arrived (#701), once, on the
- * arrival's stage: a grid of the badges instead of one coming in. Also badges
- * left unseen for a week, for someone who may already know badges.
- */
 export function BackfillStage({
 	plan,
 	onClose,

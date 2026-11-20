@@ -6,10 +6,6 @@ import { fadeUp } from "@/design/entering";
 import { LS, LT } from "@/features/lantern/lantern-style";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/**
- * A home section. Only on the arrival after the welcome does it rise in: Explore's 14 pt over
- * 450 ms, 120 + order × 80 ms. Reduce Motion: the fade.
- */
 export function Section({
 	order,
 	enter,
@@ -34,7 +30,6 @@ export function Section({
 	);
 }
 
-/** Production's `SectionTitle`: the heading face at 22, 30 above and 12 below. */
 export function SectionTitle({
 	title,
 	action,

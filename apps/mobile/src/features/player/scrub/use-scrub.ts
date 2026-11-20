@@ -20,20 +20,12 @@ type Options = {
 	head: Playhead;
 	boxW: SharedValue<number>;
 	duration: number;
-	/** The waveform's bar count: the release settles on a bar. 0 for the line. */
 	bars: number;
 	reduced: boolean;
-	/** Seconds: the seek, once the finger lifts. */
 	onRelease: (seconds: number) => void;
-	/** Loading: drawn, not draggable. */
 	enabled?: boolean;
 };
 
-/**
- * The scrub (§2): touch anywhere, the playhead jumps to the finger, a selection tick at each
- * 30 s crossed, and the release seeks. On the waveform it settles on the start of the nearest
- * bar on native-cook's spring; the line lets go where it is. Playback keeps going underneath.
- */
 export function useScrub({
 	head,
 	boxW,
@@ -71,8 +63,6 @@ export function useScrub({
 			touch.set(0);
 			grow.set(reduced ? 0 : withTiming(0, GROW));
 			const to = snapToBar(scrubF.get(), bars);
-			// The clock jumps with the finger, so the playhead never flicks back before the seek
-			// lands.
 			progress.set(to);
 			if (bars > 0 && !reduced) {
 				scrubF.set(

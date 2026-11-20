@@ -8,7 +8,6 @@ import { useHeaderOptions } from "@/lib/header-options";
 import { a11yHidden } from "@/lib/utils";
 
 /**
- * Native large title in the theme's heading face, the minimal back button and the see-through bar.
  * @public The redesign's shared kit (F5), for the screen PRs.
  */
 export function SettingsHeader({ title }: { title: string }) {
@@ -18,10 +17,6 @@ export function SettingsHeader({ title }: { title: string }) {
 
 const TITLE_GAP = 10;
 
-/**
- * 12 pt semibold, tracked .1em, uppercase, in the accent.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function SectionTitle({
 	children,
 	inset = S.titleInset,
@@ -31,7 +26,6 @@ export function SectionTitle({
 	children: string;
 	inset?: number;
 	aside?: string;
-	/** Space under the title, above its card (the prototype's name). */
 	pb?: number;
 }) {
 	return (
@@ -59,10 +53,6 @@ export function SectionTitle({
 	);
 }
 
-/**
- * 13 / 1.45 at ink 50%, inset 32.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function Footnote({
 	children,
 	className,
@@ -83,10 +73,6 @@ export function Footnote({
 	);
 }
 
-/**
- * A grouped card: 16 pt from the edges, 22 pt corners, no shadow. Rows draw their own hairlines.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function SettingsCard({
 	children,
 	className,
@@ -109,7 +95,6 @@ export function SettingsCard({
 	);
 }
 
-/** A hairline from `from` to the card's right edge. */
 export function Hairline({ from = S.lineFrom }: { from?: number }) {
 	return (
 		<View
@@ -119,10 +104,6 @@ export function Hairline({ from = S.lineFrom }: { from?: number }) {
 	);
 }
 
-/**
- * Puts a hairline under every row but the last.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function Rows({
 	children,
 	from,
@@ -130,7 +111,6 @@ export function Rows({
 	children: ReactNode;
 	from?: number;
 }) {
-	// Rows are elements; toArray keys each one uniquely (its own key, or its place).
 	const rows = Children.toArray(children).filter(isValidElement);
 	return rows.map((row, i) => (
 		<View key={row.key}>
@@ -140,10 +120,6 @@ export function Rows({
 	));
 }
 
-/**
- * A card row's label at 16 / 22.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function Label({
 	children,
 	className,

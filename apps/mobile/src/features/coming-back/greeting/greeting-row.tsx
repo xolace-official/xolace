@@ -16,11 +16,9 @@ import { useTokenColors } from "@/lib/use-token-color";
 import { RowCheck } from "./row-check";
 import { useRowPress } from "./row-press";
 
-/** Board `.r`: 64 min, 12 vertical, gap 12; icon 38; title 15.5 / 600; sub 13; chevron 16. */
 const ROW = { chevron: 16, glyph: 18 } as const;
 const TITLE = { fontSize: 15.5, lineHeight: 19.4 } as const;
 const SUB = { lineHeight: 17 } as const;
-/** Board `icPop .45s .05s`, `draw .5s .15s (.4,0,.2,1)`, `swapIn .4s .1s` (5 pt), colour .3 s. */
 const T = {
 	color: 300,
 	draw: { delay: 150, ease: Easing.bezier(0.4, 0, 0.2, 1), ms: 500 },
@@ -28,7 +26,6 @@ const T = {
 	sub: { delay: 100, ms: 400, rise: 5 },
 } as const;
 
-/** The row's icon and its circle's wash and ink, as tokens. */
 export type RowLook = { icon: IconName; bg: string; fg: string };
 
 type Props = {
@@ -36,16 +33,13 @@ type Props = {
 	sub: string;
 	look: RowLook;
 	done: boolean;
-	/** Bumped when this row just ticked: the pop, the draw and the sub play once. */
 	tick: number;
 	label: string;
 	reduced: boolean;
-	/** Absent for the freeze row (info only). */
 	onPress?: () => void;
 	ref?: Ref<ComponentRef<typeof View>>;
 };
 
-/** One line of what happened while you were away (handoff §2); done rows tick (§4). */
 export function GreetingRow({
 	title,
 	sub,

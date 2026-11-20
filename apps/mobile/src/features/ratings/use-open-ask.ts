@@ -16,24 +16,15 @@ import {
 	withBaseline,
 } from "./ratings-model";
 
-/** iOS can hand over a tapped notification just before the app reports itself active. */
 const TAP_SLACK_MS = 2000;
 
-/** One open being decided: when it began, and whether it came through first run. */
 type Open = { at: number; firstRun: boolean };
 
 export type OpenAskProps = {
-	/** The host mounted after the launch cover had already gone: sign-in or intake led here. */
 	firstRun: boolean;
-	/** The launch cover has started leaving, so Today is what's in front. */
 	revealed: boolean;
 };
 
-/**
- * Watches for plain opens (a cold start, or a return from the background, that lands on Today
- * with no link, push or greeting) and shows what `planOpen` decides: What's New, the rating
- * screen after it or alone, or nothing. Also notes Get help now for the 7-day wait.
- */
 export function useOpenAsk({ firstRun, revealed }: OpenAskProps): void {
 	const pathname = usePathname();
 	const ctx = useFullContext();
@@ -67,7 +58,6 @@ export function useOpenAsk({ firstRun, revealed }: OpenAskProps): void {
 		});
 		let last = AppState.currentState;
 		const appSub = AppState.addEventListener("change", (next) => {
-			// A link followed while the app was open belongs to that visit, not the next open.
 			if (next === "background") {
 				linked.current = false;
 			}
@@ -93,7 +83,6 @@ export function useOpenAsk({ firstRun, revealed }: OpenAskProps): void {
 			setOpen(null);
 			const store = useAppStore.getState();
 			const stored = ratingsOf(store);
-			// Noted at launch (the store's rehydrate); missing only if this launch's save failed.
 			const ran = stored.firstRan;
 			if (ran?.id !== LATEST_RELEASE.id) {
 				return;

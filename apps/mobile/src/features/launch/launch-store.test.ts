@@ -4,7 +4,6 @@ vi.mock("@/lib/native-appearance", () => ({ LAUNCH_PHONE_SCHEME: "light" }));
 
 const launchGlobal = globalThis as { __xolaceLaunchLeft?: boolean };
 
-/** A fresh process: the store module loaded anew. */
 async function boot() {
 	vi.resetModules();
 	launchGlobal.__xolaceLaunchLeft = undefined;
@@ -35,13 +34,10 @@ describe("the launch store", () => {
 	it("ignores a hold after the cover has left, but its release still clears a stale one", async () => {
 		const useLaunch = await boot();
 		const { hold, leave } = useLaunch.getState();
-		// The gate was still loading when the cover timed out.
 		hold("gate");
 		leave();
-		// A hold taken after launch is ignored: the list still has only the stale one.
 		const late = hold("gate");
 		expect(useLaunch.getState().holds).toEqual(["gate"]);
-		// Releases go by reason, so the late hold's release clears the stale entry.
 		late();
 		expect(useLaunch.getState().holds).toEqual([]);
 	});

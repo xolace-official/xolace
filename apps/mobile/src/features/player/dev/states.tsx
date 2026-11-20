@@ -1,17 +1,10 @@
-/** The player on fixtures: `xolace://dev/player/<id>`. The handoff's renders (`player.md` §11,
- * numbered as they are) and the states the server can send: loading, gone, couldn't reach, a
- * spoken track with no peaks. `still` holds the board's time for a capture; the rest play on a
- * simulated clock. A scrub and the open menu need a finger: open the state before them. */
 import type { DevState } from "@/dev/dev-state";
 import { pickSleep } from "@/lib/now-playing/sleep-timer";
 import { fixture } from "./fixture-player";
 import { AT, HEAVY, MUSIC, NO_PEAKS, SPOKEN } from "./fixtures";
 
 const SPOKEN_AT = { at: AT.spoken, track: SPOKEN } as const;
-/** A seek that lands 1.5 s late, as a slow streamed one does (review round 1). On the line: the
- * waveform's release snap holds the playhead itself for most of a second, hiding the stale ticks. */
 const SLOW_SEEK = { at: 60, seekLatencyMs: 1500, track: NO_PEAKS } as const;
-/** The board's running timer: 30 minutes, 28 left; and its last 30 s. */
 const TIMER = { ...pickSleep(30), left: 1680 };
 const FADING = { ...pickSleep(30), left: 24 };
 

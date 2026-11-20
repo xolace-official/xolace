@@ -6,7 +6,6 @@ import { StatusChip, Tag } from "../parts/chips";
 import { XolacerAvatar } from "../parts/xolacer-avatar";
 import type { RosterCard as Model } from "./roster-model";
 
-/** A Xolacer: their own words first, presence as a word, the rating or New, their tags. */
 export function RosterCard({
 	card,
 	onPress,

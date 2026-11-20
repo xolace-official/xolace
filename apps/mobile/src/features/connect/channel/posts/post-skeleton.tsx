@@ -4,7 +4,6 @@ import { CHANNEL } from "../copy";
 
 const CARDS = 2;
 
-/** Card-shaped, not bubble-shaped: the list it resolves into is cards. The shared look. */
 export function PostSkeleton() {
 	return (
 		<SkeletonBreath

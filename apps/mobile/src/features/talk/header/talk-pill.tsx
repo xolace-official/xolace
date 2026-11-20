@@ -28,24 +28,16 @@ const SHAPE = {
 
 type Props = {
 	top: number;
-	/** Before the talk it waits unseen, so its face is ready to take over. */
 	before: boolean;
 	motion: TalkMotion;
-	/** `false` while the talk is out of sight or not yet started: the face's clock stops. */
 	running: boolean;
 };
 
-/**
- * The title pill (production's): the face at 34 pt, the name and what the companion is
- * doing; from the wrap-up cue, the clock in warning. It arrives with the talk (§6), and its
- * face takes over from the hero when the talk opens in Conversation.
- */
 export function TalkPill({ top, before, motion, running }: Props) {
 	const { state } = useTalkScreen();
 	const scheme = useScheme();
 	const face = useFace(NEUTRAL, running);
 	const heard = heardCount(state.turns);
-	// What it had heard last time: a reopened talk starts with its thread and shouldn't nod.
 	const heardBefore = useRef(heard);
 	const secondsLeft = useTimeLeft(state.endsAt, SECOND_MS);
 	const late = isLate(secondsLeft, state.clockFromS);

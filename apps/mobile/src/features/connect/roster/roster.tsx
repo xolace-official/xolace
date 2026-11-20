@@ -16,20 +16,16 @@ import { COPY } from "../copy";
 import { RosterCard } from "./roster-card";
 import type { RosterCard as Card, FilterChip } from "./roster-model";
 
-/** Filtering reflows the cards over 240 ms. */
 const REFLOW_MS = 240;
 const EXIT_MS = 160;
-/** The chip row runs to the screen's edges, its first chip on the page's 16 pt gutter. */
 const GUTTER = 16;
 
 export type RosterView = {
 	filters: FilterChip[];
 	filter: string | null;
-	/** Undefined while the directory loads. */
 	cards: Card[] | undefined;
 };
 
-/** Xolacers: each card leads with the person's own words; presence is a word. */
 export function Roster({
 	roster,
 	onFilter,
@@ -75,7 +71,6 @@ export function Roster({
 								)}
 								haptic={Presets.System.selection}
 								key={f.slug ?? "everyone"}
-								// Tapping the chosen tag again goes back to everyone.
 								onPress={() => onFilter(on ? null : f.slug)}
 							>
 								<AppText
@@ -122,7 +117,6 @@ export function Roster({
 			))}
 
 			{cards !== undefined && cards.length === 0 ? (
-				// Under the chips that emptied it: 40 pt down, no face.
 				<EmptyState
 					action={{
 						label: COPY.roster.noMatchBrowse,

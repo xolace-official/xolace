@@ -13,14 +13,8 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 const EDGE = { large: 21, small: 14 } as const;
 
-/**
- * Production's Aa sheet (handoff §6), on the app's theme with the reader bright and touchable
- * behind it: three reading modes, a text size stepper and Read by the fire. Every change shows on
- * the page at once, and the reader keeps its place.
- */
 export function AaSheet() {
 	return (
-		// At accessibility text sizes the sheet caps out and this scrolls.
 		<ScrollView
 			bounces={false}
 			contentContainerClassName="gap-6 px-6 pt-7 pb-7.5"
@@ -50,7 +44,6 @@ function Label({ children }: { children: ReactNode }) {
 	);
 }
 
-/** A ●●●○○○ A: steps the base size; the phone's text size still multiplies it. */
 function SizeStepper() {
 	const { state, actions } = useAppearance();
 	const at = TEXT_SIZES.indexOf(state.size as (typeof TEXT_SIZES)[number]);
@@ -99,7 +92,6 @@ function SizeStepper() {
 	);
 }
 
-/** Read by the fire: a dim over the page, apart from the mode above. */
 function FireToggle() {
 	const { state, actions } = useAppearance();
 	const accent = useTokenColor("accent");

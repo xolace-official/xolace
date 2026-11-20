@@ -6,11 +6,9 @@ import {
 } from "../utils/version-check";
 
 type UseVersionCheckOptions = {
-	/** Called when the check completes, with whether the store has a newer version. */
 	onVersionChecked: (isNewVersionAvailable: boolean) => void;
 };
 
-/** Checks the store for a newer version on mount. Skipped in development builds. */
 export function useVersionCheck({ onVersionChecked }: UseVersionCheckOptions) {
 	useEffect(() => {
 		if (__DEV__) {

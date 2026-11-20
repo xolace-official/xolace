@@ -1,5 +1,3 @@
-// Support's preview: the feeling the Mirror named, and three branches drawing down to three
-// ways to be with it, which pop in after them. Played once per opening.
 import { View } from "react-native";
 import Animated, {
 	Easing,

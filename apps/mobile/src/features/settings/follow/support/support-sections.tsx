@@ -14,10 +14,8 @@ import { useFollowScreen } from "@/features/settings/follow/follow-data";
 import { outside, reviewRow } from "@/features/settings/follow/follow-model";
 import { a11yHidden } from "@/lib/utils";
 
-/** The board's footnotes sit a touch lighter than the kit's default. */
 const NOTE = "text-foreground/52";
 
-/** Support (feedback, mail, help) and "Is Xolace helping?" (the review row with the 🎁). */
 export function SupportSections() {
 	const { actions } = useFollowScreen();
 	const review = reviewRow(process.env.EXPO_OS);

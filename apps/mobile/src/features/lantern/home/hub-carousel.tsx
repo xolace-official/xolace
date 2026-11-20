@@ -20,10 +20,6 @@ import { useTokenColors } from "@/lib/use-token-color";
 
 const H = LS.hub;
 
-/**
- * Production's paged hub carousel (handoff §2.4): a card a page, the edges fading, and dots that
- * stretch from 6 to 18 and brighten as their page comes in. Changed: a card zooms into its hub.
- */
 export function HubCarousel() {
 	const hubs = useHomeScreen().state.home?.hubs ?? [];
 	const { width } = useWindowDimensions();
@@ -50,7 +46,6 @@ export function HubCarousel() {
 						<HubCard hub={h} key={h._id} line={separator} width={cardW} />
 					))}
 				</Animated.ScrollView>
-				{/* Production's ScrollShadow: 28 pt of page colour fading in at each edge. */}
 				<LinearGradient
 					className="absolute top-0 bottom-0 left-0"
 					colors={[page, clearOf(page)]}
@@ -157,7 +152,6 @@ function HubCard({
 	);
 }
 
-/** Production's `Dot`: 0 → 1 → 2 as its page approaches, centres, then leaves. */
 function Dot({
 	index,
 	page,

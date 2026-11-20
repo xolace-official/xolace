@@ -21,10 +21,8 @@ import {
 import { EMBER } from "@/features/achievements/badge-palette";
 import { easeOut, seg, TAU } from "@/features/achievements/motion-math";
 
-/** None born after this, so they end by ~8.4 s. */
 const EMBERS_UNTIL = 7600;
 const OUT_Y = 24;
-/** Ember `i` starts at 700 + 230·i with a period of 2200 + 350·(i % 4). */
 const BIRTH = { first: 700, step: 230 } as const;
 const PERIOD = { base: 2200, step: 350 } as const;
 const RISE = { base: 130, step: 22 } as const;
@@ -34,7 +32,6 @@ const FROM_FIRE = 8;
 const PEAK_OPACITY = 0.9;
 const SIZE = { base: 3, step: 1 } as const;
 const HALO_OPACITY = 0.75;
-/** The puff: 8 embers fanning up over 1.1 s, 40 ms apart. */
 const PUFF = {
 	fan: 0.28,
 	life: 1100,
@@ -45,7 +42,6 @@ const PUFF = {
 	tall: 1.2,
 };
 const PUFF_ABOVE = 6;
-/** The ring of sparks leaves the count over 60–620 ms after the roll. */
 const RING_T = { from: 60, to: 620 } as const;
 const RING_SHRINK = 0.6;
 
@@ -162,12 +158,6 @@ function draw(c: SkCanvas, e: Eng, g: Geo, look: Look, lifts: boolean) {
 	c.restore();
 }
 
-/**
- * The embers rising from the fire (10, none born after 7.6 s), the ring of
- * sparks leaving the count, and the puff when Flux is tapped: points in one Skia
- * picture, re-recorded from the engine. The canvas stays still; the lift and
- * the milestone stepping aside are applied as it draws.
- */
 export function Embers({
 	eng,
 	geo,
@@ -177,7 +167,6 @@ export function Embers({
 	eng: SharedValue<Eng>;
 	geo: Geo;
 	dark: boolean;
-	/** Whether the milestone lifts to make room for its cards (`liftAt`). */
 	lifts: boolean;
 }) {
 	const look = dark ? EMBER.dusk : EMBER.day;

@@ -17,18 +17,12 @@ type Props = {
 	tile: RailTile;
 	angle: SharedValue<number>;
 	playing: boolean;
-	/** A free member's tile: the lock, and it opens Xolace+. */
 	locked: boolean;
 	live: boolean;
 	reduced: boolean;
 	onPlay: () => void;
 };
 
-/**
- * A tile hung on two strings: it turns about the strings' top by .35 × its
- * pendulum's angle. Press and hold to preview (waveform-scrubber): the art
- * lifts and a waveform plays. Tap to play: a meter shows top right.
- */
 export function ChimeTile({
 	tile,
 	angle,
@@ -40,7 +34,6 @@ export function ChimeTile({
 }: Props) {
 	const [preview, setPreview] = useState(false);
 	const lift = stateTransition(reduced, PRESS_TIMING);
-	// The art's shadow as it lifts under a held finger: 0 14px 26px -12px.
 	const liftShadow = `0 14px 26px -12px ${useTokenColor("today-rail-lift-shadow")}`;
 
 	const swing = useAnimatedStyle(() => ({
@@ -68,7 +61,6 @@ export function ChimeTile({
 				accessibilityLabel={`${tile.title}, ${tile.sub}${playing ? COPY.listen.playing : ""}${locked ? COPY.listen.locked : ""}`}
 				accessibilityRole="button"
 				className="gap-2"
-				// Held past this, it was a preview: letting go doesn't start playback.
 				delayLongPress={TILE.previewMs}
 				onLongPress={() => {}}
 				onPress={onPlay}

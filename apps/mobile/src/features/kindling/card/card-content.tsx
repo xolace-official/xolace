@@ -17,7 +17,6 @@ import { FinishRow, PassedRow, TendedRow, WaitingRow } from "./card-row";
 import { RowSwap } from "./row-swap";
 
 const THUMB = 50;
-/** A clean pose sits whole on its tint, 40 pt wide, from 5 pt down. */
 const CLEAN = { top: 5, width: 40 };
 
 export type CardHandlers = {
@@ -30,22 +29,15 @@ export type CardHandlers = {
 };
 
 type Props = {
-	/** A twig's index, or `twigs.length` for the "all" card. */
 	id: number;
 	twigs: readonly TrailTwig[];
 	states: readonly TwigState[];
-	/** The twig whose xolacer match is in flight. */
 	matching: string | null;
 	reduced: boolean;
 	c: KindlingColours;
 	h: CardHandlers;
 };
 
-/**
- * One layer of the floating card (§6): a 50 pt Flux thumb on the kind's tint, the eyebrow, the
- * title, the why, and the row for its state. Production's extras stay: the twig's detail line
- * and, for a waiting track with a topic, "Browse more like this".
- */
 export function CardContent({
 	id,
 	twigs,

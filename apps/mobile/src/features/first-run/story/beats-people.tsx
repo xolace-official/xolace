@@ -16,7 +16,6 @@ import { bIf, type SEng, XS } from "./story-scene";
 import { XoCard } from "./xolacer-card";
 
 const DONE = 450 + STORY.count * 62;
-/** 4 · This week: the count is drawn in the words canvas, its embers in the points canvas. */
 export function BeatWeek({ eng }: { eng: SharedValue<SEng> }) {
 	const [dotRing, dotGlow] = useTokenColors([
 		"first-run-quote-dot-ring",
@@ -77,7 +76,6 @@ export function BeatWeek({ eng }: { eng: SharedValue<SEng> }) {
 	);
 }
 
-/** 5 · Xolacers: three people's cards to swipe through, and you as a mask. */
 export function BeatXolacers({ eng }: { eng: SharedValue<SEng> }) {
 	const [mask] = useTokenColors(["first-run-mask"]);
 	const pile = useAnimatedStyle(() => {

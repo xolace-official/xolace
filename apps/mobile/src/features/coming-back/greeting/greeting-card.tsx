@@ -11,11 +11,6 @@ import { useWelcomeBack } from "../welcome-back-data";
 import { GreetingList } from "./greeting-list";
 import { PromptPage } from "./prompt-page";
 
-/**
- * Board `.gs` / `.pgl` / `.pgp`: the card sizes to its list and grows to 648 on the prompt page
- * (420 ms); the list slides −30% and fades as the page slides in from +40% (360 ms, fades
- * 280 ms). Past 80% of the screen (large Dynamic Type) the card stops growing and scrolls.
- */
 const PAGE_H = 648;
 const MAX_FRACTION = 0.8;
 const EASE = Easing.bezier(0.2, 0.85, 0.25, 1);
@@ -26,10 +21,8 @@ const T = {
 	pageIn: 0.4,
 	slide: 360,
 } as const;
-/** The sheet sits 10 in from each side (`DetachedSheet`'s `left-2.5 right-2.5`). */
 const SIDE = 10;
 
-/** The card's two pages, inside `DetachedSheet`'s surface (radius 42). */
 export function GreetingCard() {
 	const { state } = useWelcomeBack();
 	const { page, reduced } = state;

@@ -29,7 +29,6 @@ describe("play on load, in the now-playing store", () => {
 
 	it("arms the flag even when the track is already the current one (the early return)", () => {
 		setNowPlaying({ from: FROM, slug: AWAKE });
-		// Same slug, from and step: setNowPlaying returns early, after arming.
 		setNowPlaying({ from: FROM, slug: AWAKE }, { play: true });
 		expect(consumePlayOnLoad(AWAKE).asked).toBe(true);
 	});
@@ -65,7 +64,6 @@ describe("play on load, in the now-playing store", () => {
 			{ from: "explore-continue", slug: AWAKE },
 			{ at: 312, play: true }
 		);
-		// The player opening over it keeps the place.
 		setNowPlaying({ from: "explore-continue", slug: AWAKE });
 		expect(consumePlayOnLoad(AWAKE)).toEqual({ asked: true, at: 312 });
 		setNowPlaying({ from: FROM, slug: RAIN }, { play: true });
@@ -95,7 +93,6 @@ describe("the sleep timer, with the now-playing track", () => {
 	});
 });
 
-/** What the host publishes for a minted track, at `currentTime`. */
 function minted(currentTime: number, isPlaying: boolean) {
 	const p = {
 		currentTime,

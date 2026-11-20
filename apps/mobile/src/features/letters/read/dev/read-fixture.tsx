@@ -18,10 +18,6 @@ export type ReadFixture = {
 	light?: Light;
 };
 
-/**
- * The reader on fixtures: opening, acknowledging, hiding and unhiding change only this state.
- * A `light` pins the paper's light (Dusk, Night) whatever the device's theme and hour.
- */
 export function ReadFixtureScreen({ fixture }: { fixture: ReadFixture }) {
 	const [letter, setLetter] = useState(fixture.letter);
 	const patch = (p: Partial<ReceivedLetter>) =>

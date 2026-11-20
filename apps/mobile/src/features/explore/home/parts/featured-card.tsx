@@ -19,11 +19,6 @@ const LOCK_INSET = 16;
 const PLAY_GLYPH = 17;
 const SCRIM = [ON_ART.scrimFrom, ON_ART.scrimTo] as const;
 
-/**
- * Featured this week (handoff §6). The backend picks one track (`browse.hub.getFeatured`), so the
- * board's shelf of three is one full-width card: its art, the scrim, the kind over the title and
- * who made it. The card opens the player (or Xolace+); the play plays in place.
- */
 export function FeaturedCard({ track }: { track: ShelfTrack }) {
 	const { state, actions } = useHome();
 	const { width } = useWindowDimensions();
@@ -113,7 +108,6 @@ export function FeaturedCard({ track }: { track: ShelfTrack }) {
 	);
 }
 
-/** The lock, top left on art (22 pt, as the board's Featured). */
 function Lock() {
 	return (
 		<View

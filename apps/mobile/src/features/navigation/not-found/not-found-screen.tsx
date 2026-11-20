@@ -11,13 +11,8 @@ const COPY = {
 	title: "This page isn't here",
 } as const;
 
-/** Board pad: the placeholder's 24 on every side. */
 const PAD = 24;
 
-/**
- * A path nothing matches (`+not-found`): the prototype's `PlaceholderScreen` layout, a title
- * centred on the page, with one way back to Today.
- */
 export function NotFoundScreen() {
 	const insets = useSafeAreaInsets();
 	return (

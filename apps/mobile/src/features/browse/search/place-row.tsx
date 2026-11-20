@@ -1,6 +1,3 @@
-/** A Hubs & topics search result (#550), drawn as the kit's `MediaRow` like a TrackRow. Neither
- * is Plus-gated. */
-
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Image } from "expo-image";

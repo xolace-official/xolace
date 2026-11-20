@@ -5,11 +5,6 @@ import { LETTERS } from "./copy";
 import { LetterPill } from "./letter-pill";
 import type { OptIn } from "./letters-model";
 
-/**
- * "Receive letters too?" (handoff §1): the line, then Yes and Not now. Asked once: Not now never
- * asks again, and only Settings › Privacy turns it on after that. `short`: the Letters screen's
- * title, "Receive letters?". Shared by Connect's card and the Letters screen's For you.
- */
 export function LettersOffer({
 	short = false,
 	onAnswer,

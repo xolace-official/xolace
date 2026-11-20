@@ -8,13 +8,11 @@ import { useList } from "@/features/lantern/lists/list-data";
 import { RowsSkeleton } from "@/features/lantern/lists/rows-skeleton";
 import { useHeaderOptions } from "@/lib/header-options";
 
-/** A row before it's measured: 12 + 78 + 12, or a little more when the meta wraps. */
 const ROW_ESTIMATE = 106;
 const LOAD_AHEAD = 0.5;
 
 /**
- * A kind, a subject or Saved (handoff §3.2, §3.4): a small title and production's rows, recycled
- * (`LegendList`), or a quiet line when there's nothing. The list is the screen's first
+ * The list is the screen's first
  * descendant, so the native bar folds over it.
  */
 export function ListScreen() {

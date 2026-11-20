@@ -11,7 +11,6 @@ export type IconName = ComponentProps<typeof SymbolView>["name"];
 type Props = {
 	name: IconName;
 	size?: number;
-	/** A colour string (`useTokenColor`): SymbolView takes no class. */
 	color: ColorValue;
 	weight?: SymbolWeight;
 	style?: StyleProp<ViewStyle>;
@@ -19,7 +18,6 @@ type Props = {
 
 const DEFAULT_SIZE = 20;
 
-/** A system symbol, as drawn on the boards. Decorative unless wrapped in a labelled button. */
 export function Icon({
 	name,
 	size = DEFAULT_SIZE,

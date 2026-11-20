@@ -6,7 +6,6 @@ import { useFollowScreen } from "@/features/settings/follow/follow-data";
 import { outside } from "@/features/settings/follow/follow-model";
 import { SocialMark } from "@/features/settings/follow/socials/social-mark";
 
-/** Follow Xolace: production's six places, in its order, each a mark, a handle and ↗. */
 export function SocialsSection() {
 	const { actions } = useFollowScreen();
 	return (

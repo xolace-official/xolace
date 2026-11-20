@@ -21,49 +21,34 @@ import {
 import type { ReadingPrefs } from "@/features/lantern/reader/use-reading-prefs";
 import type { EntryRef } from "@/features/lantern/use-entry-actions";
 
-/**
- * Everything the reader reads and does. Two adapters fill it: Convex in the app (`ReaderData`)
- * and fixtures in its dev states. No part calls Convex, PostHog or the toast itself.
- */
 export type Reader = {
 	state: {
 		entry: ReaderEntry;
-		/** This reader's own row; undefined while it loads. */
 		signals: ReaderState | undefined;
-		/** Up next; null when nothing qualifies, undefined while it loads. */
 		next: NextEntry | null | undefined;
 		audio: ReaderAudio;
 		prefs: ReadingPrefs;
-		/** Where a read with a stored place opens (lantern.md §5.3). */
 		opensAt: "place" | "top";
-		/** Explainers end on a way to support, where there are resources nearby. */
 		showHelpline: boolean;
-		/** Opened from a hub: Up next follows its order. */
 		hub?: string;
 	};
 	actions: {
 		toggleSave: () => void;
-		/** This read, or another (Up next's menu). */
 		share: (entry?: EntryRef) => void;
 		toggleHelped: () => void;
 		reflect: () => void;
 		openHelpline: () => void;
 		openSources: () => void;
 		openAppearance: () => void;
-		/** A link in the body or the credit; says so when it can't open. */
 		openLink: (url: string) => void;
-		/** The reader reached the end of the article (Finished waits on its dwell). */
 		reachEnd: () => void;
-		/** Leaving: the read share to keep, or null to keep the old place. */
 		leaveAt: (share: number | null) => void;
-		/** "Pick up at 40%" or the title's Resume action. */
 		resumed: () => void;
 		audio: ReaderAudioActions;
 	};
 };
 
 const ReaderContext = createContext<Reader | null>(null);
-/** Apart from the reader's own: it ticks while the narration plays. */
 const ClockContext = createContext<ReaderClock>({
 	currentTime: 0,
 	duration: 0,
@@ -83,10 +68,6 @@ export function ReaderProvider({
 	return <ReaderContext value={value}>{children}</ReaderContext>;
 }
 
-/**
- * The app's adapter. While the entry loads, its skeleton; once it's gone from Lantern, a quiet
- * line. `showHelpline`: the route knows whether there are crisis resources nearby.
- */
 export function ReaderData({
 	slug,
 	showHelpline,
@@ -112,11 +93,6 @@ export function ReaderData({
 	);
 }
 
-/**
- * The narration, above the reader: a status tick re-renders this and the clock's readers (the
- * dock's time), while `children`, made by the parent, stay as they are unless the rarely changing
- * part (started, playing…) does.
- */
 function AudioHost({
 	entry,
 	children,
@@ -167,7 +143,6 @@ function Loaded({
 	);
 }
 
-/** The narration's time, for the dock alone. */
 export const useReaderClock = () => use(ClockContext);
 
 export function useReaderScreen(): Reader {

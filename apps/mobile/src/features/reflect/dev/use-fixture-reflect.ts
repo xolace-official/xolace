@@ -22,9 +22,7 @@ import {
 } from "./fixtures";
 
 type S = Reflect["state"];
-/** The fixture's own state: Reflect's, less what it works out from the texts. */
 export type FixtureState = Omit<S, "yourWords" | "mirror" | "resources"> & {
-	/** How the simulated server answers a send. */
 	answer: Answer;
 	sent: string;
 	mirrorText: string;
@@ -82,11 +80,6 @@ const FIXTURE_DEFAULTS: FixtureState = {
 const S_MS = 1000;
 const REWRITE_MS = 1100;
 
-/**
- * The prototype's simulated server (`reflect-store.ts`, `reflect-wait.ts`) as Reflect's second
- * adapter: a send waits as `answer` says, then lands the fixture mirror. Nothing reaches the
- * backend; navigation is left out, so a dev state stays on screen.
- */
 export function useFixtureReflect(initial: Partial<FixtureState>): Reflect {
 	const [f, setF] = useState<FixtureState>({ ...FIXTURE_DEFAULTS, ...initial });
 	const timers = useRef<ReturnType<typeof setTimeout>[]>([]);

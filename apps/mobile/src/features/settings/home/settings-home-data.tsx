@@ -2,7 +2,6 @@ import { createContext, type ReactNode, use } from "react";
 import type { PlusCard } from "@/features/settings/home/home-model";
 import { useSettingsHome } from "@/features/settings/home/use-settings-home";
 
-/** The pages the main screen opens, as `/settings/<page>`. */
 export type SettingsPage =
 	| "appearance"
 	| "mirror"
@@ -11,11 +10,6 @@ export type SettingsPage =
 	| "account"
 	| "follow";
 
-/**
- * Everything Settings' main screen reads and does. Two adapters fill it: Convex in the app
- * (`SettingsHomeData`) and fixtures in its dev states (`dev/`). A value that is undefined is
- * still loading, and its row shows none.
- */
 export type SettingsHome = {
 	state: {
 		plus: PlusCard;
@@ -29,7 +23,6 @@ export type SettingsHome = {
 	actions: {
 		open: (page: SettingsPage) => void;
 		openPlus: () => void;
-		/** The latest release's What's New (S23), over everything. */
 		openWhatsNew: () => void;
 		checkForUpdates: () => void;
 	};
@@ -47,7 +40,6 @@ export function SettingsHomeProvider({
 	return <SettingsHomeContext value={value}>{children}</SettingsHomeContext>;
 }
 
-/** The app's adapter. */
 export function SettingsHomeData({ children }: { children: ReactNode }) {
 	return (
 		<SettingsHomeProvider value={useSettingsHome()}>

@@ -15,13 +15,10 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { useTokenColors } from "@/lib/use-token-color";
 
 const PILL = { h: 42, inMs: 200, outMs: 150, padH: 18, rise: 12 } as const;
-/** The pick-up pill goes once the reader has scrolled this far either way. */
 const PICK_DRIFT = 60;
 const UP = { android: "arrow_upward", ios: "arrow.up" } as const;
 const DOWN = { android: "arrow_downward", ios: "arrow.down" } as const;
 
-/** A pill 42 tall, card fill, a hairline and a soft shadow, centred above the bottom. Fades in
- * over 200 ms and rises 12 pt. */
 function Pill({
 	icon,
 	accent,
@@ -80,10 +77,6 @@ function Pill({
 	);
 }
 
-/**
- * New in v2 (handoff §5.3): "Pick up at 40%" for a read that opens at the top with a place
- * stored. It never scrolls by itself; it goes on a tap or once the reader scrolls 60 pt.
- */
 export function PickUpPill({
 	at,
 	y,
@@ -91,7 +84,6 @@ export function PickUpPill({
 	hidden,
 	onPick,
 }: {
-	/** The stored share, or null for no pill. */
 	at: number | null;
 	y: SharedValue<number>;
 	bottom: number;
@@ -126,7 +118,6 @@ export function PickUpPill({
 	);
 }
 
-/** Whether the reader is at the end. Owns its state, so crossing it re-renders only its user. */
 function useAtEnd(y: SharedValue<number>, endAt: number) {
 	const [at, setAt] = useState(false);
 	useAnimatedReaction(
@@ -140,7 +131,6 @@ function useAtEnd(y: SharedValue<number>, endAt: number) {
 	return at;
 }
 
-/** Production's `BackToTop`: fades in once the end is reached. */
 export function BackToTop({
 	y,
 	endAt,

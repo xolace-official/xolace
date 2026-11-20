@@ -12,7 +12,6 @@ import { type AvatarOption, isLocked } from "@/features/you/avatar-model";
 import { COPY } from "@/features/you/copy";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** The avatar sheet: a floating sheet over You. */
 export function AvatarSheet() {
 	return (
 		<DetachedSheet>
@@ -21,13 +20,10 @@ export function AvatarSheet() {
 	);
 }
 
-/** Production's picker in the board's layout: the current one and the line, then a grid of
- * the catalog, five across, Xolace+ ones locked for free users. No photo. A pick closes it. */
 function AvatarPicker() {
 	const { state, actions } = useAvatar();
 	const close = useSheetClose();
 	const { avatars, current, isPlus } = state;
-	// The line explains the locks, so it shows only when one is drawn.
 	const anyLocked = avatars?.some((a) => isLocked(a, isPlus)) ?? false;
 	const pick = (avatar: AvatarOption) => {
 		if (actions.pick(avatar)) {
@@ -98,7 +94,6 @@ function Choice({
 	on: boolean;
 	onPress: () => void;
 }) {
-	// The page colour on ember, as the week's flame.
 	const onEmber = useTokenColor("background");
 	return (
 		<PressScale

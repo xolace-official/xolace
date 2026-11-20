@@ -12,8 +12,6 @@ import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { RIDGES, SKY } from "./sky-model";
 import type { SkyMotion } from "./use-sky-motion";
 
-/** The two ridges on the horizon: the sun sinks behind them, and they drift with the scroll. */
-
 type ColorProp = ComponentProps<typeof Path>["color"];
 const RIDGE_FADE = {
 	end: vec(0, RIDGES.height),
@@ -22,7 +20,6 @@ const RIDGE_FADE = {
 };
 const OPAQUE_TO_CLEAR = ["#000000", "#000000", "rgba(0,0,0,0)"];
 
-/** The ridges' place: a parallax of 0.22× the scroll. */
 export function RidgesAt({
 	scrollY,
 	children,
@@ -40,7 +37,6 @@ export function RidgesAt({
 	return <Group transform={transform}>{children}</Group>;
 }
 
-/** Two ridges in the board's 390 pt page, stretched to the width; their bottom 36% fades into the page. */
 export function RidgesArt({
 	colors,
 	sx,

@@ -11,20 +11,13 @@ import {
 } from "@/lib/now-playing/now-playing-store";
 import { usePushOnce } from "@/lib/use-push-once";
 
-/**
- * A row's tap, with production's gate and events (Browse's `useOpenTrack`): a free listener
- * gets the paywall (`browse`), Xolace+ the player. Never carries a `stepId`, so nothing opened
- * here tends a twig. Also the playing mark: which slug is loaded, and whether it plays.
- */
 export function useListen(screen: BrowseFrom): Listen {
 	const posthog = usePostHog();
 	const pushOnce = usePushOnce();
 	const { isPlus, isLoading } = usePlusEntitlement();
 	const locked = !(isLoading || isPlus);
 	const np = useNowPlaying();
-	// A preview isn't what's playing: its cover says "Hearing a preview" instead.
 	const nowPlaying = np && !np.preview ? np.slug : null;
-	// A boolean snapshot: rows don't re-render on every status tick.
 	const playing = useNowPlayingIsPlaying();
 
 	const open: Listen["open"] = (track, from = screen) => {

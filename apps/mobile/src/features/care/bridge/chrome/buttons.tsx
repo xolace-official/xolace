@@ -2,7 +2,6 @@ import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 
-/** The way out under it: text only, the selection tick. */
 export function QuietButton({
 	label,
 	onPress,

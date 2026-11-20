@@ -6,16 +6,13 @@ import { useEffect } from "react";
 import { deviceRegion } from "@/features/reach-me-on/link-consent";
 import { type Channel, sheetOrder } from "@/features/reach-me-on/reach-view";
 
-/** Gates the mobile entry point only; the backend never reads it (plan §Rollout). */
 const REACH_ME_ON_FLAG = "reach-me-on";
 
-/** The flag's value: undefined until PostHog has loaded flags. */
 export function useReachMeOnFlag(): boolean | undefined {
 	const value = useFeatureFlag(REACH_ME_ON_FLAG);
 	return value === undefined ? undefined : value === true;
 }
 
-/** Everything "Reach me on…" reads and changes, except linking. */
 export function useReachChannels() {
 	const channels = useQuery(api.outreach.reachMe.listChannels);
 	const refreshCountry = useMutation(api.outreach.reachMe.refreshCountry);
@@ -25,7 +22,6 @@ export function useReachChannels() {
 	const posthog = usePostHog();
 	const { toast } = useToast();
 
-	// Opening the sheet keeps the linked chat's country current (plan §9).
 	useEffect(() => {
 		posthog.capture("reach_screen_opened");
 		const regionCode = deviceRegion();

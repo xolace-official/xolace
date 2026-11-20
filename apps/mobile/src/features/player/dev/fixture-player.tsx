@@ -1,8 +1,3 @@
-/** The player on fixtures: the real screen under its provider, filled from the board's tracks.
- * A state plays on a simulated clock (one second a second, no audio), so the cover, the scrub,
- * the skips and the timer all move as they do in the app; nothing reaches the backend. A slow
- * seek (`seekLatencyMs`) reports like a streamed one: the clock keeps ticking from the old place
- * until the seek lands, so the playhead's guard can be seen at work without the network. */
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -26,7 +21,6 @@ import {
 import { PlayerScreen } from "../player-screen";
 
 const TICK_MS = 1000;
-/** A slow-seek state reports four times a second, as a streamed status does (twice or more). */
 const SLOW_TICK_MS = 250;
 const MS_PER_S = 1000;
 const VOLUME = 0.78;
@@ -38,11 +32,8 @@ export type FixtureProps = {
 	paused?: boolean;
 	repeat?: boolean;
 	sleep?: SleepTimer;
-	/** Hold the clock still, so a capture shows the board's time. */
 	still?: boolean;
-	/** A seek reaches the clock only this long after it's asked for (a streamed seek). */
 	seekLatencyMs?: number;
-	/** Without the playhead's guard: the stale ticks pull it back (the bug, for comparison). */
 	unguarded?: boolean;
 };
 
@@ -111,13 +102,11 @@ function FixturePlayer({
 	const value: Player = {
 		actions: {
 			close: () => router.back(),
-			// The crisis-line state proves the whole line opens help (a real route, no backend).
 			openCrisisHelp: () => router.push("/crisis-resources"),
 			retry: () => undefined,
 			seek,
 			setRepeat,
 			setSleep: (c) => setSleep(pickSleep(c)),
-			// The app's guard (`use-player.ts`), so a slow-seek state exercises it.
 			settled: (at) =>
 				unguarded ? at : settledPosition(at, lastSeek.current, Date.now()),
 			setVolume,
@@ -151,7 +140,6 @@ function FixturePlayer({
 	);
 }
 
-/** A dev state's screen and header (the player draws its own chrome). */
 export const fixture = (props: FixtureProps) => ({
 	options: { headerShown: false },
 	Screen: () => <FixturePlayer {...props} />,

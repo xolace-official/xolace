@@ -1,5 +1,3 @@
-// `ask`: Flux asks the one question while it types out, then the ways to answer: a quick
-// reply, typing, talking (the mic, #709), or Skip.
 import { SymbolView } from "expo-symbols";
 import { Button, PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
@@ -37,9 +35,7 @@ export function AskStep({ onQuickReply, onSkip, onTalk, onType }: Props) {
 		<View className="flex-1 items-center px-5 pt-4">
 			<Flux mood={typed.done ? "idle" : "talking"} size={FLUX_SIZE} />
 			<View className="mt-3.5 self-stretch rounded-3xl border border-border bg-surface px-5 py-4">
-				{/* Tail up at Flux. */}
 				<View className="absolute -top-2 left-1/2 -ml-2 size-4 rotate-45 border-border border-t border-l bg-surface" />
-				{/* The whole line for screen readers; the typing is for sighted users. */}
 				<AppText
 					accessibilityLabel={ASK_LINE}
 					className="min-h-[84px] font-[Poppins-Medium] text-[21px] text-foreground leading-[29px]"
@@ -72,7 +68,6 @@ export function AskStep({ onQuickReply, onSkip, onTalk, onType }: Props) {
 						))}
 					</View>
 					<View className="flex-row items-center gap-1.5 rounded-full border border-border bg-surface-secondary p-1.5">
-						{/* Looks like the field it opens, not a button. */}
 						<PressableFeedback
 							accessibilityRole="button"
 							className="min-h-12 flex-1 justify-center px-3.5"
@@ -82,7 +77,6 @@ export function AskStep({ onQuickReply, onSkip, onTalk, onType }: Props) {
 								Tell Flux anything…
 							</AppText>
 						</PressableFeedback>
-						{/* The mic permission is asked only after this tap. */}
 						<PressableFeedback
 							accessibilityLabel="Talk instead of typing"
 							accessibilityRole="button"
@@ -100,7 +94,6 @@ export function AskStep({ onQuickReply, onSkip, onTalk, onType }: Props) {
 						</PressableFeedback>
 					</View>
 					<View className="flex-row items-center justify-between gap-3">
-						{/* True of the speech recognizer used: no recording is kept, only the words reach Xolace (#709). */}
 						<AppText className="flex-1 font-[Poppins-Regular] text-[12px] text-muted">
 							Talk or type. Flux keeps the words, never the audio.
 						</AppText>

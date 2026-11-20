@@ -21,9 +21,7 @@ import { COPY } from "../copy";
 import { useToday } from "../today-data";
 import { easeOutFn } from "../today-motion";
 
-/** Let the return into Today land before the day is counted on screen. */
 const SETTLE_MS = 450;
-/** flare-notifications: heat flares fast, the digits follow 150 ms in. */
 const ROLL_AFTER_MS = 150;
 const IGNITE_MS = 900;
 const GLOW_MS = 1300;
@@ -32,37 +30,25 @@ const GLOW: readonly (readonly [number, number])[] = [
 	[0.18, 1],
 	[1, 0],
 ];
-/** The digits' line: 15 pt callout, 20 tall, centred in the 38 pt pill. */
 const DIGITS_LINE = 20;
 
 type Props = {
-	/** The flame's flicker clock, shared by the header's chip and the toolbar's so they hand over in step. */
 	clock: SharedValue<number>;
-	/** The flame flickers: Today live and this chip in view. */
 	running: boolean;
-	/** The toolbar's copy sits on glass: a white hairline, and it stays silent. */
 	elevated?: boolean;
 	reduced: boolean;
 };
 
-/**
- * The day streak: a lit flame and digits that roll. On the first thing that
- * counts each day it ignites: the flame flares to 1.5, the chip glows amber,
- * 12 rolls to 13, one Bloom. No takeover. Nothing shows until the streak is known.
- */
 export function StreakChip({ clock, running, elevated, reduced }: Props) {
 	const { state, actions } = useToday();
-	// The glow as the flame ignites: ember at .6, 24 pt.
 	const igniteGlow = `0 0 24px 6px ${useTokenColor("today-ignite-glow")}`;
 	const focused = useIsFocused();
 	const ignite = useSharedValue(1);
-	// A hidden chip's flame reads a clock that never moves, so its worklet doesn't run each frame.
 	const still = useSharedValue(0);
 	const glow = useSharedValue(1);
 	const count = state.streak?.count ?? 0;
 	const igniteKey = state.streak?.igniteKey ?? 0;
 	const seen = useRef(igniteKey);
-	// The digits roll on Today, not behind another screen: hold the old number until Today is back.
 	const [shown, setShown] = useState(count);
 
 	useEffect(() => {

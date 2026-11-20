@@ -1,8 +1,3 @@
-/**
- * Explore home on the board's data (`ExploreAlive`: `CONTINUE`, `TIMES`, `BY`, `NEW`, `FIVE`,
- * `FEAT`), shaped as `browse.explore` and `browse.hub` serve them. For the hour serves only
- * tracks, so the board's Lantern rows there become tracks; Lantern stays on Continue and Five.
- */
 import type { Id } from "@xolace/backend/dataModel";
 import { art } from "@/features/explore/dev/covers";
 import { type TrackId, trackOf } from "@/features/explore/dev/fixtures";
@@ -98,7 +93,6 @@ const thoughts = homeTrack("thoughts");
 const SECONDS = 60;
 const LEFT_MIN = 4;
 
-/** Three cards: a track 5 min into 9, an episode a minute in, and an entry 40% read. */
 export const CONT: readonly ContinueCard[] = [
 	{
 		id: letting._id,
@@ -128,7 +122,6 @@ export const CONT: readonly ContinueCard[] = [
 	},
 ];
 
-/** Today's four phases, three each (`TIMES`). */
 export const HOUR: Record<DayPhase, HomeTrack[]> = {
 	dawn: ["softer", "first", "land"].map((id) => homeTrack(id as TrackId)),
 	day: ["land", "clear", "naming"].map((id) => homeTrack(id as TrackId)),
@@ -149,7 +142,6 @@ export const FRESH: ShelfTrack[] = ["first", "tide", "naming", "toomuch"].map(
 
 export const FEATURED: ShelfTrack = shelfTrack("setting");
 
-/** Two pages (`FIVE`): support audio and reading in turn. */
 export const SHORT: ShortItem[] = [
 	{ kind: "track", plus: true, track: homeTrack("land") },
 	{ entry: ENTRIES.twoam, kind: "entry", plus: false },

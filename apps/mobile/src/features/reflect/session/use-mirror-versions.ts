@@ -1,11 +1,6 @@
 import type { Id } from "@xolace/backend/dataModel";
 import { useState } from "react";
 
-/**
- * The first mirror and the latest refinement of it. The server keeps only the latest, so the
- * first is remembered here as it lands; a session picked up cold after a refinement shows the
- * latest alone. `landN` counts each mirror that writes in, `mv` which version shows.
- */
 export function useMirrorVersions(
 	sessionId: Id<"sessions"> | null,
 	mirrorText: string | null,

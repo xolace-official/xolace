@@ -1,6 +1,3 @@
-// The date of birth as Material 3's date dialog behind a field (Expo UI's Jetpack Compose). iOS uses
-// SwiftUI's wheel (`date-of-birth-picker.ios.tsx`).
-//
 // The dialog, not the inline picker: the inline one reports a selection on mount even with none
 // made, as epoch 0, which is indistinguishable from someone born on 1 January 1970.
 
@@ -14,7 +11,6 @@ import { playSoftPress } from "@/lib/haptics";
 
 const DAY = "YYYY-MM-DD".length;
 
-/** "1 May 1990", without a timezone shift: the day is read back as UTC. */
 const formatDay = (day: string) =>
 	new Date(`${day}T00:00:00Z`).toLocaleDateString(undefined, {
 		day: "numeric",

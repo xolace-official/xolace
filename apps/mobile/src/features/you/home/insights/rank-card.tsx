@@ -11,11 +11,8 @@ import { Surface } from "@/features/you/surface";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** The ⓘ's explanation sits under the title. */
 const TIP_TOP = 48;
 
-/** Among the fires: production's rank card, the percentile beside its line once ranked, and
- * what it's waiting for until then. */
 export function RankCard({ rank }: { rank: Rank }) {
 	const [info, setInfo] = useState(false);
 	return (
@@ -70,7 +67,6 @@ export function RankCard({ rank }: { rank: Rank }) {
 	);
 }
 
-/** Free users: one Xolace+ row at the end, in production's words. */
 export function PlusRow({ onPress }: { onPress: () => void }) {
 	const [emberWash = "", accentWash = "", subtle = ""] = useTokenColors([
 		"ember-wash",

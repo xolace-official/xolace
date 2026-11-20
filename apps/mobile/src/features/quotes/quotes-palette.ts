@@ -1,9 +1,3 @@
-/**
- * The quote colours a `--color-quote-*` token can't express (fixed-palette note in global.css):
- * gradient stops, which `LinearGradient` takes as arrays.
- */
-
-/** Poster's wash, at 170° (a hair off vertical, as CSS draws it). */
 export const POSTER_WASH = {
 	colors: ["#F9F06B", "#F7B7C8", "#B9B7B4"] as const,
 	end: { x: 0.59, y: 1 },
@@ -11,7 +5,6 @@ export const POSTER_WASH = {
 	start: { x: 0.41, y: 0 },
 };
 
-/** The scrim under light ink, top to bottom. Clear view drops it to `SCRIM_CLEAR`. */
 export const SCRIM = {
 	colors: [
 		"rgba(0,0,0,0.36)",
@@ -24,11 +17,6 @@ export const SCRIM = {
 };
 export const SCRIM_CLEAR = 0.45;
 
-/**
- * The scrim under dark ink: the paper white of the quote's light ink (#FFFDF8), at the light
- * scrim's stops and about two thirds of its alpha, so a pale image softens behind the words and
- * the bottom actions without a band.
- */
 export const PAPER_SCRIM = {
 	colors: [
 		"rgba(255,253,248,0.24)",
@@ -40,7 +28,6 @@ export const PAPER_SCRIM = {
 	locations: SCRIM.locations,
 };
 
-/** A sheet tile's flat veil, the scrims' small cousin. */
 export const TILE_VEIL = {
 	dark: "rgba(255,253,248,0.12)",
 	light: "rgba(0,0,0,0.18)",
@@ -48,10 +35,8 @@ export const TILE_VEIL = {
 
 type Scrimmed = { ink: "light" | "dark"; drawn?: "poster" | "night" };
 
-/** Poster is the one printed sheet: dark words straight on its wash, nothing between. */
 const bare = (b: Scrimmed) => b.ink === "dark" && b.drawn === "poster";
 
-/** The scrim behind a background's words: dark under light ink, paper under dark ink. */
 export const scrimOf = (b: Scrimmed) => {
 	if (bare(b)) {
 		return null;
@@ -59,5 +44,4 @@ export const scrimOf = (b: Scrimmed) => {
 	return b.ink === "light" ? SCRIM : PAPER_SCRIM;
 };
 
-/** A sheet tile's veil, chosen the same way. */
 export const tileVeilOf = (b: Scrimmed) => (bare(b) ? null : TILE_VEIL[b.ink]);

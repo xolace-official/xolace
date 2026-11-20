@@ -6,7 +6,6 @@ import type { FunctionReturnType } from "convex/server";
 import { useEffect, useState } from "react";
 import type { ListenerCard } from "./session-end-data";
 
-/** How long the slot waits for a match before taking the next card (handoff §5.9). */
 const MATCH_WAIT_MS = 2000;
 
 type Suggestion = FunctionReturnType<
@@ -16,15 +15,9 @@ type Suggestion = FunctionReturnType<
 export type ListenerMatch = {
 	status: "pending" | "found" | "none";
 	card: ListenerCard | null;
-	/** The profile the card opens, with the specialty its roster filters to. */
 	profile: { profileId: string; specialty: string } | null;
 };
 
-/**
- * A listener for this session, asked once (an action: nothing is stored). It
- * waits for auth, holds the slot at most 2 s, and a late answer never swaps a
- * card in: whatever the slot settled on stays.
- */
 export function useListenerMatch(
 	sessionId: Id<"sessions"> | null
 ): ListenerMatch {
@@ -69,7 +62,6 @@ export function useListenerMatch(
 			listensTo: specialtyListensTo(suggestion.specialty),
 			name: suggestion.displayName,
 			photoUrl: suggestion.photoUrl,
-			// Older backends don't say: no dot, "Replies within a day".
 			present: suggestion.present ?? false,
 			rating: suggestion.rating,
 		},

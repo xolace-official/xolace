@@ -5,7 +5,6 @@ import { BODY_MAX_SCALE } from "@/design/type";
 import { useVentScreen } from "@/features/vent/vent-data";
 import { LitWord } from "@/features/vent/words/lit-word";
 
-/** Centred, 48 pt sides, 17 pt on a 25 pt line, 5 pt between words (handoff §9). */
 const SIDE = 48;
 const FONT = 17;
 const LINE = 25;
@@ -13,11 +12,6 @@ const GAP = 5;
 const SIDES = { left: SIDE, right: SIDE } as const;
 const WORD_GAP = { columnGap: GAP } as const;
 
-/**
- * The reply, lit as it's spoken (v2): each word catches amber when the voice reaches it, then
- * cools to cream. Its layout is reported once, so the burn can draw the same words in the same
- * places. One accessible element; the flow announces it once the voice has finished.
- */
 export function ReplyWords() {
 	const { state, actions } = useVentScreen();
 	const { words, starts } = state.reply;

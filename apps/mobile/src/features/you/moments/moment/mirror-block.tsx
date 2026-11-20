@@ -12,8 +12,6 @@ const M = MOMENTS_COPY.moment;
 const PLAY = { android: "play_arrow", ios: "play.fill" } as const;
 const PAUSE = { android: "pause", ios: "pause.fill" } as const;
 
-/** The feeling words under the mirror, or alone on a moment that has none ("reflection" when
- * there's no feeling either). */
 export function Words({ words }: { words: string[] }) {
 	return (
 		<View className="-mt-2.5 flex-row flex-wrap gap-2">
@@ -36,7 +34,6 @@ export function Words({ words }: { words: string[] }) {
 	);
 }
 
-/** A section's small caps label. */
 export const Label = ({ children }: { children: string }) => (
 	<AppText
 		accessibilityRole="header"
@@ -49,7 +46,6 @@ export const Label = ({ children }: { children: string }) => (
 	</AppText>
 );
 
-/** The mirror in its own voice, its tone, and its play button when it has a voice. */
 export function MirrorBlock({
 	moment,
 	audio,

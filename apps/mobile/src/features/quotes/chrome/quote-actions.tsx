@@ -9,7 +9,6 @@ import { QuoteGlass } from "./quote-glass";
 import { QuoteIcon } from "./quote-icons";
 import { type InkPalette, textShadow, useQuoteInk } from "./quote-ink";
 
-/** The row sits inset + 62 above the bottom; the link inset + 12. */
 const ROW_ABOVE_INSET = 62;
 const LINK_ABOVE_INSET = 12;
 const HIDE_DROP = 24;
@@ -19,7 +18,6 @@ const A11Y = QUOTE_COPY.accessibility;
 type Props = {
 	ink: InkPalette;
 	hidden: boolean;
-	/** When the words end: the actions rise then. */
 	arriveAt: number;
 	writeLabel: string;
 	res: boolean;
@@ -30,7 +28,6 @@ type Props = {
 	onKept: () => void;
 };
 
-/** Write back, the heart and share; under them, Words you kept. */
 export function QuoteActions(p: Props) {
 	const m = useQuoteMotion();
 	const { resonate, shadowColor } = useQuoteInk();

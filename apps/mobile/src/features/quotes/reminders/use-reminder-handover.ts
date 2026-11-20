@@ -7,7 +7,6 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import { legacyReminderIds } from "./legacy-reminders";
 
-/** This device has carried its old reminder setting over to the server. Device-only. */
 const useHandoverMemory = create<{ adopted: boolean }>()(
 	persist((): { adopted: boolean } => ({ adopted: false }), {
 		merge: (stored, current) => ({
@@ -30,12 +29,6 @@ async function cancelLegacyReminders(): Promise<void> {
 	}
 }
 
-/**
- * Once a launch: cancel the old on-device daily quote reminders, then (until it has worked once
- * on this device) ask the server to carry their setting over to the daily quote push. In that
- * order, so nobody gets the quote twice. Both are idempotent and cheap; a failure retries at the
- * next launch.
- */
 export function useReminderHandover(): void {
 	const adopt = useMutation(api.dailyQuotes.pushSettings.adoptLegacyReminders);
 	useEffect(() => {

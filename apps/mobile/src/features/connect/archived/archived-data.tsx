@@ -3,7 +3,6 @@ import type { PairRowView } from "../list/chats-model";
 import type { DeleteConfirm, RowActions } from "../list/row-actions";
 import { useArchived } from "./use-archived";
 
-/** Archived: the same rows as Connect, the ones tucked away. Undefined rows: still loading. */
 export type ArchivedScreenData = {
 	state: { rows: PairRowView[] | undefined };
 	deleting: DeleteConfirm;

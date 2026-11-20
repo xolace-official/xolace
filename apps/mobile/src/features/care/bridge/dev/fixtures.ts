@@ -1,6 +1,5 @@
 import type { BridgeQuota } from "@/features/care/bridge/bridge-model";
 
-/** The prototype's draft, for Mum (`BRIDGE.draft`). */
 export const MUM_DRAFT =
 	"Mum, I've been carrying more than I've let on lately. Work has been heavy and I haven't been sleeping well. I'm okay, but I wanted you to know, and I'd love to talk this weekend if you're free.";
 
@@ -10,7 +9,6 @@ export const MUM = {
 	relationship: "parent",
 } as const;
 
-/** 55 characters: five left, so the counter shows. */
 export const LONG_NAME =
 	"Auntie Efua from church, who always asks how I'm doing";
 

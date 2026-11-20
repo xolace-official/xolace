@@ -37,7 +37,6 @@ import {
 	withStarter,
 } from "./letters-model";
 
-// Letters' motion reads its reduced fade from the springs, which load Reanimated.
 vi.mock(
 	"react-native-reanimated",
 	() => import("@/design/testing/reanimated-stub")
@@ -148,7 +147,6 @@ describe("countLine and canSend", () => {
 		expect(countLine("x".repeat(450))).toBe(LETTERS.write.countLeft(50));
 	});
 	it("counts one length for both limits and what's left: the trimmed words", () => {
-		// A starter leaves a space on the end; it counts toward neither limit.
 		expect(countLine(`${"x".repeat(450)} `)).toBe(LETTERS.write.countLeft(50));
 		expect(countLine(` ${"x".repeat(39)} `)).toBe(LETTERS.write.countUnder(1));
 	});

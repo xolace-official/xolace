@@ -13,10 +13,6 @@ import { canAppleZoom } from "@/lib/apple-zoom";
 import { playSoftPress } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/**
- * A square cover (22 pt corners, a half-point edge), then the name and the count line. It zooms
- * into the topic's cover; with Reduce Motion it's a plain push.
- */
 export function TopicTile({ tile, size }: { tile: Tile; size: number }) {
 	const reduced = useEffectiveReducedMotion();
 	const counts = countLine(tile);
@@ -74,8 +70,6 @@ export function TopicTile({ tile, size }: { tile: Tile; size: number }) {
 	);
 }
 
-/** A tile while the grid loads, in the shared look: the cover and two lines, in place. The grid
- * breathes them together (`topics-screen`). */
 export function TileSkeleton({ size }: { size: number }) {
 	return (
 		<View style={{ gap: GRID.textGap, width: size }}>

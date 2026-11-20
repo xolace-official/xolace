@@ -12,7 +12,6 @@ import { useQuoteInk } from "../chrome/quote-ink";
 import type { QuoteBackground } from "../quotes-model";
 import { POSTER_WASH } from "../quotes-palette";
 
-/** A loop's still fades out once its first frame is on screen. */
 const FIRST_FRAME_FADE = 180;
 const PERCENT = 100;
 
@@ -24,10 +23,6 @@ const contentPosition = (b: QuoteBackground) =>
 			} as const)
 		: ("center" as const);
 
-/**
- * One background, filling its parent: Poster's wash, Night's colour, a still, or a loop over its
- * first frame. `play` mounts the loop's video; otherwise a loop shows its still.
- */
 export function BackgroundLayer({
 	background: b,
 	play,
@@ -81,7 +76,6 @@ export function BackgroundLayer({
 	);
 }
 
-/** Muted, looping, no controls; cached on disk after the first play. */
 function LoopVideo({ url, onReady }: { url: string; onReady?: () => void }) {
 	const shown = useSharedValue(0);
 	const player = useVideoPlayer({ uri: url, useCaching: true }, (p) => {

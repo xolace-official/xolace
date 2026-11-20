@@ -21,10 +21,6 @@ const RELEASE = {
 	...PLAY_AS_CHOSEN,
 };
 
-/**
- * Hold to begin (handoff §7): violet fills the pill over 1.1 s while it's held and slips back if
- * it's let go early. VoiceOver activates it outright.
- */
 export function HoldToBegin({ onDone }: { onDone: () => void }) {
 	const fill = useSharedValue(0);
 	const finished = useRef(false);

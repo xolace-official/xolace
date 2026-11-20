@@ -9,11 +9,9 @@ import { LetterLine } from "../letter-sheet";
 
 const M = LETTER_MOTION;
 const H = SHEET.write.height;
-/** One third of the sheet: the band that folds, and the folded letter's height. */
 export const BAND = H / 3;
 const HALF_TURN = 180;
 const BACK_FROM = 0.5;
-/** The ember the letter shrinks into, and the sparks it sheds. */
 export const EMBER = { from: 0.4, size: 40 };
 const SPARK = { fall: 90, opacity: 0.9, size: 4 };
 
@@ -26,11 +24,6 @@ const RADIUS = {
 	},
 } as const;
 
-/**
- * One third of the sheet, cut from the whole letter. The top third turns down about its bottom
- * edge, the bottom third up about its top edge (perspective 900). Past halfway the band shows its
- * back: the paper's back colour covers the mirrored words.
- */
 export function Band({
 	i,
 	fold,
@@ -98,7 +91,6 @@ export function Band({
 	);
 }
 
-/** A spark the rising ember sheds: it falls 90 pt and fades. */
 export function Spark({
 	t,
 	x,

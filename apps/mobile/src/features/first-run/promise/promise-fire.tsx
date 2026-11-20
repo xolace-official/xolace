@@ -9,13 +9,11 @@ import { useCanvasKick } from "../stage";
 import { drawGlow, glowPose } from "../story/glow";
 import { ageX, CTA_Y, type PEng, SPARKS, underglow, X } from "./promise-scene";
 
-/** Board `.ug`: a 690 × 420 ellipse at (−150, 640), ember, breathing low on the screen. */
 const UG = { h: 420, originY: 0.4, w: 690, x: -150, y: 640 };
 const COAL = 16;
 const STOPS = [0, 0.3, 0.55, 0.72];
 const RM_FADE_MS = 300;
 
-/** The underglow, under the cards: the fire to come. */
 export function PromiseUnderglow({
 	eng,
 	stage,
@@ -53,7 +51,6 @@ export function PromiseUnderglow({
 				)
 			);
 			c.save();
-			// transform-origin 50% 40%
 			c.translate(cx, oy + u.ty);
 			c.scale(u.sc, u.sc);
 			c.translate(0, cy - oy);
@@ -70,12 +67,6 @@ export function PromiseUnderglow({
 	);
 }
 
-/**
- * The hand-off (ms from letting go): the coal at (195, 730) flares at 420 as the story's glow
- * opens out from it as a circle (radius 0 → 1000 over 420–980, brightness 1.35 → 1 over
- * 520–1200), and 12 sparks rise. The glow is the story's own first frame, so the swap at 1 s
- * doesn't show.
- */
 export function PromiseFire({
 	eng,
 	stage,

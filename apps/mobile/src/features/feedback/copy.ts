@@ -1,4 +1,3 @@
-/** Every word the feedback sheet says, production's word for word. */
 export const FEEDBACK_COPY = {
 	back: "Go back",
 	menu: {
@@ -18,8 +17,6 @@ export const FEEDBACK_COPY = {
 		concern: {
 			placeholder:
 				"What happened? Anything you can tell us helps us look into it.",
-			// Mirrors the server's message. A rate-limited reporter may have a real safety problem
-			// and no route left in the app, so the copy names one.
 			rateLimited:
 				"You've reached today's report limit. If this is urgent, email support@xolaceinc.com and a human will pick it up.",
 			sent: "A person on our team reads every report.",

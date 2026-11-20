@@ -11,7 +11,6 @@ import { EASE_OUT, PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { COPY } from "@/features/care/bridge/copy";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** Production's timing: Flux holds the boat a beat, then lets it sail. Once, never a loop. */
 const HOLD_MS = 2200;
 const RELEASE_MS = 2600;
 
@@ -20,7 +19,6 @@ const styles = StyleSheet.create({
 	layer: StyleSheet.absoluteFill,
 });
 
-/** Flux holding a paper boat (intro-2) crossfading into the boat sailing off (intro-1). */
 export function IntroMascot() {
 	const reduced = useEffectiveReducedMotion();
 	const released = useSharedValue(0);

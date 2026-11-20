@@ -19,16 +19,9 @@ const SIZE = M.mark.size;
 const RING = M.mark.ring;
 const ARRIVE = Easing.bezier(...M.curves.arrive);
 const SOFT = Easing.inOut(Easing.ease);
-/** Unlit, the ring is half strength. */
 const UNLIT_OPACITY = 0.5;
 const FROM_SCALE = 0.6;
 
-/**
- * The received mark (12 pt): an empty ring while waiting (or returned, or held), a lit ember once
- * received, and a ring around it once acknowledged. `ignite` lights it along the ignite curve (800 ms) on mount:
- * pass it only the first time the sender sees the change. Reduce Motion: it fades in, 200 ms.
- * It's drawn only: the row it sits in says its status (`LETTERS.status.*`) in its label.
- */
 export function ReceivedMark({
 	status,
 	ignite = false,
@@ -49,7 +42,6 @@ export function ReceivedMark({
 		if (!play) {
 			return;
 		}
-		// From unlit every time, so a status that flips while the mark is up ignites too.
 		opacity.set(0);
 		scale.set(reduced ? 1 : FROM_SCALE);
 		if (reduced) {

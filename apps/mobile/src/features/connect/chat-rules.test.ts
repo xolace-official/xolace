@@ -9,7 +9,6 @@ import {
 } from "./chat-rules";
 
 describe("rateCtaState", () => {
-	// canRate | myRating → what the CTA does
 	const cases: {
 		canRate: boolean;
 		myRating?: number;
@@ -18,8 +17,6 @@ describe("rateCtaState", () => {
 		{ canRate: true, expected: "prompt", myRating: undefined },
 		{ canRate: true, expected: "rated", myRating: 4 },
 		{ canRate: false, expected: "hidden", myRating: undefined },
-		// Rated, then the conversation stopped being rateable (a block): the link
-		// goes away even for someone who already used it.
 		{ canRate: false, expected: "hidden", myRating: 5 },
 	];
 
@@ -35,12 +32,9 @@ describe("rateCtaState", () => {
 describe("declineCooldownActive", () => {
 	const DAY = 86_400_000;
 
-	// server-computed retryAvailableAt → is the door still shut?
 	const cases: { inMs?: number; expected: boolean; label: string }[] = [
 		{ expected: false, label: "no cooldown on the row" },
 		{ expected: true, inMs: 1000, label: "a second left" },
-		// The dead-end this guards: a stale, already-past timestamp arrives from the
-		// reactive query's cache and would disable the CTA forever.
 		{ expected: false, inMs: 0, label: "exactly now" },
 		{ expected: false, inMs: -30 * DAY, label: "long expired, still cached" },
 	];
@@ -59,12 +53,9 @@ describe("declineCooldownActive", () => {
 describe("daysUntil", () => {
 	const DAY = 86_400_000;
 
-	// ms from now → whole days the sentence says to wait
 	const cases: { inMs: number; expected: number; label: string }[] = [
 		{ expected: 7, inMs: 7 * DAY, label: "a full week out" },
 		{ expected: 7, inMs: 6.5 * DAY, label: "part-days round up, never down" },
-		// The floor: hours left must never read as "ask again in 0 days", which
-		// describes a wait that is already over.
 		{ expected: 1, inMs: 3_600_000, label: "an hour left" },
 		{ expected: 1, inMs: 0, label: "already elapsed" },
 	];
@@ -77,14 +68,12 @@ describe("daysUntil", () => {
 });
 
 describe("hasSpoken", () => {
-	// status | closedReason → did these two ever exchange a message?
 	const cases: {
 		status: ConversationStatus;
 		reason?: "declined" | "expired" | "blocked" | "xolacer_left";
 		expected: boolean;
 		label?: string;
 	}[] = [
-		// Never accepted — no channel was ever created, so nothing was written.
 		{ expected: false, status: "requested" },
 		{
 			expected: false,
@@ -98,7 +87,6 @@ describe("hasSpoken", () => {
 			reason: "expired",
 			status: "closed",
 		},
-		// Accepted at some point, so there is history worth promising to keep.
 		{ expected: true, status: "open" },
 		{
 			expected: true,
@@ -130,38 +118,29 @@ describe("resolveMessageIdentity", () => {
 		counterpartPhotoUrl?: string;
 	};
 
-	// A conversation where I'm the seeker: the counterpart is a real xolacer,
-	// so their real name and photo are the correct thing to show.
 	const asSeeker: Conversation = {
 		counterpartName: "Maya",
 		counterpartPhotoUrl: "https://cdn/maya.jpg",
 		counterpartProfileId: THEM,
 	};
-	// A conversation where I'm the xolacer: the counterpart is anonymous, so
-	// the server already resolved them to a pseudonym + catalog avatar.
 	const asXolacer: Conversation = {
 		counterpartName: "Camper 4F2A",
 		counterpartPhotoUrl: "https://cdn/avatar-fox.png",
 		counterpartProfileId: THEM,
 	};
 
-	// sender | conversation → identity to render (null = leave the SDK's)
 	const cases: {
 		sender?: string;
 		conversation: Conversation;
 		expected: { name: string; image?: string } | null;
 		label: string;
 	}[] = [
-		// Also the reconnect case where the client's own id is unset: the resolver
-		// never asks who "I" am, so my bubbles stay mine.
 		{
 			conversation: asSeeker,
 			expected: null,
 			label: "no sender id, nothing to override",
 			sender: undefined,
 		},
-		// A sender who is neither member — a system notice, a safety intervention.
-		// Falls back to the SDK rather than wearing the counterpart's face.
 		{
 			conversation: asSeeker,
 			expected: null,
@@ -174,8 +153,6 @@ describe("resolveMessageIdentity", () => {
 			label: "counterpart in a seeker-role conversation is the real xolacer",
 			sender: THEM,
 		},
-		// The regression this exists for: the counterpart is an active xolacer
-		// elsewhere, real identity right on the object; only counterpart fields are read.
 		{
 			conversation: {
 				...asXolacer,

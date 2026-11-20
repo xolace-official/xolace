@@ -16,35 +16,23 @@ import {
 import { LEG_SAMPLES, legAt } from "./leg-samples";
 import type { Pt } from "./trail-points";
 
-/*
- The tend's particles, rebuilt in a worklet each frame as a handful of batched paths (never one
- node per particle), as native-cook's `fuseBurnArt.ts` does: the ember behind the spark, thrown
- sparks and bursts, smoke, and the embers that rise from the fire once it has caught.
- */
-
 type Builder = ReturnType<typeof Skia.PathBuilder.Make>;
 
-/** Thrown sparks per burn, and the bursts' counts (§4 Phase C, §5). */
 const SPARKS = 64;
 const BURST_STOP = 18;
 const BURST_FIRE = 30;
 const GRAVITY = 300;
 const SPREAD = 1.1;
-/** A thrown spark lives 0.3–0.55 s. */
 const MIN_LIFE = 0.3;
 const MAX_LIFE = 0.55;
-/** The ember: the last ~30 pt behind the spark. */
 const EMBER_PT = 30;
 const PUFFS = 9;
 const FIRE_EMBERS = 8;
 const EMBER_RISE = 120;
-/** One fire ember rises over this long, three times over after a catch. */
 const EMBER_LIFE = 2.8;
 const EMBER_CYCLES = 3;
-/** Seconds from the catch until the last ember has risen: the clock can rest after. */
 export const EMBERS_S = (EMBER_CYCLES + 1) * EMBER_LIFE;
 
-/** Small per-sample crinkle, so the cooling ember looks curled, not drawn (fuse `crinkle`). */
 function crinkle(i: number) {
 	"worklet";
 	return Math.sin(i * 0.9) * 0.9 + Math.sin(i * 2.3 + 1) * 0.5;
@@ -90,7 +78,6 @@ function addThrown(
 		if (te < 0 || hash(i + 5.5) > sparkLevel(trail, b, te)) {
 			continue;
 		}
-		// Thrown from where the spark was at te, along its normal ± 1.1 rad, a little back along the leg.
 		const [ex, ey, nx, ny, leg, u] = sparkAt(trail, b, te);
 		const l = trail.runs[leg];
 		if (!l) {
@@ -116,7 +103,6 @@ function addThrown(
 	}
 }
 
-/** Fuse's burst: radial sparks that slow, drop and thin; kept round. */
 function addBurst(
 	hot: Builder,
 	warm: Builder,
@@ -158,7 +144,6 @@ function addSmoke(s: Builder, trail: BurnTrail, b: Burn, tau: number) {
 	for (let j = 0; j < PUFFS; j += 1) {
 		const life = 1.8 + hash(j + 60) * 1.2;
 		const phase = (tau / life + hash(j + 61)) % 1;
-		// Born along the burnt part, nearer the spark.
 		const u =
 			l.u0 + (head - l.u0) * (1 - hash(j + 62) * 0.5 * (1 - phase * 0.3));
 		const [x, y] = legAt(l, u);
@@ -170,7 +155,6 @@ function addSmoke(s: Builder, trail: BurnTrail, b: Burn, tau: number) {
 	}
 }
 
-/** Embers rise from the flame once it has caught: 8 at a time, 120 pt over 2.8 s, three each. */
 function addFireEmbers(e: Builder, [fx, fy]: Pt, since: number) {
 	"worklet";
 	for (let k = 0; k < FIRE_EMBERS; k += 1) {
@@ -201,7 +185,6 @@ export type FxPaths = {
 	emberLevel: number;
 };
 
-/** Everything the tend draws at trail clock `t`; `embersSince` < 0 while no embers rise. */
 export function fxPaths(
 	trail: BurnTrail,
 	burns: readonly Burn[],
@@ -221,7 +204,6 @@ export function fxPaths(
 			continue;
 		}
 		const a = tau - arrivalOf(b);
-		// Sparks already thrown keep flying after the spark itself has gone.
 		if (b.leg >= 0 && a < SPARK_FADE + MAX_LIFE) {
 			addThrown(hot, warm, trail, b, tau);
 		}

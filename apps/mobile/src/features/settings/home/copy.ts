@@ -1,6 +1,5 @@
 import type { IconName } from "@/components/shared/icon";
 
-/** Settings, the main screen (P/design/handoff/settings.md §1), word for word. */
 export const HOME_COPY = {
 	brand: "Xolace",
 	checking: "Checking…",
@@ -48,7 +47,6 @@ export const HOME_COPY = {
 	versionUpdate: (date: string) => `Update ${date}`,
 } as const;
 
-/** The rows' icons, with their Android twins. */
 export const HOME_ICONS = {
 	account: { android: "account_circle", ios: "person.crop.circle" },
 	appearance: { android: "contrast", ios: "circle.lefthalf.filled" },

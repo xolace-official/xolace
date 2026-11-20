@@ -16,11 +16,6 @@ type Props = {
 	clock: SitClock;
 };
 
-/**
- * The thread (board `.thr`): one segment per beat, flexed by its length (a
- * prompt counts as 10 s), filling in spectrum (late: ember). Done segments are
- * full; the current one fills with the clock.
- */
 export function Thread({ beats, current, serial, colors, clock }: Props) {
 	const weights = threadWeights(beats);
 	return (
@@ -44,7 +39,6 @@ export function Thread({ beats, current, serial, colors, clock }: Props) {
 type FillProps = { colors: Props["colors"]; clock?: SitClock; serial?: number };
 
 function Fill({ colors, clock, serial }: FillProps) {
-	// The fill scales from its left edge: no layout pass per frame.
 	const grow = useAnimatedStyle(() => {
 		if (!clock) {
 			return { transform: [{ scaleX: 1 }] };

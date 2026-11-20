@@ -20,18 +20,11 @@ type Props = {
 	tl: Timeline;
 	ink: MirrorInk;
 	wash: string;
-	/** The line Not quite or Say more is about (−1: none). */
 	chosen: number;
-	/** The face glances up at your words when a borrowed line is tapped. */
 	glance: () => void;
-	/** The first line, for VoiceOver to move to once the mirror has written in. */
 	firstRef: Ref<ComponentRef<typeof View>>;
 };
 
-/**
- * The mirror's lines, one block each for VoiceOver, in order. A tap flashes where you said a
- * borrowed line (or, picking, chooses it); a drag right says that part missed.
- */
 export function MirrorLines({
 	e,
 	tl,

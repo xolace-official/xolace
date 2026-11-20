@@ -5,7 +5,6 @@ import { cn } from "@/lib/cn";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 
-/** The 50 pt violet pill: the action, "Back to Today". */
 const MAIN =
 	"h-12.5 flex-1 flex-row items-center justify-center gap-2 rounded-full bg-accent";
 
@@ -16,7 +15,6 @@ export function WaitingRow({
 	onAct,
 }: {
 	action: string;
-	/** A xolacer match is in flight: the pill says so and holds. */
 	matching: boolean;
 	onSkip: () => void;
 	onAct: () => void;
@@ -57,7 +55,6 @@ export function WaitingRow({
 	);
 }
 
-/** "✓ Tended", and the "again" button (none for try). */
 export function TendedRow({
 	again,
 	onAgain,
@@ -81,7 +78,6 @@ export function TendedRow({
 	);
 }
 
-/** "Passed by" with Undo for 4 s, then "Passed by · Not for you". */
 export function PassedRow({ onUndo }: { onUndo?: () => void }) {
 	return (
 		<>

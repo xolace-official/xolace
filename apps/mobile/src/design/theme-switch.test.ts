@@ -8,7 +8,6 @@ const WRITES_NATIVE = /Uniwind\.setTheme|Appearance\.setColorScheme/;
 const APPLY_THEME = /\bapplyTheme\(/;
 const MODULE = "src/lib/native-appearance.ts";
 
-/** Every source file, not tests, whose text matches. */
 const matching = (pattern: RegExp) =>
 	sourceFiles()
 		.filter((file) => !file.endsWith(".test.ts"))
@@ -22,7 +21,6 @@ describe("theme switching", () => {
 	});
 
 	it("goes through setThemeWithFonts, so text never draws before its face is loaded", () => {
-		// fonts.ts owns the switch; theme-bootstrap runs before the launch gate loads the pair.
 		expect(matching(APPLY_THEME)).toEqual([
 			"src/design/fonts.ts",
 			MODULE,

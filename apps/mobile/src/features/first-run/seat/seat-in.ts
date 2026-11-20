@@ -4,14 +4,12 @@ import { AUTH, ageAuth, ageSeat, type SEng } from "../story/story-scene";
 
 const NOT_YET = 9999;
 
-/** The seat's age, or long past while it isn't open (its pieces read it to arrive). */
 export function seatAge(e: SEng) {
 	"worklet";
 	const sa = ageSeat(e);
 	return sa < 0 ? NOT_YET : sa;
 }
 
-/** How far the seat's controls have gone once seated (board 1850–2200). */
 export function seatedOut(e: SEng) {
 	"worklet";
 	const aa = ageAuth(e);
@@ -23,7 +21,6 @@ export function seatedOut(e: SEng) {
 		: ease(seg(aa, AUTH.seated + 50, AUTH.seated + 400));
 }
 
-/** A seat piece arriving at `at` over `dur`, rising `dy` on a spring (board `sIn`). */
 export function useSeatIn(
 	eng: SharedValue<SEng>,
 	at: number,

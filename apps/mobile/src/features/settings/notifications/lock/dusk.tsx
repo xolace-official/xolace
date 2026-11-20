@@ -3,7 +3,6 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import { LinearGradient } from "@/components/shared/styled";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** The card's 16 pt margins on each side. */
 const MARGINS = 32;
 /** Board `.lock`: the night sky, then a cool light top right and a warm glow low. The stops are
  * opaque tokens; react-native-svg ignores a stop colour's alpha, so it goes in `stopOpacity`. */
@@ -12,7 +11,6 @@ const GLOW_OPACITY = 0.35;
 const WARM_OPACITY = 0.55;
 const ROSE_OPACITY = 0.25;
 
-/** The lock card's dusk background (board `.lock` CSS). A printed object: the same in every theme. */
 export function Dusk({ height }: { height: number }) {
 	const w = useWindowDimensions().width - MARGINS;
 	const [top, mid, low, glow, warm, rose] = useTokenColors([

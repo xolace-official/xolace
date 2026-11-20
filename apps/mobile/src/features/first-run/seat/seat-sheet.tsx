@@ -27,16 +27,12 @@ import { SeatWords } from "./seat-words";
 
 const LOOP = require("@/assets/images/flux/flux-campfire-loop.webp");
 const STILL = require("@/assets/images/flux/flux-campfire-still.webp");
-/** Board `.sfx` (62, 214, 216 × 288) and the log at (246, 478, 88 × 18). */
 const FLUX = { height: 288, left: 62, top: 214, width: 216 };
 const LOG = { height: 18, left: 246, top: 478, width: 88 };
 const BACK_TOP = 54;
 const BACK_H = 38;
-/** Under the largest text the column scrolls, starting this far below the back link. */
 const BACK_GAP = 8;
-/** "Back to the story" stays one line beside its chevron. */
 const BACK_TEXT_MAX = 2;
-/** The column ends where the board's terms did, above the home indicator. */
 const BOTTOM_GAP = 20;
 
 type Props = {
@@ -44,19 +40,12 @@ type Props = {
 	stage: Stage;
 	open: boolean;
 	reduced: boolean;
-	/** The provider signing in, if any. */
 	signing: AuthProvider | null;
 	seated: boolean;
 	onBack: () => void;
 	onSignIn: (provider: AuthProvider) => void;
 };
 
-/**
- * Sign-in is the seat: Flux at the fire (production's campfire loop; the still under Reduce
- * Motion), an empty log beside them, Apple first, then Google. The words, buttons and terms are
- * one column held to the bottom, so they grow with Dynamic Type over Flux and, at the largest
- * sizes, scroll under the back link.
- */
 const LOG_TOKENS = ["first-run-log-1", "first-run-log-2"] as const;
 
 export function SeatSheet({
@@ -71,7 +60,6 @@ export function SeatSheet({
 }: Props) {
 	const logColors = useTokenColors(LOG_TOKENS) as [string, string];
 	const insets = useSafeAreaInsets();
-	/** Opens on the buttons when the column is taller than the room it has. */
 	const column = useRef<ScrollViewInstance>(null);
 	const layer = useAnimatedStyle(() => ({ opacity: seatOpen(eng.get()) }));
 	const back = useSeatIn(eng, 450, 400, 0);

@@ -14,7 +14,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 export type PlayingMark = "playing" | "paused" | null;
 
 type Props = {
-	/** A Lantern entry can have no cover yet: the surface shows. */
 	uri?: string;
 	thumbhash?: string;
 	recyclingKey: string;
@@ -22,14 +21,9 @@ type Props = {
 	radius: number;
 	locked: boolean;
 	playing: PlayingMark;
-	/** Hold to hear (Explore home): the veil and live bars while a preview plays. */
 	hearing?: boolean;
 };
 
-/**
- * A track's cover: production's art with Explore's half-point edge, the lock for a free listener,
- * and the playing mark (a veil and the bars) while it's the track in the mini player or heard.
- */
 export function TrackCover({
 	uri,
 	thumbhash,
@@ -84,7 +78,6 @@ export function TrackCover({
 	);
 }
 
-/** An 18 pt circle at the cover's bottom right, 4 pt in, with a 9 pt lock (production's look). */
 function LockBadge() {
 	const ink = useTokenColor("foreground");
 	const L = EXS.lock;

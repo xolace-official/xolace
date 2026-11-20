@@ -10,7 +10,6 @@ const DOT: Record<Part["tone"], string> = {
 };
 const WORD = { accent: "accent", ember: "emberInk", muted: "muted" } as const;
 
-/** One part of life over a hairline: its dot, its name and the word for it, read as one. */
 export function PartRow({ part }: { part: Part }) {
 	return (
 		<View

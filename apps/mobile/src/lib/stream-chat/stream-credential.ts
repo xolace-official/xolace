@@ -1,6 +1,5 @@
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 
-/** What `xolacerChat.getStreamToken` returns, plus who it was minted for. */
 export type StreamCredential = {
 	clerkUserId: string;
 	apiKey: string;
@@ -8,8 +7,6 @@ export type StreamCredential = {
 	userId: string;
 };
 
-/** Not in the Zustand store: that is devtools-visible state and this is a bearer credential.
- * The token's server-side `exp` bounds a lost device (`convex/integrations/stream.ts`). */
 const KEY = "xolace-stream-credential";
 
 export function readStreamCredential(): StreamCredential | null {

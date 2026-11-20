@@ -13,26 +13,18 @@ import { LETTER_MOTION } from "./letter-motion";
 const ROLL = Easing.bezier(...LETTER_MOTION.curves.roll);
 
 type Props = {
-	/** Shown (1) or not (0). It starts where it is: nothing fades on mount unless `appear`. */
 	on: boolean;
 	reduced: boolean;
-	/** Fade in on mount, from 0. */
 	appear?: boolean;
 	ms?: number;
 	delay?: number;
-	/** Rise this far as it comes in (the sent lines: 6 pt). Reduced: none. */
 	rise?: number;
 	style?: StyleProp<ViewStyle>;
 	className?: string;
 	children?: ReactNode;
-	/** Hidden, it takes no touches and VoiceOver skips it. */
 	hiddenFromA11y?: boolean;
 };
 
-/**
- * Letters' one fade, on Reanimated (a state change, not a loop): the starters and For as the
- * letter folds, the check's line, the limit, the sent lines. Reduced: 200 ms, no rise.
- */
 export function Fade({
 	on,
 	reduced,

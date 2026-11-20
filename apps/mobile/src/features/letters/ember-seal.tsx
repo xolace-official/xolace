@@ -15,22 +15,15 @@ import { LETTER_MOTION } from "./letter-motion";
 import { useLetterInk } from "./letter-paper";
 
 const SEAL = LETTER_MOTION.open.seal;
-/** The halves fade a beat after they start to part, as the board's seal. */
 const SPLIT_FADE_DELAY = 120;
 const ROLL = Easing.bezier(...LETTER_MOTION.curves.roll);
 const OUT_QUAD = Easing.out(Easing.quad);
 
 type Props = {
-	/** Diameter in pt: 34 on the sealed letter, 22 on the card, 14 on the shelf. */
 	size?: number;
-	/** The seal parts into two halves, which drift apart, turn and fade (300 ms). */
 	split?: boolean;
 };
 
-/**
- * The ember seal. Split, the halves move ±12 pt and turn −17° / +21° as they fade; with Reduce
- * Motion they only fade, 200 ms. The caller plays `tap(0.4, 0.8)` at the split.
- */
 export function EmberSeal({ size = 34, split = false }: Props) {
 	const ink = useLetterInk();
 	const reduced = useEffectiveReducedMotion();

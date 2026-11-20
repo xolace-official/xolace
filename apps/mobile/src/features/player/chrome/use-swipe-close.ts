@@ -13,11 +13,6 @@ const SIDEWAYS_PT = 20;
 const OUT = { duration: 240, ...PLAY_AS_CHOSEN };
 const BACK = { ...SETTLE, ...PLAY_AS_CHOSEN };
 
-/**
- * Swipe down to close (§5): the player follows the finger, goes past 120 pt or a flick over
- * 800 pt/s, and springs back otherwise. Reduce Motion keeps the tracking (it's the finger's)
- * but drops the slide out and the spring back: it closes, or settles, at once (the route fades).
- */
 export function useSwipeClose({
 	y,
 	height,

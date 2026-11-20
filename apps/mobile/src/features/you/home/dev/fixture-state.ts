@@ -1,7 +1,3 @@
-/**
- * The You tab's provider value on fixtures, through the same model as the app. Its taps do
- * nothing. Dev only; the model tests read it too.
- */
 import { FIXTURE_AVATARS } from "@/features/you/avatar/dev/avatars";
 import { resolveAvatar } from "@/features/you/avatar-model";
 import { indexHistory, weekDays } from "@/features/you/home/days-model";
@@ -43,15 +39,10 @@ export type YouFixture = {
 	kind?: HistoryKind;
 	badges?: BadgeCount;
 	plus?: boolean;
-	/** Freezes on hand (the board starts at one, so buying can be shown). */
 	freezes?: number;
-	/** Cards someone hid in Settings. */
 	hidden?: readonly ("calendar" | "rank" | "week")[];
-	/** This week paged back one (Xolace+). */
 	earlierWeek?: boolean;
-	/** This week's data: the board's, before a usual, empty, cut by the read cap, or sparse. */
 	week?: WeekFixture;
-	/** No follow-ups at all: the empty state. */
 	noFollowUps?: boolean;
 };
 

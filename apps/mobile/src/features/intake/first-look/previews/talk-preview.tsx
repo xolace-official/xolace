@@ -1,5 +1,3 @@
-// Talk's preview: a play button with a ring that pulses while the row is open, a waveform that
-// rises once, and "Try it", which opens production's Talk demo.
 import { View } from "react-native";
 import Animated, {
 	Easing,
@@ -65,7 +63,6 @@ export function TalkPreview({ onTry, open, reduced }: Props) {
 	const act = useAct(open, reduced, ACT_MS);
 	const onEmber = useTokenColor("offer-ink");
 	const pulsing = open && !reduced;
-	// Remounts the ring each time the row opens, so its loop starts again (Ease 0.9).
 	const run = useLoopRun(pulsing);
 	return (
 		<PressScale

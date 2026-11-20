@@ -2,11 +2,9 @@ import { createContext, type ReactNode, use } from "react";
 import type { ReportReason } from "../copy";
 import { useReport } from "./use-report";
 
-/** The report sheet: one action. Two adapters: the data module (`ReportData`), fixtures. */
 export type LetterReport = {
 	state: { reason: ReportReason | null };
 	actions: {
-		/** Closes the sheet; the letter goes once it has (380 ms), and the sender isn't told. */
 		report: (reason: ReportReason) => void;
 	};
 };

@@ -41,7 +41,6 @@ type Props = {
 	onDismiss: () => void;
 };
 
-/** Linking Telegram in three steps, inside its card. */
 export const LinkSteps = ({
 	step,
 	minting,
@@ -114,7 +113,6 @@ export const LinkSteps = ({
 			{(step === "disclose" || step === "expired") && (
 				<>
 					<Button
-						// The spinner that replaces the label while minting has no name.
 						accessibilityLabel="Open Telegram"
 						accessibilityState={{
 							busy: minting,

@@ -1,8 +1,3 @@
-/**
- * This week's reads: the week the card is on (`profile.getWeekIntensity`, which pages only for
- * Xolace+) and B8's usual band (`profile.getUsualBand`, the same whichever week). Plus the
- * earlier-weeks gate, with production's analytics.
- */
 import { api } from "@xolace/backend/api";
 import { useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
@@ -17,17 +12,13 @@ import {
 } from "@/features/you/home/week/week-model";
 import { useStableQuery } from "@/lib/convex/use-stable-query";
 
-/** What the This week card draws. */
 export type IntensityWeek = {
 	days: IntensityDay[];
 	usual: Usual | null;
-	/** 0 is this week; Xolace+ pages back. */
 	offset: number;
 	earliest: boolean;
 	label: string;
-	/** Xolace+ pages with arrows; free users see the frosted earlier-weeks gate. */
 	pager: boolean;
-	/** Monday 00:00 UTC of the week shown: the server's weeks are UTC days. */
 	start: Date;
 };
 
@@ -38,12 +29,9 @@ export function useYouWeek(enabled: boolean, sessionCount: number) {
 	const { isPlus, isLoading } = usePlusEntitlement();
 	const openPaywall = usePaywall((s) => s.open);
 	const [offset, setOffset] = useState(0);
-	// A lapse mid-paging must not strand the read on a locked week.
 	const asked = isPlus ? offset : 0;
-	// Stable, so paging doesn't blank the card and replay its entrance.
 	const week = useStableQuery(
 		api.profile.getWeekIntensity,
-		// `withDetail`: each day's second line when held (B17).
 		enabled ? { weekOffset: asked, withDetail: true } : "skip"
 	);
 	const usual = useQuery(
@@ -66,7 +54,6 @@ export function useYouWeek(enabled: boolean, sessionCount: number) {
 
 	return {
 		actions: {
-			/** Production's gate hit, then the paywall. Free users only. */
 			openEarlierWeeks: () => {
 				if (isLoading || isPlus) {
 					return;
@@ -78,7 +65,6 @@ export function useYouWeek(enabled: boolean, sessionCount: number) {
 				});
 				openPaywall("week_intensity");
 			},
-			/** From the week on screen, so taps while the next loads can't overshoot. */
 			pageWeek: (by: -1 | 1) => {
 				if (week) {
 					setOffset(
@@ -90,7 +76,6 @@ export function useYouWeek(enabled: boolean, sessionCount: number) {
 					);
 				}
 			},
-			/** The card was seen: production's teaser analytics. */
 			weekSeen: () => posthog.capture("teaser_viewed", { feature: FEATURE }),
 		},
 		state,

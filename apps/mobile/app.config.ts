@@ -19,8 +19,6 @@ const IS_DEV = process.env.APP_VARIANT === "development";
 const IS_PREVIEW = process.env.APP_VARIANT === "preview";
 const IS_PRODUCTION = !(IS_DEV || IS_PREVIEW);
 
-// Throws on test config or secret-looking EXPO_PUBLIC_* values, but only for a
-// production EAS build or `eas update` export (see release/production-guard.ts).
 assertProductionEnvironment();
 
 const getUniqueIdentifier = () => {
@@ -114,8 +112,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 		},
 		posthogHost: process.env.POSTHOG_HOST,
 		posthogProjectToken: process.env.POSTHOG_PROJECT_TOKEN,
-		// Optional until the RevenueCat dashboard exists — gates stay inert
-		// while appConfig.features.payments is false, so no requireEnv here.
 		revenueCat: {
 			androidKey: process.env.REVENUECAT_ANDROID_KEY,
 			androidTestKey: process.env.REVENUECAT_ANDROID_TEST_KEY,
@@ -228,7 +224,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 	orientation: "portrait",
 	owner: "xolace-inc-org",
 	plugins: [
-		// First so EAS Android builds cap Gradle workers before other plugins run.
 		"./plugins/with-eas-gradle-workers.js",
 		[
 			"expo-build-properties",
@@ -289,7 +284,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 		],
 		"expo-video",
 		["expo-audio", { enableBackgroundPlayback: true }],
-		// Companion talks (#591): ElevenLabs agents run over LiveKit WebRTC.
 		"@livekit/react-native-expo-plugin",
 		[
 			"@config-plugins/react-native-webrtc",
@@ -321,9 +315,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			},
 		],
 	],
-	// Production OTAs only reach binaries with the same native fingerprint. Development and
-	// preview keep appVersion; store builds from before the switch (1.14.0) get no
-	// fingerprint-runtime OTAs.
 	runtimeVersion: {
 		policy: IS_PRODUCTION ? "fingerprint" : "appVersion",
 	},

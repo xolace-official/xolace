@@ -17,10 +17,6 @@ const L = LETTER_MOTION.label;
 const UNDO_MS = UNDO_SECONDS * 1000;
 const HIT = 10;
 
-/**
- * "Acknowledged · Undo" / "Letter hidden · Undo" (board `.undo`): an ink pill at the foot, with a
- * line that drains over the 5 s (scaleX, linear). Reduced: it fades in, and the line stays.
- */
 export function UndoPill({
 	label,
 	reduced,

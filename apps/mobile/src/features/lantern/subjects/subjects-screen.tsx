@@ -22,10 +22,6 @@ const IOS = Platform.OS === "ios";
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
 
 /**
- * Production's A–Z (handoff §3.3): every subject with something in it, each letter pinned under
- * the bar while its subjects scroll. `?letter=` opens at that letter. Changed: the rows are a fixed
- * height, so it jumps straight there instead of waiting for layout.
- *
  * On iOS the list runs under the see-through bar with its top inset set by hand rather than
  * `automatic`: React Native pins sticky headers at `contentInset.top`, and only knows it as a
  * prop, so a letter pins just under the bar. Android's bar is opaque and the list starts below

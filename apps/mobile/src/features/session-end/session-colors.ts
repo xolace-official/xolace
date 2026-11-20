@@ -1,13 +1,7 @@
 import { useCSSVariable } from "uniwind";
 
-/** Day, or the night window's late light. */
 export type Tone = "day" | "late";
 
-/**
- * The fixed light this screen draws with (`--color-after-*` in global.css,
- * the board's `<style>` values), by tone, each a token name. The day stars are
- * the Flux spectrum's.
- */
 const NAMES = {
 	day: {
 		dotGlow: "after-dot-glow",
@@ -68,7 +62,6 @@ const NAMES = {
 	},
 } as const;
 
-/** Shared by both tones. */
 const COMMON = {
 	thumbRing: "after-thumb-ring",
 	thumbShadow: "after-thumb-shadow",
@@ -82,7 +75,6 @@ export type SessionColors = Shape<(typeof NAMES)["day"]> & Shape<typeof COMMON>;
 
 const FALLBACK = "transparent";
 
-/** Every colour of one tone, read once from the theme's CSS variables. */
 export function useSessionColors(tone: Tone): SessionColors {
 	const table = { ...NAMES[tone], ...COMMON };
 	const keys = Object.keys(table) as (keyof SessionColors)[];

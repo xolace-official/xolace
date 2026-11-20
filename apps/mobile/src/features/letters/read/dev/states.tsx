@@ -1,4 +1,3 @@
-/** The reader on fixtures: `xolace://dev/letters/read-<state>`. */
 import type { DevState } from "@/dev/dev-state";
 import { receivedLetter, WAITING } from "../../dev/fixtures";
 import { type ReadFixture, ReadFixtureScreen } from "./read-fixture";

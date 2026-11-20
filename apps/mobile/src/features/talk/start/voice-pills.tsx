@@ -23,10 +23,6 @@ const BAR_HALF_MS = 300;
 const BAR_REST = 0.6;
 const TEXT = "text-[13px] leading-[18px]";
 
-/**
- * Three small accent bars after the name while the sample plays (board `.vp .bars`):
- * .3 ↔ 1, 300 ms each way, 150 ms apart (native loops). Reduced: still at .6.
- */
 function Bar({ delay, reduced }: { delay: number; reduced: boolean }) {
 	const loop = loopProps({
 		delay,
@@ -112,12 +108,10 @@ type Props = {
 	voice: VoiceSlug;
 	playing: VoiceSlug | null;
 	onPick: (voice: VoiceSlug) => void;
-	/** The orbs turn only while the start screen shows (not under a sheet, not reduced). */
 	running: boolean;
 	reduced: boolean;
 };
 
-/** The voice line and the four pills (handoff §2.3), a radio group for VoiceOver. */
 export function VoicePills({
 	voice,
 	playing,
@@ -143,7 +137,6 @@ export function VoicePills({
 			</AppText>
 			<View
 				accessibilityRole="radiogroup"
-				// Wraps only with large text: at the default size the four fit, playing bars included.
 				className="flex-row flex-wrap justify-center gap-1.5 px-2"
 			>
 				{CAST.map((v) => (

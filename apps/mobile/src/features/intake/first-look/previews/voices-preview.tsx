@@ -1,5 +1,3 @@
-// "Make Flux yours": the five voices as small flames in each one's colours. Picking one
-// recolours Flux in the header. A preview only: nothing is saved.
 import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import Animated, {

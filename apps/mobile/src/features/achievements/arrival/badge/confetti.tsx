@@ -16,19 +16,16 @@ import {
 } from "@/features/achievements/arrival/arrival-motion";
 import { clamp, easeOut, seg } from "@/features/achievements/motion-math";
 
-/** The fall's last 8% is dropped (board `q < .92`), and the burst fades 2.8–3.5 s after its throw. */
 const FALL_END = 0.92;
 const FALL_FROM = 900;
 const BURST_STEP = 12;
 const BURST_OUT = 900;
 const BURST_DROP = 650;
 const BURST_FADE = { from: 2800, to: 3500 } as const;
-/** The burst's arc: wider than tall, then a fall of `300f² + 40f` with a 10 pt sway. */
 const ARC_Y = 1.15;
 const GRAVITY = 300;
 const DRIFT = 40;
 const SWAY = { amp: 10, period: 380, ramp: 1.6 } as const;
-/** Pieces grow from .3 as they leave the badge. */
 const GROW = { from: 0.3, over: 1.6 } as const;
 const FADE_IN = 5;
 const BELOW_SCREEN = 16;
@@ -56,7 +53,6 @@ function piece(
 	}
 }
 
-/** The burst thrown from the badge as it lands: 26 pieces, 12 ms apart, out over 0.9 s, then falling. */
 function burst(
 	c: SkCanvas,
 	paint: SkPaint,
@@ -97,7 +93,6 @@ function burst(
 	c.restore();
 }
 
-/** The one slow fall from the top: 34 pieces, the first badge only. */
 function fall(
 	c: SkCanvas,
 	paint: SkPaint,
@@ -119,7 +114,6 @@ function fall(
 	const y = -FALL_ABOVE + down * (g.H + FALL_PAST);
 	paint.setAlphaf(1);
 	c.save();
-	// The board places the fall by its top-left corner; the piece turns about its centre.
 	c.translate(x + p.w / 2, y + p.h / 2);
 	c.rotate(q * p.spin, 0, 0);
 	c.scale(1, Math.cos(q * p.flut * FALL_WAVES + p.i));
@@ -127,7 +121,6 @@ function fall(
 	c.restore();
 }
 
-/** Every piece on one side of the badge at this frame (the board's `scene()` confetti). */
 function draw(c: SkCanvas, e: Eng, g: Geo, front: boolean) {
 	"worklet";
 	if (e.rm || e.phase !== PH.badge) {
@@ -151,12 +144,6 @@ function draw(c: SkCanvas, e: Eng, g: Geo, front: boolean) {
 	}
 }
 
-/**
- * The confetti on one side of the badge: one Skia picture, re-recorded per
- * frame from the engine (native-cook confetti-gather-badge: back and front
- * pictures from one clock). No view per piece. Always mounted; an empty
- * picture draws nothing.
- */
 export function Confetti({
 	eng,
 	geo,

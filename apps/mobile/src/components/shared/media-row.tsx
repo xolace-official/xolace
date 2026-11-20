@@ -16,24 +16,16 @@ const ART_END = { x: 0.9, y: 1 };
 type Props = {
 	title: string;
 	sub?: string;
-	/** The art's two gradient stops: content data (a track's colours), not theme colours. */
 	art?: readonly [string, string];
-	/** A real cover (production's art), drawn in the art's rounded box instead of the gradient. */
 	cover?: ReactNode;
 	locked?: boolean;
 	onPress: () => void;
-	/** Plays on press (`PressScale`'s `haptic`). */
 	haptic?: () => void;
 	trailing?: ReactNode;
-	/** Thumbnail side in points; a prop, so it stays in `style`. */
 	thumb?: number;
 	className?: string;
 };
 
-/**
- * A list row with gradient art or a cover: search results, topics, On its own. Locked shows a small lock, never a grey-out.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function MediaRow({
 	title,
 	sub,
@@ -95,10 +87,6 @@ export function MediaRow({
 	);
 }
 
-/**
- * "TOPIC", "ON ITS OWN": small spaced caps above a group of rows.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function Kicker({
 	children,
 	className,

@@ -14,12 +14,8 @@ import { PROFILE } from "./copy";
 const PENDING_CAP = 2;
 const SEEKER_OPEN_CAP = 3;
 
-/** `gate` stands in front of a request; `reference` is the same content from "What to expect"
- * and sends nothing. */
 export type PrimerMode = "gate" | "reference" | null;
 
-/** Everything behind "Ask to talk": the age gate, the request, its limit toast, and the first-ask
- * primer, whose flag is written only on a successful send. */
 export function useAskFlow({
 	xolacerProfileId,
 	displayName,
@@ -27,7 +23,6 @@ export function useAskFlow({
 }: {
 	xolacerProfileId: Id<"emotional_profiles">;
 	displayName: string;
-	/** Kindling twig that led here; tended once a request is actually sent. */
 	stepId?: Id<"path_steps">;
 }) {
 	const router = useRouter();
@@ -37,8 +32,6 @@ export function useAskFlow({
 	const setPrimerSeen = useAppStore((s) => s.setXolacerPrimerSeen);
 	const [primerMode, setPrimerMode] = useState<PrimerMode>(null);
 	const ageGate = useAgeGate();
-	// Ref guards the mutation (two taps in one frame both read stale state);
-	// the state drives the button's disabled look.
 	const inFlight = useRef(false);
 	const [sending, setSending] = useState(false);
 
@@ -58,24 +51,18 @@ export function useAskFlow({
 					posthog.capture("xolacer_primer_resolved", { outcome: "sent" });
 				}
 				setPrimerMode(null);
-				// The conversation exists either way — a failed tend is not a failed
-				// ask, so it never surfaces. Server no-ops on an already-settled twig.
 				if (stepId) {
 					completeStep({ stepId }).catch(() => {});
 				}
 				openThread(conversationId);
 			})
 			.catch((error: unknown) => {
-				// The status hadn't loaded, or changed under a stale screen: the server's gate
-				// answered instead, and the request goes again after an adult answer.
 				if (ageGate.handleRefusal(error, () => sendRequest(fromGate))) {
 					setPrimerMode(null);
 					return;
 				}
 				const data = chatLimitError(error);
 				toast(
-					// Only reachable from a screen that loaded before the decline: the CTA
-					// replaces itself once the cooldown is in the query.
 					data?.code === "decline_cooldown" && data.until
 						? declineCooldownNote(displayName, data.until)
 						: data?.code === "pending_request_limit"
@@ -109,8 +96,6 @@ export function useAskFlow({
 		sendRequest(true);
 	};
 
-	// Dismissing a gate is an abandonment and writes no flag. A send in flight
-	// owns the sheet: closing under it would strand the acknowledgment.
 	const handlePrimerClose = () => {
 		if (inFlight.current) {
 			return;

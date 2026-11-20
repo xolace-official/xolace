@@ -13,7 +13,6 @@ import { TICKS } from "@/features/you/home/steadiness/steadiness-model";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** The board's `.fan`: 31 ticks, 3 × 13 pt, on a 64 pt radius across 180°. */
 export const FAN_W = 132;
 const FAN_H = 72;
 const TICK_W = 3;
@@ -25,10 +24,6 @@ const SWEEP = 180;
 const START = -90;
 const TOKENS = ["accent", "separator"] as const;
 
-/**
- * The fan of ticks, accent up to the score. They fill over 1100 ms ease-out with production's
- * rising swell, once per visit; under Reduce Motion they're drawn full. On the UI thread.
- */
 export function TickFan({ lit }: { lit: number }) {
 	const reduced = useEffectiveReducedMotion();
 	const filled = useSharedValue(reduced ? lit : 0);

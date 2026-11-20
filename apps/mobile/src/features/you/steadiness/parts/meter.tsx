@@ -6,20 +6,17 @@ import type { PartView } from "@/features/you/steadiness/steadiness-model";
 import { useTrack } from "@/features/you/steadiness/ticks";
 import { useTokenColor } from "@/lib/use-token-color";
 
-// Production's TickBar: 36 ticks 4 × 14, your usual's 22 tall in foreground.
 const TICKS = 36;
 const H = 22;
 const TICK_W = 4;
 const TICK_H = 14;
 const RADIUS = 2;
-/** Meters fill 30 ms apart, each tick 8 ms after the last, from 200 ms. */
 const DELAY_MS = 200;
 const STAGGER_MS = 30;
 const TICK_MS = 8;
 export const meterTotalMs = (rows: number) =>
 	DELAY_MS + Math.max(0, rows - 1) * STAGGER_MS + TICKS * TICK_MS;
 
-/** One part's meter: its inked ticks show one by one behind a clip on the list's one clock. */
 export function Meter({
 	part,
 	color,

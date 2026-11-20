@@ -17,24 +17,20 @@ import { SpaceName } from "./space-name";
 import { WhatHappened } from "./what-happened";
 
 const N = LAYOUT.next;
-/** Board `.nh h2`: Bricolage 28/740, −.025em. */
 const TITLE = {
 	fontFamily: FONTS.displayBold,
 	fontSize: 28,
 	letterSpacing: -0.7,
 	lineHeight: 32,
 } as const;
-/** Board `.mmini`: the mirror's own face, small. */
 const MINI = {
 	fontFamily: FONTS.mirror,
 	fontSize: 16.5,
 	lineHeight: 23.9,
 } as const;
 const MINI_LINES = 3;
-/** The paths that leave Reflect for another screen; coming back, their tile is at rest again. */
 const LEAVES: readonly PathId[] = ["solo", "peers"];
 
-/** Where next (board card 08, render 13): the mirror shrinks to the top, three quiet tiles rise. */
 export function NextStage() {
 	const { state, actions } = useReflect();
 	const { reduced, live, late } = useReflectDraw();
@@ -61,7 +57,6 @@ export function NextStage() {
 		},
 		[]
 	);
-	// Back from Sit with this or You're not alone: the tiles are at rest again.
 	useEffect(() => {
 		const was = picked.current;
 		if (focused && !wasFocused.current && was && LEAVES.includes(was)) {

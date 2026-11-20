@@ -24,11 +24,8 @@ import { CELL, CELL_RECTS, rgb, SPRITE, useSprites } from "./sprites";
 import type { StarValues } from "./use-star-values";
 
 const STARS = [0, 1, 2, 3] as const;
-/** The tile's two upper circles, drawn as rings until they fill. */
 const TILE_STARS = [1, 2] as const;
-/** `ldb`'s delay per star: s1 0, s2 .4 s (board `--ld`). */
 const LD_DELAY = [0, 0, 400, 0];
-/** Per star: halo, disc, light, blink; then per line: the point's far glow, near glow and core. */
 const SRC = [
 	...STARS.flatMap(() => [
 		CELL_RECTS[CELL.halo],
@@ -42,12 +39,10 @@ const SRC = [
 		CELL_RECTS[CELL.disc],
 	]),
 ];
-/** `.st .hl` carries α .75 at its centre. */
 const HALO_A = 0.75;
 const WHITE = [1, 1, 1] as const;
 
 export type MarkProps = {
-	/** Board → band: x + ox, y + oy. */
 	ox: number;
 	oy: number;
 	n: number;
@@ -58,18 +53,10 @@ export type MarkProps = {
 	colors: PeersColors;
 	ink3: string;
 	arrive: SharedValue<number>;
-	/** ms into the loading loop (1.5 s). */
 	ld: SharedValue<number>;
 	stars: StarValues;
 };
 
-/**
- * The mark: one Skia canvas for the four lines and the stars (a glow line under
- * a core; no twinkle, sky or names). Every glow is baked once; per frame the
- * stars are one atlas draw of moved, scaled and faded sprites. At rest no input
- * changes, so nothing redraws. Your star is drawn apart (`YouStar`) so its
- * breath is a view's opacity, not a redraw.
- */
 export function MarkCanvas({
 	W,
 	H,
@@ -160,7 +147,6 @@ export function MarkCanvas({
 	);
 }
 
-/** `.st.mk .co`: the tile's circle as a ring (r 9, stroke 2, ink 3 at .5), shrinking into the star as it fills. */
 function MarkRing({
 	k,
 	n,

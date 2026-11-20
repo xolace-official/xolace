@@ -19,8 +19,6 @@ export default function CrisisResourcesLayout() {
 						icon={process.env.EXPO_OS === "ios" ? "chevron.left" : ArrowBack}
 						onPress={() => {
 							playSoftPress();
-							// A cold-start deep link leaves nothing behind: home, not a dead button
-							// (the screen has no swipe back).
 							goBack();
 						}}
 					/>

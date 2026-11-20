@@ -1,4 +1,3 @@
-/** Every string the player shows or says (handoff `player.md`, the prototype's `PLAYER`). */
 export const PLAYER_COPY = {
 	back15: "Back 15 seconds",
 	cantReach: "Couldn’t reach this one right now.",

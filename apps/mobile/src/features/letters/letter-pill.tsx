@@ -2,10 +2,6 @@ import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
 
-/**
- * The board's small pill buttons (36 pt) on the offer and the shelf: ink-filled, or plain.
- * Large text grows them; they never clip.
- */
 export function LetterPill({
 	label,
 	onPress,

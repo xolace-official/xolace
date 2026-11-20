@@ -1,5 +1,3 @@
-// `type`: the same question with room to answer, and "Talk instead" while the mic is on. After
-// a take that fell back here, one short line says why (#709).
 import { Button, useThemeColor } from "heroui-native";
 import { TextInput, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
@@ -24,7 +22,6 @@ type Props = {
 	listenFailed: ListenFailure | null;
 	onChange: (text: string) => void;
 	onSend: () => void;
-	/** Null once the mic is off: no "Talk instead". */
 	onTalk: (() => void) | null;
 };
 

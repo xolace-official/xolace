@@ -1,8 +1,3 @@
-/**
- * Connect on Convex and Stream: production's `status`, `myConversations` and `directory`, the
- * Stream warm-up and each channel's unread and last message, the routed params, and the row
- * actions. Same behaviour as the old screen; only the look moved.
- */
 import { api } from "@xolace/backend/api";
 import { isSpecialty } from "@xolace/backend/convex/lib/specialties";
 import { useQuery } from "convex/react";
@@ -33,8 +28,6 @@ export function useConnect(route: ConnectRoute): ConnectScreenData {
 	);
 	const { actions: rowActions, deleting } = useRowActions();
 
-	// Route params are latched and re-applied when they change: the tab stays mounted across
-	// navigations, and `navToken` differs per tap so a second tap for the same segment lands.
 	const routed = routeKey(route);
 	const [seen, setSeen] = useState(routed);
 	if (routed !== seen) {
@@ -47,7 +40,6 @@ export function useConnect(route: ConnectRoute): ConnectScreenData {
 	}
 
 	const enabled = status?.enabled ?? false;
-	// Opens the connection and watches the listed channels once `status` says chat is on.
 	useChatWarmup(conversations, enabled);
 	const stream = useStreamSnapshot(
 		(conversations ?? []).flatMap((c) =>

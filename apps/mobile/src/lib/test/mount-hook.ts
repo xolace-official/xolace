@@ -5,8 +5,6 @@ import {
 	NoEventPriority,
 } from "react-reconciler/constants";
 
-/** Mounts a hook once (effects included) and unmounts it, with no DOM. A throwing effect
- * propagates out of `act`. */
 export function mountHook(hook: () => unknown): void {
 	(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 	const Probe = () => {
@@ -39,7 +37,6 @@ export function mountHook(hook: () => unknown): void {
 
 const noop = () => {};
 let currentUpdatePriority: number = NoEventPriority;
-// Bare host config: nothing here renders, so every host op is a no-op.
 const reconciler = Reconciler({
 	afterActiveInstanceBlur: noop,
 	appendChild: noop,

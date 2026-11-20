@@ -27,15 +27,9 @@ import {
 } from "./copy";
 import { useEpisode } from "./episode-store";
 
-/**
- * The check-in (handoff §6) on Convex: the answer is saved at the tap (`resolveCard`), the
- * reflective words on Done (`followUpResponses.record`). Leaving any way returns to the
- * greeting, where the row ticks; leaving before an answer writes nothing (§6.5).
- */
 export function useCheckInData(): CheckIn {
 	const own = cardFromParams(useLocalSearchParams<CheckInParams>());
 	const episodeCard = useEpisode((s) => s.items.card);
-	// From the greeting, the episode holds the card and ticks its row; on its own, nothing does.
 	const card = own ?? episodeCard;
 	const episode = own ? null : useEpisode.getState;
 	const reduced = useEffectiveReducedMotion();
@@ -71,7 +65,6 @@ export function useCheckInData(): CheckIn {
 		leave(false);
 		router.back();
 	};
-	/** Saves the answer once; false on a second tap, so it can't navigate or log twice. */
 	const answer = (a: Answer) => {
 		if (answered.current || !card) {
 			return false;
@@ -80,7 +73,6 @@ export function useCheckInData(): CheckIn {
 		setPicked(a);
 		episode?.().answer(a);
 		resolveCard({ cardId: card._id, response: a }).catch(() => undefined);
-		// The rating screen waits 48 h after "Got heavier" (features/ratings, RatingsRules).
 		noteRatingsSignal(a === "heavier" ? "check-in-heavier" : "check-in");
 		posthog.capture("follow_up_responded", { ...props, response: a });
 		return true;
@@ -100,11 +92,9 @@ export function useCheckInData(): CheckIn {
 			});
 		}
 		if (place === "crisis_resources") {
-			// Over the check-in: closing it comes back here.
 			router.push(PLACES[place].href);
 			return;
 		}
-		// Explore's pages are a tab: the greeting closes on the way (what waits goes to the pill).
 		leave(false);
 		router.dismissTo(LANDING);
 		router.navigate(PLACES[place].href);
@@ -124,7 +114,6 @@ export function useCheckInData(): CheckIn {
 		}).catch(() => false);
 		setSaving(false);
 		if (!saved) {
-			// The words stay so the user can retry.
 			playErrorNotice();
 			toast(CHECK_IN.reflective.saveFailed);
 			return;
@@ -133,7 +122,6 @@ export function useCheckInData(): CheckIn {
 			has_text: text.length > 0,
 			shared,
 		});
-		// An empty Done closes quietly. The toast sits above the route, so it outlives the close.
 		if (text) {
 			playAffirmativePress();
 			toast(

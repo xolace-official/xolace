@@ -9,7 +9,6 @@ import {
 	LAUNCH_TIMING as T,
 } from "./launch-model";
 
-/** A launch store as the app's, without the native-appearance import. */
 const makeStore = () => create<LaunchState>()(() => initialLaunch("dark"));
 type Store = ReturnType<typeof makeStore>;
 
@@ -18,7 +17,6 @@ const hold = (store: Store, reason: HoldReason) =>
 const release = (store: Store, reason: HoldReason) =>
 	store.setState((s) => launchStep(s, { reason, type: "release" }));
 
-/** Runs a clock with every effect recorded, in order. */
 function start(store: Store) {
 	const calls: string[] = [];
 	const effects = {
@@ -92,7 +90,6 @@ describe("the cover's clock", () => {
 		const store = makeStore();
 		hold(store, "fonts");
 		const { effects } = start(store);
-		// One commit: the fonts hold's cleanup, then the gate's hold.
 		release(store, "fonts");
 		hold(store, "gate");
 		vi.advanceTimersByTime(T.settleMs * 3);

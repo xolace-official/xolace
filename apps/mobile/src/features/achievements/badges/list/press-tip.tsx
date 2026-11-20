@@ -13,14 +13,11 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { SLOTS, useHeld } from "@/features/achievements/badges/held-store";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** native-cook's press pose: tip toward the finger by up to 14°, sink 5%. */
 const TIP_DEG = 14;
 const TIP_PERSPECTIVE = 400;
 const PRESS_SCALE = 0.95;
 const PRESS_MS = 110;
-/** The board's release: .32 s cubic-bezier(.34, 1.56, .64, 1), a small overshoot. */
 const RELEASE = { damping: 19, stiffness: 380, ...PLAY_AS_CHOSEN };
-/** Seated again: a small pop from .94. */
 const SEAT_FROM = 0.94;
 const SEAT = { damping: 16, stiffness: 420, ...PLAY_AS_CHOSEN };
 
@@ -34,7 +31,6 @@ export type Tip = {
 
 const unit = (v: number) => Math.max(-1, Math.min(1, v));
 
-/** The press pose: where the finger lands (from the medallion's centre at cx, cy, radius r) tips it. */
 export function usePressTip(cx: number, cy: number, r: number): Tip {
 	const reduced = useEffectiveReducedMotion();
 	const fx = useSharedValue(0);
@@ -62,7 +58,6 @@ export function usePressTip(cx: number, cy: number, r: number): Tip {
 	};
 }
 
-/** The medallion: tips under the finger, pops when it seats again, and is the slot it flies from. */
 export function Tipped({
 	id,
 	tip,

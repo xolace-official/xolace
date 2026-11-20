@@ -10,10 +10,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 const PHONE: IconName = { android: "call", ios: "phone.fill" };
 const PHONE_GLYPH = 14;
 
-/**
- * The emergency number: the largest thing on the screen, one tap from the dialer. On the theme's
- * danger fill with its own ink, so it reads in light and dark alike.
- */
 export function EmergencyCard() {
 	const { state, actions } = useHelpScreen();
 	const danger = useTokenColor("danger");

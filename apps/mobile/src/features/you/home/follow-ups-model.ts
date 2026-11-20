@@ -1,7 +1,3 @@
-/**
- * The Follow-ups tab's rows from production's two reads (`followUps.profileOpenCards`, the
- * paged `followUps.listForProfilePage`): Waiting, Coming up, then Earlier. Pure.
- */
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
 import { COPY } from "@/features/you/copy";
@@ -9,15 +5,10 @@ import { COPY } from "@/features/you/copy";
 type Open = FunctionReturnType<typeof api.followUps.profileOpenCards>;
 export type FollowUpCard = Open["waiting"][number];
 
-/** What a row says and does. */
 export type FollowUpLook =
-	/** Ready or shown: the check-in waits; tapping opens it. */
 	| { kind: "check-in"; from: string }
-	/** Superseded: no check-in is coming; tapping closes it. */
 	| { kind: "close"; from: string }
-	/** Pending: the check-in hasn't come due. */
 	| { kind: "coming" }
-	/** Resolved or expired: a record, with the answer on the right. */
 	| { kind: "past"; when: string; answer: string; answered: boolean };
 
 export type FollowUpItem =
@@ -61,15 +52,9 @@ export function lookOf(card: FollowUpCard): FollowUpLook {
 	}
 }
 
-/** Cards waiting on an answer: the tab's badge. */
 export const waitingCount = (open: Open | undefined) =>
 	open?.waiting.length ?? 0;
 
-/**
- * Waiting, Coming up, then Earlier: the history skips cards already pinned above (the open
- * groups are capped per status, so older open cards fall through to it rather than vanish).
- * Empty only once the history is exhausted.
- */
 export function followUpItems(
 	open: Open,
 	history: readonly FollowUpCard[],

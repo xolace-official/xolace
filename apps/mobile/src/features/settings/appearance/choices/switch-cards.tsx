@@ -3,7 +3,6 @@ import { useAppearanceScreen } from "@/features/settings/appearance/appearance-d
 import { APPEARANCE_COPY as C } from "@/features/settings/appearance/copy";
 import { SettingsSwitchRow } from "@/features/settings/settings-switch-row";
 
-/** Night mode (10pm–4am): this device's setting. */
 export function NightCard() {
 	const { state, actions } = useAppearanceScreen();
 	return (
@@ -18,7 +17,6 @@ export function NightCard() {
 	);
 }
 
-/** The You cards a person can take off their profile, kept on the account (B7). */
 export function ProfileCardsCard() {
 	const { state, actions } = useAppearanceScreen();
 	return (

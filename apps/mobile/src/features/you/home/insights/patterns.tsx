@@ -7,7 +7,6 @@ import { Surface } from "@/features/you/surface";
 import { cn } from "@/lib/cn";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** What you bring most: production's emotion chips, from the first moment. */
 export function Chips({ tags }: { tags: string[] }) {
 	return (
 		<>
@@ -40,7 +39,6 @@ export function Chips({ tags }: { tags: string[] }) {
 	);
 }
 
-/** Your patterns: production's mirror lines, rows with 36 pt accent-tint icon tiles. */
 export function Patterns({ rows }: { rows: PatternRow[] }) {
 	const accent = useTokenColor("accent");
 	return (

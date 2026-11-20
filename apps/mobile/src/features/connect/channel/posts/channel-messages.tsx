@@ -29,13 +29,10 @@ import { ChannelComposer } from "./composer";
 import { EmptyChannel } from "./empty-channel";
 import { PostCard } from "./post-card";
 
-/** Every message is a card. No flag action: that mutation is keyed on a conversation row this
- * channel doesn't have, as in production. */
 const OVERRIDES = {
 	EmptyStateIndicator: EmptyChannel,
 	MessageItemView: PostCard,
 	NetworkDownIndicator: ChannelErrorIndicator,
-	// The inline day separators say when; Stream's floating date pill would sit on a card's title.
 	StickyHeader: noHeader,
 };
 const noFlag = () => undefined;
@@ -43,10 +40,6 @@ function noHeader() {
 	return null;
 }
 
-/**
- * Stream's list (paging, read state, the hold overlay and its reactions) with the prototype's
- * cards in place of bubbles, then the offline strip and the composer or the lock note.
- */
 export function ChannelMessages({ channel }: { channel: StreamChannel }) {
 	const insets = useSafeAreaInsets();
 	const { height: windowHeight } = useWindowDimensions();

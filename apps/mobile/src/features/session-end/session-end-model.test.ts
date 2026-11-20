@@ -216,7 +216,6 @@ describe("nextKey with letters", () => {
 			expect(nextKey(input(LETTER_WRITE.slot, extra))).not.toMatch(/letter/);
 		}
 		expect(nextKey(input(LETTER_WRITE.slot, { step: 0 }))).toBe("letterWrite");
-		// A step of −1 or −2 still allows the free pitch, as production did.
 		expect(nextKey(input(LETTER_WRITE.slot, { step: -1 }))).toBe("kfree");
 	});
 
@@ -361,7 +360,6 @@ describe("Continue", () => {
 		expect(gate.busy).toBe(false);
 		gate.hold();
 		expect(gate.busy).toBe(true);
-		// The sheet closing, then a stray second tap: only the first moves on.
 		expect(gate.enter()).toBe(true);
 		expect(gate.enter()).toBe(false);
 		expect(continueStep({ ...at, pending: gate.busy })).toBe("ignore");
@@ -382,7 +380,6 @@ describe("keptAtMoment2", () => {
 		expect(keptAtMoment2(null, 1, "words")).toBeNull();
 		const opened = keptAtMoment2<string | null>(null, 2, null);
 		expect(opened).toEqual({ value: null });
-		// The session lands after the 4 s fallback: "Go gently." stays.
 		expect(keptAtMoment2(opened, 2, "late words")).toBe(opened);
 	});
 });

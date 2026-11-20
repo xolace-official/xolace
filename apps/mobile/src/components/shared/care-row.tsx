@@ -9,10 +9,8 @@ import { useTokenColor } from "@/lib/use-token-color";
 const PHONE: IconName = { android: "call", ios: "phone.fill" };
 const PHONE_GLYPH = 13;
 const ROW_RADIUS = 22;
-/** The 40 pt pill reaches 44 pt to the finger. */
 const PILL_HIT_SLOP = { bottom: 2, top: 2 };
 
-/** The action pill: `care` is a care line (danger wash); `accent` is the peer row. */
 const pill = tv({
 	base: "h-10 flex-row items-center gap-1.5 rounded-full px-4",
 	variants: { tone: { accent: "bg-accent-wash", care: "bg-danger-wash" } },
@@ -24,15 +22,10 @@ type Props = {
 	action: string;
 	onPress: () => void;
 	tone?: "care" | "accent";
-	/** Call rows lead with a phone glyph; the peer row asks instead. */
 	phone?: boolean;
 	className?: string;
 };
 
-/**
- * A resource row: what it is, who answers, and Call under your thumb.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function CareRow({
 	title,
 	sub,

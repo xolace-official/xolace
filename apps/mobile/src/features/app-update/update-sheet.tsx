@@ -7,11 +7,6 @@ import type { UpdateMode } from "./update-model";
 
 const SHEET_BOTTOM = 18;
 
-/**
- * "New Version Available" / "Update Ready": a form sheet (`fitSheet`) sized to its words, the
- * settings kit's type and buttons. Download Now opens the store and leaves the sheet up; Got it and
- * Later close it.
- */
 export function UpdateSheet({
 	mode,
 	onPrimary,

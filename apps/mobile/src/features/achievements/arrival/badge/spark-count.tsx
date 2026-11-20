@@ -13,7 +13,6 @@ import { easeOut, seg } from "@/features/achievements/motion-math";
 
 const SPARKS_COUNT_MS = 700;
 
-/** "+10 sparks", counting up over 700 ms from 760 ms: one small render per number. */
 export function SparkCount({
 	eng,
 	i,

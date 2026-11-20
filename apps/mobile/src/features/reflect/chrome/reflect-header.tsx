@@ -13,19 +13,12 @@ const CLOSE_SIZE = 17;
 const HELP_SIZE = 20;
 const BUTTON = { height: H.button, width: H.button };
 
-/**
- * ✕ on the left, the stage's name in the middle, help on the right: 44 pt glass circles at
- * every stage. ✕ never loses anything: during the wait it steps away and the session keeps
- * going; on Heard it goes on to the session's end; elsewhere the draft or the mirror waits on
- * Today's card. Help always opens Get help now.
- */
 export function ReflectHeader() {
 	const { state, actions } = useReflect();
 	const [foreground, danger] = useTokenColors(["foreground", "danger-ink"]);
 	const y = useBoardY();
 	const waiting = state.stage === "wait" || state.stage === "land";
 	const label = COPY.chrome.labels[state.stage];
-	// Heard follows a session that has ended: ✕ goes on to its end, as Continue does.
 	let closeAction = actions.close;
 	let closeLabel: string = COPY.chrome.close;
 	if (waiting) {

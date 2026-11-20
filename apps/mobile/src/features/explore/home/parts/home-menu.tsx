@@ -3,7 +3,6 @@ import type { ComponentProps, ReactElement } from "react";
 import { Alert, Pressable } from "react-native";
 import { HOME } from "@/features/explore/copy";
 
-/** A long press opens it, as the system menu does on iOS. */
 const HOLD_MS = 450;
 
 type Props = {
@@ -14,7 +13,6 @@ type Props = {
 	width?: number;
 };
 
-/** Where the SwiftUI context menu isn't (Android): a hold opens a dialog with the one action. */
 export function HomeMenu({ label, onPress, children, width }: Props) {
 	const open = () =>
 		Alert.alert("", undefined, [

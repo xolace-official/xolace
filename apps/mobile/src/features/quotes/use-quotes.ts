@@ -27,14 +27,12 @@ import {
 import type { QuotesScreenValue, ReplyOutcome } from "./quotes-screen-data";
 import { makeStill, saveToPhotos, shareImage } from "./share/make-share-file";
 
-/** Generation runs in the background; past this with nothing, the screen offers Try again. */
 const COLD_START_WAIT_MS = 45_000;
 const KEPT_PAGE = 12;
 
 const readable = (e: unknown) =>
 	e instanceof Error && e.message ? e.message : QUOTE_COPY.errors.generic;
 
-/** Optimistic patch of one of today's quotes on `getToday`. */
 function patchToday(
 	store: OptimisticLocalStore,
 	quoteId: Id<"daily_quotes">,
@@ -81,10 +79,6 @@ function patchToday(
 	);
 }
 
-/**
- * Quotes' data: today's quote, the catalogue and the choice, Words you kept, the daily quote
- * offer, and every write. `tappedQuoteId`: the quote a daily quote push opened.
- */
 export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	const posthog = usePostHog();
 	const today = useQuery(api.dailyQuotes.getToday);
@@ -135,8 +129,6 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	const opened = useRef(new Set<string>());
 	const waiting = today !== undefined && prefs !== undefined && raw === null;
 
-	// A first visit (no quote preferences yet) signs up quietly, any curated quote and no
-	// reminders, then asks for today's words. Once per mount; Try again re-arms it.
 	useEffect(() => {
 		if (!waiting || issued.current) {
 			return;
@@ -172,8 +164,6 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 			quote_type: raw.type,
 		});
 	}, [raw, today?.hasSessionToday, posthog]);
-	// The quote on screen, and the one a push opened (a day late, it's no longer today's), count
-	// as opened: the daily quote push skips an opened day and starts its backoff over.
 	useEffect(() => {
 		for (const id of [raw?._id, tappedQuoteId]) {
 			if (!id || opened.current.has(id)) {
@@ -274,8 +264,6 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 						return true;
 					})
 					.catch((e: unknown) => {
-						// A key this deployment's catalogue doesn't have yet: Convex rolls the
-						// optimistic choice back, and the screen says nothing.
 						if (
 							e instanceof ConvexError &&
 							e.data?.code === "unknown_background"
@@ -292,7 +280,6 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 					sessionActive: Boolean(live),
 				});
 				if (seed) {
-					// Lengths only, never the words.
 					posthog.capture("quote_reflection_seeded", {
 						seed_length: seed.length,
 					});

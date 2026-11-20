@@ -10,7 +10,6 @@ import { LS } from "@/features/lantern/lantern-style";
 
 const R = LS.row;
 
-/** The loading rows in the row's own shape and the shared look: photo, kicker, title, meta. */
 export function RowsSkeleton({
 	count = 6,
 	label = "Loading",

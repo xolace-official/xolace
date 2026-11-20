@@ -13,17 +13,11 @@ import {
 	type SignIn,
 } from "@/features/settings/account/copy";
 
-/** The most characters each name takes, as the backend's validators count them. */
 export const NAME_MAX: Record<NameKind, number> = {
 	name: DISPLAY_NAME_MAX_LENGTH,
 	space: SPACE_NAME_MAX_LENGTH,
 };
 
-/**
- * How the person signed in (production's `useAccountSettings`): Apple or Google from any of
- * Clerk's external accounts. Production signs in with those two only, so email shows only when
- * Clerk reports neither.
- */
 export function signInOf(providers: readonly string[]): SignIn {
 	for (const raw of providers) {
 		const provider = raw.toLowerCase();
@@ -37,14 +31,12 @@ export function signInOf(providers: readonly string[]): SignIn {
 	return "email";
 }
 
-/** What's wrong with a draft, in the backend validator's own words, or "" when it can be saved. */
 export function nameError(kind: NameKind, draft: string): string {
 	const result =
 		kind === "space" ? validateSpaceName(draft) : validateDisplayName(draft);
 	return result.ok ? "" : result.message;
 }
 
-/** A Convex error's own message ("30 characters max"), as production's `NameDialog` showed it. */
 export function errorText(error: unknown): string {
 	if (!(error instanceof Error)) {
 		return "Something went wrong";
@@ -53,26 +45,18 @@ export function errorText(error: unknown): string {
 	return match ? match[1] : error.message;
 }
 
-/** The space as the row shows it: its name, or the companion's default while unnamed. */
 export const spaceShown = (space: string | null, companion: string) =>
 	space ?? companion;
 
-/**
- * Saving the space dialog as it opened changes nothing, so nothing is written: an unnamed space
- * opens on the companion's default, and writing it would name the space "Ember" (hiding Reset
- * and ending Reflect's naming prompt).
- */
 export const spaceUnchanged = (
 	space: string | null,
 	draft: string,
 	companion: string
 ) => draft === spaceShown(space, companion);
 
-/** "Reset to Ember" is offered only when the space has a name of its own. */
 export const canResetSpace = (space: string | null, companion: string) =>
 	space !== null && space !== companion;
 
-/** The dialog's words for one name; the space's mention the companion's default. */
 export function dialogCopy(kind: NameKind, companion: string): NameDialogCopy {
 	const shared = {
 		cancel: C.dialog.cancel,

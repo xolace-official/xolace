@@ -5,7 +5,6 @@ import { type HomeItem, pages } from "@/features/explore/home/home-model";
 import { Hairline } from "@/features/explore/rows/track-row";
 import { ItemRow, ItemTile } from "./home-item";
 
-/** For the hour (handoff §7): three rows in a grouped card. Covers can be held. */
 export function HourList({ items }: { items: readonly HomeItem[] }) {
 	return (
 		<View
@@ -24,7 +23,6 @@ export function HourList({ items }: { items: readonly HomeItem[] }) {
 	);
 }
 
-/** A shelf of tiles (Because you named, New). Audio covers can be held. */
 export function TileShelf({
 	items,
 	from,
@@ -54,7 +52,6 @@ export function TileShelf({
 
 const SHORT_PAD_V = 7;
 
-/** Five minutes or less (handoff §10): pages of three rows, 318 wide, snapping by page. No hold. */
 export function ShortShelf({ items }: { items: readonly HomeItem[] }) {
 	const F = HOME_S.five;
 	return (

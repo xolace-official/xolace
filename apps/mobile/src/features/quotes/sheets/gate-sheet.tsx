@@ -5,10 +5,6 @@ import { QUOTE_COPY } from "../copy";
 import { QuoteSheet } from "./quote-sheet";
 import { SheetButton } from "./sheet-parts";
 
-/**
- * A free account tapped something Xolace+: the star (keeping quotes) or a Plus background. Short,
- * no full-screen preview; See Xolace+ opens the paywall.
- */
 export function GateSheet({
 	ink,
 	what,

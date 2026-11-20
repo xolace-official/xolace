@@ -1,4 +1,3 @@
-// An open Plus row: its line, then its preview. "See what's building" is an example, and says so.
 import type { ComponentRef, Ref } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
@@ -15,7 +14,6 @@ type Props = Omit<RowProps, "onHeight"> & {
 	ref: Ref<ComponentRef<typeof View>>;
 };
 
-/** Laid out at its own height under the row's clip, which opens to it. */
 export function RowBody({
 	onHeight,
 	onVoice,
@@ -44,7 +42,6 @@ export function RowBody({
 				{row.line}
 				{example ? " " : ""}
 				{example ? (
-					// An inline pill (a View inside the Text), just after the line.
 					<View className="ml-[3px] h-4.5 justify-center rounded-full bg-surface-secondary px-[7px]">
 						<AppText color="subtle" variant="caption" weight="semibold">
 							{FIRST_LOOK.example}

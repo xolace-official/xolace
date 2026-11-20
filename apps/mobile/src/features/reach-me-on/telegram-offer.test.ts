@@ -53,7 +53,6 @@ describe("telegramOfferVisible", () => {
 		);
 	});
 
-	// A restored or deep-linked route can arrive without its params.
 	it("never shows when the card's tier is missing", () => {
 		expect(telegramOfferVisible({ ...base, tier: undefined })).toBe(false);
 	});
@@ -82,8 +81,6 @@ describe("telegramOfferVisible", () => {
 		}
 	});
 
-	// It's for finding Telegram; someone who linked once already has, and may
-	// have stopped or blocked the bot on purpose.
 	it("never shows to someone who linked before", () => {
 		for (const revokedReason of [
 			"blocked",
@@ -97,8 +94,6 @@ describe("telegramOfferVisible", () => {
 		}
 	});
 
-	// 30 days after a revoke the row is purged and the status reads not_linked
-	// again; `everLinked` still remembers.
 	it("never shows once a past link has been purged", () => {
 		const purged = telegram({ everLinked: true });
 		expect(telegramOfferVisible({ ...base, channels: [push, purged] })).toBe(
@@ -106,7 +101,6 @@ describe("telegramOfferVisible", () => {
 		);
 	});
 
-	// A backend without `everLinked` can't say: assume a past link.
 	it("hides when the backend doesn't say whether Telegram was ever linked", () => {
 		const { everLinked: _, ...unknown } = telegram();
 		expect(telegramOfferVisible({ ...base, channels: [push, unknown] })).toBe(

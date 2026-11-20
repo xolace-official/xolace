@@ -8,10 +8,6 @@ import { COPY } from "../copy";
 import type { Today } from "../today-data";
 import { keptExpiry, rekindleOffer, runRekindle } from "./rekindle-model";
 
-/**
- * Production's streak revive (#437), on Today's streak surface: the offer from
- * `getFullContext`, one saver spent through `streaks.revive.revive`, and `streak_rekindled`.
- */
 export function useRekindle(): {
 	offer: Today["state"]["rekindle"];
 	rekindle: () => Promise<void>;

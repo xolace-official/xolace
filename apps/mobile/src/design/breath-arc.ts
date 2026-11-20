@@ -1,10 +1,3 @@
-/**
- * The breathing arcs' geometry: production's two rounded rects (the old
- * `dual-breath.constants.ts` and `use-dual-breath-animation.ts`, exactly). Sizes are
- * ratios of the canvas, lerped rest → peak by breath progress `p`; the pair is centred
- * vertically; the bottom shape sits `GAP` below the top one; the wobble is added to both
- * base radii. Sit's breath clock drives it (`sit-with-this/clock/breath.ts`).
- */
 export const ARC = {
 	BOT_CORNERS: {
 		bottomLeft: [0.98, 1.1],
@@ -23,7 +16,6 @@ export const ARC = {
 			rest: { h: 0.6, r: 54, w: 0.82 },
 		},
 	},
-	/** Corner multipliers {x, y}: tight where the arcs face each other, round outside. */
 	TOP_CORNERS: {
 		bottomLeft: [0.26, 0.32],
 		bottomRight: [0.3, 0.26],
@@ -44,7 +36,6 @@ const lerp = (a: number, b: number, t: number) => {
 export type Box = { x: number; y: number; w: number; h: number; r: number };
 export type Arcs = { top: Box; bot: Box; seamY: number };
 
-/** Board `arcsAt(W, H, p, wob, gap)`: production's two rounded rects at breath progress `p`. */
 export function arcsAt(
 	W: number,
 	H: number,

@@ -19,7 +19,6 @@ const LABELS = [
 	COPY.share.letGo,
 ] as const;
 
-/** `.bt .yes span`: each label out up 14 pt, in from 14 below (.22 s fade, .28 s move). */
 export function HoldLabels({
 	hold,
 	reduced,

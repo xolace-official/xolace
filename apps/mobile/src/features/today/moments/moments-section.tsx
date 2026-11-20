@@ -6,15 +6,9 @@ import { TodaySection } from "../today-section";
 import { MomentCard } from "./moment-card";
 import { carouselHeightFor, StackedCarousel } from "./stacked-carousel";
 
-/** Production's card height and its screen padding, so the centred card's edges line up. */
 const CARD_HEIGHT = 166;
 const SCREEN_PADDING_X = 32;
 
-/**
- * Your moments: production's stacked carousel, unchanged (the first page of
- * `sessions.listForTimeline`, so the free tier's window applies). A tap opens the moment.
- * Hidden with none; while loading, the section holds its place.
- */
 export function MomentsSection() {
 	const { width } = useWindowDimensions();
 	const { state, actions } = useToday();

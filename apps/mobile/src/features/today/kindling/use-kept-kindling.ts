@@ -10,21 +10,12 @@ import {
 	kindlingOutcome,
 } from "./kindling-model";
 
-/**
- * The kindling Today draws: the server's, or, for this visit, its last snapshot once the
- * server closed it having been tended to its end, so the final tend celebrates instead of
- * the card vanishing (`keepKindling`). How it ended (`paths.getLatest`) is read only while
- * a kept kindling is open on screen and the server has none to draw, so Today holds no
- * extra subscription otherwise. A dev state passes `fixtureOutcome` and reads nothing.
- * Worked out during render.
- */
 export function useKeptKindling(
 	server: KindlingView | null | undefined,
 	fixtureOutcome?: KindlingOutcome
 ): KindlingView | null | undefined {
 	const focused = useIsFocused();
 	const [kept, setKept] = useState<KeptKindling | null>(null);
-	// `server` is null with no kindling to draw: none active, or one with no steps.
 	const waiting = kept !== null && !kept.closed && server === null;
 	const latest = useQuery(
 		api.paths.getLatest,

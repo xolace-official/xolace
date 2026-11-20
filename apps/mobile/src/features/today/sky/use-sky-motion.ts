@@ -11,17 +11,14 @@ import { EASE_CSS, EASE_GLIDE, EASE_NIGHT, TIMING } from "../today-motion";
 import { NIGHT_FEATHER, type Sun, skyLook } from "./sky-model";
 
 export type SkyMotion = {
-	/** Opacity of the dawn, day and evening palettes. */
 	dawn: SharedValue<number>;
 	day: SharedValue<number>;
 	evening: SharedValue<number>;
-	/** Where the night front's edge is, as a share of the sky (−.45 → 1). */
 	night: SharedValue<number>;
 	sunX: SharedValue<number>;
 	sunY: SharedValue<number>;
 	sunScale: SharedValue<number>;
 	sunOpacity: SharedValue<number>;
-	/** Colours cross from `sunFrom` to `sunTo` as `palette` runs 0 → 1. */
 	sunFrom: SharedValue<Sun>;
 	sunTo: SharedValue<Sun>;
 	palette: SharedValue<number>;
@@ -36,12 +33,6 @@ export type SkyMotion = {
 	embers: SharedValue<number>;
 };
 
-/**
- * The two-speed swap (day-night-toggle): on a phase change the palette
- * crossfades in 600 ms while the sun glides for 1.3 s, ridges recolour over
- * 0.9 s and night falls from the top over 1.6 s. Reduce Motion: 200 ms fades.
- * A theme change (light ↔ dark) in the same phase swaps the colours at once.
- */
 export function useSkyMotion(
 	phase: TodayPhase,
 	reduced: boolean,
@@ -91,7 +82,6 @@ export function useSkyMotion(
 		const late = phase === "late";
 		const { sun: suns, ridges, clouds } = skyLook(dark);
 		const target = suns[phase];
-		// Only the theme changed: no hour has passed, so nothing glides; the colours snap.
 		const snap = shownPhase.current === phase;
 		shownPhase.current = phase;
 
@@ -130,7 +120,6 @@ export function useSkyMotion(
 		m.moon.set(later(late ? 700 : 0, late ? 1 : 0, 1000));
 		m.moonRise.set(later(late ? 500 : 0, late ? 1 : 0, 1700, EASE_GLIDE));
 		m.embers.set(later(late ? 1300 : 0, late ? 1 : 0, 1000));
-		// Shared values are stable; this runs on a phase or theme change only.
 	}, [phase, reduced, dark]);
 
 	return m;

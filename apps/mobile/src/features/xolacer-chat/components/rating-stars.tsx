@@ -4,13 +4,10 @@ import { PressScale } from "@/components/shared/press-scale";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColors } from "@/lib/use-token-color";
 
-// Empty stars are the same glyph washed out, not an outline.
 const FILLED = { android: "star", ios: "star.fill" } as const;
 const VALUES = [1, 2, 3, 4, 5];
 const STAR = 32;
 
-/** The five-star picker on the rating prompt. Stars use the `warning` token rather than a new
- * `--star` one every theme would have to define. */
 export function RatingPicker({
 	value,
 	onSelect,

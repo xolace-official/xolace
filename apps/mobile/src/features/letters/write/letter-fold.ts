@@ -20,7 +20,6 @@ const IN_OUT = Easing.inOut(Easing.ease);
 const SWAY = Easing.inOut(Easing.sin);
 const SPARK_OUT = Easing.out(Easing.quad);
 const QUARTERS = 4;
-/** Reduced, the glow fades up this far while the check runs, and doesn't breathe. */
 const REDUCED_GLOW = 0.9;
 const NEVER = PLAY_AS_CHOSEN.reduceMotion;
 
@@ -30,12 +29,6 @@ const timing = (
 	easing: EasingFunction | EasingFunctionFactory = FOLD
 ) => withTiming(to, { duration, easing, ...PLAY_AS_CHOSEN });
 
-/**
- * The write sheet's moves on Reanimated (handoff §5): the fold (bottom, then top 300 ms later),
- * the glow's ignite and drain, the rise with its sway and three sparks, and the unfold. The glow's
- * breathing is an Ease loop on top (`write-letter.tsx`), so nothing here repeats. Which parts
- * move into each phase is `foldMoves`; this plays them.
- */
 export function useLetterFold(phase: LetterPhase, reduced: boolean) {
 	const folded = phase === "edit" ? 0 : 1;
 	const bottom = useSharedValue(folded);

@@ -4,10 +4,6 @@ import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
 import { playSoftPress } from "@/lib/haptics";
 
-/**
- * The settings dialog's button (`SettingsDialog`: 14 pt corners, 16 / 21 semibold) at full width
- * and 50 pt, for a form sheet's actions: the main one on the accent, the other on the well.
- */
 export function SheetButton({
 	label,
 	onPress,
@@ -19,7 +15,6 @@ export function SheetButton({
 	onPress: () => void;
 	primary?: boolean;
 	disabled?: boolean;
-	/** A spinner in place of the label while the action runs. */
 	busy?: boolean;
 }) {
 	const off = disabled || busy;

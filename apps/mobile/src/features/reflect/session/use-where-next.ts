@@ -24,11 +24,6 @@ const ACTIVITY: Record<Exclude<PathId, "exit">, Href> = {
 	solo: "/sit-with-this",
 };
 
-/**
- * Leaving Reflect: Where next's paths, Heard after "I just needed to say it", the space-name
- * prompt production asks once there, ✕ and the help button. Exit completes the session at once,
- * so Heard is held here over the machine's reset, and its button goes on to the session's end.
- */
 export function useWhereNext(m: Machine) {
 	const router = useRouter();
 	const context = useFullContext();
@@ -43,7 +38,6 @@ export function useWhereNext(m: Machine) {
 	});
 	const busy = useRef(false);
 
-	// The exit failed: the machine shows its error, so Heard lets go.
 	if (heard && m.state.screen === "error") {
 		setHeard(null);
 	}
@@ -97,7 +91,6 @@ export function useWhereNext(m: Machine) {
 			if (writing && m.state.entryText.trim()) {
 				toast(COPY.write.draftKept);
 			}
-			// The reply it opened with goes with it; the draft stays.
 			clearReplySeed();
 			leave();
 		},
@@ -110,7 +103,6 @@ export function useWhereNext(m: Machine) {
 		finish: () => router.replace(endHref("exit")),
 		goPath: (path: PathId) => void goPath(path),
 		heard,
-		// Production's entry point for Reflect's help door, so crisis_resources_opened keeps its series.
 		openHelp: () => router.push("/crisis-resources?from=idle_button"),
 		openResource: (row: ResourceRow) => {
 			if (row.href) {

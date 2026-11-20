@@ -1,4 +1,3 @@
-/** Settings › Notifications on fixtures: `xolace://dev/settings/<id>` (handoff settings.md §9–§10). */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureNotifications } from "@/features/settings/notifications/dev/fixture-notifications";
 import {
@@ -17,7 +16,6 @@ import {
 	NOTIFY_REMINDERS_OFF,
 } from "@/features/settings/notifications/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Notifications" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

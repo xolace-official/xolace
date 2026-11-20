@@ -3,12 +3,6 @@ import { LAND_MS, MIN_WAIT_MS, type ReflectStage } from "../reflect-model";
 
 type Hold = "wait" | "land" | null;
 
-/**
- * The stage on screen when the machine's says "mirror" straight after a wait: the wait is held
- * for at least `MIN_WAIT_MS` (a fast answer never flashes the circle), then "land" while the
- * circle closes (`LAND_MS`), then the mirror. A mirror opened cold (no wait before it) shows at
- * once, and so does a refinement, which never leaves the mirror.
- */
 export function useLanding(stage: ReflectStage): ReflectStage {
 	const [hold, setHold] = useState<Hold>(null);
 	const [prev, setPrev] = useState(stage);

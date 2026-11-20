@@ -1,4 +1,3 @@
-/** The check-in on fixtures: a pick plays its step; nothing is saved and nothing closes. */
 import { useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -19,9 +18,7 @@ export function FixtureCheckIn({
 	picked: initial = null,
 }: {
 	tier?: CheckInTier;
-	/** A card from an escalation: careful, like acute, with all four answers. */
 	escalation?: boolean;
-	/** Open on an answer (its step up). */
 	picked?: Answer | null;
 }) {
 	const [picked, setPicked] = useState<Answer | null>(initial);
@@ -30,7 +27,6 @@ export function FixtureCheckIn({
 	const card = { ...fixtureCard(tier), escalationDerived: escalation };
 	const careful = isCareful(card);
 	const insets = useSafeAreaInsets();
-	// The real route is a page sheet; a dev state is pushed, so it draws the sheet's frame itself.
 	return (
 		<View
 			className="flex-1 bg-scrim"

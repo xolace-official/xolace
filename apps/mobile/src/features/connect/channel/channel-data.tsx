@@ -2,12 +2,9 @@ import { createContext, type ReactNode, use } from "react";
 import type { ChannelState } from "./channel-model";
 import { useChannel } from "./use-channel";
 
-/** Everything the Xolace channel reads and does. Stream fills it in the app (`ChannelData`),
- * fixtures in its dev states. Reactions and the hold menu are Stream's, per message. */
 export type ChannelScreenData = {
 	state: ChannelState;
 	actions: {
-		/** Crisis resources, from the header, as in the thread. */
 		openHelp: () => void;
 		retry: () => void;
 	};

@@ -8,10 +8,8 @@ import { FoldedLetter } from "../folded-letter";
 import type { WriteLimit } from "../letters-model";
 import { backToLetters } from "../letters-routes";
 
-/** The card's seal, half-lit, hangs this far under the fold. */
 const SEAL = { below: -11, size: 22 };
 
-/** Today's letter written, or three waiting: say so plainly and offer the list. No streak, no nudge. */
 export function LimitView({
 	which,
 	reduced,

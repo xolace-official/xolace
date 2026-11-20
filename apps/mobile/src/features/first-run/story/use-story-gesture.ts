@@ -32,7 +32,6 @@ function inside(
 	return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
 }
 
-/** A tap that touches the beat's one thing (board `up()`); false if it was a plain tap. */
 function touch(e: SEng, x: number, y: number) {
 	"worklet";
 	if (e.beat === 0 && y > 430 && y < 740 && Math.abs(x - FIRE0.x) < 110) {
@@ -68,11 +67,6 @@ function touch(e: SEng, x: number, y: number) {
 	return false;
 }
 
-/**
- * The story's one gesture, on the UI thread: tap to go on (the left 130 pt goes back), swipe, hold
- * to pause; drag a Xolacer's card, drag the Xolace+ panel, hold the fire to vent, touch the beat's
- * one thing. Positions are in the board's frame (`dx`, `dy` off the screen's).
- */
 export function useStoryGesture(
 	eng: SharedValue<SEng>,
 	dx: number,
@@ -156,7 +150,6 @@ export function useStoryGesture(
 				if (e.moved) {
 					return e;
 				}
-				// A hold paused the story; letting go carries on where it was (the board also moved on).
 				if (e.now - e.t0d > HOLD) {
 					return e;
 				}

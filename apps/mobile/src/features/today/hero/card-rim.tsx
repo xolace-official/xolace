@@ -12,13 +12,10 @@ import {
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { HERO } from "./hero-model";
 
-/** Room around the card for the hold rim's blur (σ 7) and the hairline. */
 const RIM_BLEED = 24;
 const RIM_STOPS = [0, 0.35, 0.7, 1];
-/** Sweep 0° is 3 o'clock; the rim starts at 12. */
 const TO_NOON = [{ rotate: -Math.PI / 2 }];
 
-/** The hold rim: the only part drawn live, and only while a hold moves it. */
 export function CardRim({
 	w,
 	h,

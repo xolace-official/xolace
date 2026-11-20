@@ -19,11 +19,6 @@ import {
 import { cn } from "@/lib/cn";
 import { ItemRow } from "./home-item";
 
-/**
- * Choose for me (handoff §12): one pick for the hour, shown before anything plays. Another fades
- * the row out and in over 600 ms (alpha 1 − sin πt) and swaps at the midpoint; it walks the pool,
- * so the same pick never shows twice in a row. It's already a fade, so Reduce Motion plays it.
- */
 export function ChooseForMe({ pool }: { pool: readonly HomeItem[] }) {
 	const { state, actions } = useHome();
 	const [picked, setPicked] = useState(state.startPicked ?? false);

@@ -1,10 +1,6 @@
 import type { IconName } from "@/components/shared/icon";
 import type { CheckInPick } from "../copy";
 
-/**
- * The answer cards' tints (board `.c-*`, v1's cards): a pastel by day, a dusk by night, each with
- * its own ink. Printed on the cards, the same in every theme (`answer-*` in `global.css`).
- */
 export const ANSWER_LOOK: Record<
 	CheckInPick,
 	{ bg: string; dusk: string; ink: string; icon: IconName }

@@ -12,10 +12,6 @@ import { chipLabel, type SetupDraft } from "./setup-model";
 const AVATAR = 56;
 const CAMERA = { android: "photo_camera", ios: "camera" } as const;
 
-/**
- * The roster card exactly as people will meet it (`roster-card.tsx`), with "New Xolacer" where
- * ratings go. What's missing shows as a muted stand-in, so the gap is plain without a warning.
- */
 export function SetupReview({ draft }: { draft: SetupDraft }) {
 	const muted = useTokenColor("muted");
 	const name = draft.displayName.trim();

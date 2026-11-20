@@ -6,14 +6,8 @@ import Animated, {
 import { CAMPFIRE_LOOP, CAMPFIRE_STILL } from "../poses";
 import type { FireBox } from "./trail-points";
 
-/** Flux lifts from the flame: 49% across, 86% down its box. */
 const FLAME_ORIGIN = "49% 86%";
 
-/**
- * Flux at the campfire where the road ends (§5): production's campfire loop, a 4 s transparent
- * WebP that starts and ends on the still's pose; the still with Reduce Motion. It lifts as the
- * fire catches, from the flame. Its glow is the road's canvas; its embers are the sparks'.
- */
 export function KindlingFire({
 	fire,
 	lift,

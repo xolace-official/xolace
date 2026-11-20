@@ -11,7 +11,6 @@ import { type Ember, SCENE_MOTION as M } from "./ember-scene";
 const CLOSE = 44;
 const CLOSE_GLYPH = 14;
 const CLOSE_SLOP = 6;
-/** Canvas: 58 pt from the top of the phone, 18 from the right. */
 const CLOSE_TOP = -1;
 const CLOSE_RIGHT = 18;
 
@@ -53,7 +52,6 @@ export function CloseButton({
 	);
 }
 
-/** The fade a changed label or the thank-you line comes in on (the canvas's .25 s xl-fade). */
 const SWAP = {
 	animate: { opacity: 1 },
 	initialAnimate: { opacity: 0 },
@@ -69,7 +67,6 @@ type FooterProps = {
 	onWrite: () => void;
 };
 
-/** The thank-you line once rated, "Not quite right? Tell us", and the cream pill. */
 export function RateFooter({
 	rated,
 	reduced,

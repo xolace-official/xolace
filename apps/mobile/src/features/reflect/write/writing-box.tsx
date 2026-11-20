@@ -12,9 +12,7 @@ import { LineEndMeter } from "./line-end-meter";
 import { useTakeDrop } from "./use-take-drop";
 import { WarmText, type Warmth } from "./warm-text";
 
-/** The field takes focus once the zoom has settled, so the keyboard never fights it. */
 const FOCUS_AFTER_MS = 440;
-/** A word is finished when a space or punctuation follows it (board `onType`). */
 const ENDS_WORD = /[\s.,!?]$/;
 const FIELD_STYLE = [
 	FIELD_TEXT,
@@ -22,17 +20,12 @@ const FIELD_STYLE = [
 ];
 
 type Props = {
-	/** The placeholder rotates (Reflect is live and the box is empty). */
 	running: boolean;
 	reduced: boolean;
 	onWriting: (w: Writing) => void;
 	inputRef: RefObject<TextInputInstance | null>;
 };
 
-/**
- * The writing box (board `.wbox`): a transparent TextInput under the words you see. It grows
- * with the text inside the page's KeyboardAwareScrollView, so the caret stays above the bar.
- */
 export function WritingBox({ running, reduced, onWriting, inputRef }: Props) {
 	const { state, actions } = useReflect();
 	const { text, late, listening, takeN, prompt, take } = state;
@@ -40,8 +33,6 @@ export function WritingBox({ running, reduced, onWriting, inputRef }: Props) {
 	const [warm, setWarm] = useState<Warmth | null>(null);
 	const stamp = useRef(0);
 
-	// A home sheet over Write would sit behind the keyboard: the field gives the
-	// keyboard up while it's open and takes focus again once it resolves.
 	const { sheetOpen } = state;
 	useEffect(() => {
 		if (sheetOpen) {

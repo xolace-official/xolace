@@ -1,7 +1,3 @@
-/**
- * Xolacer setup and edit (C2). Every string is production's (`xolacer-chat/setup/*`), its em
- * dashes made a colon or a full stop; the cap and ready lines are the handoff's.
- */
 export const SETUP = {
 	bio: {
 		label: "Bio",

@@ -34,7 +34,6 @@ const prefs = (
 	...partial,
 });
 
-/** All off: what a user who has never granted permission looks like. */
 const allOff = prefs({
 	enabled: false,
 	gentleReturn: false,
@@ -53,8 +52,8 @@ describe("gentleRemindersOn", () => {
 
 describe("stored choice vs delivered state", () => {
 	it("keeps chat's absent-means-enabled default while the master is off", () => {
-		expect(chatNotificationsAllowed(allOff)).toBe(false); // delivers nothing
-		expect(chatChoice(allOff)).toBe(true); // but was never muted
+		expect(chatNotificationsAllowed(allOff)).toBe(false);
+		expect(chatChoice(allOff)).toBe(true);
 	});
 
 	it("remembers an explicit mute through a master that is off", () => {
@@ -118,8 +117,6 @@ describe("nextNotificationPrefs", () => {
 		}
 	});
 
-	// The server merges notification writes; an echoed stale value erased the
-	// timezone `applyToggles` had just synced.
 	it("says nothing about reach, quiet window, or timezone", () => {
 		const next = nextNotificationPrefs({
 			chat: true,
@@ -131,7 +128,6 @@ describe("nextNotificationPrefs", () => {
 	});
 });
 
-/** Runs the same composition the settings hook uses, not the pieces alone. */
 const enableGentle = (p: NotificationPrefs) =>
 	nextNotificationPrefs({ chat: chatChoice(p), gentle: true });
 const enableChat = (p: NotificationPrefs) =>
@@ -139,7 +135,6 @@ const enableChat = (p: NotificationPrefs) =>
 
 describe("toggling one family from a cold start", () => {
 	it("leaves chat on when a fresh user turns on gentle reminders", () => {
-		// Absent means enabled: granting permission for one gets the other.
 		expect(chatNotificationsAllowed(enableGentle(allOff))).toBe(true);
 	});
 
@@ -228,7 +223,6 @@ describe("quiet hours", () => {
 			left: 37.5,
 			width: (20 / 24) * 100 - 37.5,
 		});
-		// A window that wraps past noon still draws forward.
 		expect(daySpan({ after: 2, before: 13 }).width).toBeCloseTo(
 			(11 / 24) * 100
 		);

@@ -1,15 +1,12 @@
 import type { DevState } from "@/dev/dev-state";
 
-/** A feature's dev states, under the folder name its links use. */
 export type DevFeature = {
 	readonly feature: string;
 	readonly states: readonly DevState[];
 };
 
-/** A discovered `dev/states.tsx`: its path under `src/features/` and its exports. */
 export type StatesFile = { readonly path: string; readonly exports: unknown };
 
-/** A file, or one state in it, left out of the registry, and the fix. */
 export type DevProblem = { readonly path: string; readonly message: string };
 
 export type DevRegistry = {
@@ -17,10 +14,7 @@ export type DevRegistry = {
 	readonly problems: readonly DevProblem[];
 };
 
-/** `./reach-me-on/dev/states.tsx`, or a big feature's `./letters/write/dev/states.tsx`:
- * both register under the feature folder (`reach-me-on`, `letters`). */
 const STATES_FILE = /^(?:\.\/)?([^/]+)\/(?:[^/]+\/)*dev\/states\.tsx$/;
-/** A link segment: lowercase words joined by hyphens. */
 const SEGMENT = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function isDevState(value: unknown): value is DevState {
@@ -36,7 +30,6 @@ function isDevState(value: unknown): value is DevState {
 	);
 }
 
-/** The file's `devStates`, or undefined when it doesn't export a list of states. */
 function statesOf(exports: unknown): readonly DevState[] | undefined {
 	if (typeof exports !== "object" || exports === null) {
 		return undefined;
@@ -45,12 +38,6 @@ function statesOf(exports: unknown): readonly DevState[] | undefined {
 	return Array.isArray(states) && states.every(isDevState) ? states : undefined;
 }
 
-/**
- * The registry, from every feature's `dev/states.tsx`, sorted by feature. A file
- * or a state that breaks the contract is left out and reported with its path and
- * the fix, so one bad file never hides the others. CI runs the same rules on the
- * real files (`states-files.test.ts`).
- */
 export function devRegistry(files: readonly StatesFile[]): DevRegistry {
 	const byFeature = new Map<string, DevState[]>();
 	const problems: DevProblem[] = [];
@@ -93,7 +80,6 @@ export function devRegistry(files: readonly StatesFile[]): DevRegistry {
 	return { features, problems };
 }
 
-/** The state a link names (`/dev/<feature>/<id>`), if it's registered. */
 export const findDevState = (
 	features: readonly DevFeature[],
 	feature: string,

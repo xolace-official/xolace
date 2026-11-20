@@ -1,9 +1,3 @@
-/**
- * The You tab's data hook: production's profile reads (summary, history, the sparks shelf,
- * avatars, mood, rank, follow-ups), Steadiness and This week, the hidden cards (B7), the
- * freeze buy and the doors out.
- * The one file here that calls Convex, PostHog, the paywall or the toast.
- */
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
@@ -48,7 +42,6 @@ export function useYou(): YouHome {
 	const openPaywall = usePaywall((s) => s.open);
 	const buyFreeze = useMutation(api.achievements.sparks.buyFreeze);
 	const [buying, setBuying] = useState(false);
-	// Two quick taps land before `buying` re-renders: the ref stops the second purchase.
 	const inFlight = useRef(false);
 
 	const indexed = history
@@ -57,7 +50,6 @@ export function useYou(): YouHome {
 	const steadiness = useYouSteadiness();
 	const sessionCount = summary?.sessionCount ?? 0;
 	const weekHidden = hidden === undefined ? undefined : hidden.includes("week");
-	// Production's gate: the chart from the first moment.
 	const showWeek = weekHidden === false && sessionCount >= 1;
 	const week = useYouWeek(showWeek, sessionCount);
 	const hides = (card: "calendar" | "rank") =>
@@ -130,8 +122,6 @@ export function useYou(): YouHome {
 			patterns: summary
 				? patternRows(summary.sessionCount, mood, summary.typicalUsagePattern)
 				: [],
-			// A door, always there for free users (production). `isPlus` is false while the
-			// entitlement resolves; waiting keeps a subscriber from watching the row come and go.
 			plusRow: !(plusLoading || isPlus),
 			rank:
 				rankHidden === undefined || rank === undefined

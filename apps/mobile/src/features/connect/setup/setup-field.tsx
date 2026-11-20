@@ -9,17 +9,11 @@ type Props = {
 	onChange: (next: string) => void;
 	max: number;
 	placeholder: string;
-	/** Bio: three lines and the count under the field; the name keeps its count inside. */
 	multiline?: boolean;
-	/** The count turns ember with this many characters left. */
 	warnAt?: number;
 	help?: string;
 };
 
-/**
- * The settings kit's field (`name-dialog.tsx`): a label, the well at radius 13, the accent edge
- * while focused, the count where the board puts it. Production's limits stand (40 and 160).
- */
 export function SetupField({
 	label,
 	value,

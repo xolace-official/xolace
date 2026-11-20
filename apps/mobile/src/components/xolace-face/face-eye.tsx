@@ -1,5 +1,3 @@
-// One eye: sclera, pupil, glints and lids, recomputed from the geometry on the UI thread.
-
 import { Circle, Group, Oval, Path, Skia } from "@shopify/react-native-skia";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import {
@@ -19,9 +17,7 @@ const SECOND_GLINT_R = 1.1;
 const SLEEPY_OPEN = 0.72;
 const GAZE_X = 2.6;
 const GAZE_Y = 2.8;
-// Below this openness the glint would float outside a nearly shut eye.
 const GLINT_MIN_OPEN = 0.45;
-// The crescent (eyeShape 1): an arch over the eye, `M x−7.5 ey+2.5 Q x ey−6.5 x+7.5 ey+2.5`.
 const ARCH_HALF = 7.5;
 const ARCH_FOOT = 2.5;
 const ARCH_PEAK = 6.5;
@@ -30,7 +26,6 @@ const ARCH_WIDTH = 2.4;
 type Props = PartProps & { colors: FeatureColors; eyes: EyeStyle };
 
 export function FaceEye({ colors, eyes, geo, side, spread }: Props) {
-	// Sleepy: heavy upper lids, never fully open. Sparkle: bigger pupils, two glints.
 	const openScale = eyes === "sleepy" ? SLEEPY_OPEN : 1;
 	const pupilR = eyes === "sparkle" ? SPARKLE_PUPIL_R : PUPIL_R;
 	const glintR = eyes === "sparkle" ? SPARKLE_GLINT_R : GLINT_R;
@@ -66,7 +61,6 @@ export function FaceEye({ colors, eyes, geo, side, spread }: Props) {
 	const glintOpacity = useDerivedValue<number>(() =>
 		geo.get().open > GLINT_MIN_OPEN ? 1 : 0
 	);
-	// The closed-eye line fades in as the eye shuts, so a blink reads as a lid, not a vanish.
 	const lid = useDerivedValue(() => {
 		const g = geo.get();
 		const x = g.cx + side * spread;
@@ -78,7 +72,6 @@ export function FaceEye({ colors, eyes, geo, side, spread }: Props) {
 	const lidOpacity = useDerivedValue(
 		() => clamp((0.35 - geo.get().open) / 0.2, 0, 1) * (1 - geo.get().shape)
 	);
-	// eyeShape cross-fades the open eye out and the crescent in.
 	const openOpacity = useDerivedValue(() => 1 - geo.get().shape);
 	const archOpacity = useDerivedValue(() => geo.get().shape);
 	const arch = useDerivedValue(() => {
@@ -134,8 +127,6 @@ export function FaceEye({ colors, eyes, geo, side, spread }: Props) {
 	);
 }
 
-// Their own components, so a face without the style doesn't recompute them every frame.
-
 type SecondGlintProps = {
 	color: string;
 	glintX: DerivedValue<number>;
@@ -157,7 +148,6 @@ function SecondGlint({ color, glintX, glintY, opacity }: SecondGlintProps) {
 	);
 }
 
-// A rounded lid that hugs the eye reads calm; a flat dark bar read as side-eye.
 function HeavyLid({ color, geo, side, spread }: PartProps & { color: string }) {
 	const path = useDerivedValue(() => {
 		const g = geo.get();

@@ -1,9 +1,3 @@
-/**
- * Production's particle data, kept exactly: same seed, lattice, numbers and order of `rand()`
- * calls, so the field is the same field. Precomputed at module load so the per-frame worklet
- * reads plain arrays. v2 additions (handoff `vent.md`) are marked.
- */
-
 export const PARTICLE_COUNT = 100;
 export const SPARSE_COUNT = 26;
 
@@ -13,28 +7,19 @@ export const PERSPECTIVE = 600;
 
 export const ASSEMBLY_MS = 2000;
 export const PULSE_MS = 1200;
-// Burn beats total ~4 s: compress → flash → scatter → silence.
 export const COMPRESS_MS = 600;
 export const FLASH_MS = 140;
 export const SCATTER_MS = 2200;
 export const SILENCE_MS = 1200;
 
-/** v2: the ash flakes outlive the sparks by this much, inside the silence beat. */
 export const FLAKE_EXTRA_MS = 900;
-/** v2: the shock ring rides out over this long. */
 export const RING_MS = 900;
-/** v2: the last 15 s before the ceiling are felt. */
 export const NEAR_MS = 15_000;
-/** v2: Reduce Motion's burn is one slow fade. */
 export const RM_FADE_MS = 900;
-/** v2: Reduce Motion's field fades in over this long instead of flying in. */
 export const RM_ENTER_MS = 400;
-/** v2: the waiting sparks start this long before the scatter ends. */
 export const AFTER_LEAD_MS = 400;
-/** v2: after the intro the field gathers from a ring at this share of the entry distance. */
 export const FROM_SPARSE = 0.62;
 
-// Deterministic PRNG so the field looks the same every session.
 function mulberry32(seed: number) {
 	"worklet";
 	let a = seed;
@@ -52,17 +37,15 @@ export { mulberry32 };
 const rand = mulberry32(20_260_610);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-// Unit sphere directions (fibonacci lattice): each particle's orbital home.
 export const DIR_X: number[] = [];
 export const DIR_Y: number[] = [];
 export const DIR_Z: number[] = [];
-export const SIZE: number[] = []; // 2–4 pt
-export const SPEED: number[] = []; // signed orbit speed multiplier
-export const PHASE0: number[] = []; // per-particle phase offset
-export const DELAY: number[] = []; // entry stagger, ms
-export const ENTRY_X: number[] = []; // unit direction toward the screen's edge
+export const SIZE: number[] = [];
+export const SPEED: number[] = [];
+export const PHASE0: number[] = [];
+export const DELAY: number[] = [];
+export const ENTRY_X: number[] = [];
 export const ENTRY_Y: number[] = [];
-// Scatter: per-particle velocity (pt/ms) + gravity so the burst is non-uniform.
 export const SCAT_VX: number[] = [];
 export const SCAT_VY: number[] = [];
 export const SCAT_G: number[] = [];
@@ -87,18 +70,13 @@ for (let i = 0; i < PARTICLE_COUNT; i++) {
 	const scatAngle = rand() * Math.PI * 2;
 	const scatSpeed = 0.15 + rand() * 0.35;
 	SCAT_VX.push(Math.cos(scatAngle) * scatSpeed);
-	// Slight upward bias so the burst reads as release, not collapse.
 	SCAT_VY.push(Math.sin(scatAngle) * scatSpeed - 0.06);
 	SCAT_G.push(0.0001 + rand() * 0.0004);
 }
 
-/** v2: every third particle becomes a slow ash flake in the scatter (no new randoms, so
- * production's sequence and look are untouched). */
 export const FLAKE: boolean[] = DIR_X.map((_, i) => i % 3 === 0);
 
-// Colour ramp ash grey → ember → amber, indexed instead of interpolated per frame.
 export const RAMP_STEPS = 32;
-/** Normalised RGB per ramp step (the atlas tints a white sprite with these). */
 export const RAMP_R: number[] = [];
 export const RAMP_G: number[] = [];
 export const RAMP_B: number[] = [];

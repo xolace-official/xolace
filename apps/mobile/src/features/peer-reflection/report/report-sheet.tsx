@@ -5,13 +5,8 @@ import { PressScale } from "@/components/shared/press-scale";
 import { COPY } from "../copy";
 import { useReportSheet } from "./report-sheet-data";
 
-/** Board `.sh`: 26 / 18 padding; `.sr` rows 48 tall, 22 in. */
 const SHEET_BOTTOM = 18;
 
-/**
- * "Why are you reporting this?" (board `.sh`, production's copy word for word):
- * a native form sheet sized to its content. A reason closes it and sends.
- */
 export function ReportSheetView() {
 	const insets = useSafeAreaInsets();
 	const { actions } = useReportSheet();

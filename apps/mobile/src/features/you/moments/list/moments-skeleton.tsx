@@ -5,8 +5,6 @@ import { MOMENTS_COPY } from "@/features/you/moments/copy";
 
 const CARDS = 4;
 
-/** The first page loading, in the shared look: a day's label, then cards in the card's own shape
- * (two quote lines, the line and its chip), so the swap to moments doesn't move the page. */
 export function MomentsSkeleton() {
 	return (
 		<SkeletonBreath className="gap-2.5 pt-2" label={MOMENTS_COPY.list.loading}>
@@ -16,7 +14,6 @@ export function MomentsSkeleton() {
 			{Array.from({ length: CARDS }, (_, i) => (
 				<View
 					className="gap-2 rounded-[24px] border border-continuous border-separator bg-surface p-4"
-					// Placeholders never move or change: their place is their identity.
 					key={i}
 				>
 					<View>

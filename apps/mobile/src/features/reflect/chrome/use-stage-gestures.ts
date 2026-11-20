@@ -5,7 +5,6 @@ import { canAppleZoom } from "@/lib/apple-zoom";
 import { useBoardY } from "../layout";
 import { useReflect } from "../reflect-data";
 
-/** On the mirror, closing gestures may begin only above the lines (board y). */
 const MIRROR_DISMISS_MAX_Y = 240;
 
 /**

@@ -1,4 +1,3 @@
-/** Lantern's reader and its sheets on fixtures: `xolace://dev/lantern/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import {
 	CLASSIC,
@@ -20,9 +19,7 @@ import {
 	ReaderSkeleton,
 } from "@/features/lantern/reader/reader-skeleton";
 
-/** The reader draws its own bar, as its route does. */
 const NO_BAR = { headerShown: false };
-/** The board's offsets on the classic read at 18 pt (handoff §13). */
 const AT = { finished: -560, folded: 520, listening: 430 } as const;
 const END = Number.POSITIVE_INFINITY;
 const PARTWAY = { ...SIGNALS, position: 0.4 };
@@ -147,7 +144,6 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "sources-sheet-long",
 		options: NO_BAR,
-		// Past the sheet's cap: it scrolls to the last source and the licence.
 		Screen: () => <FixtureSources sources={MANY_SOURCES} />,
 		title: "View sources, more than fit",
 	},

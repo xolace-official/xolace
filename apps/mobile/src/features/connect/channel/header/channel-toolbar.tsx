@@ -6,8 +6,6 @@ import { CHANNEL } from "../copy";
 
 const IOS = process.env.EXPO_OS === "ios";
 
-/** Right of the identity: help, one tap away, as in the thread's header. Production's channel had it
- * as a strip over the list; every chat surface keeps one way to crisis resources. */
 export function ChannelToolbar() {
 	const { actions } = useChannelScreen();
 	const danger = useTokenColor("danger-ink");

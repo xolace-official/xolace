@@ -1,4 +1,3 @@
-/** Settings › Account on fixtures: `xolace://dev/settings/<id>` (handoff settings-sections.md §8–§9). */
 import { themeVariant } from "@/design/themes";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureAccount } from "@/features/settings/account/dev/fixture-account";
@@ -12,7 +11,6 @@ import {
 	ACCOUNT_SPACE_ERROR,
 } from "@/features/settings/account/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Account" };
 const DARK = themeVariant("default", "dark");
 

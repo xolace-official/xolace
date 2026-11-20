@@ -14,7 +14,6 @@ import { DOMAIN_ICON } from "@/features/you/steadiness/parts/domain-icon";
 
 type Params = { path?: string; sessionId?: string };
 
-/** Connect's avatar for a suggested listener; Steadiness's icon and name for a part of life. */
 const PARTS: NextParts = {
 	listenerAvatar: (listener, size) => (
 		<XolacerAvatar
@@ -29,9 +28,6 @@ const PARTS: NextParts = {
 	partName: (domain) => YOU_COPY.steadiness.domains[domain],
 };
 
-/** After a session, with letters' two cards and the other cards' pieces composed in: features
- * meet in routes. The session is already completed, so `getActive` is null: the path screens
- * carry its id. */
 export default function SessionEnd() {
 	const { path, sessionId } = useLocalSearchParams<Params>();
 	const letters = useEndLetters();

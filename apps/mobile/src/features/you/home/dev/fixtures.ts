@@ -1,7 +1,3 @@
-/**
- * The You tab on fixtures: the board's numbers (`P/src/fixtures/you-v2.ts`) as production's
- * reads return them, so the dev states and the tests run the real model. Dev only.
- */
 import type { Id } from "@xolace/backend/dataModel";
 import type { HistoryKind } from "@/features/you/home/dev/history";
 import { medalArt } from "@/features/you/home/dev/medals";
@@ -10,7 +6,6 @@ import type { Rank, Shelf } from "@/features/you/home/you-model";
 import type { ProfileSummary } from "@/lib/profile-summary";
 
 const DAY_MS = 86_400_000;
-/** Thursday 12 November 2026, 7 pm: "Evening". */
 export const FIXTURE_NOW = new Date(2026, 10, 12, 19, 0);
 const JOIN_AT = new Date(2026, 6, 28, 20, 0).getTime();
 
@@ -27,7 +22,6 @@ export function fixtureSummary(kind: HistoryKind): ProfileSummary {
 		recentWords: [],
 		sessionCount: { ended: 31, new: 0, regular: 38 }[kind],
 		streakFreezes: kind === "regular" ? 1 : 0,
-		// Tuesday evening.
 		typicalUsagePattern: isNew ? null : { dayOfWeek: 2, hourOfDay: 19 },
 		wordCount: 0,
 	};
@@ -97,7 +91,6 @@ const card = (
 	userResponse,
 });
 
-/** The board's follow-ups: one waiting, one coming, two answered. */
 export const FIXTURE_FOLLOW_UPS = {
 	history: [
 		card("f-sleep", "resolved", "Not sleeping well", 10, "lighter"),

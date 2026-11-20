@@ -14,15 +14,10 @@ import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 const SKELETON_TILES = 4;
 const IOS = Platform.OS === "ios";
 
-/**
- * Topics (handoff `explore-doors.md` §2): production's grid of every topic, two columns,
- * alphabetical, each tile zooming into its topic. Scrolled, the page fills in behind the bar.
- */
 export function TopicsScreen() {
 	const { state } = useTopicsScreen();
 	const header = useHeaderOptions("small");
 	const insets = useSafeAreaInsets();
-	// Clears the floating mini player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();
 	const { width } = useWindowDimensions();
 	const tile = (width - GRID.gutter * 2 - GRID.gap) / 2;

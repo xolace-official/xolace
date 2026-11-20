@@ -18,14 +18,8 @@ import { a11yHidden } from "@/lib/utils";
 
 const ACROSS = { end: { x: 1, y: 0 }, start: { x: 0, y: 0 } };
 const EDGE_STOPS = [0, 0.3, 0.7, 1] as const;
-/** The labels' places, as keys: "noon" is there twice. */
 const TICKS = ["noon", "6pm", "midnight", "6am", "next-noon"] as const;
 
-/**
- * A day from noon to noon (board `.day`): the quiet span in night blue with a moon at its start
- * and a sun at its end, warm edges for the daylight, the sample's dot at 9:30 pm. Hidden from
- * VoiceOver; "Not after" and "Not before" carry the times.
- */
 export function DayBar({ quiet }: { quiet: Quiet }) {
 	const [sunEdge, sunClear, nightEdge, nightMid, sun, white] = useTokenColors([
 		"notify-sun-edge",
@@ -39,7 +33,6 @@ export function DayBar({ quiet }: { quiet: Quiet }) {
 	return (
 		<View className="px-4 pt-1.5 pb-3.5" {...a11yHidden(true)}>
 			<View className="h-7.5 rounded-[9px] bg-surface-secondary">
-				{/* The board mixes the sun into the well at its edges; drawn here as the sun at 22% over it. */}
 				<LinearGradient
 					className="absolute inset-0 rounded-[9px]"
 					colors={[sunEdge, sunClear, sunClear, sunEdge]}

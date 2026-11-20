@@ -1,10 +1,3 @@
-/**
- * The arrival's motion (arrivals §2, §3): the board's `scene()`
- * (`ArrivalsAlive.dc.html`), ported function by function as worklets. Every
- * value on screen is a pure function of ages in ms read from one engine that
- * one frame callback steps. Positions are the board's 390 × 844 phone,
- * re-centred on the screen's width and shifted by the status bar (`Geo`).
- */
 import { CONFETTI, RING_SPARK } from "@/features/achievements/badge-palette";
 import {
 	clamp,
@@ -17,20 +10,14 @@ import {
 	TAU,
 } from "@/features/achievements/motion-math";
 
-/** The board's phone. */
 const BOARD = { h: 844, status: 54, w: 390 } as const;
-/** The badge's centre and radius, on the board (236 pt). */
 export const HELD = { r: 118, y: 318 } as const;
 export const COIN = HELD.r * 2;
-/** The fire and the count's centre, on the board. */
 const FIRE = { dx: -6, y: 362 } as const;
 const COUNT_Y = 452;
 export const LIFT = -48;
-/** The badge lands (and the burst starts) this long after it starts to drop. */
 export const LAND = 520;
-/** Before this, a tap anywhere on the milestone jumps to its settled state. */
 export const MS_DONE = 4200;
-/** The milestone, in ms from the screen opening. */
 export const T = {
 	cta: 3500,
 	day0: 2500,
@@ -46,7 +33,6 @@ export const T = {
 	token: 3450,
 	week: 2100,
 } as const;
-/** The badge, in ms from it starting to drop. */
 export const RV = {
 	copy: 680,
 	cta: 860,
@@ -55,7 +41,6 @@ export const RV = {
 	sparks: 760,
 	title: 600,
 } as const;
-/** Next between badges; the close; the milestone stepping aside; the badge after it. */
 export const X_MS = 440;
 const CLOSE_MS = 260;
 export const CLOSE_GO_MS = 300;
@@ -63,22 +48,18 @@ const OUT_MS = 360;
 export const BADGE_AFTER_MS = 200;
 const HOP_MS = 360;
 const HOP = 16;
-/** The clock stops: after the last ember, after the fall, after the burst. */
 const MS_STOP = 8400;
 const FALL_STOP = 7100;
 const BURST_LAST = 26 * 12 + 3500;
 const PUFF_MS = 1500;
 const REDUCED_MS = 300;
-/** Production's fx loops repeat on these; the loop that takes over when the clock stops is a multiple of all three. */
 const GLOW_MS = 2800;
 export const SPARKLE_MS = 2400;
 export const SHIMMER_EVERY = 6000;
 export const FX_LOOP_MS = 84_000;
-/** Drag to turn: a badge-width is a half turn; friction and the settle as on the badge page. */
 export const FRICTION = 3.8;
 export const SETTLE_SPEED = 2.2;
 export const SNAP_MS = 300;
-/** The drop: y on `fs(7.4, .74)`, scale .6 → 1 on production's spring (damping 11, stiffness 140). */
 const DROP = { from: -150, w: 7.4, z: 0.74 } as const;
 const GROW = { from: 0.6, w: 11.83, z: 0.465 } as const;
 const TURN = { w: 5.2, z: 0.68 } as const;
@@ -94,7 +75,6 @@ const REDUCED_FADE_MS = 200;
 export type Geo = {
 	W: number;
 	H: number;
-	/** Status-bar shift from the board. */
 	dy: number;
 	cx: number;
 	hy: number;
@@ -117,13 +97,11 @@ export function geoFor(W: number, H: number, top: number): Geo {
 	};
 }
 
-/** One piece of confetti: the burst thrown from the badge, or the slow fall from the top. */
 export type Piece = {
 	burst: boolean;
 	i: number;
 	ang: number;
 	rad: number;
-	/** The fall's x, as a share of the width. */
 	x0: number;
 	dur: number;
 	delay: number;
@@ -134,7 +112,6 @@ export type Piece = {
 	col: string;
 	spin: number;
 	flut: number;
-	/** Drawn in front of the badge (some burst pieces pass over it). */
 	front: boolean;
 };
 const NB = 26;
@@ -152,7 +129,6 @@ const shape = (round: boolean, i: number, kw: number, kh: number) => ({
 	w: round ? DOT : RECT.w + RECT.wMore * hash(i, kw),
 });
 
-/** The board's `PIECES`: seeded, the same confetti every time. */
 export const PIECES: readonly Piece[] = [
 	...Array.from({ length: NB }, (_, i): Piece => {
 		const ang = (i / NB) * TAU + (hash(i, 1) - 0.5) * BURST_SPREAD;
@@ -187,13 +163,11 @@ export const PIECES: readonly Piece[] = [
 			rad: 0,
 			spin: (hash(i, 15) > 0.5 ? 1 : -1) * (180 + 360 * hash(i, 16)),
 			sway: 14 + hash(i, 14) * 22,
-			// The board's x from 8 to 382 on 390, as a share of the width.
 			x0: (8 + hash(i, 11) * 374) / BOARD.w,
 		})
 	),
 ];
 
-/** Production's five rim sparkles (`badge-fx.tsx` `SPARKLES`): where (turns), how big, their phase. */
 export const SPARKLES = [
 	{ ph: 0, r: 0.07, turn: 0.1 },
 	{ ph: 0.35, r: 0.05, turn: 0.32 },
@@ -203,7 +177,6 @@ export const SPARKLES = [
 ] as const;
 
 const RING_N = 14;
-/** The ring of sparks leaving the count (streak-flame-takeover). */
 export const RING = Array.from({ length: RING_N }, (_, i) => {
 	const a = (i / RING_N) * TAU + 0.3;
 	const reach = 80 + ((i * 37) % 50);
@@ -214,11 +187,9 @@ export const RING = Array.from({ length: RING_N }, (_, i) => {
 		s: 5 + (i % 3) * 3,
 	};
 });
-/** Embers rising from the fire, and the puff when Flux is tapped. */
 export const NE = 10;
 export const NP = 8;
 
-/** Phases and events the clock reports to React. */
 export const PH = { badge: 1, ms: 0 } as const;
 export const EV = {
 	close: 6,
@@ -231,15 +202,10 @@ export const EV = {
 } as const;
 export const MODE = { free: 1, none: 0, snap: 2 } as const;
 
-/**
- * The one engine: ages are `now − t*`, −1 while a stamp is unset. `now` is the
- * clock's own time, summed from frame deltas, so it pauses while the clock sleeps.
- */
 export type Eng = {
 	now: number;
 	phase: number;
 	step: number;
-	/** Stamps: milestone, Next out of it, badge drop, burst (and hop), Next between badges, ember puff, close. */
 	tm: number;
 	to: number;
 	ta: number;
@@ -247,7 +213,6 @@ export type Eng = {
 	tx: number;
 	tp: number;
 	tc: number;
-	/** The slow fall: the first badge only. */
 	rain: boolean;
 	spin: number;
 	v: number;
@@ -259,16 +224,10 @@ export type Eng = {
 	dragFrom: number;
 	turned: boolean;
 	rm: boolean;
-	/** The ages at the previous frame, so each event fires once as its time is crossed. */
 	lm: number;
 	la: number;
 };
 
-/**
- * Where the clock starts. Stamps are clock times and −1 means unset, so the
- * clock starts well above zero: a skip that moves a stamp back (`now − 4200`)
- * can never make it look unset.
- */
 export const CLOCK_START = 100_000;
 
 export function freshEng(hasMs: boolean, rm: boolean): Eng {
@@ -304,7 +263,6 @@ export function age(e: Eng, t: number) {
 	return t < 0 ? -1 : e.now - t;
 }
 
-/** Is anything still moving? When not, the clock stops (§6). */
 export function busy(e: Eng) {
 	"worklet";
 	if (e.tc >= 0 || e.drag || e.mode !== MODE.none) {
@@ -336,7 +294,6 @@ export function busy(e: Eng) {
 	return a < (e.rain ? FALL_STOP : RV.hint + 500);
 }
 
-/** The badge in flight: its centre y, radius, opacity, turn and tilt, and how far it has closed. */
 export function coinAt(e: Eng, g: Geo) {
 	"worklet";
 	const a = age(e, e.ta);
@@ -368,7 +325,6 @@ export function coinAt(e: Eng, g: Geo) {
 	return { a, close, cy, op, r: HELD.r * scale, spin, tiltX, tiltY };
 }
 
-/** The shimmer's band (0–1 while it crosses, −1 otherwise): once as it lands, then every 6 s. */
 export function bandAt(fa: number, rm: boolean) {
 	"worklet";
 	if (rm || fa < LAND) {
@@ -378,7 +334,6 @@ export function bandAt(fa: number, rm: boolean) {
 	return b <= 1 ? b : -1;
 }
 
-/** The glow: up from landing, breathing on production's 2.8 s. */
 export function bloomAt(a: number, fa: number, rm: boolean) {
 	"worklet";
 	if (rm) {
@@ -390,10 +345,6 @@ export function bloomAt(a: number, fa: number, rm: boolean) {
 	);
 }
 
-/**
- * The milestone's lift (−48 pt over 1.9–2.4 s): it makes room for the week and
- * freeze cards, so with neither drawn (`lifts` false) nothing moves.
- */
 export function liftAt(m: number, rm: boolean, lifts = true) {
 	"worklet";
 	if (!lifts) {
@@ -402,7 +353,6 @@ export function liftAt(m: number, rm: boolean, lifts = true) {
 	return rm ? LIFT : LIFT * easeIO(seg(m, T.lift, T.lift + T.liftFor));
 }
 
-/** How far the milestone has stepped aside after Next (0 → 1 over 360 ms). */
 export function outAt(e: Eng) {
 	"worklet";
 	if (e.phase === PH.ms) {
@@ -411,13 +361,11 @@ export function outAt(e: Eng) {
 	return easeOut(age(e, e.to) / OUT_MS);
 }
 
-/** A reveal: fades over 380 ms (or a 200 ms fade under Reduce Motion). */
 export function revealAt(a: number, at: number, rm: boolean) {
 	"worklet";
 	return rm ? clamp(a / REDUCED_FADE_MS) : easeOut(seg(a, at, at + REVEAL_MS));
 }
 
-/** What closing leaves of anything that fades with it: 1 until the close, then down over 260 ms. */
 export function shutAt(e: Eng) {
 	"worklet";
 	return e.tc >= 0 ? 1 - easeOut(age(e, e.tc) / CLOSE_MS) : 1;

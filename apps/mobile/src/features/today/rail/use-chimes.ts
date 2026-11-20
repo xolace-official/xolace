@@ -8,12 +8,6 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-/**
- * The rail hangs like chimes (wind-chime-list): each tile is a damped
- * pendulum kicked by the rail's smoothed acceleration, a beat later per tile.
- * One frame callback; it starts on a scroll and stops itself once the swing
- * dies down. Buffers are preallocated: nothing allocates per frame.
- */
 const GAIN = 0.0018;
 const ZETA = 0.22;
 const MAX_SWING = 0.6;
@@ -21,7 +15,6 @@ const ROW_DELAY = 0.04;
 const SETTLED = 0.01;
 const MAX_ACCEL = 9000;
 const SMOOTH = 0.35;
-/** About 200 ms of history at 120 Hz: enough for the last tile's delay. */
 const HISTORY = 32;
 
 function hash(i: number) {
@@ -29,12 +22,10 @@ function hash(i: number) {
 	const s = Math.sin(i * 12.9898 + 78.233) * 43_758.5453;
 	return s - Math.floor(s);
 }
-/** 1.0–2.4 Hz by tile, as rowOmega. */
 function omega(i: number) {
 	"worklet";
 	return 2 * Math.PI * (1.0 + 1.4 * hash(i + 7));
 }
-/** Neighbours swing opposite ways. */
 function dir(i: number) {
 	"worklet";
 	return (i % 2 === 0 ? 1 : -1) * (0.8 + 0.4 * hash(i * 3 + 1));
@@ -55,7 +46,6 @@ type Sim = {
 	now: number;
 };
 
-/** One pendulum per tile, up to the rail's four (`RAIL_MAX`). */
 export function useChimes(count: number, reduced: boolean) {
 	const railX = useSharedValue(0);
 	const running = useSharedValue(false);
@@ -76,7 +66,6 @@ export function useChimes(count: number, reduced: boolean) {
 		w: [0, 0, 0, 0],
 	});
 
-	// The loop starts on a scroll and stops itself; both happen from worklets via the JS thread.
 	const loopRef = useRef<FrameCallback | null>(null);
 	const start = () => loopRef.current?.setActive(true);
 	const stop = () => loopRef.current?.setActive(false);
@@ -99,7 +88,6 @@ export function useChimes(count: number, reduced: boolean) {
 		s.histT[s.head] = s.now;
 		let energy = Math.abs(a) * GAIN;
 		for (let i = 0; i < count; i += 1) {
-			// The rail's acceleration this tile's delay ago.
 			const want = s.now - i * ROW_DELAY;
 			let kick = 0;
 			for (let k = 0; k < HISTORY; k += 1) {

@@ -1,5 +1,3 @@
-// How the companion holds itself for what the talk is doing.
-
 import { NEUTRAL, type Pose, PRESETS } from "@/components/xolace-face/pose";
 import type { Presence } from "@/features/talk/use-talk";
 

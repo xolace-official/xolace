@@ -8,12 +8,10 @@ import {
 } from "react-native-reanimated";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 
-/** Board `.sp`: rises 104% → 0 in .5 s from .16 s (over 60% of the screen); scrolls past 82%. */
 const PANEL = { at: 160, from: 1.04, ms: 500, travel: 0.6 } as const;
 export const PANEL_MAX = 0.82;
 const EASE = Easing.bezier(0.2, 0.85, 0.25, 1);
 
-/** The step's panel style: it rises once a step opens (fades, with reduced motion). */
 export function usePanelRise(open: boolean, reduced: boolean, height: number) {
 	const panel = useSharedValue(0);
 	useEffect(() => {

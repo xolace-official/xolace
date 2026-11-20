@@ -6,8 +6,6 @@ type CoverImageProps = Omit<ImageProps, "source" | "placeholder"> & {
 	thumbhash?: string;
 };
 
-/** Every Lantern and Browse cover renders through here. A `thumbhash` (#507) previews until
- * the cover loads. */
 export function CoverImage({
 	uri,
 	thumbhash,

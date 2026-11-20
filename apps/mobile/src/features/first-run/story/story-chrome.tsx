@@ -15,14 +15,10 @@ import { clamp, ease, mixRGB, type Stage, seg } from "../first-run-motion";
 import { css, STORY_COLORS } from "../first-run-palette";
 import { ageB, ageT, DUR, NB, type SEng, seatOpen, WE } from "./story-scene";
 
-/** Board `.bars`: top 56, 20 pt in, six equal segments 4 apart, 3 tall, white 22%, the fill white. */
 const BARS = { gap: 4, h: 3, side: 20, top: 56 };
-/** Board `.seatb`: top 756, 24 pt in, 54 tall; solid ember on the last beat 3 s after its words. */
 const CALL = { h: 54, side: 24, top: 756 };
-/** The call's label line and the room around it. */
 const CALL_LINE = { line: 21, pad: 20 };
 const EMBER = STORY_COLORS.ember;
-/** How solid the call is: from 3 s after the last beat's words, over 500 ms. */
 function solidOf(e: SEng) {
 	"worklet";
 	if (e.beat !== NB - 1) {
@@ -36,7 +32,6 @@ function Bar({ eng, i }: { eng: SharedValue<SEng>; i: number }) {
 	const fill = useAnimatedStyle(() => {
 		const e = eng.get();
 		const fill = i < e.beat ? 1 : i === e.beat ? clamp(e.bar / DUR[i]) : 0;
-		// Scaled, not resized, so the fill never lays out again.
 		return { transform: [{ scaleX: fill }] };
 	});
 	return (
@@ -52,7 +47,6 @@ function Bar({ eng, i }: { eng: SharedValue<SEng>; i: number }) {
 	);
 }
 
-/** The bars at the top, as in any story: the current one fills over its beat. */
 export function StoryBars({
 	eng,
 	stage,
@@ -88,7 +82,6 @@ export function StoryBars({
 	);
 }
 
-/** "Pull up a seat": ember text on an 8% ember fill, turning solid on the last beat. */
 export function SeatCall({
 	eng,
 	stage,

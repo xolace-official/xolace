@@ -23,16 +23,10 @@ import { RowsSkeleton } from "@/features/lantern/lists/rows-skeleton";
 import { useHeaderOptions } from "@/lib/header-options";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** The bar's height below the safe area: a hub measures its fold from it (Explore's topic). */
 const NAV_BAR = 44;
 const IOS = Platform.OS === "ios";
 const GONE_GAP = 48;
 
-/**
- * A hub (handoff §3.2): its cover full width under a transparent bar, the title, the intro and the
- * count ("· 2 read" is new), then the items in the editor's order, numbered, a listen too. The
- * name moves into the bar once the title scrolls under it, as a topic's does.
- */
 export function HubScreen() {
 	const { state, actions } = useHubScreen();
 	const insets = useSafeAreaInsets();
@@ -54,10 +48,7 @@ export function HubScreen() {
 		}
 	);
 	const hub = state.hub;
-	// iOS runs the cover under a see-through bar; Android's bar is opaque, in the page colour,
-	// with the cover below it, so it keeps the page's ink and needs no folded edge.
 	const underBar = IOS;
-	// On the cover: white ink. Folded, or with no cover to sit on, the page's.
 	const onCover = underBar && hub !== null && !folded;
 
 	return (
@@ -65,7 +56,6 @@ export function HubScreen() {
 			<Stack.Screen
 				options={{
 					...header,
-					// The cover runs under the bar with its own band: no soft edge, no blur.
 					headerBlurEffect: undefined,
 					headerTintColor: onCover ? coverInk : foreground,
 					headerTitle: () => <BarTitle on={folded} text={hub?.title ?? ""} />,
@@ -77,7 +67,6 @@ export function HubScreen() {
 			) : null}
 			<Animated.ScrollView
 				className="bg-background"
-				// iOS: the cover runs under the bar, so offset 0 is the top of the screen.
 				contentContainerStyle={{ paddingBottom: LS.bottom }}
 				contentInsetAdjustmentBehavior="never"
 				onScroll={onScroll}
@@ -90,7 +79,6 @@ export function HubScreen() {
 						center
 						className="px-8 text-[15px]"
 						color="muted"
-						// No cover: clear the bar the cover would have run under (iOS).
 						style={{
 							paddingTop: underBar ? insets.top + NAV_BAR + GONE_GAP : GONE_GAP,
 						}}
@@ -119,7 +107,6 @@ export function HubScreen() {
 			{underBar ? (
 				<FoldedEdge barBottom={insets.top + NAV_BAR} on={folded} />
 			) : null}
-			{/* The cover's resting frame: what a hub card zooms into. */}
 			<Link.AppleZoomTarget>
 				<View
 					className="absolute inset-x-0 top-0"

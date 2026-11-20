@@ -2,12 +2,6 @@ import { type Batch, dot } from "@/features/vent/field/particle-atlas";
 import { DIR_X, PHASE0, SIZE } from "@/features/vent/field/particle-config";
 import { clamp01, type Stage } from "@/features/vent/field/particle-render";
 
-/**
- * Production's afterglow while the reply is on its way: nine sparks rising 110 pt off the burn
- * spot, on production's exact paths. v2 only makes them visible (handoff §8): they fade in over
- * 500 ms from 400 ms before the scatter ends, no 0.85 cap, a shallower flicker, a longer visible
- * stretch of each climb, a little larger, and a hot core on the same spark. Nothing else.
- */
 const SPARKS = 9;
 const FADE_IN_MS = 500;
 
@@ -24,16 +18,10 @@ export function drawAfter(b: Batch, st: Stage, wt: number) {
 		const a = fin * life * fk;
 		const r = 2.2 + SIZE[i] * 0.6 * (1 - p * 0.5);
 		dot(b, x, y, r, i % 3 === 0 ? 1 : 0.75, a);
-		// A hot core on the same spark, so it reads as glowing rather than as a dim dot.
 		dot(b, x, y, r * 0.45, 1, a * 0.8);
 	}
 }
 
-/**
- * v2: the ash the words shed as they burn (native-cook particle-dispersion's closed form): a quick
- * scatter, a lift that grows with age^1.6, a small curl. Points are sampled on the letters once,
- * on the JS thread (`words/word-image.ts`); each is born when the burning front reaches it.
- */
 export type WordAsh = {
 	n: number;
 	x: number[];
@@ -75,7 +63,6 @@ export function drawAsh(b: Batch, ash: WordAsh, ms: number) {
 			ash.vx[i] * sc +
 			(Math.sin(ash.ph[i] + ash.f[i] * age) - Math.sin(ash.ph[i])) * ash.amp[i];
 		const y = ash.y[i] + ash.vy[i] * sc - ash.lift[i] * age ** 1.6;
-		// An amber glint for the first 200 ms, then ash grey.
 		const warm = age < GLINT_S ? 0.75 * (1 - age / GLINT_S) : 0;
 		dot(b, x, y, ash.s[i], warm, 0.5 * (1 - smooth(0.5, 1, life / ash.die[i])));
 	}

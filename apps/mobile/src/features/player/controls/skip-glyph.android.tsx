@@ -1,8 +1,6 @@
 import Svg, { Path, Text } from "react-native-svg";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** Android has no `gobackward.15`: the board's arc, arrowhead and "15", on a 24 grid. Forward
- * mirrors the arc but not the text. */
 export function SkipGlyph({ dir, size }: { dir: -1 | 1; size: number }) {
 	const ink = useTokenColor("player-ink");
 	const mirror = dir > 0 ? "translate(24 0) scale(-1 1)" : undefined;

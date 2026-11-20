@@ -6,7 +6,6 @@ import {
 } from "@/features/you/home/hidden-cards-model";
 import type { ProfileCard } from "@/features/you/home/you-model";
 
-/** A device list and an upload that lands when the test says so. */
 function harness(initial: ProfileCard[]) {
 	let device = [...initial];
 	const sent: ProfileCard[] = [];
@@ -64,7 +63,6 @@ describe("uploadDeviceCards", () => {
 		h.land();
 		await Promise.all(landing);
 		expect(h.device()).toEqual([]);
-		// Nothing put it back, so a re-run has nothing to send.
 		expect(uploadDeviceCards(h.device(), h.deps)).toEqual([]);
 		expect(h.sent).toEqual(["calendar"]);
 	});

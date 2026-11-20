@@ -17,10 +17,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 const M = MOMENTS_COPY.moment;
 const SHARE = { android: "ios_share", ios: "square.and.arrow.up" } as const;
 
-/**
- * A moment (Keepsakes 03): your words, then the mirror in the live session's voice, then the way
- * back into Reflect.
- */
 export function MomentScreen() {
 	const { state, actions } = useMomentScreen();
 	const fg = useTokenColor("foreground");
@@ -89,7 +85,6 @@ export function MomentScreen() {
 					</View>
 				) : null}
 			</ScrollView>
-			{/* The home indicator's inset (at least 16), plus 8. */}
 			<View className="mb-2 flex-row gap-2.5 px-4 pt-2 pb-safe-or-4">
 				<PressScale
 					accessibilityRole="button"

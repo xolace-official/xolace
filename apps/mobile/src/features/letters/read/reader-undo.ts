@@ -8,12 +8,6 @@ import { createUndoTimer } from "./undo-timer";
 
 const UNDO_MS = UNDO_SECONDS * 1000;
 
-/**
- * Acknowledge and Hide, each undoable for 5 s (handoff §3). The reader shows them at once; the
- * data module hears only once Undo has passed, or as the reader closes (leaving keeps it). Hide,
- * once final, leaves the reader still drifted away, Undo and all, so nothing springs back in.
- * An acknowledgement stays shown from here on, whatever the server has caught up to.
- */
 export function useReaderUndo({ state, actions }: LetterReader) {
 	const [undo, setUndo] = useState<Undo | null>(state.opens.undo);
 	const [acknowledgedHere, setAcknowledgedHere] = useState(false);

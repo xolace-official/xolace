@@ -1,4 +1,3 @@
-/** Settings › Privacy & Data on fixtures: `xolace://dev/settings/<id>` (handoff settings-sections.md §8–§9). */
 import type { DevState } from "@/dev/dev-state";
 import {
 	FixtureDeleteSheet,
@@ -21,9 +20,7 @@ import {
 	PRIVACY_TOP,
 } from "@/features/settings/privacy/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Privacy & Data" };
-/** The sheet has no header of its own (`settings/_layout.tsx`); swipe back to leave. */
 const DATA_SHEET = { headerShown: false, title: "Delete all my data" };
 const ACCOUNT_SHEET = { headerShown: false, title: "Delete account" };
 

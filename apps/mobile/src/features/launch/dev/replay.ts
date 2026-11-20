@@ -4,17 +4,9 @@ import { findVariant } from "@/design/themes";
 import type { HoldReason } from "@/features/launch/launch-model";
 import { useLaunch } from "@/features/launch/launch-store";
 
-/**
- * One launch path, replayed without a cold start: the cover comes back up as on launch (in the
- * app's light or dark; a cold launch uses the phone's), the path's first screen goes in under it,
- * and the hold that loading would take lifts after `holdMs`.
- */
 export type LaunchReplay = {
-	/** What holds the cover, as the real step would (`gate`, `bootstrap`). */
 	reason: HoldReason;
-	/** How long that loading takes. Past `LAUNCH_TIMING.maxCoverMs` the cover leaves anyway. */
 	holdMs: number;
-	/** The first screen under the cover: `dismissTo` for a tab, `replace` for anything else. */
 	under?: { dismissTo: Href } | { replace: Href };
 };
 

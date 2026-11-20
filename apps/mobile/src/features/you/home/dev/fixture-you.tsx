@@ -1,6 +1,3 @@
-/** The You tab on fixtures: the real screen under providers the fixtures fill. Its own UI (the
- * freeze explanation, the week's ring, the tabs) still answers taps, and This week pages
- * between the board's week and the one before. */
 import { useState } from "react";
 import {
 	fixtureYou,

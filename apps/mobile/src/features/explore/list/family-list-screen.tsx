@@ -12,20 +12,12 @@ import { TrackRow } from "@/features/explore/rows/track-row";
 import { useHeaderOptions } from "@/lib/header-options";
 import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 
-/** A row: 8 + 52 + 8. */
 const ROW_ESTIMATE = 68;
 const LOAD_AHEAD = 0.4;
 
-/**
- * Support audio and Music (handoff `explore-doors.md` §3): production's one list per kind, the
- * Family menu in the bar. Rows are Explore's: "Sleep · 7 min", the playing mark, the lock for a
- * free listener. The list is the screen's first child, so the native bar folds over it; another
- * kind remounts it, back at the top.
- */
 export function FamilyListScreen() {
 	const { state, actions } = useFamilyListScreen();
 	const header = useHeaderOptions("small");
-	// Clears the floating mini player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();
 	const pick = (f: typeof state.family) => {
 		if (f !== state.family) {

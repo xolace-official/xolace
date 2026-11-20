@@ -24,11 +24,6 @@ import { useTokenColors } from "@/lib/use-token-color";
 
 const C = TOPIC.chips;
 
-/**
- * All / Support audio / Music: Explore's need chips without the ×. The row rides at the top of the
- * sheet and pins under the bar on the UI thread (translated by the scroll past the pin); pinned,
- * its corners square off and a 14 pt fade appears under it.
- */
 export function TopicChips({
 	value,
 	onChange,
@@ -82,7 +77,6 @@ export function TopicChips({
 	);
 }
 
-/** 40 tall, radius 20, a 1 pt ring in `separator`; selected, filled `foreground` with page text. */
 function Chip({
 	label,
 	on,

@@ -22,10 +22,6 @@ const FADE_MS = 200;
 const MOVE_MS = 320;
 const RING_SLOP = 6;
 
-/**
- * Pick up where you left off (handoff §5): up to three cards. The ring plays in place; the card
- * opens what it is, from where it was left. "Remove from here" in the card's menu.
- */
 export function ContinueShelf({ cards }: { cards: readonly ContinueCard[] }) {
 	const { actions } = useHome();
 	return (
@@ -131,7 +127,6 @@ function ContinueCardView({ c }: { c: ContinueCard }) {
 	);
 }
 
-/** An entry's place: a 3 pt bar in violet. */
 function ReadBar({ share }: { share: number }) {
 	return (
 		<View className="mt-1.25 h-0.75 overflow-hidden rounded-xs bg-separator">

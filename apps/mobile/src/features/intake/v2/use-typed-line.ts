@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { SAY_MS_PER_CHAR } from "@/features/intake/v2/flux";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** How much of Flux's line has typed out; all of it at once under reduced motion. A new line
- * types out from the start. */
 export function useTypedLine(line: string) {
 	const reduced = useEffectiveReducedMotion();
 	const [shown, setShown] = useState(reduced ? line.length : 0);

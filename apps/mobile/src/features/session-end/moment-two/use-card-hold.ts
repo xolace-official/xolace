@@ -12,29 +12,19 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { EASE, HOLD, TS } from "../session-look";
 import type { Hold } from "./use-send";
 
-/** The edge pill by hold: off, held .26, ready .36. */
 const EDGE_AT = [0, HOLD.edge.held, HOLD.edge.ready] as const;
 
 type Args = {
 	hold: Hold;
 	holdSv: SharedValue<number>;
-	/** The card can be held (nothing answered yet). */
 	holdable: boolean;
 	reduced: boolean;
-	/** ms since the send (< 0 before). */
 	cs: SharedValue<number>;
-	/** Where the buttons start, in the card: a press there isn't a hold. */
 	rowTop: SharedValue<number>;
 	onHold: (h: Hold) => void;
 	onLeave: (how: "tap" | "hold") => void;
 };
 
-/**
- * Holding the card (paper-lantern-confirm's hold, on Gesture Handler 3's long
- * press): it lifts and warms from below, at 700 ms it's ready, and letting go
- * then sends it. Leaving the card or letting go earlier cools it back. While
- * the words leave, the floor light runs `litgo` on the send's clock.
- */
 export function useCardHold(a: Args) {
 	const { hold, holdSv, reduced, cs, rowTop, onHold, onLeave } = a;
 	const lift = useSharedValue(0);
@@ -109,7 +99,6 @@ export function useCardHold(a: Args) {
 		],
 	}));
 	const readyStyle = useAnimatedStyle(() => ({ opacity: ready.get() }));
-	// `.lit` on while held; `litgo` while sending: .4 → 1 (22%) → .5 (60%) → 0 over 1.3 s.
 	const floor = useDerivedValue(() => {
 		const s = cs.get();
 		if (s < 0 || reduced) {

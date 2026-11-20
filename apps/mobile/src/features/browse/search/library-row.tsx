@@ -1,8 +1,3 @@
-/**
- * The old Lantern row, section title and loading rows, which Browse search still draws. Moved
- * here from `features/library` when Lantern's redesign (S9) replaced that folder; they go with
- * Browse in Explore's screen PR (S7).
- */
 import { api } from "@xolace/backend/api";
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
@@ -38,20 +33,16 @@ const SAVE = { android: "bookmark_border", ios: "bookmark" } as const;
 const SAVED = { android: "bookmark_added", ios: "bookmark.fill" } as const;
 const SHARE = "square.and.arrow.up";
 
-/** Thumbnail left, "Kind · Subject" kicker, bold title, meta; Save at the end. Kit type and
- * press, with the search list's hairline under it. */
 export function EntryRow({
 	entry,
 	onOpen,
 }: {
 	entry: EntryItem;
-	/** Runs before the open: Browse search's tap analytics. */
 	onOpen?: () => void;
 }) {
 	const record = useMutation(api.library.reads.record);
 	const posthog = usePostHog();
 	const [accent, foreground] = useTokenColors(["accent", "foreground"]);
-	// Holds the tapped value until the server answers: lists miss the reader's optimistic update.
 	const [pending, setPending] = useState<boolean | null>(null);
 	const saved = pending ?? entry.saved;
 	const toggle = () => {
@@ -160,7 +151,6 @@ export function SectionTitle({
 	);
 }
 
-/** EntryRow's shape: thumbnail, kicker, two-line title, meta. */
 export function RowsSkeleton({ count = 6 }: { count?: number }) {
 	return (
 		<SkeletonBreath label="Loading">

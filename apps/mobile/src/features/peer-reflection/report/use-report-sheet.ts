@@ -10,20 +10,12 @@ import { useGoneStore } from "../gone-store";
 import { outcomeOf, type ReportAnswer, settleIn } from "./report-outcome";
 import type { ReportSheet } from "./report-sheet-data";
 
-/**
- * Production's report (`reflections.reportReflection`), unchanged: the sheet
- * closes first, then the reason is sent, so the toast lands on the screen
- * underneath. fix: production left a reported card on screen; here it folds
- * away once the report is in (or was already), no sooner than 380 ms after the
- * pick, while its star goes out.
- */
 export function useReportSheetData(): ReportSheet {
 	const { reflectionId } = useLocalSearchParams<{ reflectionId?: string }>();
 	const router = useRouter();
 	const posthog = usePostHog();
 	const report = useMutation(api.reflections.reportReflection);
 	const leave = useGoneStore((s) => s.leave);
-	// A second tap during the dismiss animation would send (and toast) twice.
 	const sent = useRef(false);
 
 	useEffect(() => {
@@ -47,8 +39,6 @@ export function useReportSheetData(): ReportSheet {
 		if (track) {
 			posthog.capture("peer_reflection_reported", { reason });
 		}
-		// The sheet is gone by the time the answer comes, so this timer isn't
-		// the sheet's: it only folds the card and shows the toast.
 		setTimeout(
 			() => {
 				if (fold) {

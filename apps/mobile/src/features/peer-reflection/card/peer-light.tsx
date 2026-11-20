@@ -19,7 +19,6 @@ import { CARD_LIGHT } from "../peers-look";
 
 const I = CARD_LIGHT.inner;
 const E = CARD_LIGHT.edge;
-/** Room around the edge pill for its blur (σ 22, about 3σ). */
 const BLEED = 70;
 
 type InnerProps = {
@@ -30,12 +29,6 @@ type InnerProps = {
 	lit: SharedValue<number>;
 };
 
-/**
- * Board `.cd .lit`: the floor light rising behind the chip, a plain radial
- * gradient (120% × 80% of the card at 78% / 118%) clipped to the card's rounded
- * rect. Mounted inside the card, before its text, on its first lighting. Only
- * its opacity moves, so the canvas redraws only while it fades.
- */
 export function PeerInnerLight({ w, h, radius, colors, lit }: InnerProps) {
 	const c = vec(I.cx * w, I.cy * h);
 	const [floor, mid] = colors.floor;
@@ -69,12 +62,6 @@ type EdgeProps = {
 	breath: SharedValue<number>;
 };
 
-/**
- * Board `.cw .edge`: the spectrum pill under the card's lower edge, blurred 22,
- * drawn outside and behind the card (a sibling before it, so the hold menu's
- * host doesn't clip it). The blur is baked once; per frame it only fades with
- * the light and the shared breath (.26 ↔ .18, late .18 ↔ .12).
- */
 export function PeerEdgeGlow({ w, h, late, colors, on, breath }: EdgeProps) {
 	const pillW = Math.max(0, w - E.inset * 2);
 	const texW = pillW + BLEED * 2;
@@ -98,7 +85,6 @@ export function PeerEdgeGlow({ w, h, late, colors, on, breath }: EdgeProps) {
 		[pillW, colors.edge.join()]
 	);
 	const [lo, hi] = late ? E.lateA : E.dayA;
-	// The shared breath is 1 under Reduce Motion, which holds the edge at its full α.
 	const opacity = useDerivedValue(
 		() => on.get() * (lo + (hi - lo) * breath.get())
 	);

@@ -12,10 +12,6 @@ import {
 } from "../letter-paper";
 import { useWriteScreen } from "./write-data";
 
-/**
- * The letter's field: the write sheet itself, in the letter's type and ink. It scrolls inside the
- * sheet, so the paper never grows past 330 pt; the count says what's missing or left.
- */
 export function WriteField({
 	ref,
 	hint,

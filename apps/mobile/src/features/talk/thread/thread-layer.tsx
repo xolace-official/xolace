@@ -10,15 +10,9 @@ import { LAYOUT } from "../motion/talk-motion";
 import type { TalkMotion } from "../motion/use-talk-motion";
 import { TalkThread } from "./talk-thread";
 
-/**
- * Under the header the thread melts into the page: solid behind the switch, then this long
- * a fade below it. The first message sits under the fade, so it's fully clear at the top.
- */
 const HEADER_FADE = 24;
-/** The thread's last line keeps this much air above the composer. */
 const ABOVE_COMPOSER = 10;
 
-/** The Conversation view and the fade under the header, cross-fading with the stage. */
 export function ThreadLayer({
 	geo,
 	motion,
@@ -32,7 +26,6 @@ export function ThreadLayer({
 	motion: TalkMotion;
 	lift: DerivedValue<number>;
 	offset: number;
-	/** Conversation is the view: it takes touches. */
 	open: boolean;
 	focused: boolean;
 	reduced: boolean;
@@ -58,7 +51,6 @@ export function ThreadLayer({
 				reduced={reduced}
 				top={solid + HEADER_FADE}
 			/>
-			{/* Under the header, pill and switch; it shares the thread's fade, so Companion has none. */}
 			<View
 				className="absolute inset-x-0 top-0"
 				pointerEvents="none"

@@ -11,11 +11,9 @@ import { type SEng, WE } from "./story-scene";
 
 const CAMP = require("@/assets/images/flux/flux-campfire.png");
 const VENT = require("@/assets/images/flux/vent-bg.png");
-/** Board figures: cover `.f0` (97, 432, 300 tall), Mirror `.f1` (214, 382, 220), Vent `.f2` (36, 452, 250). */
 const F0 = { height: 300, left: 97, top: 432, width: 197 };
 const F2 = { height: 250, left: 36, top: 452, width: 159 };
 
-/** 1 · The cover: Flux at the campfire. Its embers and the puff are in the points canvas. */
 export function BeatCover({ eng }: { eng: SharedValue<SEng> }) {
 	return (
 		<BeatSection eng={eng} i={0}>
@@ -24,7 +22,6 @@ export function BeatCover({ eng }: { eng: SharedValue<SEng> }) {
 	);
 }
 
-/** 3 · Vent: hold below 420 pt and Flux lets it out; the sparks are in the points canvas. */
 export function BeatVent({ eng }: { eng: SharedValue<SEng> }) {
 	const hint = useIn(eng, 2, WE[2] + 900, 500, 6);
 	const grow = (e: SEng) => {

@@ -10,17 +10,11 @@ import { LAYOUT } from "../session-look";
 
 const N = LAYOUT.next;
 const L = COPY.next.listener;
-/** The unlock tile's icon pops in after the card has risen (moment 2's `next` at 1.38 s + .6 s). */
 const UNLOCK_POP_MS = 1900;
 const UNLOCK_POP_FROM = 0.5;
 const PART_ICON = 20;
 const STANDING = "text-[13px] leading-[17px]";
 
-/**
- * C2's next-card versions (open question 36, owner 20 Nov): the Xolacer suggestion and the
- * insights card (a part of life coming into focus, or, free, the upsell). Same shell as every
- * next card (`next-card.tsx`): a 44 pt lead, the words, a chevron; one button for VoiceOver.
- */
 export function XolacerLead({
 	listener,
 	parts,
@@ -31,7 +25,6 @@ export function XolacerLead({
 	return parts.listenerAvatar(listener, N.icon);
 }
 
-/** The listener's words: name and what they listen to, their standing, then what tapping does. */
 export function XolacerBody({
 	listener,
 	title,
@@ -88,7 +81,6 @@ export function XolacerBody({
 	);
 }
 
-/** The insights card's tile: the part's own icon, on the accent wash (unlock) or the ember wash (upsell). */
 export function InsightLead({
 	kind,
 	domain,
@@ -130,7 +122,6 @@ export function InsightLead({
 	);
 }
 
-/** Unlock: the title and two muted lines. Upsell: a two-line title and "See the pattern" in ember. */
 export function InsightBody({
 	kind,
 	text,

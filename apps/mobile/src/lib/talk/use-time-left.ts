@@ -1,16 +1,12 @@
-// The talk's time left (#597), counted down from what the server said at start.
-// Display only: the server's clock ends the talk, never this one.
 import { useEffect, useState } from "react";
 
 const stepsLeft = (endsAt: number, stepMs: number) =>
 	Math.max(0, Math.ceil((endsAt - Date.now()) / stepMs));
 
-/** Whole `stepMs` steps left, rounded up; it only re-renders when that number changes. */
 export function useTimeLeft(
 	endsAt: number | null,
 	stepMs: number
 ): number | null {
-	// Keyed on `endsAt`, so a new talk never shows the last one's count.
 	const [left, setLeft] = useState<{ endsAt: number; steps: number } | null>(
 		null
 	);

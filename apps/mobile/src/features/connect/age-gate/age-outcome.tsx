@@ -12,11 +12,6 @@ import { AGE } from "./copy";
 type Way = (typeof AGE.ways)[number];
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
 
-/**
- * Where the gate ends when it can't go on: what happened in one line, then the ways on that are
- * open to everyone (under 13, only the crisis line: the rest is the app they're too young for),
- * then OK. Never a dead end.
- */
 export function AgeOutcome() {
 	const { state, actions } = useAgeSheetScreen();
 	if (state.step === "ask") {
@@ -57,7 +52,6 @@ export function AgeOutcome() {
 	);
 }
 
-/** A settings-kit row: an icon tile, a title and a line, a chevron. Leaves the sheet, then goes. */
 function WayRow({ way, onPress }: { way: Way; onPress: () => void }) {
 	const [dangerInk, accentInk, subtle] = useTokenColors([
 		"danger-ink",

@@ -1,7 +1,3 @@
-/**
- * The list screen's data hook: a kind or a subject (`listEntries`, the first 50, as production),
- * or Saved (`listSaved`, newest saved first, paged), with each open counted once.
- */
 import { api } from "@xolace/backend/api";
 import { useQuery } from "convex/react";
 import { useIsPreview } from "expo-router";
@@ -16,7 +12,6 @@ import { trackLibrary } from "@/lib/library-analytics";
 
 export type ListOf = { kind: Kind } | { subject: string } | { saved: true };
 
-/** Saved arrives a page at a time; a page fills the screen and some. */
 const SAVED_PAGE = 30;
 
 export function useEntryList(of: ListOf): EntryList {
@@ -37,8 +32,6 @@ export function useEntryList(of: ListOf): EntryList {
 	const loadMore = usePastEmptyPages(isSaved, saved);
 
 	if (isSaved) {
-		// Retired entries drop out of a page, so a page can come back empty with more behind it:
-		// it's still loading until paging is exhausted.
 		const waiting =
 			saved.status === "LoadingFirstPage" ||
 			(saved.results.length === 0 && saved.status !== "Exhausted");
@@ -67,11 +60,6 @@ export function useEntryList(of: ListOf): EntryList {
 	};
 }
 
-/**
- * A page that came back empty (every entry on it retired) loads the next one at once, until a
- * page brings something or paging is exhausted: the list never sits empty, or stalls at its
- * end, with more behind it. Returns the list's own `loadMore`, which marks where it asked.
- */
 function usePastEmptyPages(
 	on: boolean,
 	saved: {
@@ -80,7 +68,6 @@ function usePastEmptyPages(
 		loadMore: (n: number) => void;
 	}
 ) {
-	// The count when the last page was asked for (the first page: 0); null once one brought more.
 	const askedAt = useRef<number | null>(0);
 	const { results, status, loadMore } = saved;
 	useEffect(() => {
@@ -99,7 +86,6 @@ function usePastEmptyPages(
 	};
 }
 
-/** Once per list; a long-press preview counts once it becomes the real screen. */
 function useOpened(of: ListOf) {
 	const posthog = usePostHog();
 	const isPreview = useIsPreview();
@@ -117,7 +103,6 @@ function useOpened(of: ListOf) {
 		} else {
 			trackLibrary(posthog, "library_saved_opened");
 		}
-		// `of` is fixed for a mounted list; `key` names it.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [key, isPreview, posthog]);
 }

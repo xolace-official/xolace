@@ -21,12 +21,6 @@ import { xolacerChatScreens } from "@/features/xolacer-chat/screens";
 import { youScreens } from "@/features/you/screens";
 import type { RootScreen } from "@/lib/root-screen";
 
-/**
- * Every screen in the `(protected)` stack besides `index` and `(tabs)`, which the
- * layout lists first, and `dev` (`src/dev`), which it lists last, under
- * `__DEV__`. A feature adds its entries to its own `screens.ts`, and only a new
- * feature adds a line here (one import, one spread, alphabetical).
- */
 export const ROOT_SCREENS: readonly RootScreen[] = [
 	...browseScreens,
 	...careScreens,

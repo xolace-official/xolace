@@ -1,8 +1,3 @@
-/**
- * Get help now's data: the country (the device's region, else "elsewhere"), and production's
- * dialer, mail and link handling with its toasts and PostHog events. `from` names the screen that
- * sent the person here (talk, library, quote_reply…).
- */
 import { LAST_UPDATED } from "@xolace/backend/convex/lib/crisisResources";
 import { useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
@@ -21,7 +16,6 @@ import {
 } from "@/features/care/help/help-model";
 import { openOrSay } from "@/features/care/help/open-line";
 
-/** Opens a line now (no capability check first) and toasts only if the phone can't. */
 const open = (url: string, kind: LineKind) =>
 	openOrSay(url, kind, { openURL: Linking.openURL, say: (m) => toast(m) });
 
@@ -32,17 +26,13 @@ export function useHelp(): HelpScreenData {
 		choiceOf(detectCountry())
 	);
 	const view = helpView(choice);
-	/** An event that can't throw into a call. */
 	const capture = (event: string, props: Record<string, string | null>) => {
 		try {
 			posthog.capture(event, props);
-		} catch {
-			// Analytics is best effort here.
-		}
+		} catch {}
 	};
 	const country = countryOf(choice);
 
-	// Once, with the country it opened on (the menu may change it later).
 	const counted = useRef(false);
 	useEffect(() => {
 		if (counted.current) {
@@ -71,7 +61,6 @@ export function useHelp(): HelpScreenData {
 				if (!line.action) {
 					return;
 				}
-				// The line first: analytics never stands between someone and a crisis line.
 				await open(line.action.url, line.action.kind);
 				capture("crisis_resource_tapped", {
 					country,

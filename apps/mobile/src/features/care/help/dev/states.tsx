@@ -1,4 +1,3 @@
-/** Get help now on fixtures: `xolace://dev/care/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { COPY } from "@/features/care/help/copy";
 import { FixtureHelp } from "@/features/care/help/dev/fixture-help";
@@ -8,7 +7,6 @@ import {
 	UNITED_STATES,
 } from "@/features/care/help/dev/fixtures";
 
-/** The real route's header (`crisis-resources/_layout.tsx`). */
 const OPTIONS = { title: COPY.title };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

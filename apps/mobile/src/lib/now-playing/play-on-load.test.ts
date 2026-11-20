@@ -15,7 +15,6 @@ describe("playStep", () => {
 		expect(
 			playStep({ ...IN, loaded: null, locked: true, playing: false })
 		).toBe("paywall");
-		// Even over a track that's loaded: nothing is queued or switched.
 		expect(playStep({ ...IN, loaded: RAIN, locked: true, playing: true })).toBe(
 			"paywall"
 		);
@@ -61,7 +60,6 @@ describe("mintOf", () => {
 describe("the play-on-load flag", () => {
 	it("arms for the slug asked to play", () => {
 		expect(armPlayOnLoad(null, AWAKE, true)).toBe(AWAKE);
-		// Switching tracks: the new one waits, the old one's wait is gone.
 		expect(armPlayOnLoad(RAIN, AWAKE, true)).toBe(AWAKE);
 	});
 

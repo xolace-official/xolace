@@ -29,7 +29,6 @@ import { playSessionComplete, tap } from "@/lib/haptics";
 const MAX_DT = 64;
 const WEEK = 7;
 
-/** Spin under friction after a drag, then ease onto a face. Returns true as it settles. */
 function turnStep(e: Eng, dt: number): boolean {
 	"worklet";
 	if (e.mode === MODE.free) {
@@ -56,7 +55,6 @@ function turnStep(e: Eng, dt: number): boolean {
 	return false;
 }
 
-/** The milestone's and the badge's timed events, each once, as its time is crossed. */
 function crossings(e: Eng, evs: number[]) {
 	"worklet";
 	if (e.phase === PH.ms) {
@@ -78,7 +76,6 @@ function crossings(e: Eng, evs: number[]) {
 	}
 	const a = age(e, e.ta);
 	if (!e.rm && e.la < LAND && a >= LAND) {
-		// The first badge throws its burst as it lands; after Next, the next one does.
 		if (e.step === 0 || e.tu < 0) {
 			e.tu = e.ta + LAND;
 		}
@@ -87,12 +84,6 @@ function crossings(e: Eng, evs: number[]) {
 	e.la = a;
 }
 
-/**
- * One clock per arrival (§6): a frame callback steps the engine on the UI
- * thread and stops when nothing moves. `fa` is the badge's age for the fx
- * loops (glow, shimmer, sparkles), which carry on without the clock on one
- * 84 s linear loop once it stops. React hears only the events.
- */
 export function useArrivalClock({
 	eng,
 	fa,
@@ -133,12 +124,6 @@ export function useArrivalClock({
 			}
 			return e;
 		});
-		// Production's fx loops (`badge-fx.tsx`: the glow's breath, the shimmer, the
-		// rim sparkles) carry on from here without the clock, as the prototype ported
-		// them and measured (arrivals-v2 NOTES): one 84 s linear loop of the badge's
-		// age that several worklets read every frame. On Reanimated, not Ease, on
-		// purpose: an Ease loop animates one view's props and can't feed a shared
-		// value, and these three are derived from one clock.
 		if (loopFrom >= 0) {
 			fa.set(loopFrom);
 			fa.set(
@@ -159,7 +144,6 @@ export function useArrivalClock({
 	}, false);
 }
 
-/** The moments the clock reports, felt (arrivals §4): Thud on the roll, a flick for today, Feather on the freeze, Bloom on landing, a tick on a face. */
 export function playArrivalHaptic(ev: number) {
 	if (ev === EV.roll) {
 		Presets.thud();

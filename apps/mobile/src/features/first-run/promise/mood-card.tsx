@@ -12,14 +12,11 @@ import { mixRGB, type Stage } from "../first-run-motion";
 import { css, MOOD_COLORS } from "../first-run-palette";
 import { cardPose, namePose, type PEng } from "./promise-scene";
 
-/** Production's MoodCard: 55% of the width, 6 pt in, 24 pt corners, a dark foot under the word. */
 const WIDTH_RATIO = 0.55;
 export const CARD = { h: 363, inset: 6, radius: 24, top: 87 };
-/** The word's line (18 pt); the answer sits 3 below it without moving it (board `height: 0`). */
 const WORD_LH = 22;
 const REST_ALPHA = 0.82;
 
-/** Production's mood art, in `MOOD_WORDS` order. */
 const MOOD_IMAGES = [
 	require("@/assets/images/onboarding/heavy-mini.jpeg"),
 	require("@/assets/images/onboarding/Anxious-mini.jpeg"),
@@ -33,7 +30,6 @@ const MOOD_IMAGES = [
 
 export const cardWidth = (W: number) => W * WIDTH_RATIO;
 
-/** One mood card on the belt: its place, lean and stretch come from the promise's engine. */
 const MOOD_TOKENS = [
 	"first-run-mood-lift",
 	"first-run-mood-foot-1",

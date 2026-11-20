@@ -1,10 +1,8 @@
-/** What's New, the rating screen and Tell us on fixtures: `xolace://dev/ratings/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureRate, FixtureTellUs, FixtureWhatsNew } from "./fixture-screens";
 import { TELL_US_NOTE } from "./fixtures";
 
 const OPTIONS = { headerShown: false };
-/** The ember scene is always dark. */
 const RATE_OPTIONS = { headerShown: false, statusBarStyle: "light" } as const;
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

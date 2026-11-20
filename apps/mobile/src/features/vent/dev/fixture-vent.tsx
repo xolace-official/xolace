@@ -1,5 +1,3 @@
-/** The vent's fixture adapter: the real `VentScreen` and flow on a fixture backend, which can play
- * a stage once the screen has landed (the board's jumps). */
 import { useEffect } from "react";
 import {
 	useFixtureBackend,
@@ -10,7 +8,6 @@ import { VentProvider } from "@/features/vent/vent-data";
 import { VentScreen } from "@/features/vent/vent-screen";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** What a state plays once the screen has faded in. */
 export type Play =
 	| "none"
 	| "speak"
@@ -22,12 +19,9 @@ export type Play =
 	| "gone"
 	| "mic";
 
-/** Steps start once the screen has faded in. */
 const LANDED_MS = 400;
-/** The board's jumps let go after 2.6 s of speaking; the mic-off tap comes at 0.5 s. */
 const SPEAK_MS = 2600;
 const MIC_TAP_MS = 500;
-/** "Pinch to burst" spreads two fingers this far into the gather (the board). */
 const PINCH_MS = 260;
 const FLICK = { x: 0.18, y: -0.98 } as const;
 
@@ -35,7 +29,6 @@ type Props = {
 	fixture: VentFixture;
 	seed?: VentSeed;
 	play?: Play;
-	/** Reduce Motion's states force it, whatever the device says. */
 	reduced?: boolean;
 };
 

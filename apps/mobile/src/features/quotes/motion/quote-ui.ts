@@ -1,10 +1,5 @@
 import { create } from "zustand";
 
-/**
- * The quote screen's own UI state (the board's `state`), in one small store so each part reads
- * only what it draws. Nothing here comes from or goes to Convex: the screen resets it on every
- * open, from `initialUi` (a dev state's) or the defaults.
- */
 export type QuoteView =
 	| "today"
 	| "themes"
@@ -15,7 +10,6 @@ export type QuoteView =
 	| "share"
 	| "gate"
 	| "gateBackground"
-	/** The one-time daily quote offer (B19). */
 	| "offer";
 export type ShareFmt = "story" | "square";
 
@@ -27,9 +21,7 @@ export type QuoteUi = {
 	clear: boolean;
 	paused: boolean;
 	making: boolean;
-	/** The Background sheet's tab. */
 	cat: "still" | "loop";
-	/** Bumped to replay the heart's burst. */
 	burstKey: number;
 	toast: { text: string; key: number } | null;
 };
@@ -71,15 +63,12 @@ const SHEETS: readonly QuoteView[] = [
 	"gateBackground",
 	"offer",
 ];
-/** Views that raise a sheet over the quote. */
 export const isSheetView = (v: QuoteView) => SHEETS.includes(v);
-/** Views whose background softens. */
 export const isSoftView = (v: QuoteView) =>
 	v === "writing" ||
 	v === "sent" ||
 	v === "flagged" ||
 	v === "kept" ||
 	v === "share";
-/** The write sheet's three steps lift the quote furthest. */
 export const isWriteView = (v: QuoteView) =>
 	v === "writing" || v === "sent" || v === "flagged";

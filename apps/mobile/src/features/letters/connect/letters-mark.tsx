@@ -5,7 +5,6 @@ import { useLetterInk } from "../letter-paper";
 const W = 22;
 const H = 16;
 
-/** The card's mark (board 01): a small envelope with an ember seal, on the ember wash. */
 export function LettersMark() {
 	const ink = useLetterInk();
 	return (

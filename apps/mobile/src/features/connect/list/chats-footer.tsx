@@ -11,7 +11,6 @@ const ARCHIVE = { android: "archive", ios: "archivebox" } as const;
 
 export type EmptyNote = { title: string; body: string; browse?: () => void };
 
-/** Under the chats: the empty note when none is active, then the way into Archived. */
 export function ChatsFooter({
 	empty,
 	archived,
@@ -40,8 +39,6 @@ export function ChatsFooter({
 	);
 }
 
-/** No chats yet, or all of them archived: the shared empty state under the channel, the face
- * waiting, and the way to the roster when there's nobody yet. */
 function EmptyChats({ note }: { note: EmptyNote }) {
 	return (
 		<EmptyState

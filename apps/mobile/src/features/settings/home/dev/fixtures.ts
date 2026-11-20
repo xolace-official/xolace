@@ -1,4 +1,3 @@
-/** Settings' main screen on fixtures: the board's account (Xolace+, Gentle, Apple). */
 import { plusCard } from "@/features/settings/home/home-model";
 import type { SettingsHome } from "@/features/settings/home/settings-home-data";
 
@@ -11,7 +10,6 @@ export const HOME_ACTIONS: SettingsHome["actions"] = {
 	openWhatsNew: ignore,
 };
 
-/** 12 of 15 minutes left, as on the board. */
 const TWELVE_MINUTES = 12 * 60;
 
 export const HOME_PLUS: SettingsHome["state"] = {
@@ -34,7 +32,6 @@ export const HOME_UPDATED: SettingsHome["state"] = {
 	update: { label: "Check for updates", value: "Up to date" },
 };
 
-/** Preferences and talk time still loading: rows without values, the bar empty. */
 export const HOME_LOADING: SettingsHome["state"] = {
 	...HOME_PLUS,
 	notifications: undefined,

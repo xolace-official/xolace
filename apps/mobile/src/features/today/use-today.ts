@@ -29,33 +29,20 @@ import {
 import { useTodayActions } from "./use-today-actions";
 import { useLowerModules, useModules } from "./use-today-modules";
 
-/** Reflect: Today's card and the toolbar's pill zoom into it. */
 const REFLECT = "/reflect";
 
-/**
- * Where each door goes. Sit with this from Today plays Three breaths on its own, outside
- * any session (`from=today`).
- */
 const DOOR_HREF = {
 	sit: "/sit-with-this?from=today",
 	talk: "/talk",
 	vent: "/voice-vent",
 } as const satisfies Record<Door, string>;
 
-/**
- * Device-only, per account (as `reflect-draft.ts`): the day the first open last played,
- * and the streak as Today last showed it. A record for another account counts as none.
- */
 const INTRO_KEY = "today-intro-day";
 const STREAK_KEY = "today-seen-streak";
 
 const keep = (key: string, value: object) =>
 	zustandJSONStorage.setItem(key, JSON.stringify(value)).catch(() => undefined);
 
-/**
- * The streak and the key that ignites its flame, once a day, when it grew. Worked out
- * during render, so the chip gets the new count and the new key in the same render.
- */
 function useStreak(
 	count: number | undefined,
 	day: string,
@@ -80,7 +67,6 @@ function useStreak(
 	return shown ? { count: shown.count, igniteKey: shown.igniteKey } : null;
 }
 
-/** Whether the first open plays: once a day per account, worked out again when the day turns. */
 function useIntro(day: string, userId: string | null | undefined): boolean {
 	const due = () =>
 		Boolean(userId) &&
@@ -100,10 +86,8 @@ function useIntro(day: string, userId: string | null | undefined): boolean {
 	return intro.due;
 }
 
-/** setTimeout's longest delay; a prompt's week is far shorter. */
 const MAX_TIMER_MS = 2 ** 31 - 1;
 
-/** This month's prompt on the card, gone the moment its week ends, even while Today stays open. */
 function useMonthPrompt(now: Date): string | null {
 	const carried = useQuery(api.monthlyEvents.prompt.getCarried);
 	const [ended, setEnded] = useState(0);
@@ -119,10 +103,7 @@ function useMonthPrompt(now: Date): string | null {
 	return monthPromptOnCard(carried, Math.max(now.getTime(), ended));
 }
 
-/** Today in the app: the profile summary, the hour and night mode, and the device. */
 export function useTodayData(): Today {
-	// No markInteractive here: Today is where a cold start lands, under the launch cover, and a
-	// startup keeps only its first mark. The cover marks it when nothing holds it any more.
 	const summary = useProfileSummary();
 	const { userId } = useAuth();
 	const { isNight } = useSessionMode();
@@ -139,13 +120,11 @@ export function useTodayData(): Today {
 	const intro = useIntro(day, userId);
 	const monthPrompt = useMonthPrompt(now);
 	const { campfire, campfireSettled, kindling, kindlingEmpty } = useModules();
-	// Reflect's open session, so the card can wait with your words or say the mirror is back.
 	const active = useQuery(api.sessions.getActive);
 	const lower = useLowerModules();
 	const moduleActions = useTodayActions();
 	const { offer: rekindle, rekindle: spendSaver } = useRekindle();
 
-	// A double tap on a door or the kindling would stack two screens.
 	const pushOnce = usePushOnce();
 
 	return {
@@ -153,7 +132,6 @@ export function useTodayData(): Today {
 			...moduleActions,
 			openDoor: (door) => pushOnce(() => router.push(DOOR_HREF[door])),
 			openHelp: () => router.push("/crisis-resources"),
-			// The header and Begin both open it: one screen per tap.
 			openKindling: () =>
 				pushOnce(() => {
 					playSoftPress();
@@ -177,7 +155,6 @@ export function useTodayData(): Today {
 			campfire,
 			...lower,
 			card: {
-				// undefined while loading, null with no session.
 				mode: cardMode(active === null ? null : active?.state),
 				monthPrompt,
 				reflect: REFLECT,

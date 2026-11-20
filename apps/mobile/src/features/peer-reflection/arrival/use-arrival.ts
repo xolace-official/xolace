@@ -12,31 +12,19 @@ import { arrivalEnd } from "./arrival-end";
 import { landedAt, readAt } from "./arrival-time";
 
 type Events = {
-	/** `count` cards have landed (1 at the first, n at the last). */
 	onLand: (count: number) => void;
-	/** Done's moment: the first card lands (or, for None yet, the time it would have). */
 	onUi: () => void;
-	/** 1.5 s after the last card: the face reads along. */
 	onRead: () => void;
 };
 
 type Args = {
-	/** The results are in: the arrival runs (once). */
 	ready: boolean;
 	n: number;
 	words: number;
-	/** Dev states: hold the arrival at this many ms (`Infinity`: arrived). */
 	hold?: number;
 	events: Events;
 };
 
-/**
- * The whole arrival as one value in board ms (mailbox-inbox's single `open`):
- * the title, every card's rise, line, star and bloom are pure functions of it,
- * so they stay in step to the frame. It runs once, linearly, from when the
- * results are in. React hears only the moments that change what's on screen (a
- * card landing, Done, reading).
- */
 export function useArrival({ ready, n, words, hold, events }: Args) {
 	const end = arrivalEnd(words, n);
 	const arrive = useSharedValue(0);

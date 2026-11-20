@@ -1,11 +1,6 @@
 import { useCSSVariable } from "uniwind";
 import type { Ink } from "../quotes-model";
 
-/**
- * The board's two inks (`.inkl` / `.inkd`): light text over a scrim on photos and loops, dark
- * text on the Poster. A printed object, so a fixed palette (`--color-quote-*` in global.css), the
- * same in every theme.
- */
 const ROLES = [
 	"text",
 	"text-2",
@@ -39,14 +34,11 @@ const NAMES = [
 ];
 
 export type InkPalette = {
-	/** The words and the small lines. */
 	text: string;
 	text2: string;
-	/** Glass fill, hairline, icon. */
 	glass: string;
 	glassLine: string;
 	glassIcon: string;
-	/** Light ink's soft text shadow. */
 	shadow: boolean;
 	sheet: string;
 	sheetText: string;
@@ -71,7 +63,6 @@ export type QuoteInk = {
 	keptSoft: string;
 };
 
-/** Every quote colour JS needs, read once from the variables. */
 export function useQuoteInk(): QuoteInk {
 	const values = useCSSVariable(NAMES.map((n) => `--color-${n}`));
 	const c = Object.fromEntries(
@@ -111,7 +102,6 @@ export function useQuoteInk(): QuoteInk {
 	};
 }
 
-/** Light ink's `0 1px 22px` shadow; `scale` grows it with a capture card. */
 export const textShadow = (color: string, scale = 1) =>
 	({
 		textShadowColor: color,

@@ -5,16 +5,9 @@ import { useQuery } from "convex/react";
 export type SwapOptions = {
 	reset: Doc<"exercises"> | null;
 	nextBest: Doc<"exercises"> | null;
-	/** Both options are known (each found, or there is none). */
 	ready: boolean;
 };
 
-/**
- * The swap's two options (`exercises.getSwapOptions`) and their catalogue
- * entries (`exercises.getById`). Sit subscribes while it plays, so the sheet
- * opens on warm results and measures itself with its options in place, as
- * production's screen subscribed on mount; the sheet reads the same queries.
- */
 export function useSwapOptions(sessionId: Id<"sessions"> | null): SwapOptions {
 	const options = useQuery(
 		api.exercises.getSwapOptions,

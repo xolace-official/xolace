@@ -14,11 +14,8 @@ import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar
 import { playSoftPress } from "@/lib/haptics";
 import { RatingPicker } from "./rating-stars";
 
-/** The Peers report sheet's measures: 26 on top, 18 under, rows 22 in. */
 const SHEET_BOTTOM = 18;
 
-/** Where a rating is given, from the profile card, thread menu or status bar: a sheet sized to
- * its content. Rateable while live (`canRate`); only the seeker and Xolace see the number. */
 export function RateConversationScreen({
 	conversationId,
 }: {
@@ -43,7 +40,6 @@ export function RateConversationScreen({
 		);
 	}
 
-	// Gone, or not enough of it to judge: say so rather than show an empty prompt.
 	if (conversation === null || !conversation.canRate) {
 		return (
 			<Sheet>
@@ -121,7 +117,6 @@ export function RateConversationScreen({
 	);
 }
 
-/** The report sheet's frame: content-sized, 26 on top, clear of the home indicator. */
 function Sheet({ children }: { children: ReactNode }) {
 	const insets = useSafeAreaInsets();
 	return (

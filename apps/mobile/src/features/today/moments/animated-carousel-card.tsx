@@ -14,7 +14,6 @@ type Props = {
 	totalCards: number;
 	cardBackground: string;
 	shadowColor: string;
-	/** The board adds a 1 pt hairline to production's 5 pt shadow. */
 	hairline: string;
 	children: React.ReactNode;
 };
@@ -39,8 +38,6 @@ export function AnimatedCarouselCard({
 	];
 
 	const animatedStyle = useAnimatedStyle(() => {
-		// Softened: the exiting card must not grow past the card above or fly into the section
-		// title.
 		const scale = interpolate(
 			scrollX.get(),
 			extendedInputRange,

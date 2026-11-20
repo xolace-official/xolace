@@ -1,6 +1,3 @@
-// The first look's footer, fixed under the scrolling middle with a short fade above it: the
-// plans, the button, what it costs, "Continue free", and Terms · Privacy · Restore. When the
-// store sells nothing, production's "plans unavailable" with its retry instead.
 import { Spinner } from "heroui-native";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -40,7 +37,6 @@ function BuyButton() {
 			accessibilityState={{ busy: state.buying, disabled: off }}
 			className={cn(
 				"mt-2.5 min-h-13.5 items-center justify-center rounded-full bg-ember px-5",
-				// Drawn as off while it can't be pressed; the spinner says so while buying.
 				off && !state.buying && "opacity-50"
 			)}
 			disabled={off}

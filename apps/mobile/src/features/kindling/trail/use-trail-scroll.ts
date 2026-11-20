@@ -9,26 +9,18 @@ import {
 } from "react-native-reanimated";
 import { CIRCLE, type Pt } from "./trail-points";
 
-/** Keep the open stop between 150 and 540 pt from the top (§2.2). */
 const VIEW_MIN = 150;
 const VIEW_MAX = 540;
 
 type Args = {
 	stops: readonly Pt[];
 	open: number;
-	/** The fire has caught: bring it up above the card. */
 	caught: boolean;
 	reduced: boolean;
-	/** The card's bottom inset and height: the open stop stays clear of it. */
 	bottom: number;
 	cardH: number;
 };
 
-/**
- * The trail's scroll (§2.2): the open stop eases into view, clear of the card, and once the fire
- * catches the trail scrolls to it. Offsets are raw `contentOffset`, which starts negative under
- * the large title (automatic insets), so a point's screen y is its content y minus the offset.
- */
 export function useTrailScroll({
 	stops,
 	open,
@@ -54,8 +46,6 @@ export function useTrailScroll({
 	const onTrailLayout = (e: LayoutChangeEvent) =>
 		setTrailTop(e.nativeEvent.layout.y);
 
-	// A scroll that folds the large title can land past its target (UIKit moves the offset as
-	// the bar shrinks): land it once more where asked.
 	const want = useRef<{ y: number; animated: boolean } | null>(null);
 	const settle = () => {
 		const w = want.current;
@@ -73,7 +63,6 @@ export function useTrailScroll({
 	};
 
 	const viewMax = Math.min(VIEW_MAX, height - bottom - cardH - CIRCLE);
-	// scrolls when the open stop or the room for it changes, not on each scroll.
 	useEffect(() => {
 		const stop = stops[open];
 		if (!(stop && trailTop)) {
@@ -88,8 +77,6 @@ export function useTrailScroll({
 		}
 	}, [open, reduced, trailTop, viewMax]);
 
-	// Once the trail and the card are measured (the end moves with the card's height), so arriving
-	// on a finished kindling opens with the fire in view, and a catch on screen scrolls to it.
 	const arrived = useRef(false);
 	useEffect(() => {
 		if (!(caught && trailTop && cardH)) {

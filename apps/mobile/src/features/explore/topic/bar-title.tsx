@@ -7,8 +7,6 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 const TIMING = { duration: EX_TIMING.edgeMs, ...PLAY_AS_CHOSEN };
 const RISE = 4;
 
-/** The topic's name in the bar: in over 220 ms, rising 4 pt, once the chips pin. Reduce Motion:
- * the fade alone. */
 export function BarTitle({ text, on }: { text: string; on: boolean }) {
 	const reduced = useEffectiveReducedMotion();
 	const style = useAnimatedStyle(() => ({

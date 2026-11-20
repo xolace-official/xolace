@@ -19,7 +19,6 @@ export const initialState: ReflectionState = {
 	selectedTextures: [],
 };
 
-/** Produces the next reflection UI state for an action. */
 export function reducer(
 	state: ReflectionState,
 	action: ReflectionAction
@@ -32,7 +31,6 @@ export function reducer(
 				screen: "typing",
 			};
 
-		// Closing the composer keeps the draft; it is discarded explicitly (#258).
 		case "DISMISS_TYPING":
 			return { ...state, screen: "idle" };
 
@@ -137,7 +135,6 @@ export function reducer(
 		case "RESET":
 			return initialState;
 
-		// Nothing of the previous person's composer survives into the next one's.
 		case "ACCOUNT_SWITCHED":
 			return { ...initialState, entryText: action.entryText };
 

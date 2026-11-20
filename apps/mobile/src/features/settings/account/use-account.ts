@@ -25,17 +25,13 @@ import { getGrantedPushToken } from "@/lib/push-token";
 import { COMPANION_FALLBACK_NAME } from "@/lib/talk/use-companion-name";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
-/** How long sign-out will wait on the push-token detach before going ahead. */
 const PUSH_DETACH_TIMEOUT_MS = 2500;
 
-/** The store's own subscriptions page, when RevenueCat has no `managementURL` (a grant). */
 const STORE_SUBSCRIPTIONS =
 	Platform.OS === "android"
 		? "https://play.google.com/store/account/subscriptions"
 		: "https://apps.apple.com/account/subscriptions";
 
-/** Production's `performLogout`: PostHog first, then the push token, then Clerk. True once
- * Clerk has signed out. */
 function useSignOut() {
 	const { signOut } = useClerk();
 	const removeToken = useMutation(api.notifications.removeToken);
@@ -55,17 +51,14 @@ function useSignOut() {
 			await signOut();
 			return true;
 		} catch {
-			// Network errors, as production: nothing to say.
 			return false;
 		}
 	};
 }
 
-/** Settings › Account on Clerk, Convex and RevenueCat (production's `useAccountSettings`). */
 export function useAccount(): Account {
 	const { user } = useUser();
 	const preferences = useQuery(api.preferences.get);
-	// getSummary, not preferences: it fills in the seeded name for older profiles.
 	const summary = useQuery(api.profile.getSummary);
 	const updatePreferences = usePreferenceMutation();
 	const updateDisplayName = useMutation(api.profile.updateDisplayName);
@@ -158,7 +151,6 @@ export function useAccount(): Account {
 				}
 				busy.current.restoring = true;
 				setRestoring(true);
-				// Production's restore: it says what it found in its own toast.
 				restorePurchases()
 					.catch(() => undefined)
 					.finally(() => {
@@ -172,14 +164,12 @@ export function useAccount(): Account {
 				}
 				if (editing.kind === "space") {
 					close();
-					// Unchanged (an unnamed space saved on "Ember") writes nothing.
 					if (
 						space !== undefined &&
 						spaceUnchanged(space, trimmed, COMPANION_FALLBACK_NAME)
 					) {
 						return;
 					}
-					// Optimistic, as production's preference writes are.
 					updatePreferences({ spaceName: trimmed }).catch(saveFailed);
 					return;
 				}

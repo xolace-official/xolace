@@ -1,6 +1,3 @@
-// `heard`: what Flux took from the answer, as chips. Until the answer is read (#704), and
-// whenever reading fails, it is the plain pick-list: every chip, none on. What Flux only
-// half-read is outlined, still off: a guess to tap on, never one made for them.
 import { Button, PressableFeedback } from "heroui-native";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
@@ -26,9 +23,7 @@ type Props = {
 	onSayAgain: () => void;
 	onToggle: (chip: Chip) => void;
 	read: HeardSource | null;
-	/** What the model read, before any tap: only these can show as dropped. */
 	readAs: Heard;
-	/** What the model half-read: outlined while off. */
 	suggested: Heard;
 };
 
@@ -90,11 +85,9 @@ export function HeardStep({
 							<View className="flex-row flex-wrap gap-2">
 								{group.chips.map((chip) => {
 									const on = isOn(heard, chip);
-									// Struck through only when Flux read it and the user dropped it.
 									const dropped = !on && isOn(readAs, chip);
 									const hinted = !on && isOn(suggested, chip);
 									return (
-										// A toggle chip, not a button.
 										<PressableFeedback
 											accessibilityHint={hinted ? "Flux's guess" : undefined}
 											accessibilityRole="button"
@@ -102,7 +95,6 @@ export function HeardStep({
 											className={cn(
 												"min-h-10 justify-center rounded-full border px-3.5 py-2",
 												on && "border-accent bg-accent/20",
-												// Dashed like every chip that's off, so only a filled one reads as on.
 												hinted && "border-accent/70 border-dashed",
 												!(on || hinted) && "border-border border-dashed"
 											)}

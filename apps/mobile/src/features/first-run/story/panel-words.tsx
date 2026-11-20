@@ -9,7 +9,6 @@ import { clamp, ease, easeIO, lerp, mixRGB, seg } from "../first-run-motion";
 import { BEAT_COLORS, css, ink, STORY_COLORS } from "../first-run-palette";
 import { type SEng, SKY } from "./story-scene";
 
-/** Signal words on production's PatternLine points (x 0–100, y 0–40) mapped into the panel. */
 export const SIG = PATTERN.signal.map(([x, y, t]) => ({
 	sig: true,
 	t,

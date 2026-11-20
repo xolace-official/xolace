@@ -38,7 +38,6 @@ export function TopicCover({
 	const reduced = useEffectiveReducedMotion();
 	const move = useAnimatedStyle(() => {
 		const v = y.get();
-		// On screen: −v × rate. In the content, which moves by −v, that is +v × (1 − rate).
 		if (reduced) {
 			return { transform: [{ translateY: v }, { scale: 1 }] };
 		}
@@ -53,7 +52,6 @@ export function TopicCover({
 			[PARALLAX.stretch, 1],
 			Extrapolation.CLAMP
 		);
-		// Pinned to the screen's top, scaled about its centre, then moved down by half the growth.
 		return {
 			transform: [{ translateY: v + ((s - 1) * height) / 2 }, { scale: s }],
 		};
@@ -83,7 +81,6 @@ export function TopicCover({
 	);
 }
 
-/** The cover's resting frame: the `Link.AppleZoomTarget` a Topics tile zooms into. */
 export function CoverZoomTarget({ height }: { height: number }) {
 	return (
 		<Link.AppleZoomTarget>
@@ -98,7 +95,6 @@ export function CoverZoomTarget({ height }: { height: number }) {
 
 const NAME_TIMING = { duration: EX_TIMING.edgeMs, ...PLAY_AS_CHOSEN };
 
-/** The name and count line on the cover; they fade out as the name moves into the bar. */
 export function CoverName({
 	header,
 	hidden,

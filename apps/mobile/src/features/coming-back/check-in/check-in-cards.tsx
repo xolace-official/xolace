@@ -12,27 +12,20 @@ import { ANSWER_LABEL, CHECK_IN, type CheckInPick } from "../copy";
 import { ANSWER_LOOK } from "./answer-look";
 import { Layer, OVERLAP, TOP_ROUND, VENT_H } from "./card-layer";
 
-/**
- * Board `.stk`: 20 / 20 / 46 (the overlap of the 46 under the next card), gap 14; icon 52,
- * chevron 40; label 22 / 700; `.vrow` 74; `.res` 46.
- */
 const CARD_PAD_BOTTOM = 16 + OVERLAP;
 const RES_H = 46;
 const RES_PAD = 12;
-/** The cards run into the home indicator; this much of it they cover anyway. */
 const INSET_TUCK = 24;
 const GLYPH = { chevron: 13, icon: 22, mic: 16 } as const;
 const LABEL = { fontSize: 22, letterSpacing: -0.22, lineHeight: 26 } as const;
 const VENT = { fontSize: 15 } as const;
 const RES = { fontSize: 14 } as const;
-/** An upward shadow (iOS props: no `shadow-*` token matches). */
 const CARD_SHADOW = {
 	shadowOffset: { height: -6, width: 0 },
 	shadowOpacity: 0.25,
 	shadowRadius: 8,
 } as const;
 
-/** One answer card: its tint, icon, label and chevron. */
 function AnswerCard({
 	pick,
 	onPick,
@@ -84,7 +77,6 @@ function AnswerCard({
 	);
 }
 
-/** The answers, stacked from the bottom (v1's cards, kept), then Let it out; a careful card adds the resources link. */
 export function CheckInCards() {
 	const { state, actions } = useCheckIn();
 	const { picks, picked, careful, reduced } = state;

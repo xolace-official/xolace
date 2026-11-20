@@ -1,23 +1,13 @@
 import type { NativeStackNavigationOptions } from "expo-router";
 
-/** What a root screen's options may depend on, read once by the `(protected)` layout. */
 export type ScreenContext = {
-	/** The theme's `--background`, for sheets that can't show glass. */
 	readonly background: string;
-	/** The theme's `--surface`: the redesign's sheets are drawn on it. */
 	readonly surface: string;
-	/** iOS 26 paints its own glass behind a transparent sheet. */
 	readonly liquidGlass: boolean;
 	readonly reducedMotion: boolean;
 };
 
-/**
- * One `Stack.Screen` in the `(protected)` stack. Each feature lists its own in
- * `src/features/<feature>/screens.ts`; `features/navigation/root-screens.ts`
- * spreads them, so two PRs never edit the same lines.
- */
 export type RootScreen = {
-	/** The route path under `src/app/(protected)/`, without the extension. */
 	readonly name: string;
 	readonly options?:
 		| NativeStackNavigationOptions
@@ -36,35 +26,13 @@ export const NO_GESTURE = {
 	gestureEnabled: false,
 } as const satisfies NativeStackNavigationOptions;
 
-/** Full screen from the bottom: players, celebrations, dismissable moments. */
 export const PLAYER_OPTIONS = {
 	animation: "slide_from_bottom",
 	presentation: "fullScreenModal",
 } as const satisfies NativeStackNavigationOptions;
 
-/** The old screens' sheets sized to their rows. iOS 26 paints its own glass behind a
- * transparent screen; iOS 18 and Android show transparent literally. New screens use
- * `fitSheet`.
- * @public No screen uses it since Steadiness moved to `fitSheet` (S5c); it goes with its
- * `kit-imports.ts` entry in cleanup (C1). */
-export const legacyFitSheet = ({
-	background,
-	liquidGlass,
-}: ScreenContext): NativeStackNavigationOptions => ({
-	contentStyle: liquidGlass ? undefined : { backgroundColor: background },
-	presentation: "formSheet",
-	sheetAllowedDetents: "fitToContents",
-	sheetGrabberVisible: true,
-});
-
-/** The redesign's sheet corner. */
 const SHEET_RADIUS = 40;
 
-/**
- * The redesign's form sheet: sized to its content, a grabber, 40 pt corners, on
- * the theme's surface (opaque on iOS 26 too: the boards draw it that way). The
- * prototype's `fitSheet`; spread it to change one thing (`sheetAllowedDetents`).
- */
 export const fitSheet = ({
 	surface,
 }: ScreenContext): NativeStackNavigationOptions => ({
@@ -75,13 +43,6 @@ export const fitSheet = ({
 	sheetGrabberVisible: true,
 });
 
-/**
- * The route under a `DetachedSheet` (components/shared/detached-sheet.tsx): a
- * transparent modal with no animation of its own, so the screen behind stays put
- * and the sheet draws its own scrim, slide and fade.
- *
- * @public The redesign's shared kit (F5): Welcome back, from its screen PR.
- */
 export const DETACHED_SHEET = {
 	animation: "none",
 	contentStyle: { backgroundColor: "transparent" },

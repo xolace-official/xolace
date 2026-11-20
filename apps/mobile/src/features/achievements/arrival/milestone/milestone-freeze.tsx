@@ -20,10 +20,8 @@ import { useTokenColor } from "@/lib/use-token-color";
 const FREEZE_TOP = 652;
 const SNOWFLAKE: IconName = { android: "ac_unit", ios: "snowflake" };
 const FLAKE_SIZE = 19;
-/** The frost token pops from .5 on `fs(13, .5)`, turning from −40°. */
 const TOKEN = { from: 0.5, turn: -40, w: 13, z: 0.5 } as const;
 
-/** The freeze this milestone earned, or the one already held (§1). */
 export function MilestoneFreeze({
 	eng,
 	geo,

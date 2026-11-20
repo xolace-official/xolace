@@ -13,7 +13,6 @@ const CHECK: IconName = { android: "check", ios: "checkmark" };
 const GLYPH = 14;
 const RISE = 6;
 
-/** "Done", once a share finished: a small landing for having reached out. */
 export function DonePill({ onPress }: { onPress: () => void }) {
 	const reduced = useEffectiveReducedMotion();
 	const foreground = useTokenColor("foreground");

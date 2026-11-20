@@ -13,16 +13,9 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useWelcomeBack } from "../welcome-back-data";
 import { FACE_GEO, FACE_TIMING, GREET_FACE } from "./return-face";
 
-/** Board `faceUp`'s `cubic-bezier(.25,1,.4,1)` and the page's `(.2,.85,.25,1)`. */
 const RISE_EASE = Easing.bezier(0.25, 1, 0.4, 1);
 const PAGE_EASE = Easing.bezier(0.2, 0.85, 0.25, 1);
 
-/**
- * Xolace's face peeking over the card's top edge (handoff §3), drawn before the card so its
- * rounded bottom tucks behind it. It rises as the sheet settles, arrives `heard` and turns to
- * `watch`; a tick nods it with `glad`; the prompt page sinks it behind the card. Acute: `soft`,
- * no crescents, no overshoot. Reduce Motion: it fades in and never rises or nods.
- */
 export function GreetingFace({ running }: { running: boolean }) {
 	const { state } = useWelcomeBack();
 	const { mode, enter, page, tickKey, reduced } = state;
@@ -71,7 +64,6 @@ export function GreetingFace({ running }: { running: boolean }) {
 		);
 	}, [enter, reduced, acute, y, opacity, rise, fade]);
 
-	// Arriving `heard`, at rest 1.9 s after the card opens.
 	const { to, nod } = face;
 	useEffect(() => {
 		if (!arriving) {
@@ -81,7 +73,6 @@ export function GreetingFace({ running }: { running: boolean }) {
 		return () => clearTimeout(id);
 	}, [arriving, rest, to]);
 
-	// A tick: a nod with happy eyes (acute stays soft), back to resting after 1.5 s.
 	const seen = useRef(tickKey);
 	useEffect(() => {
 		if (tickKey === seen.current) {

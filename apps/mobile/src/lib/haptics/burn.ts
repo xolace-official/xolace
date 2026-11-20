@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { type Pattern, usePatternComposer } from "react-native-pulsar";
 
-/**
- * Vent's burn as one Pulsar pattern (handoff `vent.md` §7, §14), played at the release rather
- * than as per-frame calls into JS: ticks that speed up through the gather (native-cook
- * flare-notifications), one heavy transient at the flash, then a crackle that slows and fades
- * with the sparks. The same pattern on iOS and Android. Times in ms.
- */
 type Tick = { time: number; amplitude: number; frequency: number };
 
 const GATHER = {
@@ -32,7 +26,6 @@ const LCG_A = 1_664_525;
 const LCG_C = 1_013_904_223;
 const LCG_M = 2 ** 32;
 
-/** A seeded 0–1 sequence, so the crackle's jitter is the same every time. */
 function seeded(seed: number) {
 	let s = seed;
 	return () => {
@@ -58,7 +51,6 @@ function gatherTicks(gatherMs: number): Tick[] {
 	return ticks;
 }
 
-/** The flash at `at`, then from the flash's end a crackle fading to nothing. */
 function flashAndCrackle(at: number, flashMs: number): Tick[] {
 	const ticks: Tick[] = [{ time: at, ...FLASH }];
 	const rand = seeded(CRACKLE.seed);
@@ -78,7 +70,6 @@ function flashAndCrackle(at: number, flashMs: number): Tick[] {
 	return ticks;
 }
 
-/** The whole burn: gather, flash at `gatherMs`, crackle from `gatherMs + flashMs`. */
 export const burnPattern = (gatherMs: number, flashMs: number): Pattern => ({
 	continuousPattern: NO_CURVE,
 	discretePattern: [
@@ -87,13 +78,11 @@ export const burnPattern = (gatherMs: number, flashMs: number): Pattern => ({
 	],
 });
 
-/** A pinch cut the gather short: from the flash, now. */
 export const burnFromFlashPattern = (flashMs: number): Pattern => ({
 	continuousPattern: NO_CURVE,
 	discretePattern: flashAndCrackle(0, flashMs),
 });
 
-/** The burn, built once: `play` at the release, `fromFlash` when a pinch bursts it early. */
 export function useBurnHaptic(gatherMs: number, flashMs: number) {
 	const [patterns] = useState(() => ({
 		full: burnPattern(gatherMs, flashMs),

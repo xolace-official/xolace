@@ -1,8 +1,3 @@
-/**
- * What every Lantern list does to an entry: save or unsave it, and share it. Each screen's data
- * hook spreads these into its actions, so a row reaches Convex and PostHog only through its
- * screen's provider.
- */
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useMutation } from "convex/react";
@@ -20,12 +15,10 @@ export type EntryRef = {
 };
 
 export type EntryActions = {
-	/** Resolves once the server has answered, so a row can hold the tapped value until then. */
 	setSaved: (entry: EntryRef, saved: boolean) => Promise<void>;
 	share: (entry: EntryRef) => void;
 };
 
-/** A passive write that didn't land; the row falls back to the server's value. */
 const logDropped = (e: unknown) => console.warn("[lantern] save dropped:", e);
 
 export function useEntryActions(): EntryActions {
@@ -47,9 +40,7 @@ export function useEntryActions(): EntryActions {
 				if (action === Share.sharedAction) {
 					trackLibrary(posthog, "library_entry_shared", { slug: entry.slug });
 				}
-			} catch {
-				// The sheet failed to open; nothing was shared.
-			}
+			} catch {}
 		},
 	};
 }

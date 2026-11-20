@@ -1,5 +1,3 @@
-// The first look on fixtures: sample plans, no store, no analytics. Picking a plan works so the
-// frame can be seen sliding; every other tap does nothing.
 import { useState } from "react";
 import type { Plans } from "@/features/purchases/plans";
 import { defaultPlan } from "@/features/purchases/plans";

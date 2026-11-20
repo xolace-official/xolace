@@ -9,27 +9,16 @@ import { playSoftPress } from "@/lib/haptics";
 import { AppText } from "./app-text";
 import { PressScale } from "./press-scale";
 
-/** The face's size where it fits: big enough to read its pose, small enough to stay quiet. */
 const FACE = 64;
 
 type Props = {
 	title: string;
-	/** One line, two at most: what's missing and, if anything, what fills it. */
 	body: string;
-	/** A whole screen or a tall section with nothing in it: the face waits there, softly lidded. */
 	face?: boolean;
-	/** One quiet way on, only when there's an obvious one. */
 	action?: { label: string; onPress: () => void };
 	className?: string;
 };
 
-/**
- * The app's one empty state (C2): a headline and one body line, centred, and the face in its
- * waiting pose where there's room for it. No illustrations, no exclamation, no blame: an empty
- * list is a resting place, not an error. It fades in (200 ms) so a list that empties doesn't snap.
- * An empty screen centres it in its space (the caller's `flex-1 justify-center`); an emptied
- * filter or search puts it 40 pt under the control (`pt-10`), with no face.
- */
 export function EmptyState({ title, body, face, action, className }: Props) {
 	return (
 		<EaseView {...FADE_IN} className={cn("items-center px-10", className)}>
@@ -61,7 +50,6 @@ export function EmptyState({ title, body, face, action, className }: Props) {
 	);
 }
 
-/** The face, waiting: calm and softly lidded, blinking now and then, still while the screen is away. */
 function WaitingFace() {
 	const focused = useIsFocused();
 	const face = useFace(PRESETS.waiting, focused);

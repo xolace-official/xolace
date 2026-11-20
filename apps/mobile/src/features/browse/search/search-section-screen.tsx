@@ -1,6 +1,3 @@
-// A search section's See all (#551): every match, paged on scroll except Hubs
-// & topics, which shows whole. Taps report only section and position (#552).
-
 import { LegendList } from "@legendapp/list/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { PaginationStatus } from "convex/browser";
@@ -36,7 +33,6 @@ function Paged<T extends { _id: string }>({
 }) {
 	const playerInset = useMiniPlayerInset();
 	const muted = useTokenColor("muted");
-	// The skeleton sits inside the list, so it clears the header like the rows.
 	const loading = status === "LoadingFirstPage";
 	return (
 		<LegendList

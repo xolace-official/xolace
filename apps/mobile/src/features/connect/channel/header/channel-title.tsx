@@ -5,7 +5,6 @@ import { CHANNEL } from "../copy";
 
 const MARK = 38;
 
-/** Who the channel is: the flame, "Xolace", "Camp announcements", as on the Chats row. */
 export function ChannelTitle() {
 	return (
 		<View

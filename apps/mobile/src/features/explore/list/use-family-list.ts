@@ -11,11 +11,6 @@ import { useAppStore } from "@/store/store";
 
 const PAGE_SIZE = 30;
 
-/**
- * A list's data: production's pages, its open event, and the kind's welcome (`/browse-intro`)
- * the first time someone opens that kind, here or from the Family menu. The stable query keeps
- * the old kind on screen while the new one loads.
- */
 export function useFamilyList(): FamilyList {
 	const params = useLocalSearchParams<{ family?: string }>();
 	const [family, setFamily] = useState<Family>(familyOf(params.family));
@@ -28,8 +23,6 @@ export function useFamilyList(): FamilyList {
 		posthog.capture("browse_family_opened", { family });
 	}, [family, posthog]);
 
-	// Keyed on the live kind, so a menu swap to an unseen kind opens its welcome. The
-	// welcome sets its own flag.
 	useEffect(() => {
 		const seen = family === "music" ? musicIntroSeen : supportAudioIntroSeen;
 		if (!seen) {

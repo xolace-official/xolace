@@ -22,16 +22,13 @@ import { useEmit } from "./use-emit";
 
 const MAX_DT = 100;
 const FRAME_MS = 16;
-/** The label and caption rise over .45 s. */
 const LABEL_MS = 450;
-/** Board `frame()`: p eases with τ 260 ms outside breath beats, the seam light with τ 90 ms. */
 const P_TAU = 260;
 const G_TAU = 90;
 const HAND_P = 0.35;
 const HAND_CLOSE = 10;
 const LINK_AFTER_MS = 3000;
 const DONE_AFTER_MS = 2000;
-/** The end's seam swell and Done's drain are over by then. */
 const CLOSE_RUN_MS = 4000;
 const REDUCED_P = 0.5;
 const EPS = 1e-4;
@@ -49,24 +46,13 @@ export type SitClock = ReturnType<typeof useSitClock>;
 type Options = {
 	W: number;
 	H: number;
-	/** The screen is in front and the app is active: the loop runs. */
 	running: boolean;
-	/** Paused (or a dev state's held frame): time stands still. */
 	frozen: boolean;
-	/** A dev state's still: the lights settle at once instead of easing there. */
 	settle?: boolean;
 	reduced: boolean;
 	events: ClockEvents;
 };
 
-/**
- * The one clock (handoff §5, board `frame()`). A single `useFrameCallback`
- * advances the beat's time, computes the breath, the wobble, the gap and the
- * seam light, builds both arcs' paths, and moves the label, the caption, the
- * thread and the face's breath. A phase change calls the JS side in the same
- * frame for the haptic and the announcement. Nothing here renders React, and
- * values are written only when they change, so a still canvas isn't redrawn.
- */
 export function useSitClock({
 	W,
 	H,
@@ -87,12 +73,9 @@ export function useSitClock({
 	const { phase, pulse, beatEnd, linkReady, doneReady } = useEmit(events);
 
 	const frame = useFrameCallback((info) => {
-		// Paused: time stands still (the lights, the seam and the breath too), but a
-		// beat that changes meanwhile is still picked up.
 		const dt = frozenSv.get()
 			? 0
 			: Math.min(MAX_DT, info.timeSincePreviousFrame ?? FRAME_MS);
-		// The eases' step: a still settles them at once.
 		const ease = settleSv.get() ? Number.POSITIVE_INFINITY : dt;
 		const c = cfg.get();
 		const m = seen.get();
@@ -105,7 +88,6 @@ export function useSitClock({
 			m.capStart = 0;
 			vt.set(c.seek);
 			at.set(c.serial);
-			// The end starts at 0 (a dev still may start it later).
 			closeT.set(c.mode === MODE.close ? c.seek : 0);
 		}
 		if (c.playRun !== m.playRun) {
@@ -181,8 +163,6 @@ export function useSitClock({
 			}
 		}
 		put(p, pNow);
-		// Reduced motion: the arcs hold half way; only the light, the seam and the
-		// label breathe (breathing-tide `tide.ts:89-108`).
 		const lightNow = light < 0 ? pNow : light;
 		let drawP = pNow;
 		if (rm) {
@@ -198,7 +178,6 @@ export function useSitClock({
 		}
 		put(g, gNow);
 
-		// The arcs: rebuilt only when their geometry moved.
 		const d0 = drawn.get();
 		const sz = size.get();
 		const moved =
@@ -266,7 +245,6 @@ export function useSitClock({
 	};
 }
 
-/** Beat time for a view of beat `serial`: 0 until the clock has started that beat. */
 export function beatTime(clock: Pick<SitClock, "at" | "vt">, serial: number) {
 	"worklet";
 	return clock.at.get() === serial ? clock.vt.get() : 0;

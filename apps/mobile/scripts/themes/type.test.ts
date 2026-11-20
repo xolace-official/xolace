@@ -5,7 +5,6 @@ import { TYPE_CLASS } from "../../src/design/type-classes.generated";
 import { declared, read } from "./test-files";
 import { kebab, renderTypeClasses, renderTypeCss } from "./type";
 
-/** One `@utility type-<name>` block's declarations. */
 function utility(css: string, name: string): Record<string, string> {
 	const body = css.split(`@utility ${name} {`)[1]?.split("}")[0];
 	if (!body) {

@@ -23,11 +23,9 @@ import { InsightLead, XolacerLead } from "./next-extras";
 const N = LAYOUT.next;
 const A = LAYOUT.avatar;
 const SHIMMER_MS = 1400;
-/** The board's waveform glyph (`.gs`, 24 × 24, stroke 2.2). */
 const WAVE = "M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2";
 const WAVE_BOX = 24;
 const WAVE_STROKE = 2.2;
-/** `.av`: three Flux poses for the kindling, each fitted by height in a 40 pt circle. */
 const AVATAR_POSES = ["sitting", "whisper", "bundle"] as const;
 
 type Props = {
@@ -39,7 +37,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/** The next card's left: the kindling avatars, a listener, a part of life, letters' tile, the listen tile, or the loading tile. */
 export function NextArt({
 	k,
 	colors,
@@ -132,7 +129,6 @@ function KindlingAvatars({ fills }: { fills: string[] }) {
 	);
 }
 
-/** `.sk`: a bar the well colour with a lighter band sweeping through it (1.4 s, linear); still under Reduce Motion. */
 export function Shimmer({
 	reduced,
 	width,

@@ -16,7 +16,6 @@ describe("alarms on the trail clock", () => {
 	});
 
 	it("a clock stopped while away (blur, background) rings nothing, however long the wall clock runs", () => {
-		// The clock holds at 1.9 s: asking again finds nothing new due.
 		const once = dueAt([land, drop], 1.9);
 		const again = dueAt(once.rest, 1.9);
 		expect(again.due).toEqual([]);

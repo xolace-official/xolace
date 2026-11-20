@@ -43,7 +43,6 @@ describe("toneTap", () => {
 	});
 
 	it("compares with the saved tone: a lapsed Witnessed is replaced by tapping Adaptive", () => {
-		// Shown as Adaptive off Plus, saved as Witnessed: the tap writes Adaptive.
 		expect(toneTap("adaptive", "witnessed", "free")).toBe("choose");
 		expect(toneTap("adaptive", "adaptive", "free")).toBe("none");
 	});

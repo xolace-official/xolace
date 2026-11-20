@@ -3,13 +3,6 @@ import type { FieldControl } from "@/features/vent/field/field-control";
 import type { VentBackend } from "@/features/vent/vent-backend";
 import { ceilingPlan } from "@/features/vent/vent-model";
 
-/**
- * While it listens (§5, §6): the field follows the voice toward the ceiling, the line under the
- * mic changes 10 s before it (with one gentle haptic), and at the ceiling it lets go on its own,
- * with no timer on screen. Timed from what has been recorded, so a Plus entitlement that resolves
- * mid-take moves the ceiling without restarting the count (production). Returns whether the last
- * 10 s have begun.
- */
 export function useListening(
 	listening: boolean,
 	backend: VentBackend,
@@ -26,7 +19,6 @@ export function useListening(
 	const { recordedMs } = backend.actions;
 
 	useEffect(() => {
-		// Once it has let go the line keeps its words while it fades.
 		if (!listening) {
 			return;
 		}

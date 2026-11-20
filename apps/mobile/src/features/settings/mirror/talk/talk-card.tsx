@@ -20,15 +20,9 @@ import type { Directness } from "@/lib/talk/use-talk-style";
 import { TALK_CAST } from "@/lib/talk/voice-options";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/**
- * Talk with <companion> (board `.trow`, Plus only): the companion's voice, pace and directness,
- * each from the next talk. Picking a voice plays it; its orb breathes while it plays (an Ease
- * loop; still with Reduce Motion). Pace and directness are the kit's native `Segmented`.
- */
 const DOT = 32;
 const PULSE_MS = 2000;
 
-/** The playing orb breathes 1 ↔ .82. Keyed, so it loops from a fresh mount and settles on stop. */
 function Pulse({ on, children }: { on: boolean; children: ReactNode }) {
 	const reduced = useEffectiveReducedMotion();
 	return (

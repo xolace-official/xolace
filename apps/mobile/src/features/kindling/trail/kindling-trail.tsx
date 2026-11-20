@@ -16,7 +16,6 @@ import type { Trail } from "./trail-geometry";
 import { TrailStop } from "./trail-stop";
 import type { Tend } from "./use-tend";
 
-/** The dashes march 16 pt (one dash and gap) every 530 ms. */
 const MARCH = { periodMs: 530, step: 16 };
 
 type Props = {
@@ -24,9 +23,7 @@ type Props = {
 	twigs: readonly TrailTwig[];
 	shown: readonly TwigState[];
 	open: number;
-	/** The stop the spark is running to: dim until it lands (§4). */
 	hold: number;
-	/** The fire has caught: the spark has landed in it, or the last twig was passed. */
 	caught: boolean;
 	tend: Tend;
 	live: boolean;
@@ -35,11 +32,6 @@ type Props = {
 	onOpen: (i: number) => void;
 };
 
-/**
- * The road, the fire, the stops and the tend's light over them, laid out on the board's grid (§2).
- * The fire's glow grows with each tend and fills once it catches; the dashes march while anything
- * waits.
- */
 export function KindlingTrail({
 	trail,
 	twigs,
@@ -69,7 +61,6 @@ export function KindlingTrail({
 	const march = useDerivedValue(
 		() => -((((tend.time.get() * 1000) / MARCH.periodMs) % 1) * MARCH.step)
 	);
-	// A skip in its undo window keeps its place as the suggestion until it is sent (render 07).
 	const suggestion = shown.findIndex((s) => s === "wait" || s === "undo");
 
 	return (

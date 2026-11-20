@@ -24,11 +24,6 @@ const RISE_IN = {
 	...PLAY_AS_CHOSEN,
 };
 
-/**
- * A chip switch: the list fades out (140, ease-in), the filter changes (and `beforeIn` runs: the
- * scroll goes back to the pin), then it fades in over 180 while rising 8 over 260 (Explore's need
- * panel). Reduce Motion: the fades alone. The fade-in waits two frames so the new rows have drawn.
- */
 export function useSwap(beforeIn: () => void, reduced: boolean) {
 	const opacity = useSharedValue(1);
 	const rise = useSharedValue(0);

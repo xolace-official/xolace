@@ -6,8 +6,6 @@ import { fromCover, P } from "../player-metrics";
 
 const FOOT = "text-center text-[12.5px] leading-[17.5px]";
 
-/** The attribution when the licence asks for it, or production's quiet crisis line on a tier-4
- * track (never a sheet: §9.4 "never auto-presented"). */
 export function PlayerFoot() {
 	const { state, actions } = usePlayer();
 	const { track } = state;
@@ -21,8 +19,6 @@ export function PlayerFoot() {
 			style={{ top: fromCover(P.footTop) }}
 		>
 			{track.crisis ? (
-				// The whole line is the link, as in production: a small target is a poor one on a
-				// heavy track.
 				<Pressable
 					accessibilityRole="link"
 					className="active:opacity-50"
@@ -40,7 +36,6 @@ export function PlayerFoot() {
 					</AppText>
 				</Pressable>
 			) : (
-				// The words don't take the touch: a swipe down from them closes the player.
 				<View pointerEvents="none">
 					<AppText
 						className={`${FOOT} text-player-ink/55`}

@@ -1,4 +1,3 @@
-/** The Letters screen on fixtures: `xolace://dev/letters/hub-<state>`. */
 import type { DevState } from "@/dev/dev-state";
 import { LETTERS } from "../../copy";
 import {

@@ -11,12 +11,6 @@ import { deletionAlreadyRequested } from "@/features/settings/privacy/privacy-mo
 import { convexErrorCode } from "@/lib/convex-error-code";
 import { useAppStore } from "@/store/store";
 
-/**
- * The delete sheet on Convex and Clerk: production's `users.requestDataWipe` and
- * `users.requestDeletion`, and what `useDataSettings` / `useConfirmAction` did around them (the
- * local draft wiped, the account's flags cleared, signed out, the failure toast), plus the
- * board's toast once it's done.
- */
 export function useDeleteSheet(
 	kind: SheetKind,
 	onDataWiped: () => Promise<void>
@@ -26,14 +20,11 @@ export function useDeleteSheet(
 	const { signOut, userId } = useAuth();
 	const { isPlus } = usePlusEntitlement();
 	const navigation = useNavigation();
-	// Set synchronously, so a second tap before React re-renders can't send a second request.
 	const inFlight = useRef(false);
 	const [busy, setBusy] = useState(false);
-	// The account is deleted and only signing out is left: Keep can't promise anything now.
 	const [deleted, setDeleted] = useState(false);
 	const locked = busy || deleted;
 
-	// While a request runs (or once the account is gone) the sheet can't be swiped away.
 	useEffect(() => {
 		navigation.setOptions({ gestureEnabled: !locked });
 	}, [navigation, locked]);
@@ -41,7 +32,6 @@ export function useDeleteSheet(
 	const deleteData = async () => {
 		await requestDataWipe();
 		await onDataWiped();
-		// Only close the sheet itself: if it was already left, pop nothing else.
 		if (navigation.isFocused()) {
 			router.back();
 		}
@@ -51,19 +41,14 @@ export function useDeleteSheet(
 		try {
 			await requestDeletion();
 		} catch (error) {
-			// An earlier attempt deleted it and then failed to sign out; the server is the truth.
 			if (!deletionAlreadyRequested(convexErrorCode(error))) {
 				throw error;
 			}
 		}
 		setDeleted(true);
-		// Coming back before Clerk's copy is gone is this same id, and these flags
-		// shouldn't outlive the account they were asked on.
 		if (userId) {
 			useAppStore.getState().clearAccountFlags(userId);
 		}
-		// The patch invalidates every requireAuth-gated subscription, so the
-		// session must go. A failure lands in the toast below.
 		await signOut();
 	};
 
@@ -73,7 +58,6 @@ export function useDeleteSheet(
 			await (kind === "data" ? deleteData() : deleteAccount());
 			toast(DELETE_COPY.sheets[kind].done);
 		} catch {
-			// The sheet stays up, so it can be tried again (or, before a deletion, kept).
 			toast(DELETE_COPY.failed.title, {
 				description: DELETE_COPY.failed.description,
 				variant: "danger",

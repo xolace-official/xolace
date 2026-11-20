@@ -15,18 +15,15 @@ import {
 } from "@/features/settings/follow/follow-model";
 import { reviewUrl } from "@/lib/store-review";
 
-/** Production let a link that fails to open (no mail account) pass silently. */
 const openLink = (url: string) => {
 	Linking.openURL(url).catch(() => undefined);
 };
 
-/** Follow & Support on Convex (`feedback.*`), PostHog and the phone's links. */
 export function useFollow(): Follow {
 	const [open, setOpen] = useState(false);
 	const [draft, setDraft] = useState("");
 	const [phase, setPhase] = useState<SendPhase>("idle");
 	const [error, setError] = useState<string | null>(null);
-	// Production asks only while its dialog is up.
 	const canSubmit = useQuery(api.feedback.canSubmitGeneral, open ? {} : "skip");
 	const submit = useMutation(api.feedback.submit);
 	const posthog = usePostHog();
@@ -41,7 +38,6 @@ export function useFollow(): Follow {
 	};
 	useEffect(() => clearTimer, []);
 
-	// Closing forgets the note, as production's dialog did by unmounting its form.
 	const close = () => {
 		clearTimer();
 		setOpen(false);

@@ -14,8 +14,6 @@ import { useScrub } from "./use-scrub";
 const REST_H = 4;
 const TOUCHED_H = 10;
 
-/** Music, or a spoken track with no peaks yet: production's line, which now drags and thickens
- * to 10 pt while touched. No bar snap. */
 export function ScrubLine({
 	duration,
 	head,
@@ -25,7 +23,6 @@ export function ScrubLine({
 	duration: number;
 	head: Playhead;
 	reduced: boolean;
-	/** Loading: drawn, not draggable. */
 	disabled?: boolean;
 }) {
 	const { actions } = usePlayer();

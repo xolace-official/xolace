@@ -13,24 +13,19 @@ import { POSTER_MEDIUM } from "../stage/quote-type";
 import { CARD_W, fitScale, QUOTE, WORDS } from "./share-fit";
 
 const STORY_RATIO = 16 / 9;
-/** The logo lockup (flame + "xolace"), drawn as a one-colour silhouette in the ink. */
 const LOCKUP = require("@/assets/images/brand/logo-lockup.webp");
 const LOCKUP_RATIO = 536 / 200;
-/** The signature sits apart from the words: a small mark at the foot, in its own band. */
 const MARK = { bottom: 9, height: 7.5, opacity: 0.86 } as const;
 
 type Props = {
 	background: QuoteBackground;
 	text: string;
-	/** Points per board point: 1 for the preview, 2.4 for the 360 pt capture card. */
 	scale: number;
 	fmt: ShareFmt;
-	/** Fill the parent (the preview, whose height animates between Story and Square). */
 	fill?: boolean;
 	ref?: Ref<ComponentRef<typeof View>>;
 };
 
-/** The share card: the background, the scrim, the quote and the Xolace mark. Never the reply. */
 export function ShareCard({
 	background,
 	text,

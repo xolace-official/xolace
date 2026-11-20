@@ -22,13 +22,10 @@ const NOW = Date.parse("2027-01-10T12:00:00Z");
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 const ago = (ms: number) => NOW - ms;
-/** When this device first ran the release: its release date, as far as the rules know. */
 const SHIPPED = Date.parse("2026-12-01T09:00:00Z");
 const RAN: ReleaseRan = { at: SHIPPED, id: LATEST_RELEASE.id };
 
-/** Someone who has seen this release's What's New: only the first ask can show. */
 const SEEN: RatingsRecord = { ...RATINGS_FRESH, seen: [LATEST_RELEASE.id] };
-/** A release waiting, after the first ask. */
 const RELEASE_WAITING: RatingsRecord = {
 	...RATINGS_FRESH,
 	firstAsked: true,
@@ -138,11 +135,6 @@ describe("planOpen: never while hurting", () => {
 	});
 });
 
-/**
- * The cases P/design/review/ratings/NOTES.md ran through the prototype's `planOpen`: the first
- * ask, 48 h either side, the follow-up, Help 6 vs 8 days, each cooldown either side, first run.
- * Read with a light session finished and, for the cooldowns, a release waiting.
- */
 describe("planOpen: the prototype's cases", () => {
 	const FIRST = { lightSession: true };
 	const RELEASE = RELEASE_WAITING;

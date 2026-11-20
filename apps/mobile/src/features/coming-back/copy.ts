@@ -1,17 +1,6 @@
 import type { Href } from "expo-router";
 import type { IconName } from "@/components/shared/icon";
 
-/**
- * Coming back (handoff `return.md` §9, board `ReturnAlive.dc.html` `AWAY`, `ANS`): one greeting
- * lists what happened while you were away; the check-in it opens keeps production's
- * `follow-up-copy.ts` word for word.
- */
-
-/**
- * How long someone was away. `recent` (a few days) and `away-30-90` are the board's; the other
- * away tiers are production's (`return-welcome-copy.ts`), shortened to the board's length.
- * `next` is the next day, not away: it greets only when something waits.
- */
 export type Away =
 	| "recent"
 	| "away-14-30"
@@ -20,19 +9,15 @@ export type Away =
 	| "anniversary"
 	| "next";
 
-/** A check-in's answer, as `followUps.resolveCard` takes it. */
 export type Answer =
 	| "lighter"
 	| "still_here"
 	| "heavier"
 	| "processed"
 	| "vent";
-/** The four answers on the cards; Let it out leaves for Vent. */
 export type CheckInPick = Exclude<Answer, "vent">;
-/** `follow_up_cards.tier`. Acute omits worked-through: it reads glib so soon after a crisis. */
 export type CheckInTier = "acute" | "elevated" | "standard";
 
-/** The answers as the row and the chip say them (board `ANS`, production's chips). */
 export const ANSWER_LABEL: Record<Answer, string> = {
 	heavier: "Got heavier",
 	lighter: "Feeling lighter",
@@ -43,7 +28,6 @@ export const ANSWER_LABEL: Record<Answer, string> = {
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** Each away tier's hello. */
 export const AWAY: Record<
 	Exclude<Away, "next">,
 	{ title: string; body: string; cta: string }
@@ -79,7 +63,6 @@ export const WELCOME_BACK = {
 	a11y: "Welcome back",
 	checkIn: {
 		done: (a: Answer) => `Answered · ${ANSWER_LABEL[a]}`,
-		/** VoiceOver, once answered: "A check-in from Tuesday. Answered, feeling lighter." */
 		doneA11y: (day: string, a: Answer) =>
 			`A check-in from ${day}. Answered, ${ANSWER_LABEL[a].toLowerCase()}.`,
 		sub: "About a minute",
@@ -92,10 +75,8 @@ export const WELCOME_BACK = {
 				: "Your streak is still going",
 		title: "A freeze kept your fire lit",
 	},
-	/** The next day: the small hello, then what waits. */
 	next: {
 		cta: "Later",
-		/** One thing: from the check-in's day, or this month's prompt. */
 		one: (day: string | null) =>
 			day
 				? `One thing from ${day}, if you want it.`
@@ -103,7 +84,6 @@ export const WELCOME_BACK = {
 		title: (name: string | null) => (name ? `Hi again, ${name}.` : "Hi again."),
 		two: "Two things, if you want them.",
 	},
-	/** The month's prompt page, inside the card; its words are the event's. */
 	page: {
 		article: "Read the full article",
 		back: "Back",
@@ -112,7 +92,6 @@ export const WELCOME_BACK = {
 		pass: "Let it pass",
 		write: "Write about it",
 	},
-	/** The pill on Today (handoff §8). */
 	pill: {
 		both: "2 things from while you were away",
 		checkIn: (day: string) => `${cap(day)}’s check-in is still here`,
@@ -133,16 +112,13 @@ export const WELCOME_BACK = {
 		title: "Still here.",
 		waiting: "Not now",
 	},
-	/** The check-in's day, when it's the same day. */
 	today: "today",
 	yesterday: "yesterday",
 } as const;
 
-/** Production's `follow-up-copy.ts`, word for word (`’` for the UI). */
 export const CHECK_IN = {
 	close: "Close check-in",
 	eyebrow: "Checking back in",
-	/** A restored or deep-linked route without the card's sentence. */
 	fallbackQuestion: "How is it sitting with you now?",
 	heavierMessage:
 		"If something would help right now, pick one. Or just close this.",
@@ -183,7 +159,6 @@ export const CHECK_IN = {
 	},
 } as const;
 
-/** Where a still-here or heavier answer can go. Keys match `follow_up_responses.heavierChoice`. */
 export type Place = "crisis_resources" | "music" | "support_audio" | "library";
 
 export const PLACES: Record<
@@ -228,7 +203,6 @@ export const HEAVIER_PLACES = [
 	"library",
 ] as const satisfies readonly Place[];
 
-/** The in-app banner for a notification tapped open (production's, kept). */
 export const BANNER = {
 	dismiss: "tap to dismiss",
 	eyebrow: "You were reached",

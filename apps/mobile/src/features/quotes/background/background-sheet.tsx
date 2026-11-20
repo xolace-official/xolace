@@ -11,11 +11,8 @@ import { Segments, SheetNote } from "../sheets/sheet-parts";
 import { POSTER_SEMI } from "../stage/quote-type";
 import { BackgroundTile, TILE } from "./background-tile";
 
-/** The row's inset: the sheet's 20 pt padding. */
 const ROW_INSET = 20;
-/** The sheet sits 8 pt in from each side. */
 const SHEET_EDGE = 8;
-/** Scroll events while dragging: often enough to start a tile as it comes on screen. */
 const SCROLL_THROTTLE = 64;
 const CATS = [
 	{ id: "still", label: QUOTE_COPY.still },
@@ -27,7 +24,6 @@ type Props = {
 	backgrounds: readonly QuoteBackground[];
 	current: string;
 	cat: "still" | "loop";
-	/** Loops may move (no Reduce Motion, no Low Power Mode). */
 	moving: boolean;
 	lowPower: boolean;
 	isPlus: boolean;
@@ -36,13 +32,11 @@ type Props = {
 	onClose: () => void;
 };
 
-/** Background: Still | Loop and a row of tiles; a tap applies it at once. No Apply button. */
 export function BackgroundSheet(p: Props) {
 	const { width } = useWindowDimensions();
 	const [scrollX, setScrollX] = useState(0);
 	const tiles = p.backgrounds.filter((b) => b.kind === p.cat);
 	const viewport = width - SHEET_EDGE * 2;
-	// A tile plays only while some of it is on screen.
 	const onScreen = (i: number) => {
 		const left = ROW_INSET + i * (TILE.w + TILE.gap) - scrollX;
 		return left + TILE.w > 0 && left < viewport;

@@ -8,8 +8,6 @@ import { fromCover, P } from "../player-metrics";
 
 const ERROR_Y = 390;
 
-/** Production's words. "Couldn’t reach" gains Try again in glass; "isn’t here anymore" gets
- * nothing. */
 export function PlayerError() {
 	const { state, actions } = usePlayer();
 	const gone = state.status === "gone";

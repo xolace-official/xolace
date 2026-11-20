@@ -14,7 +14,6 @@ describe("checkInPose", () => {
 	});
 
 	it("lets the smile go sooner on the heavier half", () => {
-		// "a little heavier" (.4): production still smiles; the check-in barely does.
 		expect(poseForCheckIn(0.4).mouth).toBeGreaterThan(0.2);
 		expect(checkInPose(0.4).mouth).toBeLessThan(poseForCheckIn(0.4).mouth);
 		expect(checkInPose(0).mouth).toBeCloseTo(poseForCheckIn(0).mouth);

@@ -22,7 +22,6 @@ const noise = (n: number) => {
 	const v = Math.sin(n * 12.9898) * 43_758.5453;
 	return v - Math.floor(v);
 };
-/** The week's 22 embers in a loose ring round the number (board `EMB2`: golden-angle spacing). */
 const COUNT = STORY.count;
 const RANKS = (() => {
 	const order = Array.from(
@@ -214,7 +213,6 @@ export function embers(c: SkCanvas, e: SEng, a: number, ink: FireInk) {
 	}
 }
 
-/** Signing in: a coal leaves the button for the seat on an arc 120 pt high, then 10 sparks rise. */
 export function seat(c: SkCanvas, e: SEng, so: number, ink: FireInk) {
 	"worklet";
 	const sa = ageSeat(e);

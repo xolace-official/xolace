@@ -1,8 +1,3 @@
-/**
- * The arrival on fixtures: the real overlay under a provider filled from
- * `arrivalPlan` over fixture rows, open at once. Closing goes back; "See them"
- * does nothing. Never reaches the backend.
- */
 import { goBack } from "@/components/shared/back-button";
 import type { Arrivals } from "@/features/achievements/arrival/arrival-data";
 import { ArrivalsProvider } from "@/features/achievements/arrival/arrival-data";
@@ -19,14 +14,8 @@ import { ARRIVAL_DAY, BACKFILL } from "@/features/achievements/dev/fixtures";
 
 const NONE = new Set<string>();
 
-/**
- * What the milestone's cards show: `designed` fills the week and the freeze as
- * the boards draw them (the server doesn't serve them yet); `live` leaves them
- * out, as the app does today.
- */
 type Cards = "designed" | "capped" | "live";
 
-/** The plan the host would stage, with the fixtures' bundled art. */
 function fixturePlan(
 	unseen: readonly UnseenBadge[],
 	backfill: boolean,
@@ -74,7 +63,6 @@ export function FixtureArrival({
 }: {
 	unseen?: readonly UnseenBadge[];
 	backfill?: boolean;
-	/** The milestone's week and freeze cards (`Cards`). */
 	cards?: Cards;
 	still?: Still;
 }) {

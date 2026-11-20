@@ -8,10 +8,6 @@ import { facetLabel } from "@/features/lantern/lantern-model";
 
 const IOS = process.env.EXPO_OS === "ios";
 
-/**
- * The home's bar (handoff §1): Saved, and once Reading as is answered, its menu (multi-select,
- * the system ticks it). Until then Saved sits alone at the right.
- */
 export function HomeToolbar() {
 	const { state, actions } = useHomeScreen();
 	const readingAs = state.home?.readingAs ?? null;

@@ -7,10 +7,6 @@ import { useAccountScreen } from "@/features/settings/account/account-data";
 import { ACCOUNT_COPY as C } from "@/features/settings/account/copy";
 import { playSoftPress } from "@/lib/haptics";
 
-/**
- * Log out on its own (danger, no tile), asked first; deleting the account lives in Privacy &
- * Data, and the footnote links there.
- */
 export function LogOutSection() {
 	const { state, actions } = useAccountScreen();
 	return (

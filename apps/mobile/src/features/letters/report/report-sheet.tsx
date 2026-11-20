@@ -9,12 +9,6 @@ import { useReportSheet } from "./report-data";
 
 const BOTTOM = 18;
 
-/**
- * Report this letter (handoff §3, render 25): the four reasons (one is required, open question
- * 30), Report, and "It goes away at once. The sender isn't told." A form sheet sized to its
- * content, like `/report-reflection`. Report closes it, then the letter leaves; the reader,
- * seeing it gone, closes too.
- */
 export function ReportSheet() {
 	const { state, actions } = useReportSheet();
 	const insets = useSafeAreaInsets();

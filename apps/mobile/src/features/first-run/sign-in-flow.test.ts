@@ -7,7 +7,6 @@ import {
 	type SignInDeps,
 } from "./sign-in-flow";
 
-/** The store's two flags, plus every change in order. */
 function fakeStore() {
 	const store = {
 		accountPending: false,
@@ -37,7 +36,6 @@ const holdOn = (store: ReturnType<typeof fakeStore>) =>
 		setSeatHeld: store.setSeatHeld,
 	});
 
-/** Clerk and Convex as fakes, each logging into the store's log so the order shows. */
 function deps(
 	store: ReturnType<typeof fakeStore>,
 	hold: SeatHold,
@@ -57,7 +55,6 @@ function deps(
 			Promise.resolve({
 				createdSessionId: "sess_1",
 				setActive: () => {
-					// The root guard reads both flags the moment the session lands.
 					store.log.push(
 						`setActive(seatHeld=${store.seatHeld},accountPending=${store.accountPending})`
 					);
@@ -88,7 +85,6 @@ describe("runSignIn", () => {
 			"getOrCreate",
 			"accountPending=false",
 		]);
-		// The seat stays held for the seated moment.
 		expect(store.seatHeld).toBe(true);
 	});
 
@@ -179,7 +175,7 @@ describe("createSeatHold", () => {
 		hold.begin();
 		hold.release();
 		expect(store.seatHeld).toBe(false);
-		store.setSeatHeld(true); // a later hold from elsewhere
+		store.setSeatHeld(true);
 		await vi.advanceTimersByTimeAsync(HOLD_MS);
 		expect(store.seatHeld).toBe(true);
 	});
@@ -188,7 +184,7 @@ describe("createSeatHold", () => {
 		const store = fakeStore();
 		const hold = holdOn(store);
 		hold.begin();
-		hold.appState("inactive"); // the native sign-in sheet
+		hold.appState("inactive");
 		expect(store.seatHeld).toBe(true);
 		hold.appState("background");
 		expect(store.seatHeld).toBe(false);
@@ -200,7 +196,7 @@ describe("createSeatHold", () => {
 		hold.begin();
 		hold.dispose();
 		expect(store.seatHeld).toBe(false);
-		store.setSeatHeld(true); // the next seat's hold
+		store.setSeatHeld(true);
 		await vi.advanceTimersByTimeAsync(HOLD_MS);
 		expect(store.seatHeld).toBe(true);
 	});
@@ -234,7 +230,7 @@ describe("createSeatHold", () => {
 		await vi.advanceTimersByTimeAsync(HOLD_MS / 2);
 		const second = holdOn(store);
 		second.begin();
-		await vi.advanceTimersByTimeAsync(HOLD_MS / 2); // the first's deadline
+		await vi.advanceTimersByTimeAsync(HOLD_MS / 2);
 		expect(store.accountPending).toBe(true);
 		second.accountSettled();
 		expect(store.accountPending).toBe(false);

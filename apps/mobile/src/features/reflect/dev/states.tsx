@@ -1,7 +1,3 @@
-/** Reflect on fixtures: `xolace://dev/reflect/<id>`. Each stage of the board (write, wait, the
- * mirror and its sub-states, care, Where next, Heard), late and dark, plus the brief's states:
- * first open, streaming, error, offline, seeded and long text. Sends answer from the simulated
- * server (`use-fixture-reflect.ts`). Dictation's states are in `write/dev/states.tsx`. */
 import type { DevState } from "@/dev/dev-state";
 import { COPY } from "../copy";
 import { waitError } from "../reflect-model";

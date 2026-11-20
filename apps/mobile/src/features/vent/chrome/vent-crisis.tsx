@@ -20,10 +20,6 @@ const IN = FadeIn.duration(IN_MS)
 	.reduceMotion(PLAY_AS_CHOSEN.reduceMotion);
 const HEART = { android: "favorite", ios: "heart" } as const;
 
-/**
- * Crisis (v2): the line stays on screen with no burn and no "Gone.", and production's actions
- * fade in 112 pt from the bottom after 1.2 s. The support pill takes VoiceOver focus.
- */
 export function VentCrisis() {
 	const { state, actions } = useVentScreen();
 	if (!(state.crisis && state.phase === "heard")) {

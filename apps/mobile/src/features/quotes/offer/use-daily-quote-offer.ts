@@ -14,7 +14,6 @@ import {
 } from "./daily-quote-offer";
 import { useOfferMemory } from "./offer-memory";
 
-/** The phone's notification permission, checked once; undefined until it answers. */
 function useOsBlocked(): boolean | undefined {
 	const [blocked, setBlocked] = useState<boolean | undefined>(undefined);
 	useEffect(() => {
@@ -34,11 +33,6 @@ function useOsBlocked(): boolean | undefined {
 	return blocked;
 }
 
-/**
- * The one-time daily quote offer on Quotes (B19): whether it may rise, marking it shown, and its
- * answer. A phone that has denied notifications is never asked: only device settings could turn
- * it on.
- */
 export function useDailyQuoteOffer() {
 	const posthog = usePostHog();
 	const prefs = useQuery(api.preferences.get);
@@ -47,7 +41,6 @@ export function useDailyQuoteOffer() {
 	const seen = useOfferMemory((s) => s.seen);
 	const blocked = useOsBlocked();
 
-	/** Turns push on first when this device isn't delivering, the way Settings does. */
 	const answer = (slot: DailyQuoteSlot | null): Promise<string | null> => {
 		posthog.capture("daily_quote_offer_answered", {
 			answer: slot ?? "not_now",
@@ -59,7 +52,6 @@ export function useDailyQuoteOffer() {
 		}
 		return preparePushDelivery(
 			prefs?.notifications.enabled === true,
-			// Push for the daily quote alone: no first-grant auto-enable of the rest.
 			(pushToken) => registerToken({ autoEnable: false, pushToken })
 		).then((readiness): Promise<string | null> | string | null => {
 			if (readiness === "blocked") {

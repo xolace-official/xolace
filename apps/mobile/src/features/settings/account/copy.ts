@@ -1,15 +1,9 @@
 import type { IconName } from "@/components/shared/icon";
 
-/** How the person signed in, as Clerk's external accounts say. */
 export type SignIn = "apple" | "google" | "email";
 
-/** The two names the page edits. */
 export type NameKind = "name" | "space";
 
-/**
- * Settings › Account (P/design/handoff/settings-sections.md §1 "Account"), word for word. The
- * companion's default name (Ember) comes from production's `COMPANION_FALLBACK_NAME`.
- */
 export const ACCOUNT_COPY = {
 	alert: {
 		body: "Everything stays in your account. Reminders stop on this phone until you sign back in.",
@@ -33,7 +27,6 @@ export const ACCOUNT_COPY = {
 		},
 	},
 	logOut: "Log out",
-	/** Production's `useConfirmAction` fallback when log out throws. */
 	logOutFailed: {
 		description: "Please try again.",
 		title: "Something went wrong",
@@ -41,7 +34,6 @@ export const ACCOUNT_COPY = {
 	logOutLink: "Privacy & Data",
 	logOutNote: "To delete your account, go to ",
 	manage: "Manage subscription",
-	/** Store billing, per platform (the handoff's line is Apple's; Android's says Google Play). */
 	manageNote: {
 		android:
 			"Billing is with Google Play. Changing or cancelling happens there.",
@@ -50,7 +42,6 @@ export const ACCOUNT_COPY = {
 	names: "Names",
 	namesNote:
 		"Your name is what Xolace calls you. Your space’s name is just for you, and it’s also what your Talk companion is called.",
-	/** A row that leaves the app says so to VoiceOver. */
 	outside: (label: string) => `${label}, opens outside Xolace`,
 	plus: "Xolace+",
 	restore: "Restore purchases",
@@ -67,13 +58,11 @@ export const ACCOUNT_COPY = {
 	} satisfies Record<SignIn, string>,
 	signedOut: "Signed out",
 	signIn: "Sign-in",
-	/** Spoken on the sign-in row's place while Clerk loads. */
 	signInLoading: "Loading how you sign in",
 	yourName: "Your name",
 	yourSpace: "Your space",
 } as const;
 
-/** The rows' icons, with their Android twins. Apple's and Google's marks are drawn. */
 export const ACCOUNT_ICONS = {
 	email: { android: "mail", ios: "envelope" },
 	manage: { android: "auto_awesome", ios: "sparkle" },

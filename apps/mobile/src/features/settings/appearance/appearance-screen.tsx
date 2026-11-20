@@ -30,10 +30,6 @@ function Section({
 	);
 }
 
-/**
- * Settings › Appearance (board "Appearance v2", P/design/handoff/settings.md): Mode and Theme as
- * pictures, the rest as grouped cards with footnotes. Opens instantly; nothing animates in.
- */
 export function AppearanceScreen({ ref }: { ref?: Ref<ScrollViewInstance> }) {
 	const { state } = useAppearanceScreen();
 	return (

@@ -7,50 +7,32 @@ import {
 	useState,
 } from "react";
 
-/** How long tapping the week rings this week's column on Your days. */
 const RING_MS = 2600;
 
 export type YouTab = "insights" | "follow-ups";
 
-/** Where a dev state opens the tab: a tab picked, the freeze explanation open, the week ringed. */
 export type YouUiStart = {
 	tab?: YouTab;
 	tip?: boolean;
 	weekRing?: boolean;
-	/** Scrolled to Your days, the header docked. */
 	toDays?: boolean;
-	/** Docked at the top of Insights (Steadiness first). */
 	toTop?: boolean;
-	/** Scrolled to This week. */
 	toWeek?: boolean;
-	/** This week holding a day (Monday 0). */
 	weekHeld?: number;
 };
 
-/** Where Insights scrolls to, docked: a card's top under the pills. */
 export type ScrollTarget = "top" | "days" | "week";
 
-/**
- * The tab's own UI that several parts share: the freeze explanation (drawn by the screen over
- * the tab bar, placed under the streak card), the week ring on Your days, and the scroll and
- * tab change a tap on the week asks for. Screen state, not data: the dev states pass `start`.
- */
 type YouUi = {
 	tip: { open: boolean; top: number };
-	/** Open at a window y (the streak card's bottom), or close if open. */
 	toggleTip: (top: number) => void;
-	/** Where the explanation drops, measured as the streak card lays out. */
 	placeTip: (top: number) => void;
 	closeTip: () => void;
 	weekRing: boolean;
-	/** The header's week: Insights, scrolled to Your days, this week's column ringed. */
 	tapWeek: () => void;
-	/** A scroll the Insights tab performs; the key lets the same one repeat. */
 	scrollTo: { target: ScrollTarget; key: number } | null;
-	/** A day This week opens held on (dev states only). */
 	weekHeld: number | null;
 
-	/** A tab the screen switches to, keyed likewise. */
 	tab: { name: YouTab; key: number } | null;
 };
 

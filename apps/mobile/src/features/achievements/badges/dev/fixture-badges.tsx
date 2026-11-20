@@ -1,5 +1,3 @@
-/** The screen on fixtures: the real `BadgesScreen` under a provider the fixture adapter fills. */
-
 import { BadgesProvider } from "@/features/achievements/badges/badges-data";
 import {
 	BadgesScreen,

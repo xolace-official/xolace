@@ -4,11 +4,9 @@ import type { NextKey } from "../session-end-model";
 
 const L = COPY.next.listener;
 
-/** The listener's standing for VoiceOver: "Rated 4.9" or "New Xolacer", then their presence. */
 const standingOf = (listener: ListenerCard): string =>
 	`${listener.rating === undefined ? L.newXolacer : L.rated(listener.rating)}, ${listener.present ? L.hereNow : L.repliesInADay}`;
 
-/** The card's title and sub for a key; null while loading or empty. */
 export function nextText(
 	k: NextKey,
 	cards: NextCards,
@@ -46,7 +44,6 @@ export function nextText(
 	return null;
 }
 
-/** VoiceOver's one label for the card: title, the listener's standing, then the sub. */
 export function nextLabel(
 	k: NextKey,
 	cards: NextCards,

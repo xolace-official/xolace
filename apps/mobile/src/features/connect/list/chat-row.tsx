@@ -8,13 +8,10 @@ import { StatusChip, UnreadPill } from "../parts/chips";
 import { XolaceMark, XolacerAvatar } from "../parts/xolacer-avatar";
 import type { ChannelRowView, PairRowView } from "./chats-model";
 
-/** A row in the list: the channel, a chat, Archived. Opaque, so a swipe's action never shows
- * through at rest. */
 export const ROW =
 	"flex-row items-center gap-3 border-separator border-b bg-background px-1 py-3";
 const VERIFIED = { android: "verified", ios: "checkmark.seal.fill" } as const;
 
-/** A chat's face: the avatar, the name and its chip, line 2, the time and the count. */
 export function ChatRowBody({ row }: { row: PairRowView }) {
 	return (
 		<>
@@ -57,7 +54,6 @@ export function ChatRowBody({ row }: { row: PairRowView }) {
 	);
 }
 
-/** The Xolace channel, pinned first: the flame, verified, the last announcement. */
 export function ChannelRow({
 	row,
 	onPress,

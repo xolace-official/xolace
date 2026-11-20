@@ -4,8 +4,6 @@ import { MOMENTS_COPY } from "@/features/you/moments/copy";
 import type { Tone } from "@/features/you/moments/moments-model";
 import { cn } from "@/lib/cn";
 
-/** The prototype's pastel chips (`TONE_CHIP`), on the theme's tone tokens: a wash of the tone
- * under its readable ink, so they hold in dark too. Literal classes, so Tailwind finds them. */
 const LOOK: Record<Tone, { bg: string; fg: string }> = {
 	direct: { bg: "bg-tone-direct/15", fg: "text-tone-direct-text" },
 	gentle: { bg: "bg-tone-gentle/15", fg: "text-tone-gentle-text" },
@@ -13,7 +11,6 @@ const LOOK: Record<Tone, { bg: string; fg: string }> = {
 	witnessed: { bg: "bg-tone-witnessed/15", fg: "text-tone-witnessed-text" },
 };
 
-/** The tone a mirror was written in. */
 export function ToneChip({ tone }: { tone: Tone }) {
 	const look = LOOK[tone];
 	return (

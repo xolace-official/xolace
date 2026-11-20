@@ -1,12 +1,9 @@
-/** Dev states (`src/dev`), dev builds only: the `(protected)` layout routes here only
- * under `__DEV__`. This layout imports nothing from `src/dev`, so it ships empty. */
 import ArrowBack from "@expo/material-symbols/arrow_back.xml";
 import { router, Stack } from "expo-router";
 import { playSoftPress } from "@/lib/haptics";
 import { useHeaderOptions } from "@/lib/header-options";
 import { goHome } from "@/lib/landing";
 
-/** A link to one state opens over the index, so Back lists the others. */
 export const unstable_settings = { initialRouteName: "index" };
 
 const INDEX_OPTIONS = { title: "Dev states" };

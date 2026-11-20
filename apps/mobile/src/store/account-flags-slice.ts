@@ -1,7 +1,3 @@
-/** One-time asks that belong to an account, not the phone: a second account on this device
- * still gets them, and one account's answer never silences another's. */
-
-/** Flags that were device-wide booleans before they moved per account. */
 type LegacyAccountFlag = "findingCardDismissed";
 
 export type AccountFlag = LegacyAccountFlag | "telegramOfferDismissed";
@@ -19,16 +15,10 @@ const LEGACY_SET = new Set<string>(LEGACY_ACCOUNT_FLAGS);
 const isLegacy = (flag: AccountFlag): flag is LegacyAccountFlag =>
 	LEGACY_SET.has(flag);
 
-/** The top-level booleans are the pre-per-account marks, owner unknown. They stand in for
- * every account until `claimLegacyAccountFlags` hands them to the first one signed in. */
 export type AccountFlagsSlice = Record<LegacyAccountFlag, boolean> & {
-	/** Flags each account (by Clerk user id) has set. */
 	accountFlags: Record<string, AccountFlag[]>;
 	markAccountFlag: (owner: string, flag: AccountFlag) => void;
-	/** Unsets `flags` for one account, all of them by default. */
 	clearAccountFlags: (owner: string, flags?: readonly AccountFlag[]) => void;
-	/** A set legacy mark never gets written again, so without this it would silence every
-	 * later account on the device for good. */
 	claimLegacyAccountFlags: (owner: string) => void;
 };
 
@@ -80,7 +70,6 @@ export const createAccountFlagsSlice = (set: SetState): AccountFlagsSlice => ({
 		}),
 });
 
-/** Keys persisted by the app store's `partialize`. */
 export const accountFlagsPersistedKeys = (s: AccountFlagsSlice) => ({
 	accountFlags: s.accountFlags,
 	findingCardDismissed: s.findingCardDismissed,

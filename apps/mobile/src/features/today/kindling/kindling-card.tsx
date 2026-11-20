@@ -16,21 +16,13 @@ import { SWAP, SwapLayer } from "./swap-layer";
 const PAD_X = 18;
 const PAD_Y = 16;
 const CARD_H = 172;
-/** The board's `.card` radius. */
 const RADIUS = 26;
-/** The first rise slot after the hero; the campfire takes the next (1), S1d's modules the rest. */
 const RISE_SLOT = 0;
 const OUT = { left: PAD_X, right: PAD_X, top: PAD_Y } as const;
 
-/** The card before its first mode resolves: the frame holds its place, empty. */
 const SKELETON = "skeleton";
 type Layer = KindlingCardMode | typeof SKELETON;
 
-/**
- * The layer on screen, the one fading out of it for the swap's 400 ms (null: none), and the
- * last live kindling, which the live layer keeps drawing while it fades out (put out: the
- * server's is already null).
- */
 function useSwap(
 	mode: KindlingCardMode | undefined,
 	kindling: KindlingView | null | undefined
@@ -44,7 +36,6 @@ function useSwap(
 		setLastLive(kindling);
 	}
 	if (shown !== layer) {
-		// The skeleton never fades out: it has nothing to show.
 		setLeaving(shown === SKELETON ? null : shown);
 		setShown(layer);
 		setSwapped(true);
@@ -59,12 +50,6 @@ function useSwap(
 	return { lastLive: kindling ?? lastLive, leaving, shown, swapped };
 }
 
-/**
- * Today's kindling card. It never leaves Today (`P/design/handoff/kindling.md` §11.1): with
- * a kindling it shows the path you tend; without one, an unlit path and what to do next
- * (Xolace+ with none right now, free, setting up). The frame stays put and only its content
- * crossfades, so nothing below it moves when a kindling arrives or goes.
- */
 export function KindlingCard({ width }: { width: number }) {
 	const { state } = useToday();
 	const { reduced, intro, waiting } = useTodayFrame();
@@ -74,8 +59,6 @@ export function KindlingCard({ width }: { width: number }) {
 	const mode = kindlingCardMode(kindling, kindlingEmpty);
 	const { lastLive, leaving, shown, swapped } = useSwap(mode, kindling);
 	const pathW = width - PAD_X * 2;
-	// Keyed by layer, so a layer keeps its instance (and the live path its canvas) when it
-	// turns outgoing.
 	const layers: { layer: Layer; out: boolean }[] =
 		leaving === null
 			? [{ layer: shown, out: false }]
@@ -123,7 +106,6 @@ type BodyProps = {
 
 function Body({ layer, kindling, width, onScreen }: BodyProps) {
 	if (layer === SKELETON) {
-		// Loading (as production's skeleton): the frame holds its place.
 		return <View style={{ height: CARD_H - PAD_Y * 2 }} />;
 	}
 	if (layer === "live") {

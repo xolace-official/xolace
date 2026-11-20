@@ -10,11 +10,6 @@ import { TELL_US_COPY as C } from "./copy";
 import { canSend } from "./ratings-model";
 import type { TellUs } from "./tell-us-data";
 
-/**
- * Tell us on Convex: `feedback.submit` with `type: "general"`, which keeps only the words (no
- * name), allows one a day (`feedback.canSubmitGeneral`) and up to 1000 characters. A sent note
- * holds the rating screen until the next release (`noteAt`).
- */
 export function useTellUs(): TellUs {
 	const posthog = usePostHog();
 	const submit = useMutation(api.feedback.submit);
@@ -24,7 +19,6 @@ export function useTellUs(): TellUs {
 	const [sent, setSent] = useState(false);
 	const [sending, setSending] = useState(false);
 	const busy = useRef(false);
-	// A loading limit isn't a limit (the backend still refuses a second note); once sent it's this one.
 	const limited = canSubmit === false && !sent && !sending;
 
 	const send = async () => {

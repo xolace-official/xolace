@@ -2,10 +2,6 @@ import Svg, { Circle, Path, Rect } from "react-native-svg";
 import type { SocialId } from "@/features/settings/follow/copy";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/**
- * The boards' one-colour marks for Follow Xolace (`.g-web` … `.g-whatsapp`): line drawings in the
- * accent, never the brands' full-colour logos. Decorative: the row says the name.
- */
 const SIZE = 16;
 const DOT = 0.6;
 

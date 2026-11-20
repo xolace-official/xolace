@@ -5,7 +5,6 @@ import { LETTER_MOTION } from "../letter-motion";
 import { type ReceivedLetter, readerSealed } from "../letters-model";
 
 const O = LETTER_MOTION.open;
-/** VoiceOver moves to the letter once its words are in. */
 const FOCUS_MS = O.flapMs + O.bottomMs + O.words.ms;
 
 const focusOn = (view: ComponentRef<typeof View> | null) => {
@@ -15,11 +14,6 @@ const focusOn = (view: ComponentRef<typeof View> | null) => {
 	}
 };
 
-/**
- * Opening a sealed letter: it shows open at once and the server catches up. If the server fails,
- * the letter seals again (the data hook says so in a toast), VoiceOver goes back to Open rather
- * than to the words, and nothing opens twice while one is on its way.
- */
 export function useReaderOpen({
 	letter,
 	open: openOnServer,
@@ -34,7 +28,6 @@ export function useReaderOpen({
 	const sealed = readerSealed(letter, openedHere);
 	const words = useRef<ComponentRef<typeof View>>(null);
 	const button = useRef<ComponentRef<typeof View>>(null);
-	// PressScale types its `ref` as the View component itself, not its instance: take either.
 	const buttonRef = (el: ComponentRef<typeof View> | typeof View | null) => {
 		button.current = typeof el === "function" ? null : el;
 	};
@@ -61,7 +54,6 @@ export function useReaderOpen({
 			opening.current = false;
 			stopFocus();
 			setOpenedHere(false);
-			// Open is back once it seals again: a frame for the bar to mount.
 			requestAnimationFrame(() => focusOn(button.current));
 		});
 		focus.current = setTimeout(

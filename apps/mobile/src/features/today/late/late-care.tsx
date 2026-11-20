@@ -9,7 +9,6 @@ import { useToday } from "../today-data";
 const LIFEBUOY = 20;
 const CHEVRON = 14;
 
-/** After 10pm, under something for the quiet: people you can reach, any time. */
 export function LateCare() {
 	const [danger, subtle] = useTokenColors(["danger", "subtle"]);
 	const { actions } = useToday();

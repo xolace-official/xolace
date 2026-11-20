@@ -1,8 +1,3 @@
-/**
- * Stand-ins for production's avatar catalog (`avatars.listAvatars`) in the dev states: the
- * board's ten (`AVS`), each a soft radial gradient as an SVG data URI. The last four come with
- * Xolace+. Fixed printed colours, dev only.
- */
 import type { AvatarOption } from "@/features/you/avatar-model";
 
 const AVS = [

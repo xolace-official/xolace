@@ -1,4 +1,3 @@
-/** Every line Quotes shows (handoff `quotes.md` §1), as the "Quotes v2" board has it. */
 export const QUOTE_COPY = {
 	accessibility: {
 		back: "Back",
@@ -25,10 +24,6 @@ export const QUOTE_COPY = {
 		},
 	},
 	clearHint: "Tap anywhere to bring everything back",
-	/**
-	 * The one-time daily quote offer (B19), the first time someone resonates with or keeps a
-	 * quote. Never shown again, whatever they answer.
-	 */
 	dailyQuote: {
 		blocked:
 			"Notifications are off for Xolace. You can allow them in Settings.",
@@ -53,7 +48,6 @@ export const QUOTE_COPY = {
 		reply: "Your reply didn’t send. Try again.",
 	},
 	gate: "Keeping quotes is part of Xolace+. Resonate stays free, and it still shapes tomorrow’s words.",
-	/** The tiers come from the catalogue, so this never names which backgrounds are free. */
 	gateBackground:
 		"This background comes with Xolace+. The free ones stay yours, and today’s words read the same on any of them.",
 	keepIt: "Keep it",
@@ -74,11 +68,8 @@ export const QUOTE_COPY = {
 	prompt: "What does this bring up for you?",
 	reason: {
 		curated: "Chosen for you today.",
-		/** A free account who would have had one of their own. */
 		locked: "This one’s for everyone. Yours is waiting →",
-		/** Curated, and no reflection today yet. */
 		reflectToday: "Reflect today and tomorrow’s is yours.",
-		/** A session-made quote. */
 		session: "Based on what you’ve been sharing.",
 	},
 	reflect: "Reflect on this",

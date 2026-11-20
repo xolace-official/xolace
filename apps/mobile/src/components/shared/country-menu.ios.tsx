@@ -16,7 +16,6 @@ const CHIP_FONT = { size: 13, weight: "semibold" } as const;
 const CHEVRON = 10;
 const GAP = 4;
 
-/** The country chip: a native menu with the current choice ticked. */
 export function CountryMenu<T extends string>({
 	options,
 	value,

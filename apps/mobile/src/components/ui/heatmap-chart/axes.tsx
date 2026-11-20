@@ -12,15 +12,10 @@ import { type Slot, useHeatmap } from "./context";
 
 export interface HeatmapXAxisProps {
 	className?: string;
-	/** Label a column from its first dated bin. Return an empty string to leave it unlabelled. */
 	formatLabel?: (date: Date, column: number) => string;
-	/** Column labels, left to right, overriding month names for a grid whose columns are not
-	 * weeks. */
 	labels?: string[];
 }
 
-/** Month labels above the grid, emitted where the month changes; `labels` gives one per column
- * instead. */
 export function HeatmapXAxis({
 	className,
 	formatLabel,
@@ -56,8 +51,6 @@ export function HeatmapXAxis({
 			}
 		});
 
-		// The first month is usually a stub and its label collides with the next; drop it when
-		// cramped.
 		if (out.length > 1 && out[1]!.column - out[0]!.column < 3) {
 			out.shift();
 		}
@@ -84,17 +77,12 @@ HeatmapXAxis.slot = "x-axis" as Slot;
 
 export interface HeatmapYAxisProps {
 	className?: string;
-	/** `initial` is the single letter; `full` is the abbreviated name. */
 	labelFormat?: "initial" | "full";
-	/** Row labels, top to bottom, overriding weekday names for a grid whose rows are not days. */
 	labels?: string[];
-	/** Which rows get a label. Every other row is the usual choice. */
 	tickFilter?: "all" | "odd" | "even";
-	/** Width reserved for the labels. The grid is sized around it. */
 	width?: number;
 }
 
-/** Weekday labels down the left of the grid. */
 export function HeatmapYAxis({
 	className,
 	width = DEFAULT_AXIS_WIDTH,
@@ -124,7 +112,6 @@ export function HeatmapYAxis({
 						key={row}
 						muted
 						size="xs"
-						// Centred on the cell so the label reads as belonging to its row.
 						style={{ top: row * step + grid.size / 2 - 7 }}
 					>
 						{labels

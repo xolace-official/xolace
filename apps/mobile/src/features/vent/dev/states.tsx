@@ -1,11 +1,9 @@
-/** Vent on fixtures: `xolace://dev/vent/<id>`. No mic, no server, no voice credits. */
 import type { ComponentProps } from "react";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureVent } from "@/features/vent/dev/fixture-vent";
 import { CEILING_MS, NEAR_LEFT_MS } from "@/features/vent/dev/fixtures";
 import type { VentFixture } from "@/features/vent/dev/use-fixture-backend";
 
-/** The real route's presentation (`vent/screens.ts`): no header, no back swipe. */
 const OPTIONS = {
 	animation: "fade",
 	gestureEnabled: false,
@@ -13,12 +11,9 @@ const OPTIONS = {
 } as const;
 
 const BASE: VentFixture = { answer: "reply", introSeen: true, voice: "normal" };
-/** Assembled already, as the board's jumps open. */
 const SETTLED = { field: "field", settled: true } as const;
-/** Past the burn: the field is gone and the server has answered. */
 const AFTER = { field: "none" } as const;
 
-/** A state's screen: the real route's presentation, the vent on `props`. */
 const vent = (props: ComponentProps<typeof FixtureVent>) => ({
 	options: OPTIONS,
 	Screen: () => <FixtureVent {...props} />,

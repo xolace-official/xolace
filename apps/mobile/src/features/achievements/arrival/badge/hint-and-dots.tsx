@@ -25,7 +25,6 @@ const HINT_TOP = 612;
 const HINT_IN_MS = 500;
 const DOTS_ABOVE_CTA = 32;
 
-/** "Drag it to turn it over…" from 2.4 s, gone once it's been turned. */
 export function Hint({ eng, geo }: { eng: SharedValue<Eng>; geo: Geo }) {
 	const style = useAnimatedStyle(() => {
 		const e = eng.get();
@@ -52,7 +51,6 @@ export function Hint({ eng, geo }: { eng: SharedValue<Eng>; geo: Geo }) {
 	);
 }
 
-/** The dots: the one out lit by the engine's step; the label renders when it changes. */
 export function Dots({
 	eng,
 	first,
@@ -89,7 +87,6 @@ export function Dots({
 		<Animated.View
 			accessibilityLabel={COPY.arrival.dotsLabel(n, total)}
 			accessible
-			// The dots are 6 pt, 6 apart.
 			className="absolute inset-x-0 flex-row justify-center gap-1.5"
 			style={[{ bottom: insets.bottom + CTA_H + DOTS_ABOVE_CTA }, style]}
 		>

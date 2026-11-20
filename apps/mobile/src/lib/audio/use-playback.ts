@@ -13,20 +13,15 @@ import {
 	holdsAudioFocus,
 } from "@/lib/audio/session";
 
-/** What any signed-URL player needs from its server read. */
 export type Playable = { url: string; expiresAt: number; durationSec: number };
 
 const EXPIRY_MARGIN_MS = 5 * 60 * 1000;
 const MINT_RETRIES = 3;
 const MINT_BACKOFF_MS = 500;
-/** A loop wrap reads as the end of one status tick and the start of the next: the time
- * left before the wrap plus the time played after it stays under this. */
 const LAP_WINDOW_SEC = 2;
 
 export type PlaybackReturn<T> = {
-	/** undefined while minting, null when there's nothing to play. */
 	track: T | null | undefined;
-	/** Terminal: retries exhausted or the server refused. `track` stays undefined. */
 	error: Error | null;
 	isLoaded: boolean;
 	isPlaying: boolean;
@@ -34,12 +29,9 @@ export type PlaybackReturn<T> = {
 	currentTime: number;
 	duration: number;
 	toggle: () => void;
-	/** Resolves once the player has moved (a play right after it starts from there). */
 	seekTo: (seconds: number) => Promise<void>;
-	/** 0–1. Survives a re-mint: the rebuilt player is set to it on load. */
 	volume: number;
 	setVolume: (volume: number) => void;
-	/** Repeat this track. Survives a re-mint like `volume`. */
 	loop: boolean;
 	setLoop: (loop: boolean) => void;
 	/** Natural plays to the end while looping. A looping player never reports `didJustFinish`,
@@ -47,16 +39,11 @@ export type PlaybackReturn<T> = {
 	laps: number;
 };
 
-/** What a caller adds on top of the listener's own controls. */
 export type PlaybackOptions = {
-	/** 0–1, multiplied into the volume without moving it (the sleep timer's fade). */
 	gain?: number;
-	/** Stop at the end of this play even with Repeat on (the sleep timer's End of track). */
 	stopAtEnd?: boolean;
 };
 
-/** Signed-URL playback shared by every player (#411). R2 URLs expire hourly, so a late resume
- * re-mints and rebuilds the player. */
 export function usePlayback<T extends Playable>(
 	key: string,
 	fetchTrack: () => Promise<T | null>,
@@ -65,9 +52,6 @@ export function usePlayback<T extends Playable>(
 ): PlaybackReturn<T> {
 	const [track, setTrack] = useState<T | null | undefined>(undefined);
 	const [error, setError] = useState<Error | null>(null);
-	// Applied once the (re)built player reports loaded: where to resume, and
-	// whether the user had asked to play. `epoch` is the focus epoch at request
-	// time: if another source took focus since, the queued play is stale.
 	const pending = useRef<{ seek: number; play: boolean; epoch: number } | null>(
 		null
 	);
@@ -75,11 +59,8 @@ export function usePlayback<T extends Playable>(
 	const [loop, setLoop] = useState(false);
 	const [laps, setLaps] = useState(0);
 	const lastTime = useRef(0);
-	// Identity for audio focus: the ref object itself, not its contents.
 	const focus = useRef(null);
 
-	// Transient (network) failures retry with bounded backoff; a ConvexError is
-	// the server refusing on purpose, so it surfaces at once.
 	const mint = async (): Promise<T | null> => {
 		for (let attempt = 0; ; attempt++) {
 			try {
@@ -93,8 +74,6 @@ export function usePlayback<T extends Playable>(
 		}
 	};
 
-	// One-shot mint, not a subscription: a signed URL never changes reactively,
-	// and a fresh one is fetched on demand below.
 	useEffect(() => {
 		let cancelled = false;
 		mint()
@@ -135,8 +114,6 @@ export function usePlayback<T extends Playable>(
 				lastTime.current = seek;
 				await player.seekTo(seek);
 			}
-			// Someone else started (or a recorder yielded) while this one loaded:
-			// their sound wins, the stale request is dropped.
 			if (!play || (audioFocusEpoch() !== epoch && !holdsAudioFocus(focus))) {
 				return;
 			}
@@ -152,26 +129,19 @@ export function usePlayback<T extends Playable>(
 		// eslint-disable-next-line react-hooks/exhaustive-deps -- track read for lock-screen metadata only, not a resume trigger
 	}, [status.isLoaded, player]);
 
-	// On the player, not the status: the status only reports what the player
-	// was told, and a re-minted player starts back at 1.
 	useEffect(() => {
-		// eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.volume is a documented mutable setter
 		player.volume = nativeVolume(volume, gain);
 	}, [player, volume, gain]);
 
 	useEffect(() => {
-		// eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.loop is a documented mutable setter
 		player.loop = nativeLoop(loop, stopAtEnd);
 	}, [player, loop, stopAtEnd]);
 
-	// A rebuilt player starts at 0; the old one's end-of-track time isn't a wrap.
 	useEffect(() => {
 		lastTime.current = 0;
 	}, [player]);
 
 	// Native looping wraps to 0 without a finish event; spot the wrap instead.
-	// Seeks set `lastTime` to their target first, so a jump back isn't a lap. A
-	// lock-screen seek bypasses that, but only one landing inside the window reads as a wrap.
 	useEffect(() => {
 		const prev = lastTime.current;
 		lastTime.current = status.currentTime;
@@ -205,10 +175,7 @@ export function usePlayback<T extends Playable>(
 	// native player first, and its `sharedObjectWillRelease` already clears the
 	// active lock-screen player. Calling into the released object throws.
 
-	/** Past `expiresAt`, re-mints and queues the action for the rebuilt player; true means the
-	 * caller stops. */
 	const remintIfExpired = async (seek: number, play: boolean) => {
-		// `expiresAt` is server time; the margin absorbs a slow device clock.
 		if (!track || Date.now() + EXPIRY_MARGIN_MS < track.expiresAt) {
 			return false;
 		}
@@ -216,7 +183,6 @@ export function usePlayback<T extends Playable>(
 		try {
 			setTrack(await mint());
 		} catch (e) {
-			// Nothing will load to run the queued action; drop it and surface why.
 			pending.current = null;
 			console.error("[usePlayback] re-mint failed:", e);
 			setError(e instanceof Error ? e : new Error(String(e)));

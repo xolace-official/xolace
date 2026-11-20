@@ -30,34 +30,21 @@ import { useHeaderOptions } from "@/lib/header-options";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const S = COPY.steadinessScreen;
-/** iOS draws the content under its transparent bar; Android's bar is opaque, above it (as
- * Lantern's hub). */
 const UNDER_THE_BAR = Platform.OS === "ios";
-/** Content starts 8 pt under the bar (the board's 112 under a 104 bar). */
 const BAR = 50;
 const UNDER_BAR = 8;
 const SIDE = 20;
 const GAP = 12;
-/** Clears the floating tab bar. */
 const TAB_CLEAR = 96;
-/** The dial's number passes under the bar this far down the content (the board's `heroEnd`). */
 const NUMBER_BOTTOM = 200;
-/** The chip springs in (steadiness.md §4.2) and leaves in 150 ms linear. */
 const CHIP_SPRING = { damping: 14, stiffness: 320, ...PLAY_AS_CHOSEN };
 const CHIP_OUT = { duration: 150, easing: Easing.linear, ...PLAY_AS_CHOSEN };
 const CHIP_FADE = { duration: 200, ...PLAY_AS_CHOSEN };
-/** Every domain the server can send, so the clock runs long enough for the last ring. */
 const MAX_PARTS = Object.keys(DOMAIN_ICON).length;
 const RINGS_MS =
 	RING_DELAY_MS + (MAX_PARTS - 1) * RING_STAGGER_MS + RING_FILL_MS;
 const AURORA = 280;
 
-/**
- * Steadiness (steadiness.md): production's screen, kept nearly as it is. The glass dial with the
- * Xolace face above the number, the parts of your life as rings or tick meters with a detail
- * card, and every one of production's doors into Xolace+. Scrolling the number under the bar
- * docks the dial there as a chip, on the UI thread; React hears only the crossing.
- */
 export function SteadinessScreen() {
 	const header = useHeaderOptions("small");
 	const insets = useSafeAreaInsets();
@@ -71,12 +58,10 @@ export function SteadinessScreen() {
 	const [docked, setDocked] = useState(false);
 	const scrollY = useSharedValue(0);
 	const upsellMid = useSharedValue(-1);
-	// The dock threshold below is in content offset, so it holds on both once this is right.
 	const top = UNDER_THE_BAR ? insets.top + BAR + UNDER_BAR : UNDER_BAR;
 	const lit = state?.dial.lit === true;
 	const score = state?.dial.lit ? state.dial.score : null;
 
-	// One clock for every ring's fill, once per visit, from when the parts first draw.
 	const ready = state !== undefined;
 	const rings = useSharedValue(reduced ? RINGS_MS : 0);
 	useEffect(() => {
@@ -114,7 +99,6 @@ export function SteadinessScreen() {
 		scheduleOnRN(setDocked, now);
 	});
 
-	/** The heavier-lately line is spent once its middle is on screen. */
 	const placeUpsell = (y: number, h: number) => {
 		const mid = y + h / 2;
 		if (mid - scrollY.get() < height) {

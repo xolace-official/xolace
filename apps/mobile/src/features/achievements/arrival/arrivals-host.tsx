@@ -21,21 +21,11 @@ import { BackfillStage } from "@/features/achievements/arrival/backfill/backfill
 import { setArrivalOpen } from "@/features/achievements/arrival-open";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** The fade in and out, as a full-screen modal fades (react-native-screens' 350 ms). */
 const FADE_MS = 350;
 
-/**
- * The badges' arrival over the app (a host in `navigation/hosts.ts`): staged
- * hidden as soon as something is due, so opening only fades it in and starts
- * its clock, and the moment's first frame waits on no React work (arrivals §6).
- * An overlay rather than a route: a push re-renders every scene of the stack.
- * It can't draw over a natively presented screen, and the gate keeps it off
- * those (`held-routes.ts`).
- */
 export function ArrivalsHost({
 	isPresented,
 }: {
-	/** A native sheet or modal is up at this pathname (`navigation/presented-routes.ts`). */
 	isPresented: (pathname: string) => boolean;
 }) {
 	return (
@@ -45,7 +35,6 @@ export function ArrivalsHost({
 	);
 }
 
-/** The overlay under its provider; a dev state passes a held frame (`still`). */
 export function ArrivalOverlay({ still }: { still?: Still }) {
 	const { state, actions } = useArrivalsState();
 	const { plan, open } = state;
@@ -75,7 +64,6 @@ export function ArrivalOverlay({ still }: { still?: Still }) {
 		arrival.current?.start();
 		shown.set(withTiming(1, fade));
 		setArrivalOpen(true);
-		// Android's back closes the moment, as it closed the old route.
 		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
 			leave();
 			return true;

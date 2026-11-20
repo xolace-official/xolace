@@ -1,8 +1,3 @@
-/**
- * Builds the type files from src/design/font-pairs.ts and src/design/type.ts.
- * Pure: scripts/gen-themes.ts writes them, and type.test.ts checks the
- * committed ones are what this builds.
- */
 import {
 	FIXED_FACES,
 	FONT_PAIRS,
@@ -12,7 +7,6 @@ import { TYPE } from "../../src/design/type";
 
 const UPPER = /[A-Z]/g;
 
-/** `headlineL` → `headline-l`. */
 export const kebab = (name: string) =>
 	name.replace(UPPER, (c) => `-${c.toLowerCase()}`);
 

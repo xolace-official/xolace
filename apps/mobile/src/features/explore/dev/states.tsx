@@ -1,4 +1,3 @@
-/** Explore's home, topics and lists on fixtures: `xolace://dev/explore/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { COPY } from "@/features/explore/copy";
 import { FixtureHome } from "@/features/explore/dev/fixture-home";
@@ -9,10 +8,8 @@ import {
 } from "@/features/explore/dev/fixture-screens";
 import { LIST, TILES } from "@/features/explore/dev/fixtures";
 
-/** The screens set their own bars, as their routes do. */
 const OWN_BAR = { title: "" };
 const EMPTY = { music: [], support: [] };
-/** The home's bar, as its route has it. */
 const HOME_BAR = { headerLargeTitle: true, title: "Explore" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

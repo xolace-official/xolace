@@ -18,7 +18,6 @@ import { Confetti } from "@/features/achievements/arrival/badge/confetti";
 import { OnceShown } from "@/features/achievements/arrival/once-shown";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** Under the next badge's colour: the one before it, until the arrival closes. */
 export function Under({
 	eng,
 	badges,
@@ -84,10 +83,6 @@ export function PhaseConfetti({
 	);
 }
 
-/**
- * Badge `i`'s touches and words reach VoiceOver and touch only while it's the
- * one out: a small render of this wrapper when the step reaches or leaves it.
- */
 export function StepGate({
 	eng,
 	i,

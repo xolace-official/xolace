@@ -1,38 +1,24 @@
-// Which colours a face draws with, for every renderer (`XolaceFace` in its own canvas,
-// `FaceDrawing` inside another). Pure: the renderers read the theme tokens and pass them in.
-
 import type { BodyName } from "./bodies";
 import type { FeatureColors } from "./face-geo";
 import { type GradientSet, PALETTES, type PaletteName } from "./face-palette";
 
-/** The theme colours a face can use (`--color-*` tokens, read by `useFaceColors`). */
 export type FaceTokens = Omit<FeatureColors, "mouth"> & {
 	fg: string;
 	bg: string;
 	accent: string;
 	accentFg: string;
 	muted: string;
-	/** The highlight's transparent end. */
 	highlightClear: string;
 };
 
 export type FaceColors = {
-	/** The body's gradient, or null when it's one colour. */
 	gradient: GradientSet | null;
-	/** The body's colour when there's no gradient. */
 	solid: string;
-	/** Whether the soft highlight sits on the body (not on flat chalk). */
 	shine: boolean;
 	highlightClear: string;
-	/** The features' colours. */
 	colors: FeatureColors;
 };
 
-/**
- * Chalk (the square) is flat, in the theme's text colour, and ignores the palette. Otherwise the
- * palette picks: a gradient set, "theme" (the accent) or "muted" (a face at rest, set aside). The
- * palette defaults to the brand gradient, and to the theme accent on an orb.
- */
 export function faceColors({
 	body,
 	palette,

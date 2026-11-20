@@ -1,10 +1,5 @@
 import type { IconName } from "@/components/shared/icon";
 
-/**
- * Settings › Notifications (P/design/handoff/settings.md §1, P/src/fixtures/settings-v2.ts), word
- * for word. Production's own strings (the rows, the reach descriptions, the chat footnote, the
- * blocked alert) are kept as production says them.
- */
 export const NOTIFY_COPY = {
 	alert: {
 		body: "Your device is blocking notifications, so this can’t be turned on from here. You can allow them in device settings.",
@@ -19,10 +14,8 @@ export const NOTIFY_COPY = {
 	chatNote:
 		"When someone asks to talk, answers your request, or writes while you’re away. Never what was written.",
 	chatRow: "Chat notifications",
-	/** Production #776: one row opening "Reach me on…", behind the `reach-me-on` flag. */
 	checkIns: "Check-ins",
 	conversations: "Conversations",
-	/** The daily quote push (B19). */
 	dailyQuote: "Daily quote",
 	dailyQuoteNote:
 		"Today’s quote, once a day at the time you choose. If it was made from your reflections, the notification says only that it’s here.",
@@ -35,7 +28,6 @@ export const NOTIFY_COPY = {
 		morning: "Morning",
 	},
 	dayLabels: ["noon", "6 pm", "midnight", "6 am", "noon"],
-	/** Letters (S20): every letter push, separate from Privacy › Receive letters. */
 	letters: "Letters",
 	lettersNote:
 		"One line when a letter is placed with you: “Someone wrote you a letter.” Never what it says. During quiet hours it waits until they end.",
@@ -52,7 +44,6 @@ export const NOTIFY_COPY = {
 	remindersNote:
 		"Now and then, one short line from Xolace: when you haven’t been by in a while, around the time you usually come, or just something a friend might text.",
 	remindersRow: "Gentle reminders",
-	/** The lock-screen sample. */
 	sample: {
 		a11y: (line: string, held: boolean) =>
 			`A sample reminder: ${line}${held ? " Held until morning by quiet hours." : ""}`,
@@ -70,7 +61,6 @@ export const NOTIFY_COPY = {
 
 export type Reach = "warm" | "direct" | "quiet";
 
-/** The three voices: production's labels and descriptions, the board's fixed sample lines. */
 export const REACH: readonly {
 	id: Reach;
 	label: string;

@@ -25,12 +25,9 @@ type Props = {
 	reduced: boolean;
 	colors: PeersColors;
 	arrive: SharedValue<number>;
-	/** Where the arrival value stops. */
 	arriveEnd: number;
-	/** The scroll's offset and the window's height: a card writes when it comes into view. */
 	scrollY: SharedValue<number>;
 	viewH: number;
-	/** Where the card list starts in the scroll's content. */
 	listTop: SharedValue<number>;
 	breath: SharedValue<number>;
 	onToggle: () => void;
@@ -38,12 +35,6 @@ type Props = {
 	onHide: () => void;
 };
 
-/**
- * One reflection (board `.cw`, `.cd`): rises 28 pt on its turn (from the shared
- * arrival value), writes its words in when it's in view, lights from the chip
- * when you've felt it too (the floor light and edge glow, mounted on its first
- * lighting), and folds away when reported or hidden (.42 s, the sheet curve).
- */
 export function PeerCard({
 	card,
 	index,
@@ -62,7 +53,6 @@ export function PeerCard({
 }: Props) {
 	const { on, gone } = card;
 	const drop = useTokenColor("separator");
-	// Each turn-on beats the ember once (a card that arrives lit doesn't).
 	const [presses, setPresses] = useState(0);
 	const [wasOn, setWasOn] = useState(on);
 	if (on !== wasOn) {
@@ -85,7 +75,6 @@ export function PeerCard({
 		y,
 	});
 	const [size, setSize] = useState({ h: 0, w: 0 });
-	// The light's canvases mount on the card's first lighting, never before.
 	const [everLit, setEverLit] = useState(on);
 	if (on && !everLit) {
 		setEverLit(true);

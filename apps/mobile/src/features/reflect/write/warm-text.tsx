@@ -16,7 +16,6 @@ import { a11yHidden } from "@/lib/utils";
 import { SPEAK, WARM } from "../motion";
 import { FIELD_TEXT } from "./field-type";
 
-/** Which word (0-based, counting words only) a layer warms, and a stamp that replays it. */
 export type Warmth = { word: number; stamp: number };
 
 type Drop = { at: number; n: number; waiting: boolean };
@@ -27,7 +26,6 @@ const fade = (ms: number) => ({
 	...PLAY_AS_CHOSEN,
 });
 
-/** Splits text into words and the whitespace between them, numbering the words. */
 function tokens(text: string) {
 	let n = -1;
 	let at = 0;
@@ -42,7 +40,6 @@ function tokens(text: string) {
 	});
 }
 
-/** The field's type, unseen: it holds a span's place so the visible ones wrap as the field does. */
 function Clear({ children }: { children: string }) {
 	return (
 		<AppText className="text-transparent" style={FIELD_TEXT} variant="compose">
@@ -51,15 +48,6 @@ function Clear({ children }: { children: string }) {
 	);
 }
 
-/**
- * The words you see, drawn over a TextInput whose own text is transparent (S1a): each finished
- * word warms to ember with a soft glow, holds .45 s and cools over .4 s. The warm word is drawn
- * in its place on a copy of the paragraph whose other words are clear, and that copy's opacity
- * is its tint; two copies take turns, so a word still cooling isn't cut off by the next.
- *
- * A Plus (Scribe) take's words wait unseen while listening, then arrive as one block from 12 pt
- * above on the underdamped spring (S2: ω 18, ζ .55). An on-device take's words show as they come.
- */
 export function WarmText({
 	text,
 	warm,
@@ -79,7 +67,6 @@ export function WarmText({
 	const dropY = useSharedValue(0);
 	const dropOpacity = useSharedValue(1);
 
-	// A newly finished word takes the layer the last one didn't, then holds and cools.
 	const [seen, setSeen] = useState(-1);
 	if (warm && warm.stamp !== seen) {
 		setSeen(warm.stamp);
@@ -164,7 +151,6 @@ export function WarmText({
 	);
 }
 
-/** One warm copy of the paragraph; its opacity is the word's tint. */
 function Tinted({
 	tint,
 	children,

@@ -8,16 +8,10 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 
 const MS_PER_S = 1000;
 const REST_MS = 260;
-/** A quiet room while it listens; a voice while you speak. */
 const AMBIENT = { base: 0.12, swing: 0.08 } as const;
 const VOICE = { base: 0.5, swing: 0.4 } as const;
 const REST = { duration: REST_MS, ...PLAY_AS_CHOSEN };
 
-/**
- * A simulated mic level, 0–1, for the dev states (no microphone, no voice service): a
- * smooth noise of a few sines while it listens, louder while your line is being spoken. It
- * drives the composer's bars and the face leaning in. Never the mouth.
- */
 export function useSimulatedLevel(listening: boolean, speaking: boolean) {
 	const level = useSharedValue(0);
 	const loud = useSharedValue(0);

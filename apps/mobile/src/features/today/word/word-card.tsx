@@ -12,48 +12,34 @@ import { MODULE_GAP } from "../today-motion";
 import { TodaySection } from "../today-section";
 import { InkReveal } from "./ink-reveal";
 
-// From production `daily-quotes-card.tsx`: the source is a 1200×1000 2×2 grid; the
-// bottom-left figure is zoomed and offset into a 132 pt window. Crop starts at y 500 so
-// the blob above never shows.
 const ART = require("@/assets/images/illustrations/discovery-image-bg.png");
 const ART_SCALE = 0.4;
 const ART_CROP_X = 230;
 const ART_CROP_Y = 500;
 const CARD_RADIUS = 24;
-/** Two lines of the quote (25.8 pt each): its room while today's word loads. */
 const LOADING_H = 52;
-/** The grid, scaled and offset so the crop lands in the window (with `absolute`). */
 const ART_FRAME = {
 	height: 1000 * ART_SCALE,
 	left: -ART_CROP_X * ART_SCALE,
 	top: -ART_CROP_Y * ART_SCALE,
 	width: 1200 * ART_SCALE,
 } as const;
-/** Right corners only, so the window meets the card's right edge exactly. */
 const ART_WINDOW = {
 	borderBottomRightRadius: CARD_RADIUS,
 	borderTopRightRadius: CARD_RADIUS,
 } as const;
 
-/**
- * A word for today: today's quote, its line inking in once a day (ink-bleed-reveal),
- * beside production's art. A tap opens Quotes, as production's quotes card did.
- */
 export function WordCard() {
 	const surface = useTokenColor("surface");
 	const { state, actions } = useToday();
 	const { intro, reduced, waiting } = useTodayFrame();
 	const [line, setLine] = useState<{ w: number; h: number } | null>(null);
 	const word = state.word;
-	// Decided when the word first arrives: it inks in only while the first open is still
-	// playing. Loading, nothing is decided (and nothing shows).
 	const [ink, setInk] = useState<"wait" | "play" | "done">("wait");
 	if (ink === "wait" && word !== undefined) {
 		setInk(word && intro && !reduced ? "play" : "done");
 	}
 	const inking = ink === "play";
-	// Until the cover has drawn, an inking line stays hidden (no flash of the whole line). The
-	// ink itself starts once the launch cover leaves (`waiting`).
 	const [covered, setCovered] = useState(false);
 	const text = word ?? COPY.word.fallback;
 

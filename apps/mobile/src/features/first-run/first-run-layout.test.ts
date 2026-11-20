@@ -25,7 +25,6 @@ describe("the board's bottom controls under Dynamic Type", () => {
 		expect(link.h).toBeGreaterThan(36);
 		expect(link.top).toBe(702 + pill.h + 8);
 		expect(link.top + link.h).toBeLessThanOrEqual(CONTROLS_BOTTOM);
-		// Each label's line still fits inside its box.
 		expect(PILL.line * pill.max).toBeLessThanOrEqual(pill.h - PILL.pad);
 		expect(LINK.line * link.max).toBeLessThanOrEqual(link.h - LINK.pad);
 	});

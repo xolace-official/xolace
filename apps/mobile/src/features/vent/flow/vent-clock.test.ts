@@ -41,7 +41,6 @@ describe("ventClock", () => {
 	});
 });
 
-/** A reply whose voice resolves when the test says so. */
 function reply() {
 	let resolveVoice: (ms: number | null) => void = () => undefined;
 	const clock = ventClock();
@@ -77,7 +76,6 @@ describe("playReply", () => {
 		voice(1200);
 		await done;
 		vi.runAllTimers();
-		// No announcement, no finish (a false vent_completed), no navigation from a gone screen.
 		expect(steps.begin).not.toHaveBeenCalled();
 		expect(steps.say).not.toHaveBeenCalled();
 		expect(steps.end).not.toHaveBeenCalled();

@@ -6,8 +6,6 @@ import { planPremiumThemeReset } from "@/features/settings/premium-theme/premium
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
 
-/** Drops a lapsed subscriber off a premium theme. `colorThemeId` is re-applied
- * on cold start before the entitlement is known; `planPremiumThemeReset` decides. */
 export function usePremiumThemeReconciler() {
 	const { isPlus, isResolved } = usePlusEntitlement();
 	const colorThemeId = useAppStore((s) => s.colorThemeId);

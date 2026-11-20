@@ -24,11 +24,6 @@ function Line({ icon, children }: { icon: IconName; children: string }) {
 	);
 }
 
-/**
- * "What Xolace keeps" (board `.keep`): four plain lines that follow the choices below, and the
- * promise under a hairline. One VoiceOver element. The board's "46 kept" is left out: the backend
- * serves no count of kept sessions.
- */
 export function KeepCard({ card }: { card: ReturnType<typeof keepCard> }) {
 	const [shadow] = useTokenColors(["privacy-shadow"]);
 	return (

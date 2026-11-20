@@ -7,7 +7,6 @@ import {
 } from "uniwind";
 import type { ReaderPage } from "@/features/lantern/reader/reading-modes";
 
-/** The theme roles a reading page sets, and its token for each (`--color-reader-<page>-*`). */
 const ROLES = [
 	["background", "bg"],
 	["foreground", "ink"],
@@ -21,11 +20,6 @@ const ROLES = [
 	["accent-foreground", "on-accent"],
 ] as const;
 
-/**
- * A reading mode's page, reader-local (#401): the light or dark base theme with the roles above
- * swapped for the page's printed colours, so the reader's parts draw with plain classes
- * (`bg-surface-secondary`, `text-muted`) whatever the mode. Classic is the app's own theme.
- */
 export function ReaderPageScope({
 	page,
 	children,
@@ -33,7 +27,6 @@ export function ReaderPageScope({
 	page: ReaderPage;
 	children: ReactNode;
 }) {
-	// Classic has no page tokens; read paper's so the hook still runs.
 	const key = page === "app" ? "paper" : page;
 	const values = (
 		useCSSVariable(
@@ -41,12 +34,9 @@ export function ReaderPageScope({
 		) as string[]
 	).map(String);
 	const { theme } = useUniwind();
-	// One shape for every page, so changing the mode never remounts the reader (its scroll and
-	// its place would go): Classic is the app's own theme with nothing swapped.
 	const variables: Record<string, string> = {};
 	if (page !== "app") {
 		ROLES.forEach(([role], i) => {
-			// Classes resolve through `--<role>`, hooks through `--color-<role>`: both move.
 			variables[`--${role}`] = values[i];
 			variables[`--color-${role}`] = values[i];
 		});

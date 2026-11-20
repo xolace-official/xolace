@@ -1,4 +1,3 @@
-/** The board's kindling (handoff `kindling.md` §2.5), as `paths.getActive` would send it. */
 import type {
 	ActiveKindling,
 	ServerTwig,
@@ -28,7 +27,6 @@ const kindling = (id: string, twigs: Twig[]): ActiveKindling =>
 		})),
 	}) as unknown as ActiveKindling;
 
-/** Breathing, a voice, a bridge and a try: the board's four. */
 export const BOARD = kindling("fixture-board", [
 	{
 		actionType: "breathing_box",
@@ -54,7 +52,6 @@ export const BOARD = kindling("fixture-board", [
 	},
 ]);
 
-/** A xolacer twig second, for "Finding someone". */
 export const WITH_XOLACER = kindling("fixture-xolacer", [
 	{
 		actionType: "breathing_box",
@@ -73,7 +70,6 @@ export const WITH_XOLACER = kindling("fixture-xolacer", [
 	},
 ]);
 
-/** The board's kindling with the server's states already set. */
 export function viewOf(
 	active: ActiveKindling,
 	states?: readonly TwigState[]

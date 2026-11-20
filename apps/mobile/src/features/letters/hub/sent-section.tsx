@@ -12,22 +12,14 @@ import { SectionLabel } from "./for-you-section";
 import { useLettersHubScreen } from "./hub-data";
 import { SentRow } from "./sent-row";
 
-/** A withdrawn row fades and the rows below close up. With Reduce Motion it only fades. */
 const OUT_MS = 240;
 
-/**
- * Sent, the private list (handoff §1): each letter's opening line and status, newest first, then
- * the footnote. Empty: "You haven't written one yet." Withdraw asks first; it can't be undone.
- * Leaving the hub (a push tap opens a letter over it) drops the ask, or it would stay drawn on top.
- */
 export function SentSection() {
 	const { state, actions } = useLettersHubScreen();
 	const reduced = useEffectiveReducedMotion();
 	const [withdrawing, setWithdrawing] = useState(state.opens.withdraw);
 	const w = LETTERS.withdraw;
-	// useFocusEffect needs a stable callback (code-style's listed exception to no useCallback).
 	useFocusEffect(useCallback(() => () => setWithdrawing(null), []));
-	// The ask closes if its letter stops waiting while it's up (received, or withdrawn elsewhere).
 	const asking = state.sent.some(
 		(l) => l.id === withdrawing && l.status === "waiting"
 	)

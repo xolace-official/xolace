@@ -9,9 +9,6 @@ export default function ReachRoute() {
 	const enabled = useReachMeOnFlag();
 	const router = useRouter();
 	const canGoBack = router.canGoBack();
-	// Behind the flag like its row. With the flag off the sheet closes back to
-	// where it opened from; a deep link with nothing behind it lands on
-	// Notifications instead.
 	useEffect(() => {
 		if (enabled === false && canGoBack) {
 			router.back();
@@ -22,7 +19,6 @@ export default function ReachRoute() {
 		return canGoBack ? null : <Redirect href="/settings/notifications" />;
 	}
 	if (enabled === undefined) {
-		// PostHog hasn't loaded flags yet.
 		return (
 			<View className="flex-1 items-center bg-background py-12">
 				<ActivityIndicator accessibilityLabel="Loading" />

@@ -1,4 +1,3 @@
-/** Fixture messages as Stream holds them: reactions, removed, failed and edited. Pure. */
 import { NOW } from "../../dev/fixtures";
 import { MINUTE } from "./thread-fixtures";
 
@@ -7,15 +6,11 @@ export const ME = "profile_me";
 export type DevMessage = {
 	mine: boolean;
 	text: string;
-	/** Minutes before now. */
 	ago: number;
 	failed?: boolean;
-	/** Removed by its author: Stream keeps it in the list as `deleted`. */
 	deleted?: boolean;
-	/** Its words changed after it was sent. */
 	edited?: boolean;
 	reaction?: string;
-	/** Many people's reactions (the channel's cards): counts, and whether one is yours. */
 	reactions?: readonly { type: string; count: number; mine?: boolean }[];
 };
 
@@ -58,7 +53,6 @@ function devType(m: DevMessage) {
 	return m.failed ? "error" : "regular";
 }
 
-/** One fixture as the Stream message the list draws. */
 export function streamMessage(
 	m: DevMessage,
 	index: number,

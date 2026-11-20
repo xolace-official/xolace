@@ -16,10 +16,6 @@ const UP = { android: "arrow_upward", ios: "arrow.up" } as const;
 const DOWN = { android: "arrow_downward", ios: "arrow.down" } as const;
 const LOCK = { android: "lock", ios: "lock.fill" } as const;
 
-/**
- * Production's TrendChip: up is success, down is amber, never red. `short` is the list's
- * ("−8"); only the dial's carries an arrow (the board).
- */
 export function TrendChip({
 	trend,
 	now,
@@ -73,8 +69,6 @@ export function TrendChip({
 	);
 }
 
-/** Production's LockedTrendChip: no direction, no value. A locked ↓ would sell "find out how
- * bad it is". */
 export function LockedTrendChip({ onPress }: { onPress: () => void }) {
 	const accent = useTokenColor("accent");
 	return (

@@ -15,11 +15,6 @@ import { useTalkStyle } from "@/lib/talk/use-talk-style";
 import { useVoicePreview } from "@/lib/talk/use-voice-preview";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
-/**
- * Mirror on Convex: production's tone (`tone_changed`, the register complaint on a reach for
- * Witnessed), voice (`voice_changed`, "auto" clears it, Plus-gated server-side), the talk's
- * style, the previews and the paywall.
- */
 export function useMirrorSettings(): MirrorSettings {
 	const preferences = useQuery(api.preferences.get);
 	const update = usePreferenceMutation();
@@ -37,7 +32,6 @@ export function useMirrorSettings(): MirrorSettings {
 			play: (voice) => {
 				preview.play(voice).catch(() => undefined);
 			},
-			// The mutation throws before the write for a tone they lack, so it's sent on its own.
 			reachForTone: () => saved(update({ registerComplaint: true })),
 			setDirectness: (directness) => saved(talk.setDirectness(directness)),
 			setPace: (pace) => saved(talk.setPace(pace)),

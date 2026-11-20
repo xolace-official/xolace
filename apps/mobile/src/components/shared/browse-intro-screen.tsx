@@ -17,8 +17,6 @@ type Props = {
 
 const enter = (i: number) => FadeInDown.delay(250 + i * 90).duration(500);
 
-/** One-time welcome shared by every Browse surface: hero art, title, subtitle, hold-to-continue
- * CTA. */
 export function BrowseIntroScreen({
 	heroImage,
 	title,
@@ -37,7 +35,6 @@ export function BrowseIntroScreen({
 					source={heroImage}
 					style={StyleSheet.absoluteFill}
 				/>
-				{/* The surface rises at the edges, so the art dips into it at the centre. */}
 				<View className="absolute inset-x-0 bottom-0 h-[12%]">
 					<Svg
 						height="100%"

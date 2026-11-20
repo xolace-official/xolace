@@ -15,24 +15,11 @@ import type { Segment } from "./list/chats-model";
 import { ListSkeleton } from "./list/list-skeleton";
 import { Roster } from "./roster/roster";
 
-/** The page's bottom room, above the tab bar. */
 const BOTTOM = 140;
 
-/**
- * Connect: the one place a human answers. Chats and Xolacers behind one native segment, under
- * the stack's large title, which folds on scroll. Letters' card sits between the title and the
- * segment. One list scrolls the page: the chats are its rows; the roster, the skeleton and the
- * notes under the chats are its footer.
- */
-export function ConnectScreen({
-	letters = null,
-}: {
-	/** Letters' card, composed in by the route: features meet in routes. */
-	letters?: ReactNode;
-}) {
+export function ConnectScreen({ letters = null }: { letters?: ReactNode }) {
 	const { state, actions, deleting } = useConnectScreen();
 
-	// Chat is off; letters don't depend on it, so their card stays above the note.
 	if (state.phase === "disabled") {
 		return (
 			<ScrollView

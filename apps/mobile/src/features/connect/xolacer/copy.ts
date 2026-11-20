@@ -1,4 +1,3 @@
-/** A Xolacer's profile: the prototype's labels, production's facts and request states. */
 export const PROFILE = {
 	ask: "Ask to talk",
 	askSub: "They'll get a request and can accept when they're ready.",
@@ -12,7 +11,6 @@ export const PROFILE = {
 		title: "This Xolacer isn't here",
 	},
 	hereNow: "here now",
-	/** VoiceOver reads the skeleton once, as this. */
 	loading: "Loading their profile",
 	nameHereNow: (name: string) => `${name}, here now`,
 	newXolacer: "New Xolacer",
@@ -35,7 +33,6 @@ export const PROFILE = {
 	ratedLine: (n: number) => `You rated ★${n}. Change`,
 	rateSub: "Only you and Xolace see your score.",
 	rateTitle: (name: string) => `How was talking with ${name}?`,
-	/** The rating line as VoiceOver reads it: no star, no middle dots. */
 	ratingA11y: (rating: number, count: number) =>
 		`Rated ${rating.toFixed(1)} out of 5 across ${count} conversation${count === 1 ? "" : "s"}`,
 	repliesInADay: "replies within a day",

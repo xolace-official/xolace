@@ -18,12 +18,6 @@ const OFFLINE = { android: "wifi_off", ios: "wifi.slash" } as const;
 const OFFLINE_LINE =
 	"You're offline. Changes wait until the connection is back.";
 
-/**
- * "Reach me on…" (#733, #776) in the redesign's look (P/src/features/reach/reach-screen.tsx): the
- * intro, an offline banner when there's no connection, then one card per channel, Telegram first;
- * the one marked First is tried first. Reads its `ReachSheetProvider`: Convex in the app, fixtures
- * in a dev state.
- */
 export const ReachMeOnSheet = () => {
 	const subtle = useTokenColor("subtle");
 	const {

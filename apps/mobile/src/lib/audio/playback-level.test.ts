@@ -23,7 +23,6 @@ describe("playbackLevels", () => {
 			{ stopAtEnd: true }
 		);
 		expect(levels.native.loop).toBe(false);
-		// Repeat stays on for the next play.
 		expect(levels.shown.loop).toBe(true);
 	});
 

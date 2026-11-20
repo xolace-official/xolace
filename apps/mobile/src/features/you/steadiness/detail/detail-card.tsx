@@ -19,8 +19,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 const S = COPY.steadinessScreen;
 const FADE_MS = 150;
 
-/** The picked part (grid, Xolace+): the half gauge, its name and usual, the change, what
- * Xolace noticed, the kindling. Stays mounted from part to part; only the values move. */
 export function DetailCard({
 	part,
 	now,
@@ -70,11 +68,6 @@ export function DetailCard({
 	);
 }
 
-/**
- * A free ring's detail: the gauge unfilled, a lock where the number goes, and what Xolace+
- * shows. Never a number, an arrow or a hint of direction: the same card whether the part is
- * going well or badly.
- */
 export function LockedDetail({
 	part,
 	onUnlock,

@@ -1,5 +1,3 @@
-// The bottom of the Talk demo, by where it stands (#714): voices and "Try me" first, then the
-// mic (or a field, with the mic off), then the way on.
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { TextInput, View } from "react-native";
@@ -167,7 +165,6 @@ function WayOn({
 	onKeepTalking,
 }: Omit<Props, "demo" | "onKeepTalking"> & {
 	children?: React.ReactNode;
-	/** Null when nothing is on offer from here. */
 	onKeepTalking: (() => void) | null;
 }) {
 	return (

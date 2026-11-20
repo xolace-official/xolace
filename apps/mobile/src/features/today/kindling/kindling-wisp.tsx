@@ -7,10 +7,8 @@ import { seg, trimFn } from "../today-motion";
 import { alongX, alongY, type PathGeometry } from "./kindling-geometry";
 import { BEAT, WISP } from "./kindling-model";
 
-/** The wisp's far glow: the lit stroke's ember at 35%. */
 const WISP_FAR = 0.35;
 
-/** wispRun: in by 8%, out from 88%. */
 const WISP_OPACITY: readonly (readonly [number, number])[] = [
 	[0, 0],
 	[0.08, 1],
@@ -18,7 +16,6 @@ const WISP_OPACITY: readonly (readonly [number, number])[] = [
 	[1, 0],
 ];
 
-/** The light that runs the next stretch, with two tail dots 60 and 120 ms behind. */
 export function Wisp({
 	geo,
 	seg: j,
@@ -74,7 +71,6 @@ function WispDot({
 	alpha: number;
 	low: boolean;
 }) {
-	// The glow and core are fixed light; the far glow follows the theme's ember.
 	const [ember, glow, core] = useTokenColors([
 		"ember",
 		"today-kindling-wisp-glow",

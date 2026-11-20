@@ -9,20 +9,12 @@ import { MonthPrompt } from "./month-prompt";
 type Props = Omit<ComponentProps<typeof CardField>, "key"> & {
 	mode: CardMode;
 	late: boolean;
-	/** The question, or the face's title while Reflect has your words. */
 	prompt: string;
-	/** This month's prompt, which takes the question's place (only at rest). */
 	monthPrompt: string | null;
 	hint: string;
-	/** Remounts the field's rotating lines when the hour changes. */
 	phase: string;
 };
 
-/**
- * What the card says: the question, then the field (at rest) or the face Reflect left it with
- * (your words with the mirror, the mirror back, Where to from here, or an error), then the hint.
- * Loading, the slot stays empty, so the field doesn't flash before a face.
- */
 export function CardBody({
 	mode,
 	late,

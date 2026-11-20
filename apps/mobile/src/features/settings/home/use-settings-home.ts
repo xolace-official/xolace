@@ -25,11 +25,8 @@ import {
 import { useTalkTime } from "@/lib/talk/use-talk-time";
 import { useAppStore } from "@/store/store";
 
-// Dev clients load JS from Metro, so there is nothing for EAS Update to swap in.
 const UPDATES_ENABLED = Updates.isEnabled && !__DEV__;
 
-/** The manual EAS Update check. It only checks: `useOtaUpdate` in the root layout does the one
- * fetch, and there's no `reloadAsync` here (it crashes, see `update-bottom-sheet.tsx`). */
 function useUpdateCheck() {
 	const {
 		currentlyRunning,
@@ -82,7 +79,6 @@ function useUpdateCheck() {
 	};
 }
 
-/** Settings' main screen on Convex, Clerk, expo-updates and the paywall. */
 export function useSettingsHome(): SettingsHome {
 	const preferences = useQuery(api.preferences.get);
 	const { user } = useUser();
@@ -112,7 +108,6 @@ export function useSettingsHome(): SettingsHome {
 			notifications: notificationsLabel(preferences?.notifications?.enabled),
 			plus: plusCard(isPlus, time),
 			signIn,
-			// What Mirror shows: a free account is mirrored in Adaptive whatever is saved.
 			tone: toneLabel(
 				preferences?.mirrorTone &&
 					shownTone(preferences.mirrorTone, entitlementOf(isPlus, isLoading))

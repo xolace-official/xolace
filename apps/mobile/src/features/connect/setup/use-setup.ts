@@ -21,7 +21,6 @@ import {
 
 type TextEdits = Partial<Pick<SetupDraft, "displayName" | "bio">>;
 
-/** The picker's crop and quality, as production has always uploaded. */
 const PICK: ImagePicker.ImagePickerOptions = {
 	allowsEditing: true,
 	aspect: [1, 1],
@@ -29,10 +28,6 @@ const PICK: ImagePicker.ImagePickerOptions = {
 	quality: 0.7,
 };
 
-/**
- * Setup and edit on Convex. Text stays local until a step is left (or Save); the photo uploads
- * on pick and the query carries its URL back; the listed switch writes straight through.
- */
 export function useSetup(): SetupScreenData {
 	const saved = useQuery(api.xolacerChat.myXolacerProfile);
 	const upsert = useMutation(api.xolacerChat.upsertMyXolacerProfile);
@@ -54,7 +49,6 @@ export function useSetup(): SetupScreenData {
 		photoUrl: saved?.photoUrl,
 		specialties: picked ?? saved?.specialties ?? [],
 	};
-	// Opens on the first unfinished step, once: filling a field never moves anyone after.
 	if (step === null && saved) {
 		setStep(resumeStep(draft));
 	}
@@ -176,7 +170,6 @@ export function useSetup(): SetupScreenData {
 	};
 }
 
-/** Streams the file natively: `fetch(uri).blob()` fails on Android and loses the type elsewhere. */
 async function uploadPhoto(
 	uri: string,
 	mimeType: string | undefined,
@@ -189,7 +182,6 @@ async function uploadPhoto(
 		httpMethod: "POST",
 		uploadType: UploadType.BINARY_CONTENT,
 	});
-	// A failed upload answers with text, not JSON: say the status instead of a parse error.
 	if (result.status < 200 || result.status >= 300) {
 		throw new Error(`Photo upload failed (${result.status})`);
 	}

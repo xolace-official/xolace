@@ -13,14 +13,8 @@ import { Surface } from "@/features/you/surface";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** The explanation drops this far below the card. */
 const TIP_GAP = 8;
 
-/**
- * v1's week inside production's stat band: the streak leads, the week sits under it, and
- * moments, usual day and freezes share a quiet bottom row. Tapping the freeze count explains it
- * in place (the screen draws that over the tab bar, so it's placed by window y).
- */
 export function StreakCard() {
 	const { state } = useYouHome();
 	const { toggleTip, placeTip } = useYouUi();
@@ -30,7 +24,6 @@ export function StreakCard() {
 		return null;
 	}
 	const lit = streak.streak > 0;
-	// Measured as it lays out, and again on each tap (the header may have moved since).
 	const measure = (then: (top: number) => void) =>
 		card.current?.measureInWindow((_x, y, _w, h) => then(y + h + TIP_GAP));
 
@@ -116,7 +109,6 @@ function Stat({
 }: {
 	value: string;
 	label: string;
-	/** What VoiceOver says when the value alone doesn't read (the dash). */
 	spoken?: string;
 }) {
 	return (

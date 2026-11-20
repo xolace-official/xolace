@@ -3,8 +3,6 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useRef } from "react";
 
-/** Active session plus `startPath` / `completePath`. Both are serialized through one busy flag;
- * a call while busy returns false. */
 export function usePathSession() {
 	const activeSession = useQuery(api.sessions.getActive);
 	const startPathMutation = useMutation(api.sessions.startPath);
@@ -15,7 +13,6 @@ export function usePathSession() {
 	const session = activeSession;
 	const isLoading = activeSession === undefined;
 
-	/** Called on mount from path screens; selectPath already ran before navigation. */
 	const startPath = useCallback(
 		async (exerciseId?: Id<"exercises">): Promise<boolean> => {
 			if (!sessionId || busyRef.current) {
@@ -37,8 +34,6 @@ export function usePathSession() {
 		[sessionId, session?.state, startPathMutation]
 	);
 
-	/** Marks the session completed before navigating to session-end, so it survives the app
-	 * closing there. */
 	const completePath = useCallback(
 		async (pathCompleted: boolean): Promise<boolean> => {
 			if (!sessionId || busyRef.current) {

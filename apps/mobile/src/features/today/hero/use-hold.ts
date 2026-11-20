@@ -25,13 +25,6 @@ import {
 
 const tick = () => Presets.System.selection();
 
-/**
- * Hold the card (habit-bubble-cluster's charge): the rim fills linearly over
- * 620 ms with selection ticks at ⅓ and ⅔; let go early and it drains in
- * 320 ms, and drift past the slop and it drains too, opening nothing (`holdNext`); at
- * 620 ms the doors open and land on a Bloom. Not `holdable` (a mirror
- * waiting or ready), a press only dips the card: the doors are for starting something new.
- */
 export function useHold(reduced: boolean, holdable: boolean) {
 	const [chosen, setChosen] = useState(false);
 	const rim = useSharedValue(0);
@@ -40,7 +33,6 @@ export function useHold(reduced: boolean, holdable: boolean) {
 	const body = useSharedValue(1);
 	const holding = useSharedValue(false);
 	const swept = useRef(false);
-	// The Bloom as the doors land: cancelled by Write instead and on unmount.
 	const bloom = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 	useEffect(() => () => clearTimeout(bloom.current), []);
 	const touch = useRef(HOLD_REST);
@@ -54,7 +46,6 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		y: e.nativeEvent.pageY,
 	});
 
-	// A tick each time the charge crosses a third, only while a finger is down.
 	useAnimatedReaction(
 		() => {
 			if (!holding.get()) {
@@ -90,7 +81,6 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		);
 	};
 
-	// A drift past the slop lets go of the hold: the rim drains and the card comes back up.
 	const pressMove = (e: GestureResponderEvent) => {
 		const before = step({ type: "move", ...at(e) });
 		if (before.phase !== "holding" || touch.current.phase !== "drifted") {
@@ -122,11 +112,6 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		}
 	};
 
-	// A tap opens Reflect: the rim runs the rest of its lap quickly and stays lit until Reflect
-	// covers the card (`release`), then fades under the zoom. Before, a tap's rim kept filling for
-	// as long as Reflect took to mount (the drain waits on the JS thread), so how far it got
-	// depended on the device and the stage. pressOut can land after onPress (the press's minimum
-	// duration), so it leaves a sweep alone.
 	const sweep = () => {
 		holding.set(false);
 		if (reduced) {
@@ -142,7 +127,6 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		);
 	};
 
-	/** Today lost focus as Reflect mounted, just before the zoom: a tap's lit rim fades under it. */
 	const release = () => {
 		if (!swept.current) {
 			return;
@@ -160,7 +144,6 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		);
 	};
 
-	/** Back on Today: the rim is drawn back while it's out of sight (opacity 0), then shown again. */
 	const rest = () => {
 		if (!swept.current) {
 			return;
@@ -170,7 +153,6 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		rimOpacity.set(1);
 	};
 
-	/** A full hold opens the doors; `a11y` is VoiceOver's action, which a drift doesn't bar. */
 	const choose = (a11y = false) => {
 		if (!(holdable && canChoose(touch.current, a11y))) {
 			return;
@@ -193,7 +175,6 @@ export function useHold(reduced: boolean, holdable: boolean) {
 				...PLAY_AS_CHOSEN,
 			})
 		);
-		// The doors land: the last tile finishes its burst.
 		bloom.current = setTimeout(
 			playSessionComplete,
 			reduced ? 0 : doorsLandMs(DOORS.length)
@@ -242,7 +223,6 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		rimOpacity,
 		scale,
 		sweep,
-		/** A tap opens Reflect, unless the finger drifted first. */
 		tapAllowed: () => canTap(touch.current),
 		unchoose,
 	};

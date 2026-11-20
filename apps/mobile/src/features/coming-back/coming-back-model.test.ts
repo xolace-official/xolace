@@ -27,7 +27,6 @@ import {
 } from "./dev/fixtures";
 
 const DAY = 24 * 60 * 60 * 1000;
-/** A Thursday at noon, local. */
 const NOW = new Date(2026, 10, 19, 12).getTime();
 const daysAgo = (n: number) => NOW - n * DAY;
 
@@ -196,7 +195,6 @@ describe("the check-in", () => {
 describe("rows' words", () => {
 	it("ticks the check-in once answered and gone", () => {
 		expect(checkInRow("Tuesday", NO_OUTCOMES).done).toBe(false);
-		// Answered but the check-in still open: the row waits.
 		expect(
 			checkInRow("Tuesday", { ...NO_OUTCOMES, answer: "lighter" }).done
 		).toBe(false);
@@ -234,7 +232,6 @@ describe("cardFromParams", () => {
 	it("is null without an id or with an unknown tier", () => {
 		expect(cardFromParams({})).toBeNull();
 		expect(cardFromParams({ cardId: "c1" })).toBeNull();
-		// A link can carry anything.
 		expect(
 			cardFromParams({ cardId: "c1", tier: "loud" as unknown as "acute" })
 		).toBeNull();

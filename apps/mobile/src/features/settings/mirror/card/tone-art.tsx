@@ -6,9 +6,6 @@ import {
 } from "@/features/settings/mirror/card/tone-defs";
 import type { MirrorTone } from "@/features/settings/mirror/mirror-model";
 
-/** Each tone's light on the sample card, drawn (the gradients are in `tone-defs.tsx`). */
-
-/** Adaptive's faint vertical lines across the middle (board `::after`), faded at the ends. */
 const STRIPE_STEP = 8.5;
 const STRIPE_TOP = 104;
 const STRIPE_H = 46;
@@ -22,7 +19,6 @@ function Stripes({ w, ink }: { w: number; ink: string }) {
 					fill={ink}
 					fillOpacity={0.9}
 					height={STRIPE_H}
-					// Fixed stripes, never reordered.
 					key={`s${i.toString()}`}
 					width={1.5}
 					x={-w * 0.1 + i * STRIPE_STEP + 7}
@@ -33,7 +29,6 @@ function Stripes({ w, ink }: { w: number; ink: string }) {
 	);
 }
 
-/** Poetic's stars: x, y as fractions of the card, radius, opacity. */
 const STARS: readonly (readonly [number, number, number, number])[] = [
 	[0.12, 0.18, 1.2, 1],
 	[0.28, 0.09, 1, 1],

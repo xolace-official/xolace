@@ -1,17 +1,9 @@
-// Type definitions for NativeCoreHaptics module
-
-/**
- * Valid haptic event types supported by Core Haptics
- */
 export type HapticEventType =
 	| "hapticTransient"
 	| "hapticContinuous"
 	| "audioContinuous"
 	| "audioCustom";
 
-/**
- * Valid haptic event parameter IDs
- */
 export type HapticEventParameterID =
 	| "hapticIntensity"
 	| "hapticSharpness"
@@ -24,9 +16,6 @@ export type HapticEventParameterID =
 	| "audioPan"
 	| "audioBrightness";
 
-/**
- * Valid dynamic parameter IDs for parameter curves
- */
 export type HapticDynamicParameterID =
 	| "hapticIntensityControl"
 	| "hapticSharpnessControl"
@@ -35,52 +24,36 @@ export type HapticDynamicParameterID =
 	| "audioBrightnessControl"
 	| "audioPitchControl";
 
-/**
- * Parameter for a haptic event
- */
+type Seconds = number;
+
 export interface HapticEventParameter {
 	parameterID: HapticEventParameterID;
-	value: number; // 0.0 to 1.0
+	value: number;
 }
 
-/**
- * A single haptic event
- */
 export interface HapticEvent {
-	eventDuration?: number; // Duration in seconds (optional, for continuous events)
+	eventDuration?: Seconds;
 	eventType: HapticEventType;
 	parameters?: HapticEventParameter[];
-	time?: number; // Relative time in seconds (default: 0.0)
+	time?: Seconds;
 }
 
-/**
- * Control point for a parameter curve
- */
 export interface HapticParameterCurveControlPoint {
-	relativeTime: number; // Time in seconds
-	value: number; // 0.0 to 1.0
+	relativeTime: Seconds;
+	value: number;
 }
 
-/**
- * Parameter curve for dynamic haptic control
- */
 export interface HapticParameterCurve {
 	controlPoints: HapticParameterCurveControlPoint[];
 	parameterID: HapticDynamicParameterID;
-	relativeTime?: number; // Relative time in seconds (default: 0.0)
+	relativeTime?: Seconds;
 }
 
-/**
- * Complete haptic pattern data
- */
 export interface HapticPatternData {
 	events: HapticEvent[];
 	parameterCurves?: HapticParameterCurve[];
 }
 
-/**
- * Native module interface
- */
 export interface NativeCoreHapticsModule {
 	/**
 	 * Play a simple transient haptic impact
@@ -89,9 +62,5 @@ export interface NativeCoreHapticsModule {
 	 */
 	impact(sharpness: number, intensity: number): Promise<void>;
 
-	/**
-	 * Play a complex haptic pattern
-	 * @param patternData - The haptic pattern data to play
-	 */
 	playPattern(patternData: HapticPatternData): Promise<void>;
 }

@@ -10,20 +10,13 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 type Props = {
 	title?: string;
 	why?: string;
-	/** Wraps the header (Because you named: its long-press menu). */
 	headerWrap?: (header: ReactNode) => ReactNode;
 	top?: number;
-	/** While it loads, the header stays and this stands in for the content. */
 	loading?: boolean;
 	skeleton?: ReactNode;
 	children: ReactNode;
 };
 
-/**
- * A section (handoff §1): 26 above, a Bricolage 20 header with an optional reason line, 12 to its
- * content. It is there at rest from the first frame. Content that replaces a skeleton fades in
- * over 200 ms; content that was never waited for is simply there. Reduce Motion: a cut.
- */
 export function HomeSection({
 	title,
 	why,

@@ -8,9 +8,7 @@ import { beatTime, type SitClock } from "../clock/use-sit-clock";
 import { COPY } from "../copy";
 import { stagger, words } from "../sit-timing";
 
-/** Board `.tb`: Newsreader italic 27/1.32. */
 const LINE = { line: 35.64, size: 27, tracking: 0 } as const;
-/** Board `.tb .src`: 12.5/600, ink3, 10 below. */
 const SOURCE = {
 	fontSize: 12.5,
 	letterSpacing: 0.125,
@@ -33,12 +31,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * A line that writes in word by word (gleam-line-intro, on the shared
- * GleamLine): each word over .7 s, .16 / .12 / .09 s apart by length, on the
- * beat's own clock, so a pause freezes it mid-word. A line from the user's
- * mirror says so above it. It leaves 6 pt up over .28 s before its beat ends.
- */
 export function SitLine({ text, mirror, serial, clock, reduced }: Props) {
 	const { leave, at } = clock;
 	const time = useDerivedValue(() => beatTime(clock, serial));

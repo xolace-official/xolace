@@ -22,7 +22,6 @@ export type Band = {
 	w: number;
 	h: number;
 };
-/** Board `.mk`: the band fills 70% of the line, its bottom at 88% (so from 26.4% down). */
 const BAND_TOP = 0.264;
 const BAND_H = 0.7;
 const BAND_GROW = Easing.bezierFn(0.3, 0, 0.2, 1);
@@ -32,12 +31,10 @@ type BandProps = {
 	band: Band;
 	e: SharedValue<number>;
 	at: number;
-	/** Bumped when a line borrowing this phrase is tapped (0: never). */
 	flashN: number;
 	flashColor: string;
 };
 
-/** A marker band under one phrase's run on one line: it grows left to right in its turn (.45 s). */
 export function MarkBand({ band, e, at, flashN, flashColor }: BandProps) {
 	const flash = useSharedValue(0);
 	useEffect(() => {
@@ -82,7 +79,6 @@ type InkProps = {
 	at: number;
 };
 
-/** The phrase turns ink as its band grows: a copy of the paragraph showing only that phrase. */
 export function InkPhrase({ segs, pair, e, at }: InkProps) {
 	const style = useAnimatedStyle(() => ({
 		opacity: progress(e.get(), at, WRITE_IN.band),

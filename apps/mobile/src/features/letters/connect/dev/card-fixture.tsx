@@ -7,11 +7,6 @@ import { type ConnectCard, ConnectCardProvider } from "../connect-card-data";
 
 const ignore = () => undefined;
 
-/**
- * The Letters card on fixtures, where Connect draws it: under the large title, above the segment.
- * The offer plays out here (Yes or Not now folds it away); nothing reaches the letters data module.
- * A waiting letter takes a new id on each visit, so it arrives every time.
- */
 export function CardFixtureScreen({
 	status: initial,
 }: {

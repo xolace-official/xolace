@@ -1,6 +1,3 @@
-// One row of the table: its title, the Free and Plus marks, and (for a Plus row) its preview,
-// mounted on its first open. The Plus check lands on the arrival clock; the title brightens
-// with it.
 import { Pressable, View } from "react-native";
 import Animated, {
 	interpolateColor,
@@ -27,11 +24,9 @@ const CHECK_FROM = 0.4;
 
 export type RowProps = {
 	clock: SharedValue<number>;
-	/** Opened by the person, so VoiceOver moves into it. */
 	focus: boolean;
 	index: number;
 	mounted: boolean;
-	/** The open preview's laid-out height, for scrolling to it. */
 	onHeight: (id: RowId, height: number) => void;
 	onToggle: (id: RowId) => void;
 	onVoice: (voice: VoiceId) => void;
@@ -146,7 +141,6 @@ export function TableRow(props: RowProps) {
 			)}
 			{row.free ? null : (
 				<Animated.View
-					// A closed row's preview is out of the accessibility tree, not just clipped.
 					accessibilityElementsHidden={!open}
 					className="overflow-hidden"
 					importantForAccessibility={open ? "auto" : "no-hide-descendants"}

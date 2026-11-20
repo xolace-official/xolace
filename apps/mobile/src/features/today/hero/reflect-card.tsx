@@ -21,11 +21,6 @@ import { useHold } from "./use-hold";
 
 const FALLBACK_H = 230;
 
-/**
- * The door into Reflect, and the sky's horizon. Tap: the card zooms into Reflect (iOS 18+;
- * elsewhere, and with Reduce Motion, Reflect's own transition). Hold 0.6 s: the spectrum laps
- * the rim and the doors rise out of the hint line. Holding a session, it says where a tap lands.
- */
 export function ReflectCard() {
 	const { state, actions } = useToday();
 	const { live, reduced, low } = useTodayFrame();
@@ -39,19 +34,15 @@ export function ReflectCard() {
 	const hold = useHold(reduced, idle);
 	const focused = useIsFocused();
 	const [size, setSize] = useState<{ w: number; h: number } | null>(null);
-	// Where the input and mic sit, for VoiceOver's copy of the card (card-a11y).
 	const [input, setInput] = useState<Frame | null>(null);
 	const [mic, setMic] = useState<Frame | null>(null);
 
-	// Coming back from Talk, Vent or Sit: the card is at rest again. Or a mirror started
-	// waiting while the doors were open.
 	const { chosen, unchoose, release, rest } = hold;
 	useEffect(() => {
 		if (!(focused && idle) && chosen) {
 			unchoose();
 		}
 	}, [focused, idle, chosen, unchoose]);
-	// A tap's lit rim lets go once Reflect covers the card, and is drawn back by the time you return.
 	useEffect(() => {
 		if (focused) {
 			rest();
@@ -60,7 +51,6 @@ export function ReflectCard() {
 		}
 	}, [focused, release, rest]);
 
-	// Write instead: VoiceOver goes back to the card, which comes back in place of the doors.
 	const cardRef = useRef<ComponentRef<typeof View>>(null);
 	const [refocus, setRefocus] = useState(false);
 	const writeInstead = () => {
@@ -82,7 +72,6 @@ export function ReflectCard() {
 
 	const top = useSharedValue(0);
 	const onScreen = useOnScreen(top, size?.h ?? FALLBACK_H);
-	// The light's breath and the placeholder's rotation run natively; they stop off screen.
 	const shown = useShown(onScreen);
 	const running = live && shown;
 	const bodyStyle = useAnimatedStyle(() => ({ opacity: hold.body.get() }));
@@ -105,7 +94,6 @@ export function ReflectCard() {
 				asChild
 				href={reflect}
 				onPress={(e) => {
-					// A press that became a scroll or a hold doesn't open Reflect.
 					if (!hold.tapAllowed()) {
 						e.preventDefault();
 						return;

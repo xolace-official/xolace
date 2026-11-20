@@ -1,6 +1,3 @@
-// "Say more" on a talk's mirror opens the talk again (#604), not the typed
-// clarify. Not offered under the 3-min minimum (#582); the server refuses it too.
-
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
@@ -9,16 +6,13 @@ import { usePostHog } from "posthog-react-native";
 import { MIN_TALK_S } from "@/lib/talk/talk-time";
 import { useTalkTime } from "@/lib/talk/use-talk-time";
 
-/** Null for a typed mirror. */
 export function useTalkSayMore(sessionId: Id<"sessions"> | null) {
 	const posthog = usePostHog();
-	// The reflect screen already holds this subscription.
 	const session = useQuery(
 		api.sessions.getById,
 		sessionId ? { sessionId } : "skip"
 	);
 	const isTalk = session?.entryType === "talk";
-	// Low while the talk's charge is still landing: it shows once it has.
 	const time = useTalkTime(isTalk);
 	if (!(isTalk && sessionId)) {
 		return null;

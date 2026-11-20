@@ -30,16 +30,8 @@ import { COPY } from "@/features/achievements/copy";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** The colour reaches the farthest corner of the screen from the slot, and this much more. */
 const REACH_PAD = 84;
 
-/**
- * The badge page, in place over the list (badges §3). The badge flies out of
- * its slot, turns once and pours its family's colour; drag turns it, a tap
- * turns it over, a swipe down puts it back. It stays mounted while the screen
- * is up, hidden and untouchable while nothing is out, so opening only swaps the
- * badge it shows and starts the clock.
- */
 export function BadgeHeld({ pose }: { pose: SharedValue<Pose> }) {
 	const { state, actions } = useBadgesScreen();
 	const out = useHeld((s) => s.out);
@@ -75,13 +67,11 @@ export function BadgeHeld({ pose }: { pose: SharedValue<Pose> }) {
 		glowSv.set(glow);
 	}, [o.x, o.y, W, H, glow, reach, glowSv]);
 
-	// Android's back puts a held badge back, as the edge swipe does on iOS, instead of leaving.
 	useEffect(() => {
 		if (!open) {
 			return;
 		}
 		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-			// An arrival open over the page takes back first; it closes, the badge stays.
 			if (isArrivalOpen()) {
 				return false;
 			}
@@ -101,7 +91,6 @@ export function BadgeHeld({ pose }: { pose: SharedValue<Pose> }) {
 				pointerEvents={open ? "auto" : "none"}
 			>
 				<Flood color={flood} o={o} pose={pose} reach={reach} />
-				{/* Bloom and motes stay mounted: the pose keeps them dark for a locked badge. */}
 				<Bloom dark={dark} glow={glow} pose={pose} />
 				{reduced ? null : (
 					<Motes cx={g.hx} cy={g.hy} glow={glowSv} pose={pose} />

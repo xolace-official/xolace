@@ -275,7 +275,7 @@ older piece.
 | Press feedback | `PressScale` (.96, cards .98, Press curve, optional `haptic`) | heroui `PressableFeedback` |
 | Toast | `toast(message, opts)`, called from the data hook | heroui `useToast` |
 | Segments | `Segmented` (SwiftUI on iOS, Material 3 on Android) | `SegmentedControl` |
-| Form sheet | `fitSheet` (`src/lib/root-screen.ts`: fits its content, grabber, 40 pt, surface) | `legacyFitSheet` |
+| Form sheet | `fitSheet` (`src/lib/root-screen.ts`: fits its content, grabber, 40 pt, surface) | — |
 | Native header | `useHeaderOptions()` (`src/lib/header-options.ts`, theme faces) | `useLargeHeaderOptions` |
 
 - **Pieces:** `Card` + `SectionHeader`, `MediaRow` + `Kicker`, `CareRow`, `Avatar`,

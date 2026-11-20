@@ -13,7 +13,6 @@ import {
 	tickSleep,
 } from "./sleep-timer";
 
-/** Ticks a timer `n` seconds, collecting whether any tick paused. */
 function run(start: ReturnType<typeof pickSleep>, n: number) {
 	let t = start;
 	let paused = 0;
@@ -67,7 +66,6 @@ describe("the tick to 0", () => {
 
 describe("real time", () => {
 	it("counts the time that passed, however unevenly the ticks fire", () => {
-		// A throttled timer: late, early and half-second fires.
 		let t = pickSleep(15);
 		for (const s of [1, 2.6, 0.4, 5, 1]) {
 			t = tickSleep(t, s).next;
@@ -135,9 +133,7 @@ describe("the fade", () => {
 			expect(gain).toBeLessThanOrEqual(last);
 			last = gain;
 		}
-		// The last tick before 0 is all but silent.
 		expect(last).toBeCloseTo(1 / SLEEP_FADE_S);
-		// Cleared at 0: the next play is at full volume.
 		expect(sleepGain(t)).toBe(1);
 	});
 });

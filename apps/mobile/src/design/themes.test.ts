@@ -10,7 +10,6 @@ import {
 	VARIANTS,
 } from "./themes";
 
-/** Every `preferences.colorTheme` / `colorThemeId` a shipped build can have saved. */
 const SAVED_THEME_IDS = [
 	"default",
 	"quiet",
@@ -25,7 +24,6 @@ const SAVED_THEME_IDS = [
 	"playful",
 ];
 
-/** Every Uniwind theme production registered before the generator (the store's `previousTheme`). */
 const SAVED_VARIANTS = [
 	"light",
 	"dark",

@@ -1,22 +1,10 @@
-/**
- * Every string the kindling screen shows (prototype `design/handoff/kindling.md` §2.5, §6, §10,
- * §12). The prototype's four kinds are sit, hear, tell and try; production's seven map onto them
- * (`KINDS`), and read and xolacer take lines of their own in the same voice.
- */
-
-/** The disc's and thumb's tint behind Flux: one of the board's four, plus the fire's. */
 export type TintKey = "sit" | "hear" | "tell" | "try";
 
 export type KindCopy = {
-	/** The label beside the stop. */
 	trail: string;
-	/** The floating card's eyebrow. */
 	card: string;
-	/** When the server sends no title. */
 	title: string;
-	/** The violet pill. */
 	action: string;
-	/** On a tended twig; none for try. */
 	again: string | null;
 	tint: TintKey;
 };
@@ -56,7 +44,6 @@ export const KINDS = {
 		title: "A few pages for this",
 		trail: "To read",
 	},
-	// Off-app (#567): no screen to hand off to, so the action is the person saying they did it.
 	try: {
 		action: "I did this",
 		again: null,
@@ -75,7 +62,6 @@ export const KINDS = {
 	},
 } as const satisfies Record<string, KindCopy>;
 
-/** A kind a newer server sends that this build doesn't know. */
 export const ANY_KIND: KindCopy = {
 	action: "Open",
 	again: null,
@@ -148,7 +134,6 @@ export const COPY = {
 	passedEyebrow: (eyebrow: string) => `Passed by · ${eyebrow}`,
 	progress: (n: number, total: number) => `${n} of ${total} tended`,
 	putOut: "Put this kindling out",
-	/** `held` is a weekday ("Tuesday") or "your last session". */
 	sub: (held: string) => `A few things to try, from what ${held} held.`,
 	tended: "Tended",
 	tendedEyebrow: (eyebrow: string) => `Tended · ${eyebrow}`,

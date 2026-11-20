@@ -13,10 +13,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 import { LAYOUT } from "../motion/talk-motion";
 import { type TalkMenuProps, talkMenu } from "./talk-menu-items";
 
-/**
- * Android: the ⋯ menu as a Material 3 dropdown from a glass circle. iOS draws SwiftUI's
- * (`talk-menu.ios.tsx`).
- */
 export function TalkMenu(props: TalkMenuProps) {
 	const [open, setOpen] = useState(false);
 	const foreground = useTokenColor("foreground");

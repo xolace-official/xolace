@@ -1,4 +1,3 @@
-/** Xolacer setup and edit on fixtures: `xolace://dev/connect/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureSetup } from "./fixture-setup";
 import { CAP_DRAFT, EMPTY_DRAFT, FULL_DRAFT } from "./setup-fixtures";

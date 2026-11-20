@@ -1,6 +1,3 @@
-// `safety` (#708): the safeguard read the answer as elevated or crisis. Support instead of
-// chips, and nothing sold on the way on (no Xolace+). Flux stays out of it: this moment
-// isn't a mascot's.
 import { Button } from "heroui-native";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";

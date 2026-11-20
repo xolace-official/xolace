@@ -1,4 +1,3 @@
-/** The writing screen on fixtures: `xolace://dev/letters/write-<state>`. */
 import type { DevState } from "@/dev/dev-state";
 import { LETTERS } from "../../copy";
 import { DRAFTS, FIXABLE_LINE } from "../../dev/fixtures";

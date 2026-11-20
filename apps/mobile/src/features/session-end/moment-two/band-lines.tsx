@@ -50,7 +50,6 @@ export function BandLine({
 	);
 }
 
-/** `.slot`: fades in at .6 s (.6 s); warm while held or sending (.4 s); gone when your star lands (.5 s). */
 export function BandSlot({
 	warmColor,
 	ink3,

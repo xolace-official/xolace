@@ -4,11 +4,6 @@ import type { VentPhase } from "@/features/vent/vent-data";
 
 type DropReason = "close" | "background";
 
-/**
- * v2 (§12): leaving mid-recording drops the take, never sends it. The X calls the returned
- * `drop`; going to the background and Android's back button drop it too. The phase leaves "rec"
- * first, so neither a tap nor the ceiling can let a dropped take go while the recorder stops.
- */
 export function useDrop(
 	phase: RefObject<VentPhase>,
 	onDrop: (reason: DropReason) => void

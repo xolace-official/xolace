@@ -1,16 +1,9 @@
-/**
- * Tick paths for the dial, the half gauge and the meters, drawn in one Skia canvas each: one
- * path for the track, one for the lit ticks whose `end` follows one shared value (steadiness.md
- * §7). Production drew a worklet per tick.
- */
 import { Skia, type SkPath } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** A hair short of a whole tick, so a trimmed end never leaves a capped dot. */
 const SNAP_EPS = 0.01;
 
-/** `n` ticks on a circle from `start`° over `sweep`°, one contour each. */
 export function tickPath(
 	n: number,
 	start: number,
@@ -32,7 +25,6 @@ export function tickPath(
 	return p.build();
 }
 
-/** The trim end for `lit` of `n` equal ticks, snapped to whole ticks, as `progress` runs 0–1. */
 export function useSnappedEnd(
 	progress: SharedValue<number>,
 	lit: number,
@@ -46,5 +38,4 @@ export function useSnappedEnd(
 	return { end, opacity };
 }
 
-/** The unlit ticks' colour (production's `border`). */
 export const useTrack = () => useTokenColor("border");

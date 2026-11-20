@@ -21,12 +21,9 @@ import { playSoftPress } from "@/lib/haptics";
 
 const FLUX_W = 44;
 const FLUX_H = 56;
-/** Production's: keeps the draft's caret clear of the keyboard and the two buttons above it. */
 const KEYBOARD_GAP = 170;
-/** The native large title's size, which the prototype drew this with. */
 const TITLE = { fontSize: 34, lineHeight: 38 } as const;
 
-/** The draft: written for them, editable, shared through the phone's own sheet. */
 export function DraftStep() {
 	const { state, actions } = useBridgeScreen();
 	const { draft } = state;

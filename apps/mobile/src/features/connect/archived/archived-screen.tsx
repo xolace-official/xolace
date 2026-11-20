@@ -9,7 +9,6 @@ import { useArchivedScreen } from "./archived-data";
 
 const BOTTOM = 40;
 
-/** Archived: Connect's rows, the ones tucked away. A swipe or the menu brings one back. */
 export function ArchivedScreen() {
 	const { state, actions, deleting } = useArchivedScreen();
 	const { rows } = state;
@@ -23,8 +22,6 @@ export function ArchivedScreen() {
 					rows === undefined ? (
 						<ListSkeleton label={COPY.loading.archived} />
 					) : rows.length === 0 ? (
-						// Unarchiving the last chat lands here rather than popping the screen, so the
-						// empty state says what this place is for.
 						<EmptyState
 							body={COPY.archived.emptyBody}
 							className="py-16"

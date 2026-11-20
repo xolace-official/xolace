@@ -1,5 +1,3 @@
-/** The thread: the conversation and the counterpart's activity in, the header line, the body and
- * the bar that stands in for the composer out. Production's rules, the prototype's look. Pure. */
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
 import type { Channel } from "stream-chat";
@@ -7,26 +5,20 @@ import { rateCtaState } from "../chat-rules";
 import { THREAD } from "./copy";
 import type { ThreadState } from "./thread-data";
 
-/** `myStreamUserId` is dropped: `client.userID` carries the same value, which lets the list seed
- * this shape. The server still returns it for older clients. */
 export type ThreadConversation = Omit<
 	NonNullable<FunctionReturnType<typeof api.xolacerChat.getConversation>>,
 	"myStreamUserId"
 > & {
-	/** Set by the list seed: `resumable`, `canRate` and `myRating` are placeholders until the
-	 * real row lands, so the status bar holds its space. */
 	seeded?: true;
 };
 
 export type StreamStatus = "connecting" | "ready" | "unavailable";
 
-/** The counterpart as Stream sees them in an open thread. */
 export type Activity = {
 	typing: boolean;
 	presence: { online: boolean; lastActive?: number | null } | null;
 };
 
-/** A sentence with some words in bold. */
 export type Run = { text: string; bold?: boolean };
 
 const DAY_MS = 86_400_000;
@@ -34,7 +26,6 @@ const WEEK_DAYS = 7;
 const MONTH_DAYS = 30;
 const MONTH_WEEKS = 5;
 
-/** "last spoke 3 weeks ago". */
 export function longAgo(timestamp: number, now: number): string {
 	const days = Math.floor((now - timestamp) / DAY_MS);
 	if (days <= 0) {
@@ -54,9 +45,6 @@ export function longAgo(timestamp: number, now: number): string {
 	return months === 1 ? "a month ago" : `${months} months ago`;
 }
 
-/** The header's second line. An open thread reads Stream's live signal (typing, here, last
- * seen); the rest say where the conversation stands. A seeker sees "Xolacer ·" in front; a
- * Xolacer, with nothing in front, sees the line start with a capital. */
 export function threadSubtitle(
 	c: ThreadConversation,
 	activity: Activity,
@@ -95,9 +83,7 @@ export function threadSubtitle(
 	return c.role === "xolacer" ? THREAD.requestClosed : THREAD.notTaking;
 }
 
-/** What fills the thread under the header. */
 export type ThreadBody =
-	/** No channel yet (a request) or none ever (closed before accept). */
 	| { kind: "no-channel"; note: string }
 	| { kind: "connecting" }
 	| { kind: "unavailable" }
@@ -124,7 +110,6 @@ export function threadBody(
 	return { kind: stream };
 }
 
-/** What stands in for the composer when a conversation can't take a message. */
 export type StatusBar =
 	| { kind: "composer" }
 	/** A seeded row whose real status hasn't landed: hold the space. */
@@ -151,7 +136,6 @@ export function statusBar(c: ThreadConversation): StatusBar {
 	if (c.status === "open") {
 		return { kind: "composer" };
 	}
-	// Open and requested read nothing the list didn't carry; the rest wait for the real row.
 	if (c.seeded && c.status !== "requested") {
 		return { kind: "holding" };
 	}
@@ -181,9 +165,6 @@ export function statusBar(c: ThreadConversation): StatusBar {
 			rate: ratePrompt(c),
 		};
 	}
-	// Resting-but-not-resumable and closed share one bar, the same for every reason: a blocked
-	// person is never told, and a declined seeker never learns which. "Still here" is only
-	// promised where a channel ever opened.
 	const history = Boolean(c.streamChannelId);
 	if (c.role === "xolacer") {
 		return {
@@ -208,8 +189,6 @@ type Resource = {
 	description?: string;
 };
 
-/** A crisis resource as a row: what it is, who answers, and the action, or null for a text-only
- * one (shown as words, nothing to open). */
 export function resourceRow(r: Resource): {
 	title: string;
 	sub: string;
@@ -259,20 +238,14 @@ export function resourceRow(r: Resource): {
 	};
 }
 
-/** What `useThread` and the dev states read: the conversation (`undefined` while it loads,
- * `null` once it's gone), Stream, the channel, the block dialog, and
- * an accept or decline in flight. */
 export type ThreadInputs = {
 	conversation: ThreadConversation | null | undefined;
 	stream: StreamStatus;
 	channel: Channel | null;
 	blocking: { open: boolean; pending: boolean };
-	/** An accept or decline is in flight: the bar's buttons wait. */
 	answering: boolean;
 };
 
-/** The thread's screen state. The hook and the dev states both call it, so the rules (what
- * the block dialog says, the body, the bar, Rate) are tested once. */
 export function threadState(input: ThreadInputs): ThreadState {
 	const c = input.conversation;
 	if (c === undefined) {
@@ -284,7 +257,6 @@ export function threadState(input: ThreadInputs): ThreadState {
 	return {
 		answering: input.answering,
 		bar: statusBar(c),
-		// "Your messages stay" only when there are messages: a channel exists once accepted.
 		blocking: { ...input.blocking, history: Boolean(c.streamChannelId) },
 		body: threadBody(c, input.stream),
 		channel: input.channel,

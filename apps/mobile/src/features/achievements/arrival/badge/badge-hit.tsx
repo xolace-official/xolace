@@ -16,17 +16,9 @@ import { COPY } from "@/features/achievements/copy";
 import { tap } from "@/lib/haptics";
 
 const TAP_SLOP = 6;
-/** A vertical move this far fails the turn, so the screen's own gestures keep it. */
 const FAIL_Y = 24;
-/** A let-go below the settle speed still carries on a little, then snaps. */
 const NUDGE = 0.1;
 
-/**
- * Where the badge takes touches (§4): drag sideways turns it (a badge-width is a
- * half turn; it keeps its speed with friction and snaps to a face), a tap hops
- * it and throws the burst again. Reduce Motion: a tap turns it over at once.
- * VoiceOver: a "Turn over" action.
- */
 export function BadgeHit({
 	eng,
 	geo,
@@ -98,7 +90,6 @@ export function BadgeHit({
 				}
 				return e;
 			});
-			// The flick plays from here, the UI thread, as the burst starts.
 			if (rm) {
 				scheduleOnRN(tap);
 			} else {

@@ -10,7 +10,6 @@ import { useXolacerScreen } from "./xolacer-data";
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
 const ARROW = { android: "arrow_forward", ios: "arrow.right" } as const;
 
-/** The rate card: the main place a Xolacer gets rated, a quiet line once you have. */
 function RateCard() {
 	const { state, actions } = useXolacerScreen();
 	const accent = useTokenColor("accent-ink");
@@ -54,8 +53,6 @@ function RateCard() {
 	);
 }
 
-/** Ask to talk, and every state production names in its place: open the chat, see your request,
- * a cooldown after a decline, not taking conversations, or your own profile. */
 export function ProfileCta() {
 	const { state, actions } = useXolacerScreen();
 	const accent = useTokenColor("accent-ink");

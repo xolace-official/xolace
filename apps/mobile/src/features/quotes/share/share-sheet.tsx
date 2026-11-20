@@ -35,7 +35,6 @@ type Props = {
 	onClose: () => void;
 };
 
-/** Share: the preview card, Story / Square, Save image and Share…. A loop shares its still. */
 export function ShareSheet(p: Props) {
 	const m = useQuoteMotion();
 	const h = useSharedValue<number>(CARD_H[p.fmt]);

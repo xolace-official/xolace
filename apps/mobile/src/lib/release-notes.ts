@@ -1,29 +1,15 @@
 import type { IconName } from "@/components/shared/icon";
 
-/**
- * Xolace's release notes: one list, newest first, in plain language. The first entry is the
- * release that's new: What's New shows it alone (on a plain open, from Settings and from the shake
- * menu); the older entries stay as the record. To ship notes, add an entry at the top: a store
- * release or an over-the-air update alike. Nothing else needs setting: each device notes when it
- * first ran a build carrying the entry (`firstRan` in the ratings record), and that moment stands
- * in for the release date.
- */
-
 export type ReleaseNote = {
 	icon: IconName;
-	/** The tile's colour: ember for the release's headline, the accent otherwise. */
 	tone?: "ember";
 	title: string;
 	body: string;
 };
 
 export type Release = {
-	/** Seen-tracking key: the store version, or a name for an over-the-air update (which keeps the
-	 * store version). Never reuse one: a new id is what makes What's New show again. */
 	id: string;
-	/** For the record, e.g. "Version 1.17.0" or "OTA Update". */
 	label: string;
-	/** For the record, e.g. "December 2026". */
 	date: string;
 	highlights: readonly ReleaseNote[];
 };
@@ -533,5 +519,4 @@ const RELEASES: readonly [Release, ...Release[]] = [
 	},
 ];
 
-/** The release that's new: the one What's New shows. */
 export const LATEST_RELEASE = RELEASES[0];

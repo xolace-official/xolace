@@ -12,7 +12,6 @@ import { TrackRow } from "@/features/explore/rows/track-row";
 import { KindIcon } from "@/features/explore/topic/kind-icon";
 import { SeriesRow } from "@/features/explore/topic/series-row";
 
-/** A topic's grouped list (handoff `explore-doors.md` §4.3). Headings only when two or more show. */
 export function TopicSections({
 	tracks,
 	filter,
@@ -52,7 +51,6 @@ export function TopicSections({
 	);
 }
 
-/** 13 semibold, uppercase, 0.06 em, muted; a VoiceOver header. */
 function Heading({ text, first }: { text: string; first: boolean }) {
 	const k = TOPIC.kick;
 	return (

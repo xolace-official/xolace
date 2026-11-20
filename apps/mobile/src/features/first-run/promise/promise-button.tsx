@@ -24,20 +24,14 @@ import {
 import { css, PROMISE_COLORS } from "../first-run-palette";
 import { ageT, ageX, CTA_Y, OPEN, type PEng, X } from "./promise-scene";
 
-/** Board `.cta`: top 702, 28 pt in, 56 tall, a pill; `.acct`: top 766, 36 tall. */
 const CTA = { h: 56, side: 28, top: 702 };
 const ACCT = { h: 36, top: 766 };
-/** The labels' lines and the room around them. */
 const CTA_LINE = { line: 22, pad: 20 };
 const ACCT_LINE = { line: 19, pad: 12 };
 const ACCT_GAP = ACCT.top - (CTA.top + CTA.h);
 const COAL = 16;
 const RM_FADE_MS = 200;
 
-/**
- * "I'd like that", full width, and the quiet account link. Pressed, it squeezes to .97 on a
- * spring; let go, it turns ember, gathers into a 16 pt coal at (195, 730) and drops into the fire.
- */
 export function PromiseButton({
 	eng,
 	stage,
@@ -51,7 +45,6 @@ export function PromiseButton({
 }) {
 	const { fontScale } = useWindowDimensions();
 	const [buttonShadow] = useTokenColors(["first-run-button-shadow"]);
-	// Both grow down into the room above the home indicator, then their labels shrink to fit.
 	const [pill, link] = controlStack(
 		CTA.top,
 		ACCT_GAP,

@@ -11,12 +11,9 @@ import { useThreadScreen } from "../thread-data";
 import { resourceRow } from "../thread-model";
 import { useConversationIdentity } from "./message-identity";
 
-/** Mirrors `CRISIS_RESOURCES_KIND` in `convex/ai/chat/moderate.ts`. */
 const CRISIS_RESOURCES_KIND = "crisis_resources";
 const LIFEBUOY = { android: "support", ios: "lifepreserver" } as const;
 
-/** The resources card the moderation lane sends when a message reads as a crisis (#344), as
- * Care's rows; other system messages fall through to the SDK's. */
 export function ConversationMessageSystem(props: MessageSystemProps) {
 	const { message } = props;
 	const identity = useConversationIdentity();

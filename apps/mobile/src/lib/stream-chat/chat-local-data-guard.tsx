@@ -4,9 +4,6 @@ import { connectPlan } from "@/lib/stream-chat/connect-plan";
 import { resetChatLocalData } from "@/lib/stream-chat/offline-db";
 import { readStreamCredential } from "@/lib/stream-chat/stream-credential";
 
-/** The single reset choke point for on-device chat data. Mounted at the root because
- * `(protected)` unmounts before `userId` is ever null; `connectPlan` decides, this carries it
- * out. */
 export function ChatLocalDataGuard() {
 	const { isLoaded, userId } = useAuth();
 

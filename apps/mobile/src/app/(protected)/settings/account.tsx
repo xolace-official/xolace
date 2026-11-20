@@ -1,8 +1,6 @@
 import { AccountData } from "@/features/settings/account/account-data";
 import { AccountScreen } from "@/features/settings/account/account-screen";
 
-/** Account › Dev tools ships only in dev builds: a release build folds the
- * `require` away, so `src/dev` never reaches its bundle (`devCodeInReleaseGraph`). */
 type DevTools = typeof import("@/dev/dev-tools/dev-tools-section");
 
 const dev: DevTools | null = __DEV__

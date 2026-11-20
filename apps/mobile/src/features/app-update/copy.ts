@@ -1,4 +1,3 @@
-/** The update sheet's words, production's word for word. */
 export const UPDATE_COPY = {
 	"new-version": {
 		description:

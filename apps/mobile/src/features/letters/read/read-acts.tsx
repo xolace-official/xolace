@@ -7,14 +7,9 @@ import { Fade } from "../fade";
 import { LETTER_MOTION } from "../letter-motion";
 
 const O = LETTER_MOTION.open;
-/** The acts come in with the words, once both thirds have unfolded. */
 const AFTER_OPEN = { delay: O.flapMs + O.bottomMs, ms: O.words.ms };
 const HIT = 8;
 
-/**
- * Under an open letter: This reached me (or, acknowledged, the line that says so), then Hide or
- * Unhide · Report.
- */
 export function ReadActs({
 	show,
 	reduced,
@@ -74,7 +69,6 @@ export function ReadActs({
 	);
 }
 
-/** The foot: Letters for you are on · Change in Settings, to Privacy › Receive letters. */
 export function ReadFooter({
 	show,
 	reduced,

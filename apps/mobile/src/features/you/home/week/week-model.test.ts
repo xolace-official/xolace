@@ -34,7 +34,6 @@ const NAMES = [
 	"Sunday",
 ];
 
-/** The board's week (WEEK), today Thursday. */
 function week(values: (number | null)[], today = 3): IntensityDay[] {
 	return values.map((intensity, i) => ({
 		dayName: NAMES[i],
@@ -68,7 +67,6 @@ describe("relationTo", () => {
 		expect(relationTo(5.61, USUAL)).toBe("above");
 		expect(relationTo(3.8, USUAL)).toBe("within");
 		expect(relationTo(3.79, USUAL)).toBe("below");
-		// Under the median but inside the band is still within.
 		expect(relationTo(4, USUAL)).toBe("within");
 	});
 });
@@ -144,7 +142,6 @@ describe("dates", () => {
 		expect(shortDate(new Date(Date.UTC(2026, 9, 26)), 6)).toBe("Sun 1 Nov");
 	});
 
-	// The server cuts weeks in UTC; the device's zone must not move a label off its bar.
 	describe.each([["America/New_York"], ["Australia/Sydney"], ["Asia/Kolkata"]])(
 		"on a device in %s",
 		(zone) => {
@@ -157,13 +154,9 @@ describe("dates", () => {
 			});
 
 			it("labels the server's week at the week boundary", () => {
-				// New York, Sunday 22 Nov 20:00 (local) is Monday 23 Nov 01:00 UTC: the server's
-				// week is already 23 Nov, and its Monday bar is 23 Nov.
 				const nySunday = utc(23, 1);
 				expect(weekStart(nySunday, 0)).toEqual(utc(23));
 				expect(shortDate(weekStart(nySunday, 0), 0)).toBe("Mon 23 Nov");
-				// Sydney, Monday 23 Nov 07:00 (local) is Sunday 22 Nov 20:00 UTC: still the week
-				// of 16 Nov on the server.
 				const sydneyMonday = utc(22, 20);
 				expect(weekStart(sydneyMonday, 0)).toEqual(utc(16));
 				expect(shortDate(weekStart(sydneyMonday, 0), 6)).toBe("Sun 22 Nov");
@@ -200,7 +193,6 @@ describe("pagedOffset", () => {
 		expect(
 			pagedOffset({ by: -1, earliest: false, shown: -MAX_WEEKS_BACK })
 		).toBe(-MAX_WEEKS_BACK);
-		// Two quick taps at -51 while -52 loads: both page from -51.
 		expect(pagedOffset({ by: -1, earliest: false, shown: -51 })).toBe(-52);
 		expect(pagedOffset({ by: -1, earliest: false, shown: -51 })).toBe(-52);
 	});
@@ -293,8 +285,6 @@ describe("detailLine", () => {
 
 	it("names every domain the server can send in one word", () => {
 		const keys = Object.keys(COPY.week.domains);
-		// The same keys as Steadiness's (the server's DOMAINS). The type in week-model makes a
-		// missing key a compile error; this keeps the two lists from drifting at run time.
 		expect([...keys].sort()).toEqual(
 			Object.keys(COPY.steadiness.domains).sort()
 		);
@@ -314,7 +304,6 @@ describe("detailLine", () => {
 			for (const scale of [0.82, 1, DROP_DOMAIN_ABOVE]) {
 				expect(parts(scale)).toEqual(["2 moments", "Work", "Overwhelm", ENDED]);
 			}
-			// iOS's xLarge, xxLarge and xxxLarge.
 			for (const scale of [DROP_DOMAIN_ABOVE + 0.01, 1.118, 1.235, 1.353]) {
 				expect(parts(scale)).toEqual(["2 moments", "Overwhelm", ENDED]);
 			}

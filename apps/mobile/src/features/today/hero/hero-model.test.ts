@@ -73,7 +73,6 @@ describe("the hold", () => {
 		expect(canChoose(s)).toBe(false);
 		expect(canTap(s)).toBe(false);
 		expect(holdNext(s, { type: "choose" }).phase).toBe("drifted");
-		// Lifting the finger doesn't make the drift a tap; onPress may land after onPressOut.
 		expect(canTap(holdNext(s, { type: "out" }))).toBe(false);
 	});
 

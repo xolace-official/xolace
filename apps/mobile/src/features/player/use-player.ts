@@ -34,12 +34,6 @@ import {
 
 type Params = { slug: string; from?: BrowseFrom; stepId?: Id<"path_steps"> };
 
-/**
- * The player on the now-playing track. The audio lives in the now-playing host (above every
- * screen): this asks it for `slug` (the loaded slug keeps playing, another swaps the track) and
- * closing leaves it playing in the mini player. Free listeners never see the player: the
- * paywall replaces it, and a lapsed entitlement takes the mini player down with it.
- */
 export function usePlayerData(): { player: Player; clock: PlayerClock } {
 	const { slug, from, stepId } = useLocalSearchParams<Params>();
 	const { isPlus, isLoading } = usePlusEntitlement();
@@ -52,7 +46,6 @@ export function usePlayerData(): { player: Player; clock: PlayerClock } {
 		}
 		clearNowPlaying();
 		posthog.capture("browse_paywall_shown", { from: from ?? null, slug });
-		// Replace, not push, so the paywall's close pops back past the player.
 		router.replace({
 			params: { surface: "browse" satisfies PaywallSurface },
 			pathname: "/upgrade",
@@ -64,7 +57,6 @@ export function usePlayerData(): { player: Player; clock: PlayerClock } {
 			setNowPlaying({ from, slug, stepId });
 		}
 	}, [isPlus, slug, stepId, from]);
-	// A track first loaded here lifts the mini player once, when the player closes over it.
 	useEffect(() => releaseMiniPlayerAttention, []);
 
 	const p = useNowPlayingPlayback(slug);
@@ -79,14 +71,9 @@ export function usePlayerData(): { player: Player; clock: PlayerClock } {
 		track: p.track,
 	});
 	const { track, isPlaying, loop, volume } = p;
-	// The last seek asked for: the status reports it only after it lands, so quick skips in a row
-	// step on from where the previous one went, not from the stale time.
 	const lastSeek = useRef<Seek | null>(null);
 
-	// A context value (code-style.md's exception): `p` is rebuilt on every status tick, and the
-	// parts should render only when what they show changes. Actions read the live playback.
 	const player = useMemo((): Player => {
-		/** The playback, if `slug` is the loaded track. */
 		const live = () =>
 			nowPlaying()?.slug === slug ? nowPlayingPlayback() : null;
 		const seek = (seconds: number) => {
@@ -95,8 +82,6 @@ export function usePlayerData(): { player: Player; clock: PlayerClock } {
 		};
 		return {
 			actions: {
-				// Cold start or a deep link: the player is the whole stack, so there's nothing to go
-				// back to. Home instead, or an invisible modal is left over the app.
 				close: () =>
 					router.canGoBack() ? router.back() : router.replace("/(protected)"),
 				openCrisisHelp: () => router.push("/crisis-resources"),

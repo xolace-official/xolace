@@ -10,19 +10,11 @@ import {
 	type Writing,
 } from "./compose-face-gaze";
 
-/** How long a pause in the writing before it looks up at you. */
 const PAUSE_MS = 1400;
-/** Late, its eyes are a little heavier (board: `eo × .9`). */
 const LATE_EYES = 0.9;
-/** No live voice level reaches the screen: while listening, the `listen` dial rests here. */
 const LISTEN_REST = 0.5;
 const LISTEN_SPRING = { damping: 20, stiffness: 180 };
 
-/**
- * The writing face: it leans in as you write more and its eyes follow the end of your last line
- * (reported by `LineEndMeter`), then look up at you after a pause. Holding the mic turns it
- * `attentive` with its `listen` dial up; late, its eyes are a little heavier.
- */
 export function useComposeFace(
 	running: boolean,
 	text: string,

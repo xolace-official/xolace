@@ -9,12 +9,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 
-/** Board `.stk`: each card runs 30 under the next; `.vrow` 74 (the least a layer drops by). */
 export const OVERLAP = 30;
 export const VENT_H = 74;
 export const TOP_ROUND = "rounded-t-[34px] border-continuous";
 
-/** Board `cardUp .5s` from 60, `220ms + 60ms × i`; on a pick the rest drop 130% (380 ms, staggered 40), the chosen lifts −70 to .94 (360 ms, fade from 80). */
 const RISE = {
 	at: 220,
 	ease: Easing.bezier(0.2, 0.85, 0.25, 1),
@@ -46,7 +44,6 @@ type LayerProps = {
 	children: ReactNode;
 };
 
-/** One layer of the stack: rises in, then drops away (or lifts, if chosen) on a pick. */
 export function Layer({ j, picked, chosen, reduced, children }: LayerProps) {
 	const y = useSharedValue(reduced ? 0 : RISE.from);
 	const opacity = useSharedValue(reduced ? 1 : 0);

@@ -4,20 +4,11 @@ import { loopOrSettle, rest, useLoopRun } from "@/design/ease-loops";
 import { cn } from "@/lib/cn";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** native-cook's `EqualiserBar`, as the boards draw it: four bars on their own slow loops. */
 const BAR = { gap: 2.5, h: 16, r: 1.5, w: 3 } as const;
 const LOW = 0.38;
-/** Each bar's full cycle, in ms; their different lengths keep them out of step. */
 const PERIODS = [2200, 1900, 2500, 2050] as const;
-/** Reduce Motion: still bars at rising heights, never all flat. */
 const STILL = [0.5, 0.625, 0.75, 0.875] as const;
 
-/**
- * The playing mark (Lantern's hub listen; Explore and the player next): bars that rise and fall
- * while `playing`. One Ease loop per bar, so nothing runs per frame; every other bar starts high,
- * so they never move together. When `playing` turns false each bar eases back to rest and its
- * loop stops. `className` colours the bars (white by default, for art).
- */
 export function Equaliser({
 	playing,
 	className,
@@ -62,7 +53,6 @@ function Bar({
 }) {
 	const [low, high] = index % 2 === 0 ? [LOW, 1] : [1, LOW];
 	const running = playing && !reduced;
-	// A loop restarts only on remount: the key moves each time it starts again.
 	const run = useLoopRun(running, periodMs);
 	const ease = reduced
 		? rest({ scaleY: STILL[index] })

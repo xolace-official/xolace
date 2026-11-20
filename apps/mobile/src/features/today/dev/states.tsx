@@ -1,6 +1,3 @@
-/** Today on fixtures: `xolace://dev/today/<id>`. The board's phases (handoff `today.md`
- * §4.1, renders `01`–`04`), each in light and dark, the first open, the streak igniting,
- * and Today with nothing loaded (offline). */
 import type { DevState } from "@/dev/dev-state";
 import { today } from "./fixture-today";
 

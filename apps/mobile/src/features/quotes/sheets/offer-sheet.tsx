@@ -14,18 +14,12 @@ import { Segments, SheetButton } from "./sheet-parts";
 const C = QUOTE_COPY.dailyQuote;
 const SLOT_ITEMS = OFFER_SLOTS.map((id) => ({ id, label: C.slots[id] }));
 
-/**
- * The one-time daily quote offer (B19), after someone first resonates with or keeps a quote:
- * Yes (mornings), Choose time (then the three times), or Not now. Closing it answers nothing,
- * and it isn't shown again on this device either way.
- */
 export function OfferSheet({
 	ink,
 	onAnswer,
 	onClose,
 }: {
 	ink: InkPalette;
-	/** A time turns it on; null is Not now. */
 	onAnswer: (slot: DailyQuoteSlot | null) => void;
 	onClose: () => void;
 }) {

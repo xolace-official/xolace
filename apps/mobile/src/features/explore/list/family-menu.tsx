@@ -7,10 +7,6 @@ const OPTIONS: readonly { value: Family; icon: "waveform" | "music.note" }[] = [
 	{ icon: "music.note", value: "music" },
 ];
 
-/**
- * Production's filter menu in the bar: "Family", Support audio and Music, the current one
- * ticked. The system draws it; SF Symbols are iOS-only, Android drops them.
- */
 export function FamilyMenu({
 	value,
 	onChange,

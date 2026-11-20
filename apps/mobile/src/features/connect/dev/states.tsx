@@ -1,4 +1,3 @@
-/** Connect on fixtures: `xolace://dev/connect/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureArchived, FixtureConnect } from "./fixture-connect";
 import {
@@ -16,7 +15,6 @@ import {
 	XOLACER_UNPUBLISHED,
 } from "./fixtures";
 
-/** The screen sets its own header, as the tab's stack does. */
 const OWN = { headerShown: true, title: "" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

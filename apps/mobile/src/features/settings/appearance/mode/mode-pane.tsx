@@ -6,14 +6,11 @@ import type { ThemeMode } from "@/features/settings/appearance/appearance-model"
 import { cn } from "@/lib/cn";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** A mode picture (board `.modes`): 72 × 118, 14 pt corners. */
 const W = 72;
 const H = 118;
 const RADIUS = 14;
-/** The ring sits outside the edge (CSS box-shadow 0 0 0 2px / 1px). */
 const RING_ON = 2;
 const RING_OFF = 1;
-/** Line widths inside the picture: two lines of a tiny Reflect screen. */
 const PAD = 7;
 const LINE_LONG = W - 21;
 const LINE_SHORT = W - 33;
@@ -21,7 +18,6 @@ const LINE_SHORT = W - 33;
 const DEFAULT_LIGHT = themeVariant("default", "light");
 const DEFAULT_DARK = themeVariant("default", "dark");
 
-/** One pane in the scoped theme's background, surface, accent and ink; `half` keeps the lower right. */
 function PaneSvg({ half = false }: { half?: boolean }) {
 	const [background, surface, accent, ink] = useTokenColors([
 		"background",
@@ -74,11 +70,6 @@ function PaneSvg({ half = false }: { half?: boolean }) {
 	);
 }
 
-/**
- * The picture for one mode, always in Default's light and dark (each pane in a ScopedTheme),
- * whatever theme is picked. System is split on the diagonal, the dark half bottom right. The
- * chosen one is ringed 2 pt in the accent, just outside its edge.
- */
 export function ModePane({ mode, on }: { mode: ThemeMode; on: boolean }) {
 	const ring = on ? RING_ON : RING_OFF;
 	return (

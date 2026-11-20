@@ -1,6 +1,5 @@
-import MaskedViewClass from "@react-native-masked-view/masked-view";
-import type { ComponentType, ReactElement } from "react";
-import { View, type ViewProps } from "react-native";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { View } from "react-native";
 import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
@@ -20,12 +19,7 @@ const MIRROR = require("@/assets/images/flux/mirror-v2-bg.png");
 const F1 = { height: 220, left: 214, top: 382, width: 141 };
 const WATER = 598;
 const RF = { height: 92, left: 214, top: 599, width: 141 };
-// The package's class typings predate React 19's JSX types (as in today/band-blur.tsx).
-const MaskedView = MaskedViewClass as unknown as ComponentType<
-	ViewProps & { maskElement: ReactElement }
->;
 
-/** 2 · The Mirror: the waterline draws, the reflection reads the feeling back; touch it to ripple. */
 const REFLECT_MASK = [
 	"first-run-reflect-mask-1",
 	"first-run-reflect-mask-2",

@@ -21,19 +21,13 @@ import { trailGeometry } from "./trail/trail-geometry";
 import { useTrailScroll } from "./trail/use-trail-scroll";
 import { useTrail } from "./use-trail";
 
-/** The board's phone has a 34 pt home indicator; the card sits 24 pt above it. */
 const BOARD_BOTTOM = 34;
 const CARD_GAP = 24;
-/** Without a home indicator the card still keeps off the screen's edge. */
 const CARD_MIN_BOTTOM = 12;
-/** The trail starts 35 pt below the header block. */
 const HEADER_GAP = 35;
-/** Room between the fire and the card once scrolled to the end. */
 const FIRE_CLEAR = 40;
-/** Before a kindling loads, the screen's hooks run on no twigs. */
 const NO_VIEW: TrailView = { generatedAt: 0, id: "", states: [], twigs: [] };
 
-/** Your kindling (handoff `kindling.md`): the trail lights up as you tend it. */
 export function KindlingScreen() {
 	const { state } = useKindling();
 	const header = useHeaderOptions();
@@ -81,7 +75,6 @@ function KindlingBody({ view: ready }: { view: TrailView | null }) {
 		reduced,
 		stops: trail.stops,
 	});
-	// Below the trail's top: the board's length, or enough to lift the fire clear of the card.
 	// The automatic bottom inset already adds the home indicator.
 	const blockH =
 		Math.max(
@@ -91,7 +84,6 @@ function KindlingBody({ view: ready }: { view: TrailView | null }) {
 
 	return (
 		<>
-			{/* A settled kindling is completed: there's nothing left to put out. */}
 			{ready && !settled(k.shown) ? (
 				<KindlingMenu
 					onAsk={k.menu.asking}

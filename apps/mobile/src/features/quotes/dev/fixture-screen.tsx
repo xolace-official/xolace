@@ -1,6 +1,3 @@
-/** The screen's fixture adapter: the real `QuotesScreen` under a provider filled from fixtures.
- * Taps that only change the screen's own UI (sheets, Clear view, the heart's burst) play; taps
- * that would write change nothing and reach nothing. */
 import { QuotesScreen } from "@/features/quotes/quotes-screen";
 import {
 	type QuotesActions,
