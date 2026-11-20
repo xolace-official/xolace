@@ -46,6 +46,22 @@ describe("startRevenueCat", () => {
 		expect(start.configured).toBe(true);
 		expect(start.customerInfo).toBeNull();
 		expect(start.offerings).toBe(offerings);
+		expect(start.errors).toEqual([offline]);
+	});
+
+	it("stays configured when both fail", async () => {
+		const start = await startRevenueCat(
+			sdk({
+				getCustomerInfo: () => Promise.reject(offline),
+				getOfferings: () => Promise.reject(offline),
+			})
+		);
+		expect(start).toEqual({
+			configured: true,
+			customerInfo: null,
+			errors: [offline, offline],
+			offerings: null,
+		});
 	});
 
 	it("is not configured when configure throws, and fetches nothing", async () => {
