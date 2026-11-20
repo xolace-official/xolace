@@ -9,6 +9,12 @@ import type { Timeline } from "../reflect-model";
 import { MirrorLine } from "./mirror-line";
 import type { MirrorInk } from "./mirror-word";
 
+/**
+ * The tick as the line arms. A plain function on purpose: the pan schedules it back on the RN
+ * runtime, and `scheduleOnRN` rejects a Pulsar preset itself (presets are worklets).
+ */
+const armTick = () => Presets.System.selection();
+
 type Props = {
 	e: SharedValue<number>;
 	tl: Timeline;
@@ -69,7 +75,7 @@ export function MirrorLines({
 					ink={ink}
 					key={`${landN}-${mv}-${i}`}
 					line={line}
-					onArm={Presets.System.selection}
+					onArm={armTick}
 					onChoose={(k) => actions.notQuite(k)}
 					onTap={onTap}
 					pickMode={pickMode}
