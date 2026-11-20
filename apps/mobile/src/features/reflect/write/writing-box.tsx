@@ -1,3 +1,4 @@
+import { REFLECTION_INPUT_MAX_CHARS } from "@xolace/backend/shared";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { TextInput, type TextInputInstance, View } from "react-native";
 import { RotatingPlaceholder } from "@/components/shared/rotating-placeholder";
@@ -5,7 +6,6 @@ import { BODY_MAX_SCALE } from "@/design/type";
 import { COPY } from "../copy";
 import { LAYOUT } from "../layout";
 import { useReflect } from "../reflect-data";
-import { MAX_CHARS } from "../reflect-model";
 import type { Writing } from "./compose-face-gaze";
 import { FIELD_TEXT } from "./field-type";
 import { LineEndMeter } from "./line-end-meter";
@@ -81,7 +81,7 @@ export function WritingBox({ running, reduced, onWriting, inputRef }: Props) {
 				accessibilityLabel={prompt}
 				className="type-compose p-0 font-normal text-transparent"
 				maxFontSizeMultiplier={BODY_MAX_SCALE}
-				maxLength={MAX_CHARS}
+				maxLength={REFLECTION_INPUT_MAX_CHARS}
 				multiline
 				onChangeText={onChange}
 				ref={inputRef}

@@ -1,3 +1,4 @@
+import type { SessionErrorCode } from "@xolace/backend/shared";
 export type ReflectionStateName =
 	| "idle"
 	| "typing"
@@ -37,7 +38,7 @@ export type ReflectionAction =
 	| { type: "CLARIFY_TEXT_CHANGE"; text: string }
 	| { type: "RESET" }
 	| { type: "ACCOUNT_SWITCHED"; entryText: string }
-	| { type: "SESSION_ERROR"; message: string }
+	| { type: "SESSION_ERROR"; message: string; code?: SessionErrorCode }
 	| { type: "SESSION_RESUMED"; screen: ReflectionStateName }
 	| { type: "VOICE_START" }
 	| { type: "VOICE_TRANSCRIPT"; text: string }
@@ -49,6 +50,7 @@ export interface ReflectionState {
 	clarifyText: string;
 	entryText: string;
 	entryType: EntryType;
+	errorCode: SessionErrorCode | null;
 	errorMessage: string;
 	lastFeedbackType: FeedbackType | null;
 	missReason: MissReason | null;

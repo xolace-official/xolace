@@ -1,10 +1,5 @@
-import {
-	COUNT_FROM,
-	LETTER_MAX,
-	LETTER_MIN,
-	LETTERS,
-	type LetterFor,
-} from "./copy";
+import { LETTER_MAX_CHARS, LETTER_MIN_CHARS } from "@xolace/backend/shared";
+import { COUNT_FROM, LETTERS, type LetterFor } from "./copy";
 import type { LETTER_MOTION } from "./letter-motion";
 
 export type OptIn = "unset" | "yes" | "no";
@@ -94,15 +89,6 @@ export function cardStatus(s: LettersStatus): string {
 	return LETTERS.card.invite;
 }
 
-const LINE_MAX = 46;
-const LINE_CUT = 44;
-export function openingLine(text: string): string {
-	const first = text.split("\n")[0] ?? "";
-	return first.length > LINE_MAX
-		? `${first.slice(0, LINE_CUT).replace(/\s+\S*$/, "")}…`
-		: first;
-}
-
 const letterLength = (text: string): number => text.trim().length;
 
 export function countLine(text: string): string {
@@ -110,10 +96,12 @@ export function countLine(text: string): string {
 	if (len === 0) {
 		return "";
 	}
-	if (len < LETTER_MIN) {
-		return LETTERS.write.countUnder(LETTER_MIN - len);
+	if (len < LETTER_MIN_CHARS) {
+		return LETTERS.write.countUnder(LETTER_MIN_CHARS - len);
 	}
-	return len > COUNT_FROM ? LETTERS.write.countLeft(LETTER_MAX - len) : "";
+	return len > COUNT_FROM
+		? LETTERS.write.countLeft(LETTER_MAX_CHARS - len)
+		: "";
 }
 
 export const heldAgain = (text: string, held: string): boolean =>
@@ -121,11 +109,16 @@ export const heldAgain = (text: string, held: string): boolean =>
 
 export function canSend(text: string, held: string): boolean {
 	const len = letterLength(text);
-	return len >= LETTER_MIN && len <= LETTER_MAX && !heldAgain(text, held);
+	return (
+		len >= LETTER_MIN_CHARS && len <= LETTER_MAX_CHARS && !heldAgain(text, held)
+	);
 }
 
 export const withStarter = (text: string, starter: string): string =>
-	`${text ? text.replace(/\s*$/, " ") : ""}${starter} `.slice(0, LETTER_MAX);
+	`${text ? text.replace(/\s*$/, " ") : ""}${starter} `.slice(
+		0,
+		LETTER_MAX_CHARS
+	);
 
 export function forYouRows(received: readonly ReceivedLetter[]): {
 	reread: ReceivedLetter[];

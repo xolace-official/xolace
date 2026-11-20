@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
@@ -11,6 +11,7 @@ import {
 } from "./_generated/server";
 import { matchExercise } from "./exercises/match";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { ERROR_CODES, EXERCISE_MAX_SWAPS } from "./lib/shared";
 import { recordActivity } from "./streaks/activityLog";
 
 /**
@@ -302,7 +303,7 @@ export const completeStandalone = mutation({
 });
 
 /**
- * Record an exercise swap for a session (max 2 swaps enforced).
+ * Record an exercise swap for a session (max EXERCISE_MAX_SWAPS swaps enforced).
  */
 export const recordSwap = mutation({
 	args: {
@@ -313,8 +314,11 @@ export const recordSwap = mutation({
 		const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
 		const currentSwaps = session.swappedExerciseIds ?? [];
-		if (currentSwaps.length >= 2) {
-			throw new Error("Maximum swaps reached");
+		if (currentSwaps.length >= EXERCISE_MAX_SWAPS) {
+			throw new ConvexError({
+				code: ERROR_CODES.swapLimitReached,
+				message: "Maximum swaps reached",
+			});
 		}
 
 		const { resetId, nextBestId } = await computeSwapOptions(ctx, session);
@@ -322,7 +326,10 @@ export const recordSwap = mutation({
 			[resetId, nextBestId].filter((id): id is Id<"exercises"> => id !== null)
 		);
 		if (!allowed.has(args.newExerciseId)) {
-			throw new Error("Exercise not allowed for this session");
+			throw new ConvexError({
+				code: ERROR_CODES.swapNotAllowed,
+				message: "Exercise not allowed for this session",
+			});
 		}
 
 		const updatedSwaps = [...currentSwaps, args.newExerciseId];

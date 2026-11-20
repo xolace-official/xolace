@@ -4,6 +4,7 @@ import { reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
 import { seededDisplayName, validateDisplayName } from "./lib/displayName";
 import { hasPremium } from "./lib/premium";
+import { WEEKS_BACK_MAX } from "./lib/shared";
 import { insightFeatureValidator } from "./lib/validators";
 import {
 	type DayDetail,
@@ -234,7 +235,7 @@ export const getReflectionRank = query({
 
 // How far back a Plus user can page. Matches the longest data-retention
 // tier ("1_year") — beyond this, earlier sessions are already purged.
-const MAX_WEEKS_BACK = 52;
+const MAX_WEEKS_BACK = WEEKS_BACK_MAX;
 const MONTH_LABELS = [
 	"Jan",
 	"Feb",

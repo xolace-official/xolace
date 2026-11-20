@@ -1,4 +1,5 @@
 import type { api } from "@xolace/backend/api";
+import { WEEKS_BACK_MAX } from "@xolace/backend/shared";
 import type { FunctionReturnType } from "convex/server";
 import { COPY } from "@/features/you/copy";
 import { feelingOf } from "@/features/you/moments/moments-model";
@@ -100,7 +101,6 @@ const MONTH = new Intl.DateTimeFormat("en-GB", {
 });
 const DAY_MS = 86_400_000;
 const DAYS_IN_WEEK = 7;
-export const MAX_WEEKS_BACK = 52;
 
 export function weekStart(now: Date, offset: number): Date {
 	const monday = new Date(now);
@@ -141,7 +141,7 @@ export function pagedOffset({
 	if (by < 0 && earliest) {
 		return shown;
 	}
-	return Math.max(-MAX_WEEKS_BACK, Math.min(0, shown + by));
+	return Math.max(-WEEKS_BACK_MAX, Math.min(0, shown + by));
 }
 
 export type DetailDomain = NonNullable<

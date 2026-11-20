@@ -1,4 +1,6 @@
+import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
+import { FEEDBACK_COPY } from "./copy";
 import {
 	concernParams,
 	errorMessageOf,
@@ -41,15 +43,38 @@ describe("feedbackStartOf", () => {
 	});
 });
 
+const PRODUCTION_MESSAGE =
+	"[CONVEX M(productFeedback:submit)] [Request ID: abc123] Server Error";
+
 describe("errorMessageOf", () => {
-	it("unwraps Convex's message", () => {
+	it("gives each kind its own limit copy when production scrubs the message", () => {
+		const limited = new ConvexError({ code: "rate_limited", kind: "concern" });
+		limited.message = PRODUCTION_MESSAGE;
+		expect(errorMessageOf(limited, "concern")).toBe(
+			FEEDBACK_COPY.report.concern.rateLimited
+		);
+		expect(errorMessageOf(limited, "bug")).toBe(
+			FEEDBACK_COPY.report.bug.rateLimited
+		);
+	});
+
+	it("never shows production's scrubbed message", () => {
+		expect(errorMessageOf(new Error(PRODUCTION_MESSAGE), "bug")).toBe(
+			"Something went wrong"
+		);
+	});
+
+	it("unwraps the message of a server from before the codes", () => {
 		expect(
-			errorMessageOf(new Error("[CONVEX] Uncaught Error: Too long\n at x"))
+			errorMessageOf(
+				new Error("[CONVEX] Uncaught Error: Too long\n at x"),
+				"idea"
+			)
 		).toBe("Too long");
 	});
 
 	it("falls back for a non-error", () => {
-		expect(errorMessageOf("x")).toBe("Something went wrong");
+		expect(errorMessageOf("x", "bug")).toBe("Something went wrong");
 	});
 });
 

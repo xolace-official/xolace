@@ -1,3 +1,4 @@
+import { FEEDBACK_MAX_CHARS } from "@xolace/backend/shared";
 import { Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
@@ -7,7 +8,7 @@ import { cn } from "@/lib/cn";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { TELL_US_COPY as C } from "../copy";
 import { SCENE_MOTION } from "../rate/ember-scene";
-import { canSend, TELL_US_MAX } from "../ratings-model";
+import { canSend } from "../ratings-model";
 import { useTellUsSheet } from "../tell-us-data";
 
 const BOTTOM = 34;
@@ -100,7 +101,7 @@ export function TellUsSheet() {
 						accessibilityLabelledBy="tell-us-label"
 						className="mt-2 rounded-[18px] border border-continuous border-foreground/12 bg-surface px-4 py-3.5 font-normal text-[17px] text-foreground leading-[23px]"
 						editable={!(state.limited || state.sending)}
-						maxLength={TELL_US_MAX}
+						maxLength={FEEDBACK_MAX_CHARS}
 						multiline
 						onChangeText={actions.setText}
 						placeholder={C.placeholder}

@@ -1,5 +1,6 @@
 import type { Resource } from "@xolace/backend/convex/lib/crisisResources";
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
+import { convexErrorCode } from "@/lib/convex-error-code";
 import { MIN_TALK_S, talkTimeLine, WEEKLY_TALK_S } from "@/lib/talk/talk-time";
 import { TALK_CAST } from "@/lib/talk/voice-options";
 import { TALK_COPY } from "./copy";
@@ -116,3 +117,15 @@ export function resourceUrl(resource: Resource): string | null {
 
 export const opensResource = (resource: Resource): boolean =>
 	resourceUrl(resource) !== null;
+
+const REFUSAL_COPY: Readonly<Record<string, string>> = {
+	not_reopenable: TALK_COPY.start.notReopenable,
+	talk_time_used: TALK_COPY.start.timeUsed,
+};
+
+export function talkErrorMessage(error: unknown, fallback: string): string {
+	const code = convexErrorCode(error);
+	return code !== undefined && Object.hasOwn(REFUSAL_COPY, code)
+		? REFUSAL_COPY[code]
+		: fallback;
+}

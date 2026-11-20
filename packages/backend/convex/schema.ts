@@ -35,6 +35,7 @@ import {
 	quoteBackgroundValidator,
 	resourceValidator,
 	safeguardLevelValidator,
+	sessionErrorCodeValidator,
 	supportNeedValidator,
 	talkIssueValidator,
 	talkPeakValidator,
@@ -3009,6 +3010,7 @@ export default defineSchema({
 			v.literal("voice"),
 			v.literal("talk") // A companion talk (#592): rawInput is the person's lines only
 		),
+		errorCode: v.optional(sessionErrorCodeValidator),
 
 		// Error message when state is "error" (AI processing failure).
 		errorMessage: v.optional(v.string()),

@@ -1,5 +1,6 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { api } from "@xolace/backend/api";
+import { COMPANION_FALLBACK_NAME } from "@xolace/backend/shared";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
@@ -22,7 +23,6 @@ import {
 } from "@/features/settings/account/copy";
 import { saveFailed } from "@/features/settings/use-save-failed";
 import { getGrantedPushToken } from "@/lib/push-token";
-import { COMPANION_FALLBACK_NAME } from "@/lib/talk/use-companion-name";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useSingleFlight } from "@/lib/use-single-flight";
 

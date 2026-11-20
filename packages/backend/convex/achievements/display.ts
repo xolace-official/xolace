@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { type QueryCtx, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
+import { BADGE_PIN_LIMIT } from "../lib/shared";
 import { FREEZE_CAP, FREEZE_SPARK_PRICE } from "../lib/streakFreezes";
 import { streakState } from "../streaks/state";
 import { type BadgeArt, badgeArt, badgeArtValidator } from "./art";
@@ -241,7 +242,7 @@ export const overview = query({
 });
 
 /** The badges the profile card shows. */
-export const SHELF_BADGES = 3;
+export const SHELF_BADGES = BADGE_PIN_LIMIT;
 
 /** The rows the profile card shows: pins in the order pinned, then the latest earned. */
 function shelfOrder<T extends { row: Doc<"user_achievements"> }>(

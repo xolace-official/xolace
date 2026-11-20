@@ -7,15 +7,14 @@
  * The turn is claimed first (`talkDemo/demo.claimTurn`), so its limits hold
  * before any model or voice is paid for.
  */
+
 import { ConvexError, v } from "convex/values";
 import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
 import { type ActionCtx, action } from "../../_generated/server";
-import {
-	resolveVoiceId,
-	VOICE_CATALOG,
-	voiceSlugValidator,
-} from "../../lib/voices";
+import { resolveVoiceId, VOICE_CATALOG } from "../../lib/elevenLabsVoices";
+import { TALK_DEMO_LINE_MAX_CHARS } from "../../lib/shared";
+import { voiceSlugValidator } from "../../lib/voices";
 import { checkAnswerSafety } from "../intake/read";
 import {
 	extractTextFromResponse,
@@ -27,7 +26,7 @@ import type { DemoPrompt } from "./prompt";
 import { type DemoReply, demoReplyValidator, replyToLine } from "./replying";
 
 /** Twice what one spoken sentence or two runs to. */
-const MAX_LINE_CHARS = 1000;
+const MAX_LINE_CHARS = TALK_DEMO_LINE_MAX_CHARS;
 
 /** Two tries of 5s: the person is watching Flux think. */
 const REQUEST_OPTIONS = { maxRetries: 1, timeout: 5000 };

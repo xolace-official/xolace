@@ -1,3 +1,5 @@
+import { ERROR_CODES } from "@xolace/backend/shared";
+import { convexErrorCode } from "@/lib/convex-error-code";
 import type { RatingsRecord, ReleaseRan } from "@/store/ratings-slice";
 
 const HOUR = 60 * 60 * 1000;
@@ -131,9 +133,13 @@ export const isPlainOpen = ({
 export const isHelpRoute = (pathname: string): boolean =>
 	pathname === "/crisis-resources" || pathname.startsWith("/crisis-resources/");
 
-export const TELL_US_MAX = 1000;
-
 export const canSend = (text: string): boolean => text.trim() !== "";
+
+export const sendRefusedAsLimited = (
+	error: unknown,
+	canSubmit: boolean | undefined
+): boolean =>
+	canSubmit === false || convexErrorCode(error) === ERROR_CODES.rateLimited;
 
 export const markSeen = (seen: string[] | null, releaseId: string): string[] =>
 	seen?.includes(releaseId) ? seen : [...(seen ?? []), releaseId];

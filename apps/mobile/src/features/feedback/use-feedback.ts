@@ -63,7 +63,7 @@ export function useFeedback(
 			});
 			goBack();
 		} catch (e) {
-			setError(errorMessageOf(e));
+			setError(errorMessageOf(e, kind));
 		} finally {
 			setSaving(false);
 		}

@@ -1,10 +1,10 @@
+import { REFINEMENT_MAX_TURNS } from "@xolace/backend/shared";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { COPY } from "../copy";
 import type { Reflect, ReflectUi } from "../reflect-data";
 import {
 	LAND_MS,
-	MAX_TURNS,
 	mirrorSentences,
 	pairPhrases,
 	resourceRows,
@@ -123,7 +123,7 @@ export function useFixtureReflect(initial: Partial<FixtureState>): Reflect {
 	const refine = () => {
 		patch({ nq: false, rewriting: true, sayMore: false, sel: -1 });
 		after(REWRITE_MS, () => ({
-			atCap: f.turns + 1 >= MAX_TURNS,
+			atCap: f.turns + 1 >= REFINEMENT_MAX_TURNS,
 			landN: f.landN + 1,
 			mv: 2,
 			nqReason: null,

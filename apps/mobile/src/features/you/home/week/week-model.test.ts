@@ -1,3 +1,4 @@
+import { WEEKS_BACK_MAX } from "@xolace/backend/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { COPY } from "@/features/you/copy";
 import {
@@ -13,7 +14,6 @@ import {
 	heldReadout,
 	type IntensityDay,
 	levelY,
-	MAX_WEEKS_BACK,
 	pagedOffset,
 	peakIndex,
 	relationTo,
@@ -191,8 +191,8 @@ describe("pagedOffset", () => {
 	it("stops at the earliest week and at the server's limit", () => {
 		expect(pagedOffset({ by: -1, earliest: true, shown: -4 })).toBe(-4);
 		expect(
-			pagedOffset({ by: -1, earliest: false, shown: -MAX_WEEKS_BACK })
-		).toBe(-MAX_WEEKS_BACK);
+			pagedOffset({ by: -1, earliest: false, shown: -WEEKS_BACK_MAX })
+		).toBe(-WEEKS_BACK_MAX);
 		expect(pagedOffset({ by: -1, earliest: false, shown: -51 })).toBe(-52);
 		expect(pagedOffset({ by: -1, earliest: false, shown: -51 })).toBe(-52);
 	});

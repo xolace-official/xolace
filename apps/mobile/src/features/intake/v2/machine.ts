@@ -1,3 +1,4 @@
+import { DISPLAY_NAME_MAX_CODE_POINTS } from "@xolace/backend/shared";
 import {
 	type Chip,
 	type FollowUp,
@@ -9,8 +10,6 @@ import {
 	type SafetyResource,
 	toggleChip,
 } from "@/features/intake/v2/heard";
-
-export const NAME_MAX_CHARS = 30;
 
 export const ANSWER_MAX_CHARS = 1000;
 
@@ -296,7 +295,7 @@ export function intakeV2Reducer(
 				: state;
 		case "NAME_CHANGE":
 			return state.step === "name"
-				? { ...state, name: action.name.slice(0, NAME_MAX_CHARS) }
+				? { ...state, name: action.name.slice(0, DISPLAY_NAME_MAX_CODE_POINTS) }
 				: state;
 		case "KEEP_NAME": {
 			const name = state.name.trim();

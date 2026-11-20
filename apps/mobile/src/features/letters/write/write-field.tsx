@@ -1,8 +1,9 @@
+import { LETTER_MAX_CHARS } from "@xolace/backend/shared";
 import type { ComponentRef, Ref } from "react";
 import { TextInput } from "react-native";
 import { useFixedFaces } from "@/design/fonts";
 import { FONTS } from "@/design/type";
-import { LETTER_MAX, LETTERS } from "../copy";
+import { LETTERS } from "../copy";
 import {
 	LETTER_MAX_SCALE,
 	LETTER_TYPE,
@@ -31,7 +32,7 @@ export function WriteField({
 			autoFocus={focus}
 			cursorColor={ink.ink}
 			maxFontSizeMultiplier={LETTER_MAX_SCALE}
-			maxLength={LETTER_MAX}
+			maxLength={LETTER_MAX_CHARS}
 			multiline
 			onChangeText={actions.setText}
 			placeholder={LETTERS.write.placeholder}

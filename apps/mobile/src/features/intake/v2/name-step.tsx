@@ -1,3 +1,4 @@
+import { DISPLAY_NAME_MAX_CODE_POINTS } from "@xolace/backend/shared";
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { useRef } from "react";
@@ -12,7 +13,6 @@ import { AppText } from "@/components/shared/app-text";
 import { suggestHandle } from "@/features/intake/answer-rules";
 import { Flux } from "@/features/intake/v2/flux";
 import { KeyboardStep } from "@/features/intake/v2/keyboard-step";
-import { NAME_MAX_CHARS } from "@/features/intake/v2/machine";
 import { playSoftPress } from "@/lib/haptics";
 
 const FLUX_SIZE = 160;
@@ -77,7 +77,7 @@ export function NameStep({ busy, name, onChange, onKeep, skipped }: Props) {
 						accessibilityLabel="Your name here"
 						className="h-14 flex-1 rounded-2xl border border-border bg-surface-secondary px-[18px] font-[Poppins-Medium] text-[18px] text-foreground"
 						enablesReturnKeyAutomatically
-						maxLength={NAME_MAX_CHARS}
+						maxLength={DISPLAY_NAME_MAX_CODE_POINTS}
 						onChangeText={onChange}
 						onSubmitEditing={keep}
 						placeholder="Your name here"

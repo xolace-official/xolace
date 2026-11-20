@@ -2,12 +2,8 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { type ActionCtx, internalAction } from "../_generated/server";
-import {
-	resolveVoiceId,
-	TONE_DEFAULT_VOICE,
-	type VoiceSlug,
-	voiceSlugValidator,
-} from "../lib/voices";
+import { resolveVoiceId, TONE_DEFAULT_VOICE } from "../lib/elevenLabsVoices";
+import { type VoiceSlug, voiceSlugValidator } from "../lib/voices";
 import type { MirrorTone } from "./mirrorPlan";
 
 /**

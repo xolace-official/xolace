@@ -1,4 +1,8 @@
 import { api } from "@xolace/backend/convex/_generated/api";
+import {
+	DICTATION_BIT_RATE,
+	DICTATION_MAX_TAKE_MS,
+} from "@xolace/backend/shared";
 import { useAction, useConvex, useQuery } from "convex/react";
 import { File } from "expo-file-system";
 import { useIsFocused } from "expo-router/react-navigation";
@@ -14,9 +18,6 @@ import { useVoiceProcessingConsent } from "@/lib/consent/use-voice-processing-co
 import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
 import { uploadWithConsent } from "./consented-upload";
 
-const MAX_TAKE_MS = 180_000;
-// Mono 32kbps AAC ≈ 4KB/s → a full take is ~720KB, under Convex's 1MB v.bytes().
-const DICTATION_BIT_RATE = 32_000;
 // Scribe's own 30s timeout plus room for the upload; offline, an action waits
 // for the socket indefinitely.
 const UPLOAD_TIMEOUT_MS = 45_000;
@@ -51,7 +52,7 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 	const convex = useConvex();
 	const { startRecording, stopRecording, metering, getDurationMs } =
 		useMeteringRecorder(DICTATION_BIT_RATE);
-	const [remainingMs, setRemainingMs] = useState(MAX_TAKE_MS);
+	const [remainingMs, setRemainingMs] = useState(DICTATION_MAX_TAKE_MS);
 	const transcribe = useAction(api.dictation.plus.transcribe);
 	const { ensureConsent } = useVoiceProcessingConsent();
 	const consentRef = useRef<Promise<void> | null>(null);
@@ -185,12 +186,12 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		if (phase !== "listening") {
 			return;
 		}
-		const t = setTimeout(endTake, MAX_TAKE_MS);
+		const t = setTimeout(endTake, DICTATION_MAX_TAKE_MS);
 		return () => clearTimeout(t);
 	}, [phase]);
 
 	const tickCountdown = useEffectEvent(() =>
-		setRemainingMs(Math.max(0, MAX_TAKE_MS - getDurationMs()))
+		setRemainingMs(Math.max(0, DICTATION_MAX_TAKE_MS - getDurationMs()))
 	);
 	useEffect(() => {
 		if (phase !== "listening") {
@@ -199,7 +200,7 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		const t = setInterval(tickCountdown, COUNTDOWN_TICK_MS);
 		return () => {
 			clearInterval(t);
-			setRemainingMs(MAX_TAKE_MS);
+			setRemainingMs(DICTATION_MAX_TAKE_MS);
 		};
 	}, [phase]);
 

@@ -1,5 +1,6 @@
 import type { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
+import { isStreakMilestone } from "@xolace/backend/shared";
 import type { FunctionReturnType } from "convex/server";
 import {
 	type Art,
@@ -52,20 +53,10 @@ export type ArrivalPlan =
 			milestone: Milestone | null;
 	  };
 
-const MILESTONES = [7, 30, 100] as const;
-const MILESTONE_EVERY = 100;
-const LAST_MILESTONE = 100;
 const STREAK_ID = /^streak-(\d+)$/;
 const WEEK = 7;
 const DAY_MS = 86_400_000;
 const LETTERS = 2;
-
-export function isStreakMilestone(day: number): boolean {
-	return (
-		(MILESTONES as readonly number[]).includes(day) ||
-		(day > LAST_MILESTONE && day % MILESTONE_EVERY === 0)
-	);
-}
 
 export function milestoneDayOf(achievementId: string): number | null {
 	const match = STREAK_ID.exec(achievementId);

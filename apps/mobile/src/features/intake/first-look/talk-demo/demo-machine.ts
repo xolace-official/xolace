@@ -1,5 +1,6 @@
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
+import { TALK_DEMO_LINE_MAX_CHARS } from "@xolace/backend/shared";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import { convexErrorCode } from "@/lib/convex-error-code";
@@ -51,8 +52,6 @@ export type DemoAction =
 	| { type: "REPLIED"; reply: DemoReply }
 	| { type: "REPLY_REFUSED"; reason: Refusal }
 	| { type: "SAID" };
-
-export const LINE_MAX_CHARS = 1000;
 
 const DEFAULT_VOICE: VoiceSlug = "wren";
 
@@ -133,7 +132,10 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
 			if (phase !== "listening") {
 				return state;
 			}
-			const line = action.transcript.trim().slice(0, LINE_MAX_CHARS).trim();
+			const line = action.transcript
+				.trim()
+				.slice(0, TALK_DEMO_LINE_MAX_CHARS)
+				.trim();
 			return line
 				? { ...state, line, mode: "voice", phase: "thinking" }
 				: { ...state, phase: "intro" };
@@ -144,7 +146,7 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
 				: state;
 		case "DRAFT":
 			return phase === "typing"
-				? { ...state, draft: action.text.slice(0, LINE_MAX_CHARS) }
+				? { ...state, draft: action.text.slice(0, TALK_DEMO_LINE_MAX_CHARS) }
 				: state;
 		case "SEND": {
 			const line = state.draft.trim();

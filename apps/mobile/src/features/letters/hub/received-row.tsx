@@ -1,12 +1,9 @@
+import { letterOpeningLine } from "@xolace/backend/shared";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { LetterLine } from "../letter-sheet";
-import {
-	openingLine,
-	type ReceivedLetter,
-	receivedRowSub,
-} from "../letters-model";
+import { type ReceivedLetter, receivedRowSub } from "../letters-model";
 import { openLetter } from "../letters-routes";
 import { ReceivedMark } from "../received-mark";
 
@@ -14,7 +11,7 @@ const HIDDEN_LINE_OPACITY = 0.6;
 
 export function ReceivedRow({ letter }: { letter: ReceivedLetter }) {
 	const sub = receivedRowSub(letter);
-	const line = openingLine(letter.text);
+	const line = letterOpeningLine(letter.text);
 	return (
 		<PressScale
 			accessibilityLabel={`${line}, ${sub}`}

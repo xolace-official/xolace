@@ -1,3 +1,4 @@
+import { retentionShortens } from "@xolace/backend/shared";
 import { describe, expect, it } from "vitest";
 import { DELETE_COPY } from "@/features/settings/privacy/copy";
 import {
@@ -17,7 +18,6 @@ import {
 	retentionAlert,
 	retentionPick,
 	sheetKind,
-	shortens,
 	shownRetention,
 } from "@/features/settings/privacy/privacy-model";
 
@@ -35,7 +35,7 @@ describe("retentionPick", () => {
 	});
 
 	it("counts first when the period gets shorter", () => {
-		expect(shortens("indefinite", "1_year")).toBe(true);
+		expect(retentionShortens("indefinite", "1_year")).toBe(true);
 		expect(retentionPick("indefinite", "6_months")).toBe("count");
 		expect(retentionPick("1_year", "6_months")).toBe("count");
 	});

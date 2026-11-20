@@ -1,4 +1,5 @@
 import type { api } from "@xolace/backend/api";
+import { BADGE_PIN_LIMIT } from "@xolace/backend/shared";
 import type { FunctionReturnType } from "convex/server";
 import {
 	type AchievementsOverview,
@@ -125,10 +126,8 @@ export function heldHint(earned: boolean, reduced: boolean): string {
 	return reduced ? COPY.badge.hint.tap : COPY.badge.hint.drag;
 }
 
-export const PIN_LIMIT = 3;
-
 export function pinRefused(b: BadgeView, pinnedCount: number): boolean {
-	return !b.pinned && pinnedCount >= PIN_LIMIT;
+	return !b.pinned && pinnedCount >= BADGE_PIN_LIMIT;
 }
 
 export function pinRefusal(code: unknown, pinning: boolean): string {

@@ -1,6 +1,6 @@
 import type { api } from "@xolace/backend/convex/_generated/api";
+import { INTAKE_MAX_SELECTIONS } from "@xolace/backend/shared";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { MAX_SELECTIONS } from "@/features/intake/questions";
 
 type CompleteArgs = FunctionArgs<typeof api.intake.v2.complete>;
 
@@ -128,7 +128,7 @@ export function toggleChip(heard: Heard, chip: Chip): Heard {
 	if (chip.field === "weighingOn") {
 		const weighingOn = isOn(heard, chip)
 			? heard.weighingOn.filter((v) => v !== chip.value)
-			: [...heard.weighingOn, chip.value].slice(-MAX_SELECTIONS);
+			: [...heard.weighingOn, chip.value].slice(-INTAKE_MAX_SELECTIONS);
 		return { ...heard, weighingOn };
 	}
 	return {

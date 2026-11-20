@@ -1,8 +1,6 @@
 import { Platform } from "react-native";
 import type { IntakeAnswers } from "@/store/intake-slice";
 
-export const MAX_SELECTIONS = 3;
-
 export const SERIES_BRANCH_VALUE = "short_form_video";
 
 export interface IntakeChoice {

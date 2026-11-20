@@ -1,8 +1,9 @@
 import { useAuth } from "@clerk/expo";
+import { LETTER_MAX_CHARS } from "@xolace/backend/shared";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
-import { FOR, LETTER_MAX, type LetterFor } from "./copy";
+import { FOR, type LetterFor } from "./copy";
 import { END_CARD_FRESH, type EndCardMemory } from "./letters-model";
 
 type Mine = {
@@ -26,7 +27,7 @@ const VERSION = 1;
 const isRecord = (v: unknown): v is Record<string, unknown> =>
 	typeof v === "object" && v !== null;
 const isWords = (v: unknown): v is string =>
-	typeof v === "string" && v.length <= LETTER_MAX;
+	typeof v === "string" && v.length <= LETTER_MAX_CHARS;
 const isFor = (v: unknown): v is LetterFor =>
 	(FOR as readonly unknown[]).includes(v);
 const isTime = (v: unknown): v is number =>

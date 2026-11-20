@@ -53,10 +53,17 @@ against prod.
 
 ## Client imports
 
-- Clients import `@xolace/backend/api` and `@xolace/backend/dataModel`.
+- Clients import `@xolace/backend/api`, `@xolace/backend/dataModel` and
+  `@xolace/backend/shared` (`convex/lib/shared.ts`: shared limits, error codes and
+  pure helpers; no runtime imports, no env). Put a value both sides need there,
+  not in a client copy.
 - `@xolace/backend/convex/*` is a temporary bridge for the mobile move; only
-  `_generated` and allowlisted client-safe `lib/*` modules. Never `"use node"` files,
-  `ai/providers` or `jobs`.
+  `_generated` and the client-safe modules listed in
+  `apps/mobile/src/features/backend-imports.ts`. Never `"use node"` files,
+  `process.env`, `ai/providers`, `jobs` or `lib/elevenLabsVoices.ts`, directly or
+  through a runtime import. Type imports are fine: Metro drops them.
+- A refusal the client reacts to is a `ConvexError({ code, message })` with a code
+  from `ERROR_CODES`. A plain `Error` reaches a production client as "Server Error".
 
 ## AI
 

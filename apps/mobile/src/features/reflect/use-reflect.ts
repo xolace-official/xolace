@@ -1,4 +1,8 @@
 import { api } from "@xolace/backend/api";
+import {
+	REFINEMENT_MAX_TURNS,
+	REFLECTION_INPUT_MAX_CHARS,
+} from "@xolace/backend/shared";
 import { useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
@@ -15,8 +19,6 @@ import { NUDGE } from "./motion";
 import type { Reflect, ReflectUi } from "./reflect-data";
 import {
 	holdsArrivals,
-	MAX_CHARS,
-	MAX_TURNS,
 	mirrorSentences,
 	pairPhrases,
 	promptFor,
@@ -76,7 +78,9 @@ export function useReflectData(): Reflect {
 	const { status: plusStatus } = usePlusEntitlement();
 	const openPaywall = usePaywall((p) => p.open);
 	const error =
-		s.screen === "error" ? waitError(s.errorMessage, plusStatus) : null;
+		s.screen === "error"
+			? waitError(s.errorMessage, plusStatus, s.errorCode)
+			: null;
 	const slow = useWaitClock(stage === "wait" && !error);
 
 	const [shown, setShown] = useState(stage);
@@ -201,7 +205,10 @@ export function useReflectData(): Reflect {
 				posthog.capture("texture_set_changed", { from: set, to });
 			},
 			setText: (text) => {
-				dispatch({ text: text.slice(0, MAX_CHARS), type: "TEXT_CHANGE" });
+				dispatch({
+					text: text.slice(0, REFLECTION_INPUT_MAX_CHARS),
+					type: "TEXT_CHANGE",
+				});
 				typingPause.resetTimer();
 			},
 			setVersion: versions.setVersion,
@@ -234,7 +241,7 @@ export function useReflectData(): Reflect {
 			upgradeDictation: m.dictationUpsell.onUpgrade,
 		},
 		state: {
-			atCap: m.turnsCount >= MAX_TURNS || s.screen === "gave-up",
+			atCap: m.turnsCount >= REFINEMENT_MAX_TURNS || s.screen === "gave-up",
 			audio: { playing: audio.isPlaying, ready: audio.isReady },
 			canSayMore: talk ? talk.offered : true,
 			care: ui.care,

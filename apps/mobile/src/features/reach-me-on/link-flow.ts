@@ -1,3 +1,4 @@
+import { TELEGRAM_LINK_TTL_MS } from "@xolace/backend/shared";
 export type LinkStep = "idle" | "disclose" | "waiting" | "expired" | "linked";
 
 export type LinkEvent =
@@ -32,13 +33,12 @@ export function linkFlow(step: LinkStep, event: LinkEvent): LinkStep {
 	}
 }
 
-export const LINK_LIFETIME_MINUTES = 15;
 const MINUTE_MS = 60_000;
-const LINK_LIFETIME_MS = LINK_LIFETIME_MINUTES * MINUTE_MS;
+export const LINK_LIFETIME_MINUTES = TELEGRAM_LINK_TTL_MS / MINUTE_MS;
 const REUSE_MARGIN_MS = 5 * MINUTE_MS;
 
 export function linkMsLeft(mintedAt: number, now: number): number {
-	return mintedAt + LINK_LIFETIME_MS - now;
+	return mintedAt + TELEGRAM_LINK_TTL_MS - now;
 }
 
 export function canReuseLink(mintedAt: number, now: number): boolean {

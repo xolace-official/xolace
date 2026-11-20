@@ -1,3 +1,4 @@
+import { FEEDBACK_MAX_CHARS } from "@xolace/backend/shared";
 import { TextInput, View } from "react-native";
 import { SheetButton } from "@/components/settings-kit/sheet-button";
 import { AppText } from "@/components/shared/app-text";
@@ -6,7 +7,7 @@ import { Segmented } from "@/components/shared/segmented";
 import { cn } from "@/lib/cn";
 import { FEEDBACK_COPY } from "../copy";
 import { useFeedbackScreen } from "../feedback-data";
-import { FEEDBACK_MAX, reportView } from "../feedback-model";
+import { reportView } from "../feedback-model";
 
 const R = FEEDBACK_COPY.report;
 const KINDS: readonly Choice<"bug" | "idea">[] = [
@@ -46,7 +47,7 @@ export function ReportForm() {
 					state.text ? "border-accent" : "border-transparent"
 				)}
 				editable={!state.saving}
-				maxLength={FEEDBACK_MAX}
+				maxLength={FEEDBACK_MAX_CHARS}
 				multiline
 				onChangeText={actions.setText}
 				placeholder={words.placeholder}

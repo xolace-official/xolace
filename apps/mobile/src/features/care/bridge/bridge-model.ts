@@ -16,8 +16,6 @@ export const ADDRESS_TERMS: Readonly<Record<Relationship, readonly string[]>> =
 		sibling: ["bro", "sis", "bruh"],
 	};
 
-export const MAX_NAME_LENGTH = 60;
-export const MAX_ADDRESS_TERM_LENGTH = 40;
 const COUNTER_REVEAL = 10;
 
 export function charactersLeft(value: string, max: number): number | null {

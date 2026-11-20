@@ -4,6 +4,7 @@
  * to determine risk level and appropriate response.
  */
 
+import { ERROR_CODES } from "../lib/shared";
 import { emotionFamily } from "../lib/understandingVocab";
 import type { ClassificationResult, SupportNeed } from "./providers/anthropic";
 import type { ModerationResult } from "./providers/moderation";
@@ -422,7 +423,7 @@ function checkRejection(
 		if (!isSurvivorNarrative(classification)) {
 			return makeRejection(
 				`Moderation: sexual/minors flagged (score: ${fmtScore(scores["sexual/minors"])}).`,
-				"content_policy_violation"
+				ERROR_CODES.safeguardRejected
 			);
 		}
 		// Survivor narrative detected — fall through to elevated/gentle checks
@@ -431,7 +432,7 @@ function checkRejection(
 	if (cats["hate/threatening"]) {
 		return makeRejection(
 			`Moderation: hate/threatening flagged (score: ${fmtScore(scores["hate/threatening"])}).`,
-			"content_policy_violation"
+			ERROR_CODES.safeguardRejected
 		);
 	}
 
@@ -439,7 +440,7 @@ function checkRejection(
 		if (!isSurvivorNarrative(classification)) {
 			return makeRejection(
 				`Moderation: violence (${fmtScore(scores.violence)}) + harassment (${fmtScore(scores.harassment)}) both flagged.`,
-				"content_policy_violation"
+				ERROR_CODES.safeguardRejected
 			);
 		}
 	}

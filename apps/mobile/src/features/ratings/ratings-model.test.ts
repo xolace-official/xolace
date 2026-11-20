@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { LATEST_RELEASE } from "@/lib/release-notes";
 import {
@@ -15,6 +16,7 @@ import {
 	type OpenInput,
 	planOpen,
 	RATING_RULES as R,
+	sendRefusedAsLimited,
 	withBaseline,
 } from "./ratings-model";
 
@@ -328,5 +330,21 @@ describe("markSeen", () => {
 		expect(markSeen(seen, "2026-12")).toEqual(["2026-06", "2026-12"]);
 		expect(markSeen(null, "2026-12")).toEqual(["2026-12"]);
 		expect(markSeen(seen, "2026-06")).toBe(seen);
+	});
+});
+
+describe("sendRefusedAsLimited", () => {
+	it("reads the server's limit when the pre-check raced it", () => {
+		expect(
+			sendRefusedAsLimited(new ConvexError({ code: "rate_limited" }), true)
+		).toBe(true);
+	});
+
+	it("trusts the pre-check, and calls anything else a failure", () => {
+		expect(sendRefusedAsLimited(new Error("Server Error"), false)).toBe(true);
+		expect(sendRefusedAsLimited(new Error("Server Error"), true)).toBe(false);
+		expect(sendRefusedAsLimited(new Error("Server Error"), undefined)).toBe(
+			false
+		);
 	});
 });

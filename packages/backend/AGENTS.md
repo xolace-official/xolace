@@ -46,9 +46,20 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
 ## Public surface
 
 - `@xolace/backend/api` (`convex/_generated/api`) and `@xolace/backend/dataModel`.
-- Temporary `@xolace/backend/convex/*` for the mobile move, restricted by Biome to
-  `_generated` + an allowlist of client-safe `lib/*` modules. Server-only code
-  (`"use node"`, `ai/providers`, `jobs`) is never on the allowlist.
+- `@xolace/backend/shared` (`convex/lib/shared.ts`): the limits, error codes and
+  small pure helpers a client must agree with the server on. It has no runtime
+  imports and reads no env (`lib/shared.test.ts` enforces this and snapshots the
+  values). The owning server module imports from it and keeps its old name as an
+  alias. A shipped binary keeps the value it was built with, so changing one is a
+  store-gap change: say in the PR which way it may move.
+- Refusals a client reacts to throw `ConvexError({ code, message })` with a code
+  from `ERROR_CODES`; production replaces a plain `Error`'s message with
+  "Server Error". Keep the old text in `message` for clients that still match on it.
+- Temporary `@xolace/backend/convex/*` for the mobile move: `_generated` plus the
+  client-safe modules listed in `apps/mobile/src/features/backend-imports.ts`. The
+  mobile import-graph test fails on any other value import, and on any listed
+  module that reaches server-only code at runtime (`"use node"`, `process.env`,
+  `ai/providers`, `jobs`, the ElevenLabs ids in `lib/elevenLabsVoices.ts`).
 
 ## Rules
 

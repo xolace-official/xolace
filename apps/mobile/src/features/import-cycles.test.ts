@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+	backendFilesInAppBundle,
+	backendImportsOffList,
+	serverOnlyCodeReached,
+	staleBackendListings,
+} from "@/features/backend-imports";
+import {
 	backendCallsOutsideDataHooks,
 	crossFeatureImportsFromPorted,
 	devCodeInReleaseGraph,
@@ -192,6 +198,31 @@ describe("shared kit (apps/mobile/AGENTS.md)", () => {
 		expect(
 			staleKitListings(graph),
 			"Remove these from KIT_LEGACY_FILES in kit-imports.ts"
+		).toEqual([]);
+	});
+});
+
+describe("backend imports (packages/backend/AGENTS.md)", () => {
+	it("imports values only from the api, the data model, shared and the listed client-safe modules", () => {
+		expect(
+			backendImportsOffList(graph),
+			"Move the client-safe value into packages/backend/convex/lib/shared.ts and import it from @xolace/backend/shared; import types with `import type`"
+		).toEqual([]);
+	});
+
+	it("lists only client-safe modules the app still imports", () => {
+		expect(
+			staleBackendListings(graph),
+			"Remove these from BACKEND_LEGACY_MODULES in backend-imports.ts"
+		).toEqual([]);
+	});
+
+	it("bundles no server-only backend code through those modules", () => {
+		const entries = backendFilesInAppBundle(graph);
+		expect(entries.some((f) => f.endsWith("/convex/lib/shared.ts"))).toBe(true);
+		expect(
+			serverOnlyCodeReached(entries),
+			'A client-safe backend module imports server-only code at runtime: ElevenLabs ids, a "use node" file or process.env. Import it as a type, or move the value it needs into lib/shared.ts'
 		).toEqual([]);
 	});
 });

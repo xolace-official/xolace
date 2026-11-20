@@ -1,10 +1,11 @@
+import { ERROR_CODES } from "@xolace/backend/shared";
 import {
 	FOLLOW_COPY as C,
 	FOLLOW_LINKS as L,
 } from "@/features/settings/follow/copy";
+import { convexErrorCode } from "@/lib/convex-error-code";
 import { storeOf } from "@/lib/store-review";
 
-export const FEEDBACK_MAX = 1000;
 export const SENT_CLOSE_MS = 1500;
 
 export type SendPhase = "idle" | "busy" | "sent";
@@ -49,13 +50,15 @@ export function feedbackView(f: Feedback): FeedbackView {
 	};
 }
 
-const CONVEX_ERROR = /Uncaught Error: (.+?)(?:\n|$)/;
+const UNCAUGHT_BEFORE_CODES = /Uncaught Error: (.+?)(?:\n|$)/;
 
 export function sendErrorMessage(e: unknown): string {
-	if (!(e instanceof Error)) {
-		return C.somethingWrong;
+	if (convexErrorCode(e) === ERROR_CODES.rateLimited) {
+		return C.dialog.limited;
 	}
-	return CONVEX_ERROR.exec(e.message)?.[1] ?? e.message;
+	const before =
+		e instanceof Error ? UNCAUGHT_BEFORE_CODES.exec(e.message)?.[1] : undefined;
+	return before ?? C.somethingWrong;
 }
 
 export const feedbackMailto = () =>

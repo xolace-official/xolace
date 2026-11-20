@@ -1,4 +1,5 @@
 import type { Resource } from "@xolace/backend/convex/lib/crisisResources";
+import { ERROR_CODES, type SessionErrorCode } from "@xolace/backend/shared";
 import type { PlusStatus } from "@/features/purchases/plus-status";
 import { COPY } from "./copy";
 import { isRateLimitMessage } from "./session/session-service";
@@ -27,7 +28,6 @@ export const holdsArrivals = (stage: ReflectStage): boolean =>
 export type Seg = readonly [text: string, pair: number];
 export type MirrorLines = readonly (readonly Seg[])[];
 
-export const MAX_TURNS = 2;
 export const SLOW_MS = 10_000;
 export const MIN_WAIT_MS = 1600;
 export const LAND_MS = 720;
@@ -40,8 +40,6 @@ export function takeCountdown(remainingMs: number | null): string | null {
 	}
 	return `0:${String(Math.ceil(remainingMs / SECOND_MS)).padStart(2, "0")}`;
 }
-
-export const MAX_CHARS = 5000;
 
 const WRITE_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
 	"idle",
@@ -411,16 +409,23 @@ export function resourceRows(
 	return rows.sort((a, b) => a.p - b.p).map(({ p: _p, ...row }) => row);
 }
 
-const REJECTED_CODE = "content_policy_violation";
-
 export type WaitError = { kind: "rejected" | "limit" | "failed"; body: string };
 
-export function waitError(message: string, plus: PlusStatus): WaitError {
-	if (message === REJECTED_CODE) {
+export function waitError(
+	message: string,
+	plus: PlusStatus,
+	code: SessionErrorCode | null = null
+): WaitError {
+	if (
+		code === ERROR_CODES.safeguardRejected ||
+		message === ERROR_CODES.safeguardRejected
+	) {
 		return { body: COPY.wait.rejected, kind: "rejected" };
 	}
 	const body = message || COPY.wait.failed;
-	if (plus === "free" && isRateLimitMessage(message)) {
+	const limited =
+		code === ERROR_CODES.reflectionRateLimited || isRateLimitMessage(message);
+	if (plus === "free" && limited) {
 		return { body: `${body} ${COPY.wait.limitMore}`, kind: "limit" };
 	}
 	return { body, kind: "failed" };

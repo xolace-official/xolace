@@ -1,5 +1,9 @@
 import CheckIcon from "@expo/material-symbols/check.xml";
 import CloseIcon from "@expo/material-symbols/close.xml";
+import {
+	XOLACER_BIO_MAX_CHARS,
+	XOLACER_NAME_MAX_CHARS,
+} from "@xolace/backend/shared";
 import { Stack } from "expo-router";
 import { View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -13,12 +17,7 @@ import { SETUP } from "./copy";
 import { PhotoStep } from "./photo-step";
 import { useSetupScreen } from "./setup-data";
 import { SetupField } from "./setup-field";
-import {
-	BIO_MAX_LENGTH,
-	BIO_WARN_AT,
-	blockingStep,
-	NAME_MAX_LENGTH,
-} from "./setup-model";
+import { BIO_WARN_AT, blockingStep } from "./setup-model";
 import { SpecialtyChips } from "./specialty-chips";
 
 const IOS = process.env.EXPO_OS === "ios";
@@ -80,14 +79,14 @@ export function EditScreen() {
 					<SetupField
 						help={SETUP.name.help}
 						label={SETUP.name.label}
-						max={NAME_MAX_LENGTH}
+						max={XOLACER_NAME_MAX_CHARS}
 						onChange={actions.setName}
 						placeholder={SETUP.name.placeholder}
 						value={state.draft.displayName}
 					/>
 					<SetupField
 						label={SETUP.bio.label}
-						max={BIO_MAX_LENGTH}
+						max={XOLACER_BIO_MAX_CHARS}
 						multiline
 						onChange={actions.setBio}
 						placeholder={SETUP.bio.placeholder}

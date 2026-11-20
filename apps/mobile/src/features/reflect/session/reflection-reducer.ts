@@ -6,12 +6,11 @@ import type {
 import { MAX_TEXTURES } from "@/features/reflect/texture-sets";
 import { joinDictation } from "@/lib/speech/dictation-transcript";
 
-export const MAX_TURNS = 2;
-
 export const initialState: ReflectionState = {
 	clarifyText: "",
 	entryText: "",
 	entryType: "typed",
+	errorCode: null,
 	errorMessage: "",
 	lastFeedbackType: null,
 	missReason: null,
@@ -105,7 +104,12 @@ export function reducer(
 			return { ...state, clarifyText: action.text };
 
 		case "SESSION_ERROR":
-			return { ...state, errorMessage: action.message, screen: "error" };
+			return {
+				...state,
+				errorCode: action.code ?? null,
+				errorMessage: action.message,
+				screen: "error",
+			};
 
 		case "SESSION_RESUMED":
 			return { ...state, screen: action.screen };

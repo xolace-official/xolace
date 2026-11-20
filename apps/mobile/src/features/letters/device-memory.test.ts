@@ -1,5 +1,5 @@
+import { LETTER_MAX_CHARS } from "@xolace/backend/shared";
 import { describe, expect, it, vi } from "vitest";
-import { LETTER_MAX } from "./copy";
 import {
 	FRESH,
 	type Kept,
@@ -38,9 +38,9 @@ describe("what letters keep on the device", () => {
 			})
 		).toEqual(fresh);
 		expect(validKept({ ...A_DRAFT, forWho: "Anger" })).toEqual(fresh);
-		expect(validKept({ ...A_DRAFT, text: "x".repeat(LETTER_MAX + 1) })).toEqual(
-			fresh
-		);
+		expect(
+			validKept({ ...A_DRAFT, text: "x".repeat(LETTER_MAX_CHARS + 1) })
+		).toEqual(fresh);
 		expect(validKept({ ...A_DRAFT, held: 3 })).toEqual(fresh);
 		expect(validKept(null)).toEqual(fresh);
 		expect(validKept("draft")).toEqual(fresh);
