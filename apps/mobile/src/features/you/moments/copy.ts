@@ -41,8 +41,9 @@ const windowOf = (days: number) => {
 
 export const MOMENTS_COPY = {
 	list: {
-		/** Production's empty line, in the redesign's voice. */
-		empty: "Your moments will appear here after your first reflection.",
+		/** The empty state (C2): a written headline, production's line in the redesign's words. */
+		empty: "Your reflections will appear here after your first session.",
+		emptyTitle: "No moments yet",
 		limitSub: "Xolace+ keeps every moment",
 		limitTitle: (days: number) => `You're seeing the last ${windowOf(days)}`,
 		loading: "Loading your moments",

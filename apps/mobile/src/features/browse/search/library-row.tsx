@@ -7,7 +7,6 @@ import { api } from "@xolace/backend/api";
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Link } from "expo-router";
-import { Skeleton } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -15,6 +14,13 @@ import { AppText } from "@/components/shared/app-text";
 import { CoverImage } from "@/components/shared/cover-image";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
+import {
+	Bone,
+	Line,
+	SKELETON,
+	SkeletonBreath,
+} from "@/components/shared/skeleton";
+import { META_W, TITLE_W, widthAt } from "@/components/shared/skeleton-shapes";
 import {
 	capitalise,
 	facetLabel,
@@ -157,17 +163,17 @@ export function SectionTitle({
 /** EntryRow's shape: thumbnail, kicker, two-line title, meta. */
 export function RowsSkeleton({ count = 6 }: { count?: number }) {
 	return (
-		<View accessibilityLabel="Loading">
+		<SkeletonBreath label="Loading">
 			{Array.from({ length: count }, (_, i) => (
 				<View className="flex-row items-center gap-4 px-4 py-3" key={i}>
-					<Skeleton className="rounded-[14px]" style={THUMB} />
-					<View className="flex-1 gap-2">
-						<Skeleton className="h-3 w-1/3 rounded" />
-						<Skeleton className="h-4 w-11/12 rounded" />
-						<Skeleton className="h-3 w-1/2 rounded" />
+					<Bone h={THUMB.height} r={14} w={THUMB.width} />
+					<View className="flex-1">
+						<Line h={SKELETON.meta} lh={18} w="33%" />
+						<Line lh={21} w={widthAt(TITLE_W, i)} />
+						<Line h={SKELETON.meta} lh={18} w={widthAt(META_W, i)} />
 					</View>
 				</View>
 			))}
-		</View>
+		</SkeletonBreath>
 	);
 }

@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { EmptyState } from "@/components/shared/empty-state";
 import { MOMENTS_COPY } from "@/features/you/moments/copy";
 import { MomentCard } from "@/features/you/moments/list/moment-card";
 import { MomentsSkeleton } from "@/features/you/moments/list/moments-skeleton";
@@ -59,11 +60,12 @@ export function MomentsScreen() {
 					state === undefined ? (
 						<MomentsSkeleton />
 					) : (
-						<View className="px-6 pt-18">
-							<AppText center color="muted" variant="callout">
-								{L.empty}
-							</AppText>
-						</View>
+						<EmptyState
+							body={L.empty}
+							className="pt-35"
+							face
+							title={L.emptyTitle}
+						/>
 					)
 				}
 				ListFooterComponent={

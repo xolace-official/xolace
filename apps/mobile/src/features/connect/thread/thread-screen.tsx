@@ -2,7 +2,6 @@ import { Stack } from "expo-router";
 import { View } from "react-native";
 import { useOverlayContext } from "stream-chat-expo";
 import { AppText } from "@/components/shared/app-text";
-import { AgeGateSheet } from "../age-gate/age-gate-sheet";
 import { BodyFrame, MessagesFailed } from "../parts/chat-frame";
 import { StatusBar } from "./bar/status-bar";
 import { THREAD } from "./copy";
@@ -37,7 +36,7 @@ function Note({ title, body }: { title?: string; body: string }) {
 /** The conversation: the header carries who, how they are, help and the menu; the body is
  * Stream's list and composer, or the bar that stands in for the composer. */
 export function ThreadScreen() {
-	const { state, actions, ageGate } = useThreadScreen();
+	const { state, actions } = useThreadScreen();
 	// The long-press overlay owns the back swipe while it's up.
 	const { overlay } = useOverlayContext();
 
@@ -68,7 +67,6 @@ export function ThreadScreen() {
 				<ThreadBody />
 			</BodyFrame>
 			<BlockDialog />
-			<AgeGateSheet gate={ageGate} />
 		</>
 	);
 }

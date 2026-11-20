@@ -1,7 +1,6 @@
 import type { Id } from "@xolace/backend/dataModel";
 import { createContext, type ReactNode, use } from "react";
 import type { Channel, LocalMessage } from "stream-chat";
-import type { AgeGate } from "../age-gate/use-age-gate";
 import type { StatusBar, ThreadBody, ThreadConversation } from "./thread-model";
 import type { FeedbackContext } from "./use-flag-message";
 import { useThread } from "./use-thread";
@@ -37,7 +36,6 @@ export type ThreadState =
  * fixtures in its dev states. */
 export type ThreadScreenData = {
 	state: ThreadState;
-	ageGate: AgeGate;
 	actions: {
 		/** Stream couldn't connect: try the token again. */
 		retry: () => void;

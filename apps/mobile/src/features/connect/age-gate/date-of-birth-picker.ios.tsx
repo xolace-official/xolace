@@ -1,14 +1,21 @@
-// The date of birth as SwiftUI's wheel, the picker iOS uses for birthdays. Android opens Material 3's
-// date dialog (`date-of-birth-picker.tsx`).
+// The date of birth as SwiftUI's wheel, the picker iOS uses for birthdays, in a well card. Android
+// opens Material 3's date dialog (`date-of-birth-picker.tsx`).
 
-import { Host } from "@expo/ui";
 import { DatePicker } from "@expo/ui/swift-ui";
-import { datePickerStyle, labelsHidden } from "@expo/ui/swift-ui/modifiers";
-import { useAppTheme } from "@/context/app-theme-context";
+import {
+	datePickerStyle,
+	frame,
+	labelsHidden,
+} from "@expo/ui/swift-ui/modifiers";
+import { View } from "react-native";
+import { ThemedHost } from "@/components/shared/themed-host";
 import { calendarDate } from "./age-gate-step";
+import { AGE } from "./copy";
 
 /** UIKit's standard wheel picker height, in points. */
 const WHEEL_HEIGHT = 216;
+/** SwiftUI's `.infinity`: the wheel spans the card. */
+const FILL = 10_000;
 
 /** Local midnight of a "YYYY-MM-DD" day, so the wheel shows that day in every timezone. */
 const toLocalDate = (day: string) => {
@@ -23,23 +30,28 @@ export function DateOfBirthPicker({
 	value: string | null;
 	onChange: (dateOfBirth: string) => void;
 }) {
-	const { isDark } = useAppTheme();
 	const today = new Date();
 	return (
-		// A fixed height, not `matchContents`: inside the bottom sheet's scroll view the measured
-		// height never arrives and the wheel renders at zero height.
-		<Host
-			colorScheme={isDark ? "dark" : "light"}
-			style={{ height: WHEEL_HEIGHT, width: "100%" }}
+		<View
+			className="overflow-hidden rounded-[18px] border-continuous bg-surface-secondary"
+			style={{ height: WHEEL_HEIGHT }}
 		>
-			<DatePicker
-				// The sheet's heading asks the question; the title stays as the accessibility label.
-				modifiers={[datePickerStyle("wheel"), labelsHidden()]}
-				onDateChange={(date) => onChange(calendarDate(date))}
-				range={{ end: today }}
-				selection={value ? toLocalDate(value) : today}
-				title="Date of birth"
-			/>
-		</Host>
+			{/* A fixed height, not `matchContents`: inside a sheet the measured height can arrive
+			    late and the wheel renders at zero height. */}
+			<ThemedHost style={{ height: WHEEL_HEIGHT, width: "100%" }}>
+				<DatePicker
+					// The sheet's heading asks the question; the title stays as the accessibility label.
+					modifiers={[
+						datePickerStyle("wheel"),
+						labelsHidden(),
+						frame({ maxWidth: FILL }),
+					]}
+					onDateChange={(date) => onChange(calendarDate(date))}
+					range={{ end: today }}
+					selection={value ? toLocalDate(value) : today}
+					title={AGE.ask.picker}
+				/>
+			</ThemedHost>
+		</View>
 	);
 }

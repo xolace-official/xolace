@@ -81,7 +81,7 @@ export function ConnectScreen({
 				bottom={BOTTOM}
 				footer={
 					ready === null ? (
-						<ListSkeleton />
+						<ListSkeleton label={COPY.loading.chats} />
 					) : chats ? (
 						<ChatsFooter
 							archived={{

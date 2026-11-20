@@ -1,10 +1,10 @@
-import { Skeleton } from "heroui-native";
 import { useWindowDimensions, View } from "react-native";
+import { Bone } from "@/components/shared/skeleton";
 import { EXS, HOME_S } from "@/features/explore/explore-style";
 import { RowsSkeleton } from "@/features/explore/rows/rows-skeleton";
 
 /**
- * Explore home's loading shapes: blocks the size of what they stand in for, so the swap to
+ * Explore home's loading shapes, in the shared look (the section breathes them, `home-section`): blocks the size of what they stand in for, so the swap to
  * content doesn't move the page. The section's header stays real; only the content waits.
  */
 const SHELF_TILES = 3;
@@ -25,13 +25,7 @@ export function FeaturedSkeleton() {
 	const F = HOME_S.feat;
 	return (
 		<View style={{ paddingHorizontal: HOME_S.gutter }}>
-			<Skeleton
-				style={{
-					borderRadius: F.r,
-					height: F.h,
-					width: width - HOME_S.gutter * 2,
-				}}
-			/>
+			<Bone h={F.h} r={F.r} w={width - HOME_S.gutter * 2} />
 		</View>
 	);
 }
@@ -42,7 +36,7 @@ export function HourSkeleton() {
 			className="rounded-[22px] border border-continuous border-separator bg-surface py-1"
 			style={{ marginHorizontal: HOME_S.cardGutter }}
 		>
-			<RowsSkeleton count={3} />
+			<RowsSkeleton bare count={3} />
 		</View>
 	);
 }
@@ -53,11 +47,9 @@ export function TilesSkeleton() {
 		<Shelf>
 			{Array.from({ length: SHELF_TILES }, (_, i) => (
 				<View key={i} style={{ gap: T.gap, width: T.art }}>
-					<Skeleton
-						style={{ borderRadius: T.artR, height: T.art, width: T.art }}
-					/>
-					<Skeleton className="h-3.75 w-4/5 rounded" />
-					<Skeleton className="h-3 w-1/2 rounded" />
+					<Bone h={T.art} r={T.artR} w={T.art} />
+					<Bone h={15} r={4} w="80%" />
+					<Bone h={12} r={4} w="50%" />
 				</View>
 			))}
 		</Shelf>
@@ -67,7 +59,7 @@ export function TilesSkeleton() {
 export function ShortSkeleton() {
 	return (
 		<View style={{ marginHorizontal: HOME_S.gutter - EXS.row.padH }}>
-			<RowsSkeleton count={3} />
+			<RowsSkeleton bare count={3} />
 		</View>
 	);
 }

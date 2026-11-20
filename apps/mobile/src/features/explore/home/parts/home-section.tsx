@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { SkeletonBreath } from "@/components/shared/skeleton";
 import { EASING, EaseView } from "@/design/ease";
 import { COPY } from "@/features/explore/copy";
 import { HOME_S, HOME_TIMING } from "@/features/explore/explore-style";
@@ -64,7 +65,7 @@ function SectionBody({
 		setSwap({ fade: !loading, was: loading });
 	}
 	if (loading) {
-		return <View accessibilityLabel={label}>{skeleton}</View>;
+		return <SkeletonBreath label={label}>{skeleton}</SkeletonBreath>;
 	}
 	if (!swap.fade || reduced) {
 		return children;

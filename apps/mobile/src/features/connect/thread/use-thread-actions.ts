@@ -188,7 +188,6 @@ export function useThreadActions(
 
 	return {
 		actions,
-		ageGate,
 		answering,
 		blocking: { open: confirming, pending: blocking },
 	};

@@ -1,6 +1,5 @@
 import type { Id } from "@xolace/backend/dataModel";
 import { createContext, type ReactNode, use } from "react";
-import type { AgeGate } from "../age-gate/use-age-gate";
 import type { ReportTo } from "../thread/thread-data";
 import { useXolacer } from "./use-xolacer";
 import type { ProfileView } from "./xolacer-model";
@@ -35,7 +34,6 @@ export type XolacerState =
  * fixtures in its dev states. */
 export type XolacerScreenData = {
 	state: XolacerState;
-	ageGate: AgeGate;
 	actions: {
 		ask: () => void;
 		openChat: () => void;

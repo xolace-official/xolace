@@ -1,17 +1,18 @@
-import { View } from "react-native";
+import { Bone, SkeletonBreath } from "@/components/shared/skeleton";
+import { THREAD } from "../copy";
 
-/** Stands in for the message list: bottom-anchored and bubble-shaped (22 pt, the bubbles'
- * radius) so real messages land without a reflow. */
+/** Stands in for the message list in the shared look: bottom-anchored and bubble-shaped (22 pt,
+ * the bubbles' radius) so real messages land without a reflow. */
 export function ThreadSkeleton() {
 	return (
-		<View
-			accessibilityElementsHidden
+		<SkeletonBreath
 			className="flex-1 justify-end gap-2 bg-background px-3.5 pb-10"
-			importantForAccessibility="no-hide-descendants"
+			fill
+			label={THREAD.loading}
 		>
-			<View className="h-12 w-2/3 self-end rounded-[22px] bg-surface-secondary" />
-			<View className="h-16 w-3/5 rounded-[22px] bg-surface-secondary" />
-			<View className="h-12 w-1/2 self-end rounded-[22px] bg-surface-secondary" />
-		</View>
+			<Bone className="self-end" h={48} r={22} w="66%" />
+			<Bone h={64} r={22} w="60%" />
+			<Bone className="self-end" h={48} r={22} w="50%" />
+		</SkeletonBreath>
 	);
 }

@@ -1,6 +1,5 @@
 /** The thread and a profile on fixtures, through the same providers as the app. */
 import { useState } from "react";
-import type { AgeGate } from "../../age-gate/use-age-gate";
 import { NOW } from "../../dev/fixtures";
 import { deviceClock } from "../../device-clock";
 import {
@@ -31,19 +30,6 @@ function settled<T>(
 	}
 	return phase === "gone" ? null : value;
 }
-
-const AGE_GATE: AgeGate = {
-	close: noop,
-	dateOfBirth: null,
-	decline: noop,
-	guard: (proceed) => proceed(),
-	handleRefusal: () => false,
-	saving: false,
-	setDateOfBirth: noop,
-	step: null,
-	submit: noop,
-	surface: "xolacer_chat",
-};
 
 export function FixtureThread({
 	conversation,
@@ -101,7 +87,6 @@ export function FixtureThread({
 			resume: noop,
 			retry: noop,
 		},
-		ageGate: AGE_GATE,
 		state: threadState({
 			answering: false,
 			blocking: { open: blockOpen, pending: false },
@@ -146,7 +131,6 @@ export function FixtureXolacer({
 			rate: noop,
 			report: noop,
 		},
-		ageGate: AGE_GATE,
 		state: xolacerState({
 			blocking: { open: blockOpen, pending: false },
 			locale: deviceClock().locale,

@@ -1,9 +1,9 @@
 import { Link } from "expo-router";
-import { Skeleton } from "heroui-native";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { CoverImage } from "@/components/shared/cover-image";
 import { PressScale } from "@/components/shared/press-scale";
+import { Bone } from "@/components/shared/skeleton";
 import {
 	countLine,
 	type TopicTile as Tile,
@@ -74,16 +74,15 @@ export function TopicTile({ tile, size }: { tile: Tile; size: number }) {
 	);
 }
 
-/** A tile while the grid loads: the cover and two lines, in place. */
+/** A tile while the grid loads, in the shared look: the cover and two lines, in place. The grid
+ * breathes them together (`topics-screen`). */
 export function TileSkeleton({ size }: { size: number }) {
 	return (
 		<View style={{ gap: GRID.textGap, width: size }}>
-			<Skeleton
-				style={{ borderRadius: GRID.artR, height: size, width: size }}
-			/>
+			<Bone h={size} r={GRID.artR} w={size} />
 			<View className="gap-1.5">
-				<Skeleton className="h-3.75 w-3/4 rounded" />
-				<Skeleton className="h-3.25 w-1/2 rounded" />
+				<Bone h={15} r={4} w="75%" />
+				<Bone h={13} r={4} w="50%" />
 			</View>
 		</View>
 	);

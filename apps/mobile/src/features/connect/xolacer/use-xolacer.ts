@@ -109,7 +109,6 @@ export function useXolacer(
 
 	return {
 		actions,
-		ageGate: ask.ageGate,
 		state: xolacerState({
 			blocking: { open: confirming, pending: blocking },
 			locale: deviceClock().locale,

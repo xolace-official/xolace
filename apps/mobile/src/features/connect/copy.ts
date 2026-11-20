@@ -58,6 +58,12 @@ export const COPY = {
 		youClosed: "You closed this request",
 		youWrappedUp: "You wrapped this up. It can still be picked back up.",
 	},
+	/** VoiceOver reads each skeleton once, as this. */
+	loading: {
+		archived: "Loading your archived conversations",
+		chats: "Loading your conversations",
+		xolacers: "Loading Xolacers",
+	},
 	menu: {
 		archive: "Archive",
 		cancel: "Cancel",
@@ -86,8 +92,9 @@ export const COPY = {
 		full: "Full right now",
 		hereNow: "Here now",
 		newXolacer: "New Xolacer",
-		noMatch:
-			"Nobody's listed that right now. Try another tag, or browse everyone.",
+		noMatchBody: "Try another tag, or browse everyone.",
+		noMatchBrowse: "Browse everyone",
+		noMatchTitle: "Nobody's listed that right now",
 		rating: (r: number) => `★ ${r.toFixed(1)}`,
 		ratingA11y: (r: number, n: number) =>
 			`rated ${r.toFixed(1)} out of 5 from ${n} conversations`,
