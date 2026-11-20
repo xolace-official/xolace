@@ -215,7 +215,6 @@ export const COPY = {
 		speakHint: "Hold and talk. Slide up to cancel.",
 		speakLabel: "Hold to speak",
 		tapClose: "Or just tap what feels close",
-		tapToStart: "Tap the card to start reflecting",
 		wordsStay: "The words stay, the audio doesn’t",
 		/** A Plus take being written down after the mic lets go (production's strip). */
 		writingDown: "Writing it down…",

@@ -38,12 +38,6 @@ export function useDevTools() {
 		run().finally(() => setBusy(false));
 	};
 
-	const acknowledge = (streak: number) => {
-		if (userId) {
-			useAppStore.getState().setLastAcknowledgedStreak(streak, userId);
-		}
-	};
-
 	return {
 		clearAgeGate: () =>
 			clearAgeDeclarations()
@@ -75,29 +69,17 @@ export function useDevTools() {
 		// No navigation: `onboardingComplete` is the root guard and swaps the group.
 		replayIntake: () =>
 			once(() => resetIntake().catch(failed("Intake reset failed"))),
-		replayReveal: () => {
-			acknowledge(0);
-			toast("Reveal re-armed", {
-				description: "Go back home to watch it again.",
-			});
-		},
 		resetAwareness: () => {
 			useAppStore.setState({ seenEventIds: [] });
 			useAppStore.getState().setPendingEventPrompt(null);
 			toast("Awareness events reset", {
-				description: "Reopen home to see the card.",
+				description: "Reopen Today to see this month's prompt.",
 			});
 		},
 		runStreak: (mode: "bump" | "reset") =>
 			once(() =>
 				setStreak({ mode })
-					.then((streak) => {
-						// Make the reveal pending: acknowledged = the day before.
-						acknowledge(Math.max(streak - 1, 0));
-						toast(`Streak set to day ${streak}`, {
-							description: "Go back home to watch the reveal.",
-						});
-					})
+					.then((streak) => toast(`Streak set to day ${streak}`))
 					.catch(() =>
 						toast("Streak update failed", {
 							description: "Is DEV_TOOLS_ENABLED set on this deployment?",
@@ -110,7 +92,7 @@ export function useDevTools() {
 				seedFollowUpCard({ tier })
 					.then(() =>
 						toast(`Follow-up card seeded · ${tier}`, {
-							description: "Go back to the reflect home to see the check-in.",
+							description: "Reopen Today for the greeting, or find it in You.",
 						})
 					)
 					.catch(failed("Seed failed"))

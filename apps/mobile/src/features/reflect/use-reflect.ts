@@ -104,8 +104,7 @@ export function useReflectData(): Reflect {
 	useReflectBridge(
 		s.screen,
 		holdsArrivals(stage),
-		s.entryText.trim().length > 0,
-		dispatch
+		s.entryText.trim().length > 0
 	);
 
 	const scaffold = s.entryType === "scaffold";

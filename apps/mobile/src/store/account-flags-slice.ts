@@ -2,19 +2,12 @@
  * still gets them, and one account's answer never silences another's. */
 
 /** Flags that were device-wide booleans before they moved per account. */
-type LegacyAccountFlag =
-	| "copingAskSeen"
-	| "findingCardDismissed"
-	| "notifNudgeDismissed"
-	| "starterSuggestionsSeen";
+type LegacyAccountFlag = "findingCardDismissed";
 
 export type AccountFlag = LegacyAccountFlag | "telegramOfferDismissed";
 
 const LEGACY_ACCOUNT_FLAGS: readonly LegacyAccountFlag[] = [
-	"copingAskSeen",
 	"findingCardDismissed",
-	"notifNudgeDismissed",
-	"starterSuggestionsSeen",
 ];
 
 const ALL_ACCOUNT_FLAGS: readonly AccountFlag[] = [
@@ -65,10 +58,7 @@ export const createAccountFlagsSlice = (set: SetState): AccountFlagsSlice => ({
 					...s.accountFlags,
 					[owner]: [...new Set([...own, ...legacy])],
 				},
-				copingAskSeen: false,
 				findingCardDismissed: false,
-				notifNudgeDismissed: false,
-				starterSuggestionsSeen: false,
 			};
 		}),
 	clearAccountFlags: (owner, flags = ALL_ACCOUNT_FLAGS) =>
@@ -80,7 +70,6 @@ export const createAccountFlagsSlice = (set: SetState): AccountFlagsSlice => ({
 				),
 			},
 		})),
-	copingAskSeen: false,
 	findingCardDismissed: false,
 	markAccountFlag: (owner, flag) =>
 		set((s) => {
@@ -89,15 +78,10 @@ export const createAccountFlagsSlice = (set: SetState): AccountFlagsSlice => ({
 				? {}
 				: { accountFlags: { ...s.accountFlags, [owner]: [...own, flag] } };
 		}),
-	notifNudgeDismissed: false,
-	starterSuggestionsSeen: false,
 });
 
 /** Keys persisted by the app store's `partialize`. */
 export const accountFlagsPersistedKeys = (s: AccountFlagsSlice) => ({
 	accountFlags: s.accountFlags,
-	copingAskSeen: s.copingAskSeen,
 	findingCardDismissed: s.findingCardDismissed,
-	notifNudgeDismissed: s.notifNudgeDismissed,
-	starterSuggestionsSeen: s.starterSuggestionsSeen,
 });
