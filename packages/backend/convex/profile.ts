@@ -419,7 +419,10 @@ export const getWeekIntensity = query({
 /**
  * Record intent-only waitlist interest for a premium insight teaser.
  * Pre-billing desire signal — no price, no IAP. Idempotent per profile+feature.
+ * @deprecated No current client calls it: the RevenueCat paywall replaced the waitlist teaser.
  */
+// DEPRECATED(remove-after: app >= first version with the RevenueCat paywall): old builds' insight
+// teaser still joins the waitlist here.
 export const joinInsightWaitlist = mutation({
 	args: { feature: insightFeatureValidator },
 	handler: async (ctx, args) => {
@@ -449,7 +452,10 @@ export const joinInsightWaitlist = mutation({
 /**
  * Features the authenticated profile has already joined the waitlist for.
  * Lets the teaser show an "already on the list" state on re-tap.
+ * @deprecated No current client calls it: the RevenueCat paywall replaced the waitlist teaser.
  */
+// DEPRECATED(remove-after: app >= first version with the RevenueCat paywall): old builds' insight
+// teaser still reads it.
 export const listInsightWaitlist = query({
 	args: {},
 	handler: async (ctx) => {

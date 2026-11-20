@@ -665,6 +665,11 @@ const PROFILE_FOLLOWUP_LIMIT = 5;
 // Hard ceiling so a client-supplied limit can never request unbounded rows.
 const MAX_FOLLOWUP_LIMIT = 50;
 
+/**
+ * @deprecated No current client calls it: You's Follow-ups read `listForProfilePage` (#666).
+ */
+// DEPRECATED(remove-after: app >= first version with the paged Follow-ups, #666): store builds
+// from before it still call this for the profile's Follow-ups section.
 export const listForProfile = query({
 	args: { limit: v.optional(v.number()) },
 	handler: async (ctx, args) => {

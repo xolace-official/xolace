@@ -497,7 +497,10 @@ export const loadGenerationContext = internalQuery({
 
 /**
  * List recent notifications for the current user's profile.
+ * @deprecated No current client calls it: the settings notification log is gone.
  */
+// DEPRECATED(remove-after: app >= first version without the settings notification log): old
+// builds still read it.
 export const list = query({
 	args: {},
 	handler: async (ctx) => {

@@ -384,7 +384,10 @@ const emotionalMetadataDocValidator = v.object({
 
 /**
  * Get emotional metadata for a session (with ownership check).
+ * @deprecated No current client calls it: the old session details screen read it.
  */
+// DEPRECATED(remove-after: app >= first version without the old session details screen): old
+// builds still read it.
 export const getBySession = query({
 	args: {
 		sessionId: v.id("sessions"),
