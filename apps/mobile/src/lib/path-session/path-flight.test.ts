@@ -58,6 +58,14 @@ describe("createPathFlight", () => {
 		expect(await flight.start(task)).toBe(true);
 	});
 
+	it("takes a new start after one that failed", async () => {
+		const flight = createPathFlight();
+		expect(await flight.start(() => Promise.reject(new Error("offline")))).toBe(
+			false
+		);
+		expect(await flight.start(() => Promise.resolve())).toBe(true);
+	});
+
 	it("reports a failed completion as false", async () => {
 		const flight = createPathFlight();
 		expect(

@@ -20,6 +20,7 @@ import { toast } from "@/components/shared/toast";
 import { appConfig } from "@/config/app";
 import { playAffirmativePress } from "@/lib/haptics";
 import { useAppStore } from "@/store/store";
+import { logInIfNeeded } from "./revenuecat-identity";
 import { startRevenueCat } from "./revenuecat-start";
 
 function hasActiveEntitlement(customerInfo: CustomerInfo | null): boolean {
@@ -181,6 +182,7 @@ export function RevenueCatProvider({
 			const surface = rawSurface ?? null;
 			posthog.capture("purchase_started", { package: pkg.identifier, surface });
 			try {
+				await logInIfNeeded(Purchases, appUserId);
 				const { customerInfo: info } = await Purchases.purchasePackage(pkg);
 				setCustomerInfo(info);
 
@@ -216,7 +218,7 @@ export function RevenueCatProvider({
 				return false;
 			}
 		},
-		[posthog]
+		[posthog, appUserId]
 	);
 
 	const refreshOfferings = useCallback(async (): Promise<boolean> => {
