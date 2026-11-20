@@ -2,13 +2,13 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
-import { Skeleton } from "heroui-native";
 import { type ReactNode, useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { CtaButton } from "@/components/shared/cta-button";
 import { PressScale } from "@/components/shared/press-scale";
+import { Bone, SkeletonBreath } from "@/components/shared/skeleton";
 import { toast } from "@/components/shared/toast";
 import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
 import { playSoftPress } from "@/lib/haptics";
@@ -34,11 +34,11 @@ export function RateConversationScreen({
 	if (conversation === undefined) {
 		return (
 			<Sheet>
-				<View accessibilityLabel="Loading" className="items-center gap-4 py-6">
-					<Skeleton className="size-19 rounded-full" />
-					<Skeleton className="h-6 w-56 rounded-row" />
-					<Skeleton className="h-10 w-48 rounded-row" />
-				</View>
+				<SkeletonBreath className="items-center gap-4 py-6" label="Loading">
+					<Bone h={76} r={38} w={76} />
+					<Bone h={24} w={224} />
+					<Bone h={40} r={12} w={192} />
+				</SkeletonBreath>
 			</Sheet>
 		);
 	}

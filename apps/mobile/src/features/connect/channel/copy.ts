@@ -3,10 +3,15 @@ export const CHANNEL = {
 	add: "Add a reaction",
 	/** Beside the time, as Stream's own footer said it. */
 	edited: "Edited",
-	empty: "Nothing from Xolace yet. Announcements for the whole camp land here.",
+	empty: {
+		body: "Announcements for the whole camp land here.",
+		title: "Nothing from Xolace yet",
+	},
 	failed: "Messages couldn't load. Check your connection and try again.",
 	/** The header's lifebuoy, as in the thread. */
 	help: "Get help now",
+	/** VoiceOver reads the skeleton once, as this. */
+	loading: "Loading announcements",
 	lock: "Xolace talks to the whole camp, not back. Drop a reaction instead.",
 	/** The card's VoiceOver action: Stream's hold overlay, with the reactions, Copy, and for the
 	 * broadcaster Edit and Delete. */

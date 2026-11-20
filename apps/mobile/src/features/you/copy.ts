@@ -84,7 +84,7 @@ export const COPY = {
 		comingUpWhen: "Check-in coming",
 		earlier: "Earlier",
 		empty:
-			"After a moment, Xolace may check back in a day or two. They'll wait here.",
+			"After some reflections, Xolace checks back in a little later to see how it's sitting. Those check-ins land here.",
 		emptyTitle: "No follow-ups yet",
 		/** "From Thursday", the day the moment was. */
 		from: (weekday: string) => `From ${weekday}`,

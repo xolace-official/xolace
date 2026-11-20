@@ -1,5 +1,6 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { playSoftPress } from "@/lib/haptics";
@@ -39,28 +40,20 @@ export function ChatsFooter({
 	);
 }
 
-/** No chats yet, or all of them archived: a quiet note under the channel. */
+/** No chats yet, or all of them archived: the shared empty state under the channel, the face
+ * waiting, and the way to the roster when there's nobody yet. */
 function EmptyChats({ note }: { note: EmptyNote }) {
 	return (
-		<View className="items-center gap-2 px-6 py-12">
-			<AppText center variant="headline">
-				{note.title}
-			</AppText>
-			<AppText center className="max-w-70" color="muted" variant="callout">
-				{note.body}
-			</AppText>
-			{note.browse ? (
-				<PressScale
-					accessibilityLabel={COPY.empty.browse}
-					className="mt-2 min-h-11 justify-center px-3"
-					haptic={playSoftPress}
-					onPress={note.browse}
-				>
-					<AppText color="accentInk" variant="callout" weight="semibold">
-						{`${COPY.empty.browse} →`}
-					</AppText>
-				</PressScale>
-			) : null}
-		</View>
+		<EmptyState
+			action={
+				note.browse
+					? { label: COPY.empty.browse, onPress: note.browse }
+					: undefined
+			}
+			body={note.body}
+			className="py-12"
+			face
+			title={note.title}
+		/>
 	);
 }

@@ -12,6 +12,8 @@ export const PROFILE = {
 		title: "This Xolacer isn't here",
 	},
 	hereNow: "here now",
+	/** VoiceOver reads the skeleton once, as this. */
+	loading: "Loading their profile",
 	nameHereNow: (name: string) => `${name}, here now`,
 	newXolacer: "New Xolacer",
 	notRightNow: (name: string) =>

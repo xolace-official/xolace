@@ -8,7 +8,7 @@ import { usePaginatedQuery, useQuery } from "convex/react";
 import { Stack, useLocalSearchParams } from "expo-router";
 import type { ReactElement } from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
-import { AppText } from "@/components/shared/app-text";
+import { EmptyState } from "@/components/shared/empty-state";
 import { TrackRow } from "@/features/browse/components/track-row";
 import { EntryRow, RowsSkeleton } from "@/features/browse/search/library-row";
 import { PlaceRow } from "@/features/browse/search/place-row";
@@ -49,9 +49,11 @@ function Paged<T extends { _id: string }>({
 				loading ? (
 					<RowsSkeleton count={4} />
 				) : (
-					<AppText className="px-gutter pt-6" color="muted" variant="callout">
-						Nothing matches that.
-					</AppText>
+					<EmptyState
+						body="Try a feeling, like “can’t sleep”."
+						className="pt-10"
+						title="Nothing matches that"
+					/>
 				)
 			}
 			ListFooterComponent={

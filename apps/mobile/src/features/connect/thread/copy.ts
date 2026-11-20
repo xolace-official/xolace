@@ -78,6 +78,8 @@ export const THREAD = {
 	help: "Get help now",
 	hereNow: "here now",
 	lastHere: (ago: string) => `last here ${ago}`,
+	/** VoiceOver reads the skeleton once, as this. */
+	loading: "Loading your conversation",
 	menu: {
 		block: "Block",
 		changeRating: "Change your rating",

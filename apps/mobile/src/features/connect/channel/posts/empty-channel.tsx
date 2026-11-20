@@ -1,14 +1,12 @@
 import { View } from "react-native";
-import { AppText } from "@/components/shared/app-text";
+import { EmptyState } from "@/components/shared/empty-state";
 import { CHANNEL } from "../copy";
 
-/** Stream's empty list, in the channel's words. */
+/** Stream's empty list, in the channel's words: the shared empty state, the face waiting. */
 export function EmptyChannel() {
 	return (
-		<View className="flex-1 items-center justify-center px-10">
-			<AppText center color="muted" variant="callout">
-				{CHANNEL.empty}
-			</AppText>
+		<View className="flex-1 justify-center">
+			<EmptyState body={CHANNEL.empty.body} face title={CHANNEL.empty.title} />
 		</View>
 	);
 }

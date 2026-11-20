@@ -7,7 +7,9 @@ import Animated, {
 	ReduceMotion,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PressScale } from "@/components/shared/press-scale";
+import { DiscoverySkeleton } from "@/components/shared/skeleton-shapes";
 import { cn } from "@/lib/cn";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { COPY } from "../copy";
@@ -42,14 +44,12 @@ export function Roster({
 
 	if (cards !== undefined && cards.length === 0 && filter === null) {
 		return (
-			<View className="items-center gap-2 px-6 py-16">
-				<AppText center variant="headline">
-					{COPY.roster.emptyTitle}
-				</AppText>
-				<AppText center className="max-w-70" color="muted" variant="callout">
-					{COPY.roster.emptyBody}
-				</AppText>
-			</View>
+			<EmptyState
+				body={COPY.roster.emptyBody}
+				className="py-16"
+				face
+				title={COPY.roster.emptyTitle}
+			/>
 		);
 	}
 
@@ -92,6 +92,10 @@ export function Roster({
 				</ScrollView>
 			) : null}
 
+			{cards === undefined ? (
+				<DiscoverySkeleton label={COPY.loading.xolacers} />
+			) : null}
+
 			{(cards ?? []).map((card) => (
 				<Animated.View
 					entering={
@@ -118,9 +122,16 @@ export function Roster({
 			))}
 
 			{cards !== undefined && cards.length === 0 ? (
-				<AppText center className="py-8" color="muted" variant="callout">
-					{COPY.roster.noMatch}
-				</AppText>
+				// Under the chips that emptied it: 40 pt down, no face.
+				<EmptyState
+					action={{
+						label: COPY.roster.noMatchBrowse,
+						onPress: () => onFilter(null),
+					}}
+					body={COPY.roster.noMatchBody}
+					className="pt-7.5"
+					title={COPY.roster.noMatchTitle}
+				/>
 			) : null}
 		</View>
 	);
