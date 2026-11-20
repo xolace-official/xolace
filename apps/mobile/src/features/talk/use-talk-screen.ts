@@ -72,8 +72,11 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 		}
 	});
 	useEffect(() => startReopened(), []);
+	// Only an error that arrives after "Just end" cancels the toast: one from earlier in the
+	// talk stays set until the next start.
+	const errorAtEnd = useRef<string | null>(null);
 	const leave = useEffectEvent(() => {
-		if (justEnded.current && !talk.error) {
+		if (justEnded.current && talk.error === errorAtEnd.current) {
 			toast(TALK_COPY.live.ended);
 		}
 	});
@@ -110,6 +113,7 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			},
 			justEnd() {
 				justEnded.current = true;
+				errorAtEnd.current = talk.error;
 				talk.endWithoutMirror();
 			},
 			openHelp: () => router.push("/crisis-resources?from=talk"),
