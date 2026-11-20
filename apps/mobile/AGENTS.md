@@ -279,7 +279,7 @@ older piece.
 | Native header | `useHeaderOptions()` (`src/lib/header-options.ts`, theme faces) | `useLargeHeaderOptions` |
 
 - **Pieces:** `Card` + `SectionHeader`, `MediaRow` + `Kicker`, `CareRow`, `Avatar`,
-  `BackButton`, `GlassGroup`, `DetachedSheet` (its route takes `DETACHED_SHEET`), `RollingNumber`,
+  `BackButton`, `GlassGroup`, `DetachedSheet` (its route takes `DETACHED_SHEET`), `RollDigits`,
   `CountryMenu`, `Flux`, `Aura`. Settings-like pages: `SettingsHeader`, `SectionTitle`,
   `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`, `OpenRow`, `TileRow`, `SettingsDialog`,
   `NameDialog`.

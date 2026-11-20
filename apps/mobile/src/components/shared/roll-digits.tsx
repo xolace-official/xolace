@@ -18,7 +18,7 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 /** native-cook's Roller: 260 ms per change. */
 const ROLL_MS = 260;
-/** Today v2's chips and counts: 420 ms, ease-out (RollingNumber's `quick`). */
+/** Today v2's chips and counts: 420 ms, ease-out. */
 export const QUICK_ROLL_MS = 420;
 
 type Props = {
@@ -38,12 +38,12 @@ type Props = {
 };
 
 /**
- * Digits that roll to a new value (from 0 on mount unless `rollIn` is off), on the UI thread, in plain
- * views: a SwiftUI-hosted number (`RollingNumber`) is left at a stale frame
- * inside a transformed parent. Reduce Motion: they just change. The digits grow
- * with Dynamic Type up to the display cap, and so does each line. Achievements'
- * sparks and You's streak and freezes (in the collapsing header, hence plain views),
- * and the streak chips on Today and Heard and Today's kindling count.
+ * Digits that roll to a new value (from 0 on mount unless `rollIn` is off), on
+ * the UI thread, in plain views: a SwiftUI-hosted number is left at a stale
+ * frame inside a transformed parent. Reduce Motion: they just change. The
+ * digits grow with Dynamic Type up to `maxScale` (the display cap by default),
+ * and so does each line. Achievements' sparks, You's streak and freezes (in the
+ * collapsing header), the streak chips on Today and Heard, Today's kindling count.
  */
 export function RollDigits({
 	value,
