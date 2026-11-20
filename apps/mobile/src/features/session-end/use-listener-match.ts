@@ -65,9 +65,13 @@ export function useListenerMatch(
 	}
 	return {
 		card: {
+			id: suggestion.xolacerProfileId,
 			listensTo: specialtyListensTo(suggestion.specialty),
 			name: suggestion.displayName,
 			photoUrl: suggestion.photoUrl,
+			// Older backends don't say: no dot, "Replies within a day".
+			present: suggestion.present ?? false,
+			rating: suggestion.rating,
 		},
 		profile: {
 			profileId: suggestion.xolacerProfileId,

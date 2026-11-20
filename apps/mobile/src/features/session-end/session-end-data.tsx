@@ -1,5 +1,6 @@
-import type { Id } from "@xolace/backend/convex/_generated/dataModel";
+import type { Doc, Id } from "@xolace/backend/convex/_generated/dataModel";
 import { createContext, type ReactNode, use } from "react";
+import type { IconName } from "@/components/shared/icon";
 import type {
 	LetterOffer,
 	NextInput,
@@ -12,10 +13,40 @@ import { useSessionEndData } from "./use-session-end";
 
 /** The listener a matched suggestion opens (`ai.xolacers.suggest.sessionSuggestion`). */
 export type ListenerCard = {
+	/** Picks their art when there's no photo: the same person always wears the same pair. */
+	id: string;
 	name: string;
 	/** "anxiety", "work stress": what they listen to, from their specialty. */
 	listensTo: string;
 	photoUrl?: string;
+	/** Their average, once they have enough ratings to show one; absent: a new Xolacer. */
+	rating?: number;
+	/** In the app when the match was made. */
+	present: boolean;
+};
+
+/** A part of life (`lib/validators` `domainValidator`). */
+export type Domain = NonNullable<
+	Doc<"sessions">["domainUnlock"]
+>["domains"][number];
+
+/**
+ * Other features' pieces the slot's cards draw, composed in by the route (features meet in
+ * routes): Connect's avatar for a listener, Steadiness's icon and name for a part of life.
+ */
+export type NextParts = {
+	listenerAvatar: (listener: ListenerCard, size: number) => ReactNode;
+	partIcon: (domain: Domain) => IconName;
+	partName: (domain: Domain) => string;
+};
+
+/** What the slot's cards speak of, besides letters. */
+export type NextCards = {
+	listener: ListenerCard | null;
+	/** The parts of life this session brought into focus (`sessions.domainUnlock`), held unseen. */
+	unlock: readonly Domain[] | null;
+	/** Free: the part of life that's been heavier than usual (`compounding.upsell.get`). */
+	upsell: Domain | null;
 };
 
 /**
@@ -59,9 +90,12 @@ export type SessionEnd = {
 		day: { from: number; to: number } | null;
 		/** The next-step slot's inputs; the screen adds the answer's step. */
 		slot: Omit<NextInput, "late" | "step">;
-		listener: ListenerCard | null;
+		/** The listener, the part of life in focus, the heavier part: the slot's cards' words. */
+		cards: NextCards;
 		/** Letters' tile for its two cards. */
 		letterTile: ReactNode;
+		/** Connect's and Steadiness's pieces for the other cards. */
+		parts: NextParts;
 		/** The heavier follow-up hasn't been answered in the last 24 hours. */
 		canAskFollowUp: boolean;
 	};
@@ -102,14 +136,16 @@ export function SessionEndData({
 	path,
 	sessionId,
 	letters,
+	parts,
 	children,
 }: {
 	path: SessionPath;
 	sessionId: Id<"sessions"> | null;
 	letters: EndLetters;
+	parts: NextParts;
 	children: ReactNode;
 }) {
-	const value = useSessionEndData({ letters, path, sessionId });
+	const value = useSessionEndData({ letters, parts, path, sessionId });
 	return <SessionEndProvider value={value}>{children}</SessionEndProvider>;
 }
 

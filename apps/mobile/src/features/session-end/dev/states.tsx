@@ -1,5 +1,10 @@
 /** After a session on fixtures: `xolace://dev/session-end/<id>`, one per board render. */
 import type { DevState } from "@/dev/dev-state";
+import {
+	InsightsUpsell,
+	PartInFocus,
+	XolacerSuggestion,
+} from "./extras-screen";
 import { FixtureScreen } from "./fixture-screen";
 import {
 	FREE,
@@ -183,6 +188,24 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureScreen scene={{ moment: 2 }} state={LISTEN} />,
 		title: "Xolace+: something to listen to",
+	},
+	{
+		id: "xolacer",
+		options: OPTIONS,
+		Screen: XolacerSuggestion,
+		title: "C2 Xolacer suggestion",
+	},
+	{
+		id: "unlock",
+		options: OPTIONS,
+		Screen: PartInFocus,
+		title: "C2 A part of life comes into focus",
+	},
+	{
+		id: "upsell",
+		options: OPTIONS,
+		Screen: InsightsUpsell,
+		title: "C2 Insights upsell (free)",
 	},
 	{
 		id: "letter-waiting",

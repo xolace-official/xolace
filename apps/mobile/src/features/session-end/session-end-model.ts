@@ -155,9 +155,11 @@ export type NextKey =
 	| "letterRead"
 	| "kindling"
 	| "kindlingSettingUp"
+	| "unlock"
 	| "letterWrite"
 	| "listen"
 	| "kfree"
+	| "upsell"
 	| "loading"
 	| "none";
 
@@ -180,6 +182,10 @@ export type NextInput = {
 	listen: boolean;
 	/** Letters' two cards; undefined while letters load. */
 	letters: LetterOffer | undefined;
+	/** A part of life came into focus this session, not yet seen; undefined while the session loads. */
+	unlock: boolean | undefined;
+	/** Free: the server has an insights upsell for this session; undefined while that's read. */
+	upsell: boolean | undefined;
 	late: boolean;
 	step: number | null;
 	/** The free pitch's cadence allows it (`pitchAllowed`). */
@@ -238,20 +244,29 @@ const steadyFor = (late: boolean, step: number | null): boolean =>
 	!late && step !== null && step >= 0;
 
 /**
- * One card at most, in order (letters' handoff §2 fitted into production's slot):
+ * One card at most, in order (letters' handoff §2 and C2's session-end extras fitted into
+ * production's slot):
  * 1. a matched listener, for everyone;
  * 2. a letter waiting to be opened, after a steady answer;
- * 3. Xolace+: kindling, or "setting up" until it lands;
- * 4. write a letter, after a steady answer; it outranks the free pitch (handoff §7);
- * 5. Xolace+: something to listen to;
- * 6. free: the ending's one Xolace+ pitch, never late, never after a heavier answer (step −3
- *    down), and only when the session qualifies and the cadence allows it;
- * 7. nothing.
- * The slot holds (loading) at most 2 s for the listener match, the plan and kindling, and letters.
+ * 3. a part of life coming into focus (the unlock), after a steady answer, every plan: it
+ *    happens once and is earned, so it outranks kindling and a letter to write;
+ * 4. Xolace+: kindling, or "setting up" until it lands;
+ * 5. write a letter, after a steady answer; it outranks the free pitch (handoff §7);
+ * 6. Xolace+: something to listen to;
+ * 7. free: the ending's one Xolace+ pitch, never late, never after a heavier answer (step −3
+ *    down), and only when the cadence allows it: the insights upsell when the server has one
+ *    (it speaks to this person's own pattern), else the kindling pitch when the session qualifies;
+ * 8. nothing.
+ * The slot holds (loading) at most 2 s for the listener match, the plan and kindling, letters,
+ * the unlock and the upsell.
  */
 export function nextKey(input: NextInput): NextKey {
 	const { listener, plus, late, step, waitedOut } = input;
-	const unknown = input.qualifies === undefined || input.letters === undefined;
+	const unknown =
+		input.qualifies === undefined ||
+		input.letters === undefined ||
+		input.unlock === undefined ||
+		input.upsell === undefined;
 	if (listener === "pending" || (unknown && !waitedOut)) {
 		return "loading";
 	}
@@ -263,6 +278,9 @@ export function nextKey(input: NextInput): NextKey {
 	if (steady && letters.waiting) {
 		return "letterRead";
 	}
+	if (steady && input.unlock === true) {
+		return "unlock";
+	}
 	const qualifies = input.qualifies ?? false;
 	if (plus && qualifies) {
 		return input.kindlingReady ? "kindling" : "kindlingSettingUp";
@@ -273,11 +291,18 @@ export function nextKey(input: NextInput): NextKey {
 	if (plus) {
 		return input.listen ? "listen" : "none";
 	}
-	if (!qualifies || late || asksFollowUp(step) || !input.pitchAllowed) {
+	if (late || asksFollowUp(step) || !input.pitchAllowed) {
 		return "none";
 	}
-	return "kfree";
+	if (input.upsell === true) {
+		return "upsell";
+	}
+	return qualifies ? "kfree" : "none";
 }
+
+/** The keys that are the ending's one Xolace+ pitch: showing one spends the next session's. */
+export const isPitch = (key: NextKey | null): boolean =>
+	key === "kfree" || key === "upsell";
 
 export type PitchContext = {
 	safeguardActive: boolean;
@@ -335,7 +360,7 @@ export function keptAtMoment2<T>(
 export const pitchDismissed = (
 	shown: NextKey | null,
 	taken: boolean
-): boolean => shown === "kfree" && !taken;
+): boolean => isPitch(shown) && !taken;
 
 /** Leaving with the write card shown and not taken passes it over (three running: 30 days off). */
 export const letterPassed = (shown: NextKey | null, taken: boolean): boolean =>

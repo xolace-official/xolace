@@ -135,14 +135,15 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 				<MomentTwo
 					breath={face.breath}
 					c2={clocks.c2}
+					cards={session.state.cards}
 					colors={colors}
 					cs={clocks.cs}
 					ctaTop={ctaTop}
 					from={session.state.from}
 					letterTile={session.state.letterTile}
-					listener={session.state.listener}
 					next={next}
 					onNext={() => session.actions.openNext(next)}
+					parts={session.state.parts}
 					reduced={reduced}
 					send={send}
 					W={W}

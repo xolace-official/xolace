@@ -66,11 +66,34 @@ export const COPY = {
 			title: "Something soft to listen to",
 		},
 		listener: {
-			sub: "A trained peer, not a therapist. This only opens their profile.",
+			hereNow: "Here now",
+			newXolacer: "New Xolacer",
+			rated: (rating: number) => `Rated ${rating}`,
+			rating: (rating: number) => `★ ${rating}`,
+			repliesInADay: "Replies within a day",
+			/** Production's SuggestionCard line, its dash a colon. */
+			sub: "A trained peer, not a therapist. Nothing is sent: this only opens their profile.",
 			title: (name: string, listensTo: string) =>
 				`${name} listens to ${listensTo}`,
 		},
 		loading: "Finding something for you",
+		/** C2: a part of life came into focus (production's UnlockBeat, without the full stop). */
+		unlock: {
+			sub: (count: number) =>
+				count > 1
+					? "You’ve shared enough for Xolace to see how these parts of life tend to feel for you."
+					: "You’ve shared enough for Xolace to see how this part of life tends to feel for you.",
+			title: (names: readonly string[]) =>
+				names.length > 1
+					? `${names.slice(0, -1).join(", ")} and ${names.at(-1)} are coming into focus`
+					: `${names[0]} is coming into focus`,
+		},
+		/** C2, free: production's SessionEndUpsell line; "with Xolace+" says where the tap goes. */
+		upsell: {
+			sub: "See the pattern, with Xolace+",
+			title: (name: string) =>
+				`${name} has been heavier lately than your usual`,
+		},
 	},
 	nextLabel: "Next, if you want it",
 	nothing: {

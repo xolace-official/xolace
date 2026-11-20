@@ -14,12 +14,13 @@ import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import type { SessionColors } from "../session-colors";
-import type { ListenerCard } from "../session-end-data";
+import type { NextCards, NextParts } from "../session-end-data";
 import { type NextKey, slotEmpty } from "../session-end-model";
 import { LAYOUT, REDUCED_MS, T2 } from "../session-look";
 import { appear, cardRise } from "../timeline";
 import { NextArt, Shimmer } from "./next-art";
-import { nextText } from "./next-text";
+import { InsightBody, XolacerBody } from "./next-extras";
+import { nextLabel, nextText } from "./next-text";
 
 const N = LAYOUT.next;
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
@@ -28,7 +29,10 @@ const LABEL_MAX = 1.4;
 
 type Props = {
 	k: NextKey;
-	listener: ListenerCard | null;
+	/** The listener, the part in focus, the heavier part. */
+	cards: NextCards;
+	/** Connect's and Steadiness's pieces, composed in by the route. */
+	parts: NextParts;
 	/** Letters' tile, for its two cards. */
 	letterTile: ReactNode;
 	c2: SharedValue<number>;
@@ -46,7 +50,8 @@ type Props = {
  */
 export function NextCard({
 	k,
-	listener,
+	cards,
+	parts,
 	letterTile,
 	c2,
 	colors,
@@ -87,7 +92,7 @@ export function NextCard({
 			transform: [{ translateY: r.transform[0].translateY + drop }],
 		};
 	});
-	const text = nextText(k, listener);
+	const text = nextText(k, cards, parts.partName);
 
 	return (
 		<View
@@ -117,9 +122,7 @@ export function NextCard({
 			</Animated.View>
 			<Animated.View style={[{ marginTop: N.top }, card]}>
 				<PressScale
-					accessibilityLabel={
-						text ? `${text.title}. ${text.sub}` : COPY.next.loading
-					}
+					accessibilityLabel={nextLabel(k, cards, text)}
 					card
 					className="flex-row items-center border-continuous bg-surface py-2"
 					disabled={!text}
@@ -134,16 +137,22 @@ export function NextCard({
 					}}
 				>
 					<NextArt
+						cards={cards}
 						colors={colors}
 						k={k}
 						letterTile={letterTile}
-						listener={listener}
+						parts={parts}
+						reduced={reduced}
 					/>
 					{k === "loading" ? (
 						<View className="flex-1 gap-[7px]">
 							<Shimmer reduced={reduced} width="100%" />
 							<Shimmer reduced={reduced} width="70%" />
 						</View>
+					) : k === "listener" && cards.listener && text ? (
+						<XolacerBody listener={cards.listener} title={text.title} />
+					) : (k === "unlock" || k === "upsell") && text ? (
+						<InsightBody kind={k} text={text} />
 					) : (
 						<View className="min-w-0 flex-1 gap-0.5">
 							<AppText

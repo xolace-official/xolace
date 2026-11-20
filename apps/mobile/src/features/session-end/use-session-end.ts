@@ -10,10 +10,11 @@ import { goHome } from "@/lib/landing";
 import { useAppStore } from "@/store/store";
 import { useFollowUpAsk } from "./follow-up/follow-up-ask";
 import { followUpBucket } from "./mood-scale";
-import type { EndLetters, SessionEnd } from "./session-end-data";
+import type { EndLetters, NextParts, SessionEnd } from "./session-end-data";
 import {
 	dayOf,
 	fromOf,
+	isPitch,
 	letterPassed,
 	type NextKey,
 	pitchDismissed,
@@ -26,8 +27,16 @@ import { useNextStep } from "./use-next-step";
 /** Past this, the arrival starts with whatever is in (offline: no words, no day chip). */
 const READY_WAIT_MS = 4000;
 
-/** The pitch's offer events: kindling's own slot, not one of the session close's moments. */
-const PITCH_EVENT = { moment: null, surface: "kindling", variant: "default" };
+/** The insights upsell's paywall source and analytics surface (production's). */
+const UPSELL_SURFACE = "compounding_upsell";
+
+/** The pitch's offer events: its own slot (kindling's or the insights upsell's), not one of the
+ * session close's moments. */
+const pitchEvent = (key: NextKey | null) => ({
+	moment: null,
+	surface: key === "upsell" ? UPSELL_SURFACE : "kindling",
+	variant: "default",
+});
 
 /** What this visit saved, for `session_completed` on the way out. */
 type Saved = { mood: SavedMood | null; contributed: boolean | null };
@@ -42,10 +51,12 @@ export function useSessionEndData({
 	path,
 	sessionId,
 	letters,
+	parts,
 }: {
 	path: SessionPath;
 	sessionId: Id<"sessions"> | null;
 	letters: EndLetters;
+	parts: NextParts;
 }): SessionEnd {
 	const router = useRouter();
 	const posthog = usePostHog();
@@ -58,6 +69,7 @@ export function useSessionEndData({
 	const canAsk = useQuery(api.feedback.canAskContextual);
 	const record = useMutation(api.sessions.recordPostSessionFeedback);
 	const markUnlockSeen = useMutation(api.compounding.unlocks.markSeen);
+	const markUpsellShown = useMutation(api.compounding.upsell.markShown);
 	const next = useNextStep(sessionId, session, letters);
 	const openPaywall = usePaywall((s) => s.open);
 	const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
@@ -77,10 +89,10 @@ export function useSessionEndData({
 		}
 	}, [missing, router]);
 
-	// Deliberate: no unlock beat shows here any more. An unlock that earned an area badge is marked
-	// seen as the session end opens (`whenBadged`): Badges' arrival announces it, so tomorrow's
-	// "you missed it" push would repeat it. Any other unlock (no badge for the 2nd area, or the 4th
-	// to 7th) stays unseen, and the push is how the person hears of it.
+	// An unlock that earned an area badge is marked seen as the session end opens (`whenBadged`):
+	// Badges' arrival announces it, so tomorrow's "you missed it" push would repeat it. Any other
+	// unlock stays unseen until the slot shows its card (`nextShown`); if the slot shows something
+	// else, the push is how the person hears of it. The slot holds the unlock it first read.
 	const unseenUnlock =
 		session?.domainUnlock !== undefined &&
 		session.domainUnlock.seenAt === undefined;
@@ -133,7 +145,7 @@ export function useSessionEndData({
 		setPendingEventPrompt(null);
 		if (pitchDismissed(shown.current.key, shown.current.taken)) {
 			recordPlusOfferDismissal("session_close");
-			posthog.capture("plus_offer_dismissed", PITCH_EVENT);
+			posthog.capture("plus_offer_dismissed", pitchEvent(shown.current.key));
 		}
 		if (letterPassed(shown.current.key, shown.current.taken)) {
 			letters.writePassed();
@@ -147,11 +159,20 @@ export function useSessionEndData({
 
 	const nextShown = (key: NextKey) => {
 		shown.current = { key, taken: false };
-		if (key === "kfree") {
+		if (isPitch(key)) {
 			// The pitch spends this session's offer: the next session won't show one.
 			recordPlusOfferShown(sessionId);
-			posthog.capture("plus_offer_shown", PITCH_EVENT);
+			posthog.capture("plus_offer_shown", pitchEvent(key));
+		}
+		if (key === "kfree") {
 			posthog.capture("plus_upsell_shown", { surface: "kindling" });
+		} else if (key === "upsell" && next.upsell) {
+			// Shown means seen: the stretch is spent, here as on Steadiness.
+			markUpsellShown(next.upsell).catch(() => undefined);
+			posthog.capture("plus_upsell_shown", { surface: UPSELL_SURFACE });
+		} else if (key === "unlock" && sessionId) {
+			// Seen: tomorrow's "you missed it" push stands down.
+			markUnlockSeen({ sessionId }).catch(() => undefined);
 		} else if (key === "listener") {
 			posthog.capture("xolacer_suggestion_shown", { variant });
 		} else if (key === "letterWrite") {
@@ -177,6 +198,13 @@ export function useSessionEndData({
 			posthog.capture("plus_upsell_tapped", { surface: "kindling" });
 			complete({ action: "open_paywall" });
 			openPaywall("kindling", sessionId ? { sessionId } : undefined);
+		} else if (key === "upsell") {
+			posthog.capture("plus_upsell_tapped", { surface: UPSELL_SURFACE });
+			complete({ action: "open_paywall" });
+			openPaywall(UPSELL_SURFACE);
+		} else if (key === "unlock") {
+			complete({ action: "open_steadiness" });
+			router.push("/you/steadiness");
 		} else if (key === "letterRead") {
 			complete({ action: "open_letter" });
 			letters.openRead();
@@ -216,12 +244,17 @@ export function useSessionEndData({
 		},
 		state: {
 			canAskFollowUp: canAsk === true,
+			cards: {
+				listener: next.listener.card,
+				unlock: next.unlock,
+				upsell: next.upsell?.domain ?? null,
+			},
 			// Whether today had counted before this session isn't served yet: no roll.
 			day: summary ? dayOf(summary.currentStreak, null) : null,
 			from: fromOf(path),
 			late: isNight,
 			letterTile: letters.tile,
-			listener: next.listener.card,
+			parts,
 			ready,
 			slot: next.slot,
 			words: wordsToShare(path, session?.distilledText),

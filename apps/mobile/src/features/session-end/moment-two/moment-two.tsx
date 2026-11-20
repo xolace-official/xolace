@@ -15,7 +15,7 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import type { SessionColors } from "../session-colors";
-import type { ListenerCard } from "../session-end-data";
+import type { NextCards, NextParts } from "../session-end-data";
 import type { NextKey, SessionFrom } from "../session-end-model";
 import { LAYOUT, T2 } from "../session-look";
 import { appear } from "../timeline";
@@ -42,7 +42,8 @@ type Props = {
 	from: SessionFrom | null;
 	words: string | null;
 	next: NextKey;
-	listener: ListenerCard | null;
+	cards: NextCards;
+	parts: NextParts;
 	letterTile: ReactNode;
 	send: Send;
 	c2: SharedValue<number>;
@@ -163,12 +164,13 @@ export function MomentTwo(p: Props) {
 					) : null}
 					<NextCard
 						c2={c2}
+						cards={p.cards}
 						colors={colors}
 						k={p.next}
 						letterTile={p.letterTile}
-						listener={p.listener}
 						noneTop={!words}
 						onPress={p.onNext}
+						parts={p.parts}
 						reduced={reduced}
 					/>
 				</View>
