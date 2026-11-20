@@ -1,21 +1,22 @@
-import type { RootScreen } from "@/lib/root-screen";
+import type { NativeStackNavigationOptions } from "expo-router";
+import {
+	fitSheet,
+	type RootScreen,
+	type ScreenContext,
+} from "@/lib/root-screen";
 
-/** Skipping a rating should feel like dismissing, not navigating away. */
-const RATE_OPTIONS = {
-	presentation: "formSheet",
-	sheetGrabberVisible: true,
-} as const;
-
-/** Like the rating sheet, but full height so every field is reachable without a drag. */
-const EDIT_PROFILE_OPTIONS = {
+/** The kit's sheet at full height, so every field is reachable without a drag. */
+const editProfileOptions = (
+	context: ScreenContext
+): NativeStackNavigationOptions => ({
+	...fitSheet(context),
 	headerShown: true,
-	presentation: "formSheet" as const,
 	sheetAllowedDetents: [1],
-	sheetCornerRadius: 28,
-};
+});
 
 export const xolacerChatScreens: readonly RootScreen[] = [
 	{ name: "xolacer-setup" },
-	{ name: "xolacer-edit", options: EDIT_PROFILE_OPTIONS },
-	{ name: "rate/[conversationId]", options: RATE_OPTIONS },
+	{ name: "xolacer-edit", options: editProfileOptions },
+	// Skipping a rating should feel like dismissing, not navigating away.
+	{ name: "rate/[conversationId]", options: fitSheet },
 ];

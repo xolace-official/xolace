@@ -1,13 +1,12 @@
 import { router } from "expo-router";
 import { Skeleton } from "heroui-native";
-import { Pressable, useWindowDimensions, View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
-import { Icon } from "@/components/shared/icon";
+import { BackButton } from "@/components/shared/back-button";
 import { COPY } from "@/features/lantern/copy";
 import { CoverButton } from "@/features/lantern/reader/cover-button";
 import { FOLD } from "@/features/lantern/reader/cover-fold";
-import { useTokenColor } from "@/lib/use-token-color";
 
 const BACK = { android: "arrow_back", ios: "chevron.left" } as const;
 const BAR_GAP = 6;
@@ -50,24 +49,16 @@ export function ReaderSkeleton() {
 	);
 }
 
-/** A read that's no longer in Lantern (production's line, the redesign's back button). */
+/** A read that's no longer in Lantern: production's line as a centred footnote, under the kit's
+ * back button (back, or Today when a link opened it with nothing behind). */
 export function ReaderGone() {
 	const insets = useSafeAreaInsets();
-	const ink = useTokenColor("foreground");
 	return (
 		<View
 			className="flex-1 bg-background px-4"
 			style={{ paddingTop: insets.top + BAR_GAP }}
 		>
-			<Pressable
-				accessibilityLabel={COPY.reader.bar.back}
-				accessibilityRole="button"
-				className="size-10 items-center justify-center rounded-full bg-surface-secondary active:opacity-60"
-				hitSlop={8}
-				onPress={goBack}
-			>
-				<Icon color={ink} name={BACK} size={17} weight="semibold" />
-			</Pressable>
+			<BackButton label={COPY.reader.bar.back} />
 			<View className="flex-1 items-center justify-center px-4">
 				<AppText center color="muted" variant="footnote">
 					{COPY.reader.gone}

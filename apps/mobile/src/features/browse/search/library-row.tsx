@@ -7,38 +7,33 @@ import { api } from "@xolace/backend/api";
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Link } from "expo-router";
-import { SymbolView } from "expo-symbols";
-import { Skeleton, useThemeColor } from "heroui-native";
+import { Skeleton } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { CoverImage } from "@/components/shared/cover-image";
+import { Icon } from "@/components/shared/icon";
+import { PressScale } from "@/components/shared/press-scale";
 import {
 	capitalise,
 	facetLabel,
 	readTimeLine,
 	shareEntry,
 } from "@/features/browse/search/library-row-copy";
+import { useTokenColors } from "@/lib/use-token-color";
 
 type EntryItem = FunctionReturnType<
 	typeof api.library.entries.listEntries
 >[number];
 
 const THUMB = { height: 78, width: 104 };
-const SAVE = {
-	android: "bookmark_border",
-	ios: "bookmark",
-	web: "bookmark_border",
-} as const;
-const SAVED = {
-	android: "bookmark_added",
-	ios: "bookmark.fill",
-	web: "bookmark_added",
-} as const;
+const SAVE = { android: "bookmark_border", ios: "bookmark" } as const;
+const SAVED = { android: "bookmark_added", ios: "bookmark.fill" } as const;
 const SHARE = "square.and.arrow.up";
 
-/** Thumbnail left, "Kind · Subject" kicker, bold title, meta; Save at the end. */
+/** Thumbnail left, "Kind · Subject" kicker, bold title, meta; Save at the end. Kit type and
+ * press, with the search list's hairline under it. */
 export function EntryRow({
 	entry,
 	onOpen,
@@ -49,7 +44,7 @@ export function EntryRow({
 }) {
 	const record = useMutation(api.library.reads.record);
 	const posthog = usePostHog();
-	const [accent, foreground] = useThemeColor(["accent", "foreground"]);
+	const [accent, foreground] = useTokenColors(["accent", "foreground"]);
 	// Holds the tapped value until the server answers: lists miss the reader's optimistic update.
 	const [pending, setPending] = useState<boolean | null>(null);
 	const saved = pending ?? entry.saved;
@@ -63,7 +58,7 @@ export function EntryRow({
 			.finally(() => setPending(null));
 	};
 	return (
-		<View className="flex-row items-center pr-4">
+		<View className="mx-gutter flex-row items-center border-separator border-b">
 			<Link
 				asChild
 				href={{
@@ -73,12 +68,13 @@ export function EntryRow({
 				onPress={onOpen}
 			>
 				<Link.Trigger>
-					<Pressable
+					<PressScale
 						accessibilityRole="link"
-						className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70"
+						card
+						className="flex-1 flex-row items-center gap-3.5 py-3"
 					>
 						<View
-							className="overflow-hidden rounded-[14px] bg-surface-secondary"
+							className="overflow-hidden rounded-[14px] border-continuous bg-surface-secondary"
 							style={THUMB}
 						>
 							<CoverImage
@@ -88,21 +84,18 @@ export function EntryRow({
 								uri={entry.coverThumbUrl ?? entry.coverUrl}
 							/>
 						</View>
-						<View className="flex-1 gap-1">
-							<AppText className="text-[12px] text-muted">
+						<View className="flex-1 gap-0.5">
+							<AppText color="muted" variant="caption">
 								{capitalise(entry.kind)} · {facetLabel(entry.primarySubject)}
 							</AppText>
-							<AppText
-								className="font-semibold text-[16px] leading-[21px]"
-								numberOfLines={2}
-							>
+							<AppText numberOfLines={2} variant="subhead" weight="semibold">
 								{entry.title}
 							</AppText>
-							<AppText className="text-[13px] text-muted">
+							<AppText color="muted" variant="footnote">
 								{readTimeLine(entry.readMin, entry.views, entry.listenMin)}
 							</AppText>
 						</View>
-					</Pressable>
+					</PressScale>
 				</Link.Trigger>
 				<Link.Preview />
 				<Link.Menu>
@@ -117,22 +110,21 @@ export function EntryRow({
 					</Link.MenuAction>
 				</Link.Menu>
 			</Link>
-			<Pressable
+			<PressScale
 				accessibilityLabel="Save"
-				accessibilityRole="button"
 				accessibilityState={{ selected: saved }}
-				className="h-10 w-10 items-center justify-center rounded-full active:opacity-60"
+				className="size-11 items-center justify-center"
 				disabled={pending !== null}
 				hitSlop={8}
 				onPress={toggle}
 			>
-				<SymbolView
+				<Icon
+					color={saved ? accent : foreground}
 					name={saved ? SAVED : SAVE}
 					size={17}
-					tintColor={saved ? accent : foreground}
 					weight="semibold"
 				/>
-			</Pressable>
+			</PressScale>
 		</View>
 	);
 }

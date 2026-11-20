@@ -89,10 +89,8 @@ const pinned = (reduced: boolean) => {
 		player: { animation: rise, presentation: "transparentModal" },
 		"quotes/archive": undefined,
 		"quotes/index": undefined,
-		"rate/[conversationId]": {
-			presentation: "formSheet",
-			sheetGrabberVisible: true,
-		},
+		// The redesign's sheet since C1a.
+		"rate/[conversationId]": FIT_SHEET,
 		// The redesign's sheet since S9b (Lantern's reader).
 		"reader-appearance": {
 			...FIT_SHEET,
@@ -115,11 +113,11 @@ const pinned = (reduced: boolean) => {
 		},
 		"voice-vent": { animation: "fade", gestureEnabled: false },
 		"xolace-channel": CHAT,
+		// The redesign's sheet since C1a, full height with its toolbar.
 		"xolacer-edit": {
+			...FIT_SHEET,
 			headerShown: true,
-			presentation: "formSheet",
 			sheetAllowedDetents: [1],
-			sheetCornerRadius: 28,
 		},
 		"xolacer-setup": undefined,
 		"xolacer/[profileId]": undefined,
