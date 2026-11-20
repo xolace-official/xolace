@@ -1,23 +1,57 @@
 import type { IconName } from "@/components/shared/icon";
 
-export type WhatsNewHighlight = {
+/**
+ * Xolace's release notes: one list, newest first, in plain language. The first entry is the
+ * release that's new: What's New shows it alone (on a plain open, from Settings and from the shake
+ * menu); the older entries stay as the record. To ship notes, add an entry at the top: a store
+ * release or an over-the-air update alike. Nothing else needs setting: each device notes when it
+ * first ran a build carrying the entry (`firstRan` in the ratings record), and that moment stands
+ * in for the release date.
+ */
+
+export type ReleaseNote = {
 	icon: IconName;
+	/** The tile's colour: ember for the release's headline, the accent otherwise. */
+	tone?: "ember";
 	title: string;
 	body: string;
 };
 
-export type WhatsNewEntry = {
-	/** Seen-tracking key, not the version: OTA updates keep the store version. */
+export type Release = {
+	/** Seen-tracking key: the store version, or a name for an over-the-air update (which keeps the
+	 * store version). Never reuse one: a new id is what makes What's New show again. */
 	id: string;
-	/** Display label, e.g. "Version 1.6.0" or "OTA Update". */
+	/** For the record, e.g. "Version 1.17.0" or "OTA Update". */
 	label: string;
-	/** Human date string for display. */
+	/** For the record, e.g. "December 2026". */
 	date: string;
-	highlights: WhatsNewHighlight[];
+	highlights: readonly ReleaseNote[];
 };
 
-/** User-facing release notes, newest first, in plain language; a Convex changelog is a P3 TODO. */
-export const WHATS_NEW: WhatsNewEntry[] = [
+const RELEASES: readonly [Release, ...Release[]] = [
+	{
+		date: "December 2026",
+		highlights: [
+			{
+				body: "Write a few kind lines for someone you'll never meet. Xolace finds who needs them.",
+				icon: { android: "mail", ios: "envelope" },
+				title: "Letters to strangers",
+				tone: "ember",
+			},
+			{
+				body: "Ember's words appear as it speaks, so you can follow along quietly.",
+				icon: { android: "subject", ios: "text.alignleft" },
+				title: "Talk, with captions",
+			},
+			{
+				body: "The message box grows with what you write, and the thread shows through the glass.",
+				icon: { android: "chat_bubble", ios: "bubble.left" },
+				title: "A calmer chat",
+			},
+		],
+		id: "1.17.0",
+		label: "Version 1.17.0",
+	},
 	{
 		date: "November 2026",
 		highlights: [
@@ -499,9 +533,5 @@ export const WHATS_NEW: WhatsNewEntry[] = [
 	},
 ];
 
-/** Id of the newest entry — what `lastSeenVersion` is compared against. */
-export const LATEST_WHATS_NEW_ID: string | null = WHATS_NEW[0]?.id ?? null;
-
-/** True when there's a newest entry the user hasn't opened yet. */
-export const hasUnseenWhatsNew = (lastSeenVersion: string | null): boolean =>
-	LATEST_WHATS_NEW_ID !== null && lastSeenVersion !== LATEST_WHATS_NEW_ID;
+/** The release that's new: the one What's New shows. */
+export const LATEST_RELEASE = RELEASES[0];

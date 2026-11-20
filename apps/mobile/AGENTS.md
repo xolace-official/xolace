@@ -52,7 +52,8 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   Reflect-card doors and light, Today's kindling and campfire firelight, the kindling
   screen's road, stop tints and the tend's light, Connect's avatar art and Xolace flame,
   Reflect's sky and light, Letters' paper and ember, the launch cover's splash colours,
-  Coming back's month-prompt rose and banner, the check-in's paper and answer cards),
+  Coming back's month-prompt rose and banner, the check-in's paper and answer cards,
+  the rating screen's ember scene),
   still as tokens in `global.css`. Today's sky is the hour's,
   not the theme's, and its gradient stops stay strings in `features/today/sky/` because
   worklets interpolate them. Connect's art is content a person or the brand wears, the

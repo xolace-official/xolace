@@ -3,7 +3,7 @@ import { FEEDBACK_COPY } from "./copy";
 
 /** A bug or an idea from the shake menu; a concern about a person from a thread or a profile. */
 export type FeedbackKind = "bug" | "idea" | "concern";
-export type FeedbackStep = "menu" | "report" | "whatsNew";
+export type FeedbackStep = "menu" | "report";
 
 /** What a concern is about: the person, and the conversation when it's from a thread. The name is
  * the form's words only; the ids are what gets sent. */

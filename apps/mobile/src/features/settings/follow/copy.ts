@@ -39,10 +39,6 @@ export const FOLLOW_LINKS = {
 	mailBody:
 		"Hi Xolace team,\n\nI have some feedback:\n\n[Your feedback here]\n\nThanks!",
 	mailSubject: "Xolace Feedback",
-	reviewAndroid:
-		"https://play.google.com/store/apps/details?id=com.xolaceincorg.xolace&showAllReviews=true",
-	reviewIos:
-		"https://apps.apple.com/app/apple-store/id6761601429?action=write-review",
 } as const;
 
 export type SocialId =

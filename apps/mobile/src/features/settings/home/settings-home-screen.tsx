@@ -69,6 +69,11 @@ export function SettingsHomeScreen() {
 					onPress={() => actions.open("follow")}
 				/>
 				<OpenRow
+					icon={I.whatsNew}
+					label={C.rows.whatsNew}
+					onPress={actions.openWhatsNew}
+				/>
+				<OpenRow
 					chevron={false}
 					icon={I.updates}
 					label={state.update.label}

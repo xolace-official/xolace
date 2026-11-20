@@ -4,6 +4,7 @@ import {
 	FOLLOW_COPY as C,
 	FOLLOW_LINKS as L,
 } from "@/features/settings/follow/copy";
+import { storeOf } from "@/lib/store-review";
 
 /** Production's limit, and the backend's (`feedback.submit` refuses more for "general"). */
 export const FEEDBACK_MAX = 1000;
@@ -75,15 +76,6 @@ export function sendErrorMessage(e: unknown): string {
 /** Production's "Email us": its subject and starter body. */
 export const feedbackMailto = () =>
 	`mailto:${C.email}?subject=${encodeURIComponent(L.mailSubject)}&body=${encodeURIComponent(L.mailBody)}`;
-
-type Store = "ios" | "android";
-
-/** Production's choice: the App Store on iOS, Google Play everywhere else. */
-const storeOf = (os: string | undefined): Store =>
-	os === "ios" ? "ios" : "android";
-
-export const reviewUrl = (os: string | undefined) =>
-	storeOf(os) === "ios" ? L.reviewIos : L.reviewAndroid;
 
 /** The review row's subtitle, and what VoiceOver reads (the 🎁 stays silent). */
 export function reviewRow(os: string | undefined) {

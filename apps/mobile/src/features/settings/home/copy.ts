@@ -39,6 +39,7 @@ export const HOME_COPY = {
 		privacy: "Privacy & Data",
 		updateReady: "Update ready",
 		updates: "Check for updates",
+		whatsNew: "What's new",
 	},
 	signIn: { apple: "Apple", email: "Email", google: "Google" },
 	updateAvailable: "Available",
@@ -57,4 +58,5 @@ export const HOME_ICONS = {
 	plus: { android: "auto_awesome", ios: "sparkles" },
 	privacy: { android: "shield_lock", ios: "lock.shield" },
 	updates: { android: "replay", ios: "arrow.counterclockwise" },
+	whatsNew: { android: "auto_awesome", ios: "sparkles" },
 } as const satisfies Record<string, IconName>;

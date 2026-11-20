@@ -8,6 +8,7 @@ export const HOME_ACTIONS: SettingsHome["actions"] = {
 	checkForUpdates: ignore,
 	open: ignore,
 	openPlus: ignore,
+	openWhatsNew: ignore,
 };
 
 /** 12 of 15 minutes left, as on the board. */
@@ -20,7 +21,7 @@ export const HOME_PLUS: SettingsHome["state"] = {
 	signIn: "Apple",
 	tone: "Gentle",
 	update: { label: "Check for updates", value: "" },
-	version: "Version 1.16.0 · Update Nov 8, 2026",
+	version: "Version 1.17.0 · Update Nov 8, 2026",
 };
 
 export const HOME_FREE: SettingsHome["state"] = {

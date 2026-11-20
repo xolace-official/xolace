@@ -887,3 +887,34 @@
 	--color-quote-kept-pill-ink: #17141c;
 	--color-quote-kept-soft: rgba(255, 255, 255, 0.14);
 }
+
+/*
+ * "Help someone find Xolace" (S23, canvas "Ratings Alive"): always the dark ember scene, in
+ * every theme, a printed object like the quote poster. The page, its cream ink, the hearth
+ * glow, the laurel, the five stars and the review notes. JS reads them with `useEmber`
+ * (features/ratings/rate/ember-scene.ts).
+ */
+@theme static {
+	--color-rate-page: #070605;
+	--color-rate-ink: #fff6ea;
+	--color-rate-cream: #fff1dc;
+	--color-rate-body: rgba(255, 241, 220, 0.74);
+	--color-rate-label: rgba(255, 241, 220, 0.62);
+	--color-rate-close-fill: rgba(255, 241, 220, 0.08);
+	--color-rate-close-edge: rgba(255, 241, 220, 0.12);
+	--color-rate-pill: #fff6ea;
+	--color-rate-pill-ink: #1a120c;
+	--color-rate-glow-core: rgba(217, 130, 43, 0.5);
+	--color-rate-glow-mid: rgba(154, 67, 21, 0.24);
+	--color-rate-leaf: #f5b04f;
+	--color-rate-stem: #e9a04a;
+	/* The stars, outer to centre. */
+	--color-rate-star-1: #f5b04f;
+	--color-rate-star-2: #ffc56e;
+	--color-rate-star-3: #ffe2b0;
+	--color-rate-note-paper: #fff4e4;
+	--color-rate-note-ink: #2a1e14;
+	--color-rate-note-mark: #c2581c;
+	--color-rate-note-by: #6b5440;
+	--color-rate-note-shadow: rgba(0, 0, 0, 0.35);
+}

@@ -20,6 +20,13 @@ vi.mock("@/features/letters/late-risk-host", () => ({
 vi.mock("@/features/quotes/reminders/reminder-handover-host", () => ({
 	ReminderHandoverHost: () => null,
 }));
+vi.mock("@/features/ratings/open-ask-host", () => ({
+	OpenAskHost: () => null,
+}));
+vi.mock("@/features/launch/launch-store", () => ({
+	useLaunch: { getState: () => ({ phase: "cover" }) },
+	useLaunchRevealed: () => false,
+}));
 
 describe("ROOT_HOSTS", () => {
 	it("names each host once, since the name is its key", () => {

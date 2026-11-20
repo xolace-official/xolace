@@ -170,3 +170,15 @@ describe("recordPlusOfferDismissal", () => {
 		expect(useAppStore.getState().plusOfferFullStopAt).toBeNull();
 	});
 });
+
+describe("the release this build carries", () => {
+	it("keeps the first moment a release ran, and starts again for the next one", () => {
+		const s = () => useAppStore.getState();
+		s().setRatings({ firstRan: { at: 1, id: "1.17.0" } });
+		s().noteReleaseRan("1.17.0");
+		expect(s().ratings.firstRan).toEqual({ at: 1, id: "1.17.0" });
+		s().noteReleaseRan("1.18.0");
+		expect(s().ratings.firstRan?.id).toBe("1.18.0");
+		expect(s().ratings.firstRan?.at).toBeGreaterThan(1);
+	});
+});

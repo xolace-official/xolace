@@ -1,10 +1,12 @@
 import { api } from "@xolace/backend/api";
 import { useMutation } from "convex/react";
+import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { goBack } from "@/components/shared/back-button";
 import { toast } from "@/components/shared/toast";
 import { useStableQuery } from "@/lib/convex/use-stable-query";
+import { LATEST_RELEASE } from "@/lib/release-notes";
 import { useAppStore } from "@/store/store";
 import { FEEDBACK_COPY } from "./copy";
 import type { FeedbackScreen } from "./feedback-data";
@@ -15,20 +17,18 @@ import {
 	type FeedbackStep,
 } from "./feedback-model";
 import { useFeedbackContext } from "./use-feedback-context";
-import {
-	hasUnseenWhatsNew,
-	LATEST_WHATS_NEW_ID,
-} from "./whats-new/whats-new-entries";
 
-/** The sheet's data: which step is up, the form's draft and its send, What's new's seen mark. */
+/** The sheet's data: which step is up, the form's draft and its send, What's New's seen mark. */
 export function useFeedback(
 	start: FeedbackStart,
 	from: string | undefined
 ): FeedbackScreen {
 	const posthog = usePostHog();
 	const context = useFeedbackContext(from);
-	const lastSeenVersion = useAppStore((s) => s.lastSeenVersion);
-	const setLastSeenVersion = useAppStore((s) => s.setLastSeenVersion);
+	// What's New's own seen list (ratings), so the dot clears wherever it was read.
+	const whatsNewSeen = useAppStore(
+		(s) => s.ratings.seen?.includes(LATEST_RELEASE.id) ?? false
+	);
 	const [step, setStep] = useState<FeedbackStep>(start.step);
 	const [kind, setKind] = useState<FeedbackKind>(
 		start.step === "report" ? start.kind : "bug"
@@ -85,10 +85,7 @@ export function useFeedback(
 			},
 			openWhatsNew: () => {
 				posthog.capture("whats_new_opened");
-				if (LATEST_WHATS_NEW_ID) {
-					setLastSeenVersion(LATEST_WHATS_NEW_ID);
-				}
-				setStep("whatsNew");
+				router.push("/ratings/whats-new");
 			},
 			send,
 			setKind,
@@ -106,7 +103,7 @@ export function useFeedback(
 			step,
 			subjectName: subject?.name ?? null,
 			text,
-			whatsNewUnseen: hasUnseenWhatsNew(lastSeenVersion),
+			whatsNewUnseen: !whatsNewSeen,
 		},
 	};
 }

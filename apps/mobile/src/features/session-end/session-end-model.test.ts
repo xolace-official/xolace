@@ -32,6 +32,7 @@ import {
 	pathOf,
 	pitchAllowed,
 	pitchDismissed,
+	ratingsSignalsOf,
 	savedMood,
 	wordsToShare,
 } from "./session-end-model";
@@ -455,5 +456,35 @@ describe("nextKey with C2's cards (session-end-extras.md)", () => {
 		expect(isPitch(null)).toBe(false);
 		expect(pitchDismissed("upsell", false)).toBe(true);
 		expect(pitchDismissed("upsell", true)).toBe(false);
+	});
+});
+
+describe("ratingsSignalsOf", () => {
+	it("anything but heavier makes the first ask due", () => {
+		for (const postSessionMood of ["lighter", "same", "unsure"] as const) {
+			expect(ratingsSignalsOf({ moodPosition: 0.5, postSessionMood })).toEqual([
+				"light-session",
+			]);
+		}
+	});
+
+	it("a little heavier says nothing", () => {
+		expect(
+			ratingsSignalsOf({ moodPosition: 0.35, postSessionMood: "heavier" })
+		).toEqual([]);
+	});
+
+	it("heavy enough for a follow-up holds the ask while it's open", () => {
+		expect(
+			ratingsSignalsOf({ moodPosition: 0.2, postSessionMood: "heavier" })
+		).toEqual(["heavier-follow-up"]);
+	});
+
+	it("much heavier (step −4 and below) also starts the 48 h wait", () => {
+		for (const moodPosition of [0.13, 0]) {
+			expect(
+				ratingsSignalsOf({ moodPosition, postSessionMood: "heavier" })
+			).toEqual(["heavier-follow-up", "much-heavier"]);
+		}
 	});
 });

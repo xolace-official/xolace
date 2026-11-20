@@ -4,6 +4,7 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { create } from "zustand";
 import { createJSONStorage, devtools, persist } from "zustand/middleware";
 import type { TextureSetId } from "@/features/reflect/texture-sets";
+import { LATEST_RELEASE } from "@/lib/release-notes";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import {
 	type AccountFlagsSlice,
@@ -15,6 +16,11 @@ import {
 	type PlusOfferSlice,
 	plusOfferPersistedKeys,
 } from "./plus-offer-slice";
+import {
+	createRatingsSlice,
+	type RatingsSlice,
+	ratingsPersistedKeys,
+} from "./ratings-slice";
 
 type ThemeSlice = {
 	theme: "system" | "light" | "dark";
@@ -45,7 +51,12 @@ type OnboardingSlice = {
 	 * reflection. */
 	homeComposing: boolean;
 	setHomeComposing: (v: boolean) => void;
-	/** A home sheet is on screen right now. Transient. */
+	/** A home sheet is open or armed to open (Coming back's greeting is due). Transient; the
+	 * rating rules wait while set, so nothing else greets first. */
+	homeSheetBlocking: boolean;
+	setHomeSheetBlocking: (v: boolean) => void;
+	/** A home sheet is on screen right now. Transient; unlike homeSheetBlocking it drops while
+	 * a greeting is merely due. */
 	homeSheetOpen: boolean;
 	setHomeSheetOpen: (v: boolean) => void;
 };
@@ -90,9 +101,6 @@ type TogglesSlice = {
 	/** One-time flag — once true, the "shake to send feedback" hint toast never shows again. */
 	shakeHintSeen: boolean;
 	setShakeHintSeen: (v: boolean) => void;
-	/** Id of the newest What's New entry the user has opened. Drives the menu's unseen badge. */
-	lastSeenVersion: string | null;
-	setLastSeenVersion: (v: string) => void;
 	/** Awareness event slugs the v1 sheet already showed. Coming back reads it once to let that
 	 * month's prompt pass (`useMonthEvent`); only the dev reset writes it now. */
 	seenEventIds: { slug: string; seenAt: number }[];
@@ -156,6 +164,7 @@ export type AppState = ThemeSlice &
 	TogglesSlice &
 	AccountFlagsSlice &
 	PlusOfferSlice &
+	RatingsSlice &
 	PreferencesSlice &
 	UpdateCheckSlice &
 	LastNotificationSlice &
@@ -175,11 +184,11 @@ export const useAppStore = create<AppState>()(
 				dictationUpsellSeen: false,
 
 				homeComposing: false,
+				homeSheetBlocking: false,
 				homeSheetOpen: false,
 
 				introSeen: false,
 
-				lastSeenVersion: null,
 				libraryIntroSeen: false,
 				musicIntroSeen: false,
 
@@ -199,9 +208,9 @@ export const useAppStore = create<AppState>()(
 				setColorThemeId: (id) => set({ colorThemeId: id }),
 				setDictationUpsellSeen: (v) => set({ dictationUpsellSeen: v }),
 				setHomeComposing: (v) => set({ homeComposing: v }),
+				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
-				setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
 				setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
 				setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
 				setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
@@ -223,6 +232,8 @@ export const useAppStore = create<AppState>()(
 				...createAccountFlagsSlice(set),
 
 				...createPlusOfferSlice(set),
+
+				...createRatingsSlice(set),
 
 				clearLastNotification: () => set({ lastNotification: null }),
 				clearReplySeed: () => set({ replySeed: null }),
@@ -256,6 +267,11 @@ export const useAppStore = create<AppState>()(
 			}),
 			{
 				name: "xolace-app",
+				// Each launch notes the release this build carries, once the saved state is back and
+				// before anyone signs in: What's New reads that moment as the release's date.
+				onRehydrateStorage: () => (state) => {
+					state?.noteReleaseRan(LATEST_RELEASE.id);
+				},
 				partialize: (s) => ({
 					bridgeIntroSeen: s.bridgeIntroSeen,
 					chatEnabledCached: s.chatEnabledCached,
@@ -263,7 +279,6 @@ export const useAppStore = create<AppState>()(
 					dictationUpsellSeen: s.dictationUpsellSeen,
 					hiddenProfileCards: s.hiddenProfileCards,
 					introSeen: s.introSeen,
-					lastSeenVersion: s.lastSeenVersion,
 					libraryIntroSeen: s.libraryIntroSeen,
 					musicIntroSeen: s.musicIntroSeen,
 					nightModeEnabled: s.nightModeEnabled,
@@ -281,6 +296,7 @@ export const useAppStore = create<AppState>()(
 					xolacerPrimerSeen: s.xolacerPrimerSeen,
 					...accountFlagsPersistedKeys(s),
 					...plusOfferPersistedKeys(s),
+					...ratingsPersistedKeys(s),
 				}),
 				storage: createJSONStorage(() => zustandJSONStorage),
 			}

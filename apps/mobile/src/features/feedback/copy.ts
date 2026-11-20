@@ -41,5 +41,4 @@ export const FEEDBACK_COPY = {
 		thanks: "Thank you.",
 	},
 	shakeHint: "Shake your phone anytime to send feedback.",
-	whatsNew: { title: "What's new" },
 } as const;

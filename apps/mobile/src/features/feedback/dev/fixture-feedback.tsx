@@ -39,7 +39,7 @@ function FixtureFeedback({ initial }: { initial: Fixture }) {
 						setKind(k);
 						setStep("report");
 					},
-					openWhatsNew: () => setStep("whatsNew"),
+					openWhatsNew: () => undefined,
 					send: () => setSaving(true),
 					setKind,
 					setText,
