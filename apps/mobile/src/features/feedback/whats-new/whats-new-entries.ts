@@ -1,10 +1,7 @@
-import type { SymbolView } from "expo-symbols";
-import type { ComponentProps } from "react";
-
-type CrossPlatformSymbol = ComponentProps<typeof SymbolView>["name"];
+import type { IconName } from "@/components/shared/icon";
 
 export type WhatsNewHighlight = {
-	icon: CrossPlatformSymbol;
+	icon: IconName;
 	title: string;
 	body: string;
 };

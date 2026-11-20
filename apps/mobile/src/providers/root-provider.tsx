@@ -9,7 +9,6 @@ import { ToastBridge } from "@/components/shared/toast-bridge";
 import { posthog } from "@/config/posthog";
 import { AppThemeProvider } from "@/context/app-theme-context";
 import { SessionModeProvider } from "@/context/session-mode-context";
-import { FeedbackTrayProvider } from "@/features/feedback-tray/feedback-tray-provider";
 import { RevenueCatProvider } from "@/features/purchases/revenuecat-context";
 import { PremiumThemeReconciler } from "@/features/settings/premium-theme/premium-theme-reconciler";
 import { ConvexClientProvider } from "./convex-provider";
@@ -57,7 +56,7 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
 										<PremiumThemeReconciler />
 										{/* Hands HeroUI's toast manager to the app's toast(). */}
 										<ToastBridge />
-										<FeedbackTrayProvider>{children}</FeedbackTrayProvider>
+										{children}
 									</RevenueCatProvider>
 								</HeroUINativeProvider>
 							</ConvexClientProvider>

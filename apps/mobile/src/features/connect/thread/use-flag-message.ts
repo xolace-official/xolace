@@ -7,7 +7,7 @@ import type { LocalMessage, StreamChat } from "stream-chat";
 import { toast } from "@/components/shared/toast";
 import { THREAD } from "./copy";
 
-/** The concern tray's context (`useFeedbackContext`), passed in by the route: the tray is its
+/** The feedback sheet's context (`useFeedbackContext`), passed in by the route: the sheet is its
  * own feature. */
 export type FeedbackContext = FunctionArgs<
 	typeof api.productFeedbackFlags.flagMessage

@@ -4,7 +4,6 @@
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
-import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import {
 	createContext,
@@ -21,8 +20,9 @@ import Purchases, {
 	type PurchasesOfferings,
 	type PurchasesPackage,
 } from "react-native-purchases";
+import { toast } from "@/components/shared/toast";
 import { appConfig } from "@/config/app";
-import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
+import { playAffirmativePress } from "@/lib/haptics";
 import { useAppStore } from "@/store/store";
 
 function hasActiveEntitlement(customerInfo: CustomerInfo | null): boolean {
@@ -71,7 +71,6 @@ export function RevenueCatProvider({
 	children: React.ReactNode;
 }) {
 	const posthog = usePostHog();
-	const { toast } = useToast();
 	const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
 	// Waits for the account too: before `getOrCreate` lands it throws `user_not_found`.
 	const accountPending = useAppStore((s) => s.accountPending);
@@ -189,10 +188,7 @@ export function RevenueCatProvider({
 						surface,
 					});
 					playAffirmativePress();
-					toast.show({
-						description: "It's yours now.",
-						label: "Welcome to Xolace+",
-					});
+					toast("Welcome to Xolace+", { description: "It's yours now." });
 					return true;
 				}
 				return false;
@@ -211,16 +207,15 @@ export function RevenueCatProvider({
 					surface,
 				});
 				console.error("[RevenueCat] purchase failed:", error);
-				playErrorNotice();
-				toast.show({
+				// The danger toast plays the error notice.
+				toast("Purchase didn't go through", {
 					description: "Please try again.",
-					label: "Purchase didn't go through",
 					variant: "danger",
 				});
 				return false;
 			}
 		},
-		[posthog, toast]
+		[posthog]
 	);
 
 	const refreshOfferings = useCallback(async (): Promise<boolean> => {
@@ -244,22 +239,20 @@ export function RevenueCatProvider({
 
 			if (hasActiveEntitlement(info)) {
 				playAffirmativePress();
-				toast.show({ label: "Purchases restored" });
+				toast("Purchases restored");
 				return true;
 			}
-			toast.show({ label: "No active purchases found" });
+			toast("No active purchases found");
 			return false;
 		} catch (error) {
 			console.error("[RevenueCat] restore failed:", error);
-			playErrorNotice();
-			toast.show({
+			toast("Restore failed", {
 				description: "Please try again.",
-				label: "Restore failed",
 				variant: "danger",
 			});
 			return false;
 		}
-	}, [toast]);
+	}, []);
 
 	const value = useMemo(
 		() => ({

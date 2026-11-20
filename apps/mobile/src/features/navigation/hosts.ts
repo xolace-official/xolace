@@ -1,6 +1,7 @@
 import { type ComponentType, createElement } from "react";
 import { ArrivalsHost } from "@/features/achievements/arrival/arrivals-host";
 import { AgeAskHost } from "@/features/connect/age-gate/age-ask-host";
+import { FeedbackShake } from "@/features/feedback/shake/feedback-shake";
 import { LateRiskHost } from "@/features/letters/late-risk-host";
 import { isPresentedRoute } from "@/features/navigation/presented-routes";
 import { GoneHost } from "@/features/peer-reflection/gone-host";
@@ -62,4 +63,6 @@ export const ROOT_HOSTS: readonly RootHost[] = [
 	{ Host: LateRisk, name: "letters-late-risk" },
 	// Cancels the old on-device daily quote reminders and carries their setting to the push (B19).
 	{ Host: ReminderHandoverHost, name: "daily-quote-handover" },
+	// Shake to open the feedback sheet, on every screen but Reflect's (C1b).
+	{ Host: FeedbackShake, name: "feedback-shake" },
 ];
