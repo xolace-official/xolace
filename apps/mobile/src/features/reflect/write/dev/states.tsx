@@ -19,7 +19,7 @@ export const devStates: readonly DevState[] = [
 		title: "A Plus take's last seconds counting down",
 		...reflect({
 			listening: true,
-			take: { note: null, remainingMs: 9000, writing: false },
+			take: { note: null, remainingMs: 9000, scribe: true, writing: false },
 			text: "I keep",
 		}),
 	},
@@ -27,7 +27,7 @@ export const devStates: readonly DevState[] = [
 		id: "take-writing",
 		title: "A Plus take being written down (send waits)",
 		...reflect({
-			take: { note: null, remainingMs: null, writing: true },
+			take: { note: null, remainingMs: null, scribe: false, writing: true },
 			text: "I keep",
 		}),
 	},
@@ -35,7 +35,12 @@ export const devStates: readonly DevState[] = [
 		id: "take-note",
 		title: "A Plus take's note: fell back to on-device",
 		...reflect({
-			take: { note: TAKE_NOTE, remainingMs: null, writing: false },
+			take: {
+				note: TAKE_NOTE,
+				remainingMs: null,
+				scribe: false,
+				writing: false,
+			},
 			text: "I keep",
 		}),
 	},

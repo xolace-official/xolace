@@ -70,7 +70,7 @@ const FIXTURE_DEFAULTS: FixtureState = {
 	spaceNameOpen: false,
 	stage: "write",
 	streak: STREAK,
-	take: { note: null, remainingMs: null, writing: false },
+	take: { note: null, remainingMs: null, scribe: false, writing: false },
 	takeN: 0,
 	text: "",
 	turns: 0,

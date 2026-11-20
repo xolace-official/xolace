@@ -38,7 +38,13 @@ export type Reflect = {
 		/** A home sheet is over Write: the field leaves the keyboard down. */
 		sheetOpen: boolean;
 		/** A Plus take: `writing` after the mic lets go (send waits), its countdown, a fallback's note. */
-		take: { writing: boolean; remainingMs: number | null; note: string | null };
+		take: {
+			writing: boolean;
+			remainingMs: number | null;
+			note: string | null;
+			/** Listening through Scribe: words wait unseen, then land as one block. On-device streams. */
+			scribe: boolean;
+		};
 		/** Bumped each time a finished take lands in the text (the drop, S2). */
 		takeN: number;
 		/** The free first-mic-tap upsell (#559) is up. */

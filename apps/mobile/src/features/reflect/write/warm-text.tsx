@@ -57,8 +57,8 @@ function Clear({ children }: { children: string }) {
  * in its place on a copy of the paragraph whose other words are clear, and that copy's opacity
  * is its tint; two copies take turns, so a word still cooling isn't cut off by the next.
  *
- * Words from hold-to-speak wait unseen while listening, then arrive as one block from 12 pt
- * above on the underdamped spring (S2: ω 18, ζ .55).
+ * A Plus (Scribe) take's words wait unseen while listening, then arrive as one block from 12 pt
+ * above on the underdamped spring (S2: ω 18, ζ .55). An on-device take's words show as they come.
  */
 export function WarmText({
 	text,

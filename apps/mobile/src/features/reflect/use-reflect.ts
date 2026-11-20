@@ -288,6 +288,7 @@ export function useReflectData(): Reflect {
 			take: {
 				note: plus?.phase === "idle" ? plus.note : null,
 				remainingMs: plus?.phase === "listening" ? plus.remainingMs : null,
+				scribe: plus?.phase === "listening",
 				writing: plus?.phase === "writing",
 			},
 			takeN: takes.takeN,
