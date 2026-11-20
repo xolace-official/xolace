@@ -1,6 +1,6 @@
 /** Ratings on fixtures: the latest release, and taps that go nowhere. */
 
-import { LATEST_RELEASE } from "../copy";
+import { LATEST_RELEASE } from "@/lib/release-notes";
 import type { Rate } from "../rate-data";
 import type { TellUs } from "../tell-us-data";
 import type { WhatsNew } from "../whats-new-data";

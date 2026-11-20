@@ -1,16 +1,17 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
+import { LATEST_RELEASE } from "@/lib/release-notes";
 import { useAppStore } from "@/store/store";
-import { LATEST_RELEASE } from "./copy";
 import { markSeen } from "./ratings-model";
 import type { WhatsNew } from "./whats-new-data";
 
 type Params = { next?: "rate" | "close" };
 
 /**
- * What's New for the latest release. A plain open passes `?next=rate` when the rating screen is
- * due after it; from Settings it just closes. Opening it counts as seeing it, from anywhere.
+ * What's New for the latest release alone. A plain open passes `?next=rate` when the rating screen
+ * is due after it; from Settings or the shake menu it just closes. Opening it counts as seeing it,
+ * from anywhere.
  */
 export function useWhatsNew(): WhatsNew {
 	const { next } = useLocalSearchParams<Params>();

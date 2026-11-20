@@ -68,7 +68,7 @@ export function WhatsNewScreen() {
 					{C.lede}
 				</AppText>
 				<View className="mt-10 gap-[26px]">
-					{state.entry.items.map((item) => (
+					{state.entry.highlights.map((item) => (
 						<View
 							accessibilityLabel={`${item.title}. ${item.body}`}
 							accessible

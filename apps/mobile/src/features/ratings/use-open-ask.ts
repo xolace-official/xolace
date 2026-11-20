@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { AppState, Linking } from "react-native";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { tappedSince } from "@/lib/last-notification-tap";
+import { LATEST_RELEASE } from "@/lib/release-notes";
 import { ratingsOf } from "@/store/ratings-slice";
 import { useAppStore } from "@/store/store";
-import { LATEST_RELEASE } from "./copy";
 import {
 	afterShowing,
 	isHelpRoute,
@@ -93,7 +93,12 @@ export function useOpenAsk({ firstRun, revealed }: OpenAskProps): void {
 			setOpen(null);
 			const store = useAppStore.getState();
 			const stored = ratingsOf(store);
-			const record = withBaseline(stored, createdAt, LATEST_RELEASE);
+			// Noted at launch (the store's rehydrate); missing only if this launch's save failed.
+			const ran = stored.firstRan;
+			if (ran?.id !== LATEST_RELEASE.id) {
+				return;
+			}
+			const record = withBaseline(stored, createdAt, ran);
 			const moment = {
 				blocked: store.homeSheetBlocking,
 				linked: linked.current || tappedSince(open.at),
@@ -107,7 +112,7 @@ export function useOpenAsk({ firstRun, revealed }: OpenAskProps): void {
 						firstRun: open.firstRun,
 						now,
 						record,
-						release: LATEST_RELEASE,
+						release: ran,
 					})
 				: null;
 			const patch = {

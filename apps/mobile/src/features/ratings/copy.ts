@@ -1,53 +1,8 @@
 /**
  * What's New and "Help someone find Xolace" (P/design/boards/RatingsAlive.dc.html; when they show:
- * RatingsRules.dc.html), word for word from the prototype's `src/fixtures/ratings.ts`.
+ * RatingsRules.dc.html), word for word from the prototype's `src/fixtures/ratings.ts`. The release
+ * notes themselves are `@/lib/release-notes`.
  */
-
-export type WhatsNewIcon = "letters" | "captions" | "chat";
-export type WhatsNewItem = {
-	icon: WhatsNewIcon;
-	tone: "ember" | "accent";
-	title: string;
-	body: string;
-};
-export type WhatsNewEntry = {
-	/** Keyed by release, not the store version, so it works with over-the-air updates too. */
-	id: string;
-	/** When the release went out: "sent us a note since the last release" counts from here, and
-	 * an account made after it has nothing new to see. Set to the real day when it ships. */
-	shippedAt: string;
-	items: readonly WhatsNewItem[];
-};
-
-/** Every release with a What's New, newest first. The first is the one that shows. */
-const WHATS_NEW: readonly [WhatsNewEntry, ...WhatsNewEntry[]] = [
-	{
-		id: "2026-12",
-		items: [
-			{
-				body: "Write a few kind lines for someone you'll never meet. Xolace finds who needs them.",
-				icon: "letters",
-				title: "Letters to strangers",
-				tone: "ember",
-			},
-			{
-				body: "Ember's words appear as it speaks, so you can follow along quietly.",
-				icon: "captions",
-				title: "Talk, with captions",
-				tone: "accent",
-			},
-			{
-				body: "The message box grows with what you write, and the thread shows through the glass.",
-				icon: "chat",
-				title: "A calmer chat",
-				tone: "accent",
-			},
-		],
-		shippedAt: "2026-11-12T09:00:00Z",
-	},
-];
-
-export const LATEST_RELEASE = WHATS_NEW[0];
 
 export const WHATS_NEW_COPY = {
 	continue: "Continue",

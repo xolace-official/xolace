@@ -1,10 +1,10 @@
 import { createContext, type ReactNode, use } from "react";
-import type { WhatsNewEntry } from "./copy";
+import type { Release } from "@/lib/release-notes";
 import { useWhatsNew } from "./use-whats-new";
 
 /** What's New: one release's notes, and where Continue goes. */
 export type WhatsNew = {
-	state: { entry: WhatsNewEntry };
+	state: { entry: Release };
 	actions: {
 		/** On to the rating screen when a plain open has it due, otherwise closes. */
 		continue: () => void;

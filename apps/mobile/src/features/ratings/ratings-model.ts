@@ -1,5 +1,4 @@
-import type { RatingsRecord } from "@/store/ratings-slice";
-import type { WhatsNewEntry } from "./copy";
+import type { RatingsRecord, ReleaseRan } from "@/store/ratings-slice";
 
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -27,7 +26,7 @@ export type OpenInput = {
 	cardWaiting: boolean;
 	/** This open came through first run (sign-in, intake): nothing shows. */
 	firstRun: boolean;
-	release: Pick<WhatsNewEntry, "id" | "shippedAt">;
+	release: ReleaseRan;
 	now: number;
 };
 
@@ -56,7 +55,7 @@ function cooling({ record: r, release, now }: OpenInput): string | null {
 	) {
 		return "rated or wrote a review in the last 12 months";
 	}
-	if (r.noteAt !== null && r.noteAt >= Date.parse(release.shippedAt)) {
+	if (r.noteAt !== null && r.noteAt >= release.at) {
 		return "sent a note since the last release";
 	}
 	if (within(r.shownAt, RATING_RULES.shownMs, now)) {
@@ -104,17 +103,18 @@ export function planOpen(input: OpenInput): OpenPlan {
 
 /**
  * The first plain open on a device settles which releases count as seen: an account made after
- * the release has never known Xolace without it, so its What's New is nothing new.
+ * this device first ran the release has never known Xolace without it, so its What's New is
+ * nothing new.
  */
 export function withBaseline(
 	record: RatingsRecord,
 	accountCreatedAt: number,
-	release: Pick<WhatsNewEntry, "id" | "shippedAt">
+	release: ReleaseRan
 ): RatingsRecord {
 	if (record.seen !== null) {
 		return record;
 	}
-	const isNew = accountCreatedAt >= Date.parse(release.shippedAt);
+	const isNew = accountCreatedAt >= release.at;
 	return { ...record, seen: isNew ? [release.id] : [] };
 }
 

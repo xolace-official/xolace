@@ -4,6 +4,7 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { create } from "zustand";
 import { createJSONStorage, devtools, persist } from "zustand/middleware";
 import type { TextureSetId } from "@/features/reflect/texture-sets";
+import { LATEST_RELEASE } from "@/lib/release-notes";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import {
 	type AccountFlagsSlice,
@@ -100,9 +101,6 @@ type TogglesSlice = {
 	/** One-time flag — once true, the "shake to send feedback" hint toast never shows again. */
 	shakeHintSeen: boolean;
 	setShakeHintSeen: (v: boolean) => void;
-	/** Id of the newest What's New entry the user has opened. Drives the menu's unseen badge. */
-	lastSeenVersion: string | null;
-	setLastSeenVersion: (v: string) => void;
 	/** Awareness event slugs the v1 sheet already showed. Coming back reads it once to let that
 	 * month's prompt pass (`useMonthEvent`); only the dev reset writes it now. */
 	seenEventIds: { slug: string; seenAt: number }[];
@@ -191,7 +189,6 @@ export const useAppStore = create<AppState>()(
 
 				introSeen: false,
 
-				lastSeenVersion: null,
 				libraryIntroSeen: false,
 				musicIntroSeen: false,
 
@@ -214,7 +211,6 @@ export const useAppStore = create<AppState>()(
 				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
-				setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
 				setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
 				setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
 				setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
@@ -271,6 +267,11 @@ export const useAppStore = create<AppState>()(
 			}),
 			{
 				name: "xolace-app",
+				// Each launch notes the release this build carries, once the saved state is back and
+				// before anyone signs in: What's New reads that moment as the release's date.
+				onRehydrateStorage: () => (state) => {
+					state?.noteReleaseRan(LATEST_RELEASE.id);
+				},
 				partialize: (s) => ({
 					bridgeIntroSeen: s.bridgeIntroSeen,
 					chatEnabledCached: s.chatEnabledCached,
@@ -278,7 +279,6 @@ export const useAppStore = create<AppState>()(
 					dictationUpsellSeen: s.dictationUpsellSeen,
 					hiddenProfileCards: s.hiddenProfileCards,
 					introSeen: s.introSeen,
-					lastSeenVersion: s.lastSeenVersion,
 					libraryIntroSeen: s.libraryIntroSeen,
 					musicIntroSeen: s.musicIntroSeen,
 					nightModeEnabled: s.nightModeEnabled,

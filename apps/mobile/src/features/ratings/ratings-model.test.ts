@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { RATINGS_FRESH, type RatingsRecord } from "@/store/ratings-slice";
-import { LATEST_RELEASE } from "./copy";
+import { LATEST_RELEASE } from "@/lib/release-notes";
+import {
+	RATINGS_FRESH,
+	type RatingsRecord,
+	type ReleaseRan,
+} from "@/store/ratings-slice";
 import {
 	afterShowing,
 	canSend,
@@ -18,7 +22,9 @@ const NOW = Date.parse("2027-01-10T12:00:00Z");
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
 const ago = (ms: number) => NOW - ms;
-const SHIPPED = Date.parse(LATEST_RELEASE.shippedAt);
+/** When this device first ran the release: its release date, as far as the rules know. */
+const SHIPPED = Date.parse("2026-12-01T09:00:00Z");
+const RAN: ReleaseRan = { at: SHIPPED, id: LATEST_RELEASE.id };
 
 /** Someone who has seen this release's What's New: only the first ask can show. */
 const SEEN: RatingsRecord = { ...RATINGS_FRESH, seen: [LATEST_RELEASE.id] };
@@ -39,7 +45,7 @@ const input = (
 	firstRun,
 	now: NOW,
 	record: { ...SEEN, ...record },
-	release: LATEST_RELEASE,
+	release: RAN,
 });
 
 describe("planOpen: the first ask", () => {
@@ -248,21 +254,19 @@ describe("planOpen: the prototype's cases", () => {
 });
 
 describe("withBaseline", () => {
-	it("an account made after the release has nothing new to see", () => {
-		expect(
-			withBaseline(RATINGS_FRESH, SHIPPED + DAY, LATEST_RELEASE).seen
-		).toEqual([LATEST_RELEASE.id]);
+	it("an account made after this device first ran the release has nothing new to see", () => {
+		expect(withBaseline(RATINGS_FRESH, SHIPPED + DAY, RAN).seen).toEqual([
+			LATEST_RELEASE.id,
+		]);
 	});
 
 	it("an account from before it sees What's New", () => {
-		expect(
-			withBaseline(RATINGS_FRESH, SHIPPED - DAY, LATEST_RELEASE).seen
-		).toEqual([]);
+		expect(withBaseline(RATINGS_FRESH, SHIPPED - DAY, RAN).seen).toEqual([]);
 	});
 
 	it("is settled once", () => {
 		const settled = { ...RATINGS_FRESH, seen: ["2026-06"] };
-		expect(withBaseline(settled, SHIPPED + DAY, LATEST_RELEASE)).toBe(settled);
+		expect(withBaseline(settled, SHIPPED + DAY, RAN)).toBe(settled);
 	});
 });
 

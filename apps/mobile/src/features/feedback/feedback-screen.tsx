@@ -8,7 +8,6 @@ import { FEEDBACK_COPY } from "./copy";
 import { useFeedbackScreen } from "./feedback-data";
 import { FeedbackMenu } from "./menu/feedback-menu";
 import { ReportForm } from "./report/report-form";
-import { WhatsNew } from "./whats-new/whats-new";
 
 const SHEET_TOP = 28;
 const SHEET_BOTTOM = 18;
@@ -17,12 +16,11 @@ const STEP_RISE = 8;
 const STEPS = {
 	menu: FeedbackMenu,
 	report: ReportForm,
-	whatsNew: WhatsNew,
 } as const;
 
 /**
- * Shake to send feedback: a form sheet (`fitSheet`) that grows to each step. The menu, a form,
- * or What's new; a step opened from the menu has a way back to it.
+ * Shake to send feedback: a form sheet (`fitSheet`) that grows to each step. The menu or a form; a
+ * form opened from the menu has a way back to it. What's new opens What's New over the sheet.
  */
 export function FeedbackSheet() {
 	const { state, actions } = useFeedbackScreen();

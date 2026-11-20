@@ -37,9 +37,4 @@ export const devStates: readonly DevState[] = [
 			subjectName: "Ama",
 		}),
 	},
-	{
-		id: "whats-new",
-		title: "What's new",
-		...feedbackSheet({ step: "whatsNew" }),
-	},
 ];

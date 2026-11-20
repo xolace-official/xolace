@@ -4,10 +4,17 @@
  * that read it live in `features/ratings/ratings-model.ts`; whether a follow-up card still waits is
  * server truth (`users.getFullContext`) and isn't kept here. */
 
+/** A release, and when this device first ran a build carrying its notes (`@/lib/release-notes`):
+ * the moment that stands in for its release date, so nobody has to set one. */
+export type ReleaseRan = { id: string; at: number };
+
 export type RatingsRecord = {
 	/** What's New releases already shown. Null until the first plain open sets the baseline: a
 	 * person new since the release has nothing to catch up on. */
 	seen: string[] | null;
+	/** The newest release this device has run, and since when. Noted at every launch, before
+	 * sign-in, so an account made after it reads as new to this release. */
+	firstRan: ReleaseRan | null;
 	/** A finished session that didn't end heavier: the first ask may follow. */
 	lightSession: boolean;
 	/** The first ask has happened (shown once, ever). */
@@ -31,6 +38,7 @@ export type RatingsRecord = {
 
 export const RATINGS_FRESH: RatingsRecord = {
 	firstAsked: false,
+	firstRan: null,
 	heavierFollowUp: false,
 	heavyAt: null,
 	helpAt: null,
@@ -60,6 +68,8 @@ export type RatingsSlice = {
 	ratings: RatingsRecord;
 	setRatings: (patch: Partial<RatingsRecord>) => void;
 	noteRatingsSignal: (signal: RatingsSignal) => void;
+	/** At launch: the release this build carries. Keeps the first moment it ran here. */
+	noteReleaseRan: (id: string) => void;
 };
 
 type SetState = (partial: (s: RatingsSlice) => Partial<RatingsSlice>) => void;
@@ -87,6 +97,13 @@ export const createRatingsSlice = (set: SetState): RatingsSlice => ({
 		set((s) => ({
 			ratings: { ...ratingsOf(s), ...SIGNAL_PATCH[signal](Date.now()) },
 		})),
+	noteReleaseRan: (id) =>
+		set((s) => {
+			const r = ratingsOf(s);
+			return r.firstRan?.id === id
+				? {}
+				: { ratings: { ...r, firstRan: { at: Date.now(), id } } };
+		}),
 	ratings: RATINGS_FRESH,
 	setRatings: (patch) =>
 		set((s) => ({ ratings: { ...ratingsOf(s), ...patch } })),
