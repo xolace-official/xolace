@@ -20,6 +20,7 @@ import { toast } from "@/components/shared/toast";
 import { appConfig } from "@/config/app";
 import { playAffirmativePress } from "@/lib/haptics";
 import { useAppStore } from "@/store/store";
+import { startRevenueCat } from "./revenuecat-start";
 
 function hasActiveEntitlement(customerInfo: CustomerInfo | null): boolean {
 	if (!customerInfo) {
@@ -100,29 +101,30 @@ export function RevenueCatProvider({
 
 		let cancelled = false;
 		async function init() {
-			try {
-				if (__DEV__) {
-					Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
-				}
-				Purchases.configure({ apiKey: getApiKey() });
-
-				const [info, offers] = await Promise.all([
-					Purchases.getCustomerInfo(),
-					Purchases.getOfferings(),
-				]);
-				if (cancelled) {
-					return;
-				}
-				setCustomerInfo(info);
-				setOfferings(offers);
-				setConfigured(true);
-			} catch (error) {
+			const start = await startRevenueCat({
+				configure: () => {
+					if (__DEV__) {
+						Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+					}
+					Purchases.configure({ apiKey: getApiKey() });
+				},
+				getCustomerInfo: () => Purchases.getCustomerInfo(),
+				getOfferings: () => Purchases.getOfferings(),
+			});
+			for (const error of start.errors) {
 				console.error("[RevenueCat] init failed:", error);
-			} finally {
-				if (!cancelled) {
-					setIsLoading(false);
-				}
 			}
+			if (cancelled) {
+				return;
+			}
+			if (start.customerInfo) {
+				setCustomerInfo(start.customerInfo);
+			}
+			if (start.offerings) {
+				setOfferings(start.offerings);
+			}
+			setConfigured(start.configured);
+			setIsLoading(false);
 		}
 		init();
 
@@ -138,9 +140,17 @@ export function RevenueCatProvider({
 		if (!(configured && appUserId)) {
 			return;
 		}
+		let cancelled = false;
 		Purchases.logIn(appUserId)
-			.then(({ customerInfo: info }) => setCustomerInfo(info))
+			.then(({ customerInfo: info }) => {
+				if (!cancelled) {
+					setCustomerInfo(info);
+				}
+			})
 			.catch((error) => console.error("[RevenueCat] logIn failed:", error));
+		return () => {
+			cancelled = true;
+		};
 	}, [configured, appUserId]);
 
 	useEffect(() => {
