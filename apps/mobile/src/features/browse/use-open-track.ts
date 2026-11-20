@@ -10,8 +10,7 @@ export type { BrowseFrom };
 
 export function useOpenTrack(from: BrowseFrom) {
 	const posthog = usePostHog();
-	const { isPlus, isLoading } = usePlusEntitlement();
-	const locked = !(isLoading || isPlus);
+	const locked = usePlusEntitlement().status === "free";
 
 	const open = (track: { slug: string; family: "support" | "music" }) => {
 		playSoftPress();

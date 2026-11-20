@@ -1,15 +1,16 @@
+import type { PlusStatus } from "@/features/purchases/plus-status";
+
 export type KindlingEmptyMode = "plus" | "free" | "setting-up";
 export type KindlingCardMode = "live" | KindlingEmptyMode;
 
 export function kindlingEmptyMode(s: {
-	isPlus: boolean;
-	isLoading: boolean;
+	plus: PlusStatus;
 	settingUp: object | null | undefined;
 }): KindlingEmptyMode | undefined {
-	if (s.isLoading && !s.isPlus) {
+	if (s.plus === "loading") {
 		return;
 	}
-	if (!s.isPlus) {
+	if (s.plus === "free") {
 		return "free";
 	}
 	if (s.settingUp === undefined) {

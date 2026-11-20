@@ -18,7 +18,7 @@ export function useMoments(): MomentsScreenData {
 		{ initialNumItems: PAGE }
 	);
 	const windowInfo = useQuery(api.sessions.getTimelineWindowInfo);
-	const { isPlus } = usePlusEntitlement();
+	const { status: plus } = usePlusEntitlement();
 	const posthog = usePostHog();
 	const openPaywall = usePaywall((s) => s.open);
 	const { markInteractive } = useObserve();
@@ -32,7 +32,9 @@ export function useMoments(): MomentsScreenData {
 	}, [loading, markInteractive]);
 
 	const hidden =
-		!isPlus && status === "Exhausted" && windowInfo?.hasOlderSessions === true;
+		plus === "free" &&
+		status === "Exhausted" &&
+		windowInfo?.hasOlderSessions === true;
 
 	return {
 		actions: {

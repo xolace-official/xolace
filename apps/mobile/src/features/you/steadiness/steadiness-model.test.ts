@@ -5,11 +5,13 @@ import {
 	ST_NOW,
 } from "@/features/you/steadiness/dev/steadiness-fixtures";
 import {
+	asksFreeView,
 	dialOf,
 	litTicks,
 	openLine,
 	partsOf,
 	selectedPart,
+	steadinessAccess,
 	tapOf,
 	trendSay,
 	trendText,
@@ -199,5 +201,31 @@ describe("litTicks", () => {
 		expect(litTicks(30)).toBe(16);
 		expect(litTicks(100)).toBe(56);
 		expect(litTicks(0)).toBe(0);
+	});
+});
+
+describe("Xolace+ access on Steadiness", () => {
+	it("asks for no view while Xolace+ loads, so the free one never flashes", () => {
+		expect(asksFreeView("loading", undefined)).toBe(false);
+		expect(asksFreeView("free", undefined)).toBe(true);
+	});
+
+	it("on Xolace+, falls back to the free view only once the server says it has no Plus view", () => {
+		expect(asksFreeView("plus", undefined)).toBe(false);
+		expect(asksFreeView("plus", {})).toBe(false);
+		expect(asksFreeView("plus", null)).toBe(true);
+	});
+
+	it("holds the upsell back until the account is known to be free", () => {
+		expect(steadinessAccess("loading", false).upsell).toBe(false);
+		expect(steadinessAccess("free", false)).toEqual({
+			doors: true,
+			upsell: true,
+		});
+		expect(steadinessAccess("free", true).upsell).toBe(false);
+		expect(steadinessAccess("plus", true)).toEqual({
+			doors: false,
+			upsell: false,
+		});
 	});
 });

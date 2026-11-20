@@ -83,14 +83,14 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "error",
 		title: "The session failed (Try again)",
-		...reflect({ ...SENT, error: waitError("", false), stage: "wait" }),
+		...reflect({ ...SENT, error: waitError("", "free"), stage: "wait" }),
 	},
 	{
 		id: "error-rejected",
 		title: "The safeguard said no (Talk to someone)",
 		...reflect({
 			...SENT,
-			error: waitError("content_policy_violation", false),
+			error: waitError("content_policy_violation", "free"),
 			stage: "wait",
 		}),
 	},
@@ -99,7 +99,7 @@ export const devStates: readonly DevState[] = [
 		title: "A free account hit the hourly cap (See Xolace+)",
 		...reflect({
 			...SENT,
-			error: waitError(LIMIT_MESSAGE, false),
+			error: waitError(LIMIT_MESSAGE, "free"),
 			stage: "wait",
 		}),
 	},

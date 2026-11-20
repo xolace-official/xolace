@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, use } from "react";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { useAvatarSheet } from "@/features/you/avatar/use-avatar-sheet";
 import type { AvatarOption } from "@/features/you/avatar-model";
 
@@ -6,7 +7,7 @@ export type AvatarSheetData = {
 	state: {
 		avatars: readonly AvatarOption[] | undefined;
 		current: AvatarOption | null;
-		isPlus: boolean;
+		plus: PlusStatus;
 	};
 	actions: {
 		pick: (avatar: AvatarOption) => boolean;

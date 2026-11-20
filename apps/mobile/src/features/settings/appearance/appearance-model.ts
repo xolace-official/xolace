@@ -6,6 +6,7 @@ import {
 	THEME_BY_ID,
 	themeVariant,
 } from "@/design/themes";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { APPEARANCE_COPY as C } from "@/features/settings/appearance/copy";
 import type { MotionPreference } from "@/lib/motion/use-effective-reduced-motion";
 import type { ProfileCardId } from "@/store/store";
@@ -38,40 +39,49 @@ export function motionNote(pref: MotionPreference, osReduce: boolean): string {
 export const PICKER_THEMES = [...FREE_THEMES, ...PREMIUM_THEMES];
 const FIRST_PLUS = FREE_THEMES.length;
 
+export type ThemeTap = "pick" | "locked" | "wait";
+
+export function themeTap(id: string, plus: PlusStatus): ThemeTap {
+	if (THEME_BY_ID[id]?.tier !== "premium" || plus === "plus") {
+		return "pick";
+	}
+	return plus === "free" ? "locked" : "wait";
+}
+
 export type ThemeCard = {
 	id: string;
 	name: string;
 	active: boolean;
 	locked: boolean;
+	tap: ThemeTap;
 	firstPlus: boolean;
 	a11y: string;
 };
 
-export function themeCards(activeId: string, isPlus: boolean): ThemeCard[] {
+export function themeCards(activeId: string, plus: PlusStatus): ThemeCard[] {
 	return PICKER_THEMES.map((t, i) => {
-		const plus = t.tier === "premium";
-		const locked = plus && !isPlus;
+		const premium = t.tier === "premium";
+		const tap = themeTap(t.id, plus);
+		const locked = tap === "locked";
 		return {
-			a11y: C.themeA11y(t.name, plus, locked),
+			a11y: C.themeA11y(t.name, premium, locked),
 			active: t.id === activeId,
 			firstPlus: i === FIRST_PLUS,
 			id: t.id,
 			locked,
 			name: t.name,
+			tap,
 		};
 	});
 }
 
-export function themeNote(activeId: string, isPlus: boolean): string {
-	if (!isPlus) {
+export function themeNote(activeId: string, plus: PlusStatus): string {
+	if (plus === "free") {
 		return C.themeNoteFree;
 	}
 	const theme = THEME_BY_ID[activeId] ?? THEME_BY_ID.default;
 	return C.themeNote(theme.name, theme.tier === "premium");
 }
-
-export const themeTap = (id: string, isPlus: boolean): "pick" | "locked" =>
-	THEME_BY_ID[id]?.tier === "premium" && !isPlus ? "locked" : "pick";
 
 export const STRIP = {
 	cardH: 132,

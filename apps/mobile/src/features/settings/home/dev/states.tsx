@@ -4,6 +4,7 @@ import {
 	HOME_FREE,
 	HOME_LOADING,
 	HOME_PLUS,
+	HOME_PLUS_LOADING,
 	HOME_UPDATED,
 } from "@/features/settings/home/dev/fixtures";
 
@@ -34,5 +35,11 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureHome state={HOME_LOADING} />,
 		title: "Settings while preferences and talk time load",
+	},
+	{
+		id: "home-plus-loading",
+		options: OPTIONS,
+		Screen: () => <FixtureHome state={HOME_PLUS_LOADING} />,
+		title: "Settings while Xolace+ is still loading: no offer, no minutes",
 	},
 ];

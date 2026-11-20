@@ -8,51 +8,33 @@ import {
 const MARK = { sessionId: "s1", startedAt: 1 };
 
 describe("kindlingEmptyMode", () => {
-	it("waits while the entitlement loads, unless the server already says Xolace+", () => {
+	it("waits while the entitlement loads; a Plus answer from either source counts at once", () => {
 		expect(
-			kindlingEmptyMode({
-				isLoading: true,
-				isPlus: false,
-				settingUp: undefined,
-			})
+			kindlingEmptyMode({ plus: "loading", settingUp: undefined })
 		).toBeUndefined();
-		expect(
-			kindlingEmptyMode({ isLoading: true, isPlus: true, settingUp: MARK })
-		).toBe("setting-up");
-		expect(
-			kindlingEmptyMode({ isLoading: true, isPlus: true, settingUp: null })
-		).toBe("plus");
+		expect(kindlingEmptyMode({ plus: "plus", settingUp: MARK })).toBe(
+			"setting-up"
+		);
+		expect(kindlingEmptyMode({ plus: "plus", settingUp: null })).toBe("plus");
 	});
 
 	it("shows free members what Xolace+ adds, never setting up", () => {
-		expect(
-			kindlingEmptyMode({ isLoading: false, isPlus: false, settingUp: MARK })
-		).toBe("free");
-		expect(
-			kindlingEmptyMode({
-				isLoading: false,
-				isPlus: false,
-				settingUp: undefined,
-			})
-		).toBe("free");
+		expect(kindlingEmptyMode({ plus: "free", settingUp: MARK })).toBe("free");
+		expect(kindlingEmptyMode({ plus: "free", settingUp: undefined })).toBe(
+			"free"
+		);
 	});
 
 	it("shows Xolace+ members setting up while the server marks one, then none right now", () => {
-		expect(
-			kindlingEmptyMode({ isLoading: false, isPlus: true, settingUp: MARK })
-		).toBe("setting-up");
-		expect(
-			kindlingEmptyMode({ isLoading: false, isPlus: true, settingUp: null })
-		).toBe("plus");
+		expect(kindlingEmptyMode({ plus: "plus", settingUp: MARK })).toBe(
+			"setting-up"
+		);
+		expect(kindlingEmptyMode({ plus: "plus", settingUp: null })).toBe("plus");
 	});
 
 	it("waits for the setting-up mark before choosing for Xolace+", () => {
 		expect(
-			kindlingEmptyMode({
-				isLoading: false,
-				isPlus: true,
-				settingUp: undefined,
-			})
+			kindlingEmptyMode({ plus: "plus", settingUp: undefined })
 		).toBeUndefined();
 	});
 });
@@ -78,16 +60,8 @@ describe("kindlingCardMode", () => {
 
 describe("heldEmptyMode", () => {
 	it("keeps the last mode while a re-read loads (free → Xolace+ mid-session)", () => {
-		const free = kindlingEmptyMode({
-			isLoading: false,
-			isPlus: false,
-			settingUp: undefined,
-		});
-		const loading = kindlingEmptyMode({
-			isLoading: false,
-			isPlus: true,
-			settingUp: undefined,
-		});
+		const free = kindlingEmptyMode({ plus: "free", settingUp: undefined });
+		const loading = kindlingEmptyMode({ plus: "plus", settingUp: undefined });
 		expect(loading).toBeUndefined();
 		expect(heldEmptyMode(free, loading)).toBe("free");
 		expect(heldEmptyMode(free, "plus")).toBe("plus");

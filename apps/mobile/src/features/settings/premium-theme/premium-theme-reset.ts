@@ -1,4 +1,5 @@
 import { findVariant, isPremiumTheme } from "@/design/themes";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 
 export type PremiumThemeReset = {
 	clearPreviousTheme: boolean;
@@ -11,14 +12,13 @@ function isPremiumVariant(variant: string | null): boolean {
 }
 
 export function planPremiumThemeReset(input: {
-	isPlus: boolean;
-	isResolved: boolean;
+	plus: PlusStatus;
 	colorThemeId: string;
 	previousTheme: string | null;
 	currentTheme: string;
 	storedTheme: string;
 }): PremiumThemeReset | null {
-	if (!input.isResolved || input.isPlus) {
+	if (input.plus !== "free") {
 		return null;
 	}
 	if (!isPremiumTheme(input.colorThemeId)) {

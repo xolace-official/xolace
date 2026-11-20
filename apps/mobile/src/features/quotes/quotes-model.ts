@@ -1,3 +1,4 @@
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { removeEmDash } from "@/lib/text/plain-dashes";
 import { QUOTE_COPY } from "./copy";
 
@@ -95,10 +96,10 @@ export function resolveBackgrounds(
 export function shownBackground(
 	saved: string | undefined,
 	list: readonly QuoteBackground[],
-	isPlus: boolean
+	plus: PlusStatus
 ): QuoteBackground {
 	const found = list.find((b) => b.key === saved);
-	if (!found || (found.plus && !isPlus)) {
+	if (!found || (found.plus && plus === "free")) {
 		return list.find((b) => b.key === POSTER.key) ?? POSTER;
 	}
 	return found;
@@ -115,12 +116,15 @@ export const keptBackground = (
 export function tileTap(
 	tile: QuoteBackground,
 	current: string,
-	isPlus: boolean
-): "none" | "apply" | "plus" {
+	plus: PlusStatus
+): "none" | "apply" | "plus" | "wait" {
 	if (tile.key === current) {
 		return "none";
 	}
-	return tile.plus && !isPlus ? "plus" : "apply";
+	if (!tile.plus || plus === "plus") {
+		return "apply";
+	}
+	return plus === "free" ? "plus" : "wait";
 }
 
 export const loopsMayMove = (o: { reduced: boolean; lowPower: boolean }) =>

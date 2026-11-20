@@ -1,7 +1,11 @@
 import { api } from "@xolace/backend/api";
 import { useEffect, useState } from "react";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
-import type { StView } from "@/features/you/steadiness/steadiness-model";
+import {
+	asksFreeView,
+	type StView,
+} from "@/features/you/steadiness/steadiness-model";
 import { useStableQuery } from "@/lib/convex/use-stable-query";
 
 const HOUR = 60 * 60 * 1000;
@@ -19,26 +23,25 @@ function useHour(): number {
 export function useInsightsView(): {
 	view: StView | undefined;
 	plus: boolean;
-	isPlus: boolean;
-	isResolved: boolean;
+	status: PlusStatus;
 	now: Date;
 } {
-	const { isPlus, isResolved } = usePlusEntitlement();
+	const { status } = usePlusEntitlement();
+	const asksPlus = status === "plus";
 	const now = useHour();
 	const held = useStableQuery(
 		api.compounding.insights.plusView,
-		isPlus ? { now } : "skip"
+		asksPlus ? { now } : "skip"
 	);
-	const plus = isPlus ? held : undefined;
+	const plus = asksPlus ? held : undefined;
 	const free = useStableQuery(
 		api.compounding.insights.freeView,
-		plus ? "skip" : { now }
+		asksFreeView(status, plus) ? { now } : "skip"
 	);
 	return {
-		isPlus,
-		isResolved,
 		now: new Date(now),
 		plus: Boolean(plus),
+		status,
 		view: plus ?? free,
 	};
 }

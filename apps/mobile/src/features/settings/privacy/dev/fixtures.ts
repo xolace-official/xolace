@@ -84,16 +84,20 @@ export const DELETE_DATA: Sheet = {
 	busy: false,
 	deleted: false,
 	kind: "data",
-	plus: false,
+	plus: "free",
 };
 export const DELETE_DATA_BUSY: Sheet = { ...DELETE_DATA, busy: true };
 export const DELETE_ACCOUNT: Sheet = {
 	busy: false,
 	deleted: false,
 	kind: "account",
-	plus: false,
+	plus: "free",
 };
-export const DELETE_ACCOUNT_PLUS: Sheet = { ...DELETE_ACCOUNT, plus: true };
+export const DELETE_ACCOUNT_PLUS: Sheet = { ...DELETE_ACCOUNT, plus: "plus" };
+export const DELETE_ACCOUNT_PLUS_LOADING: Sheet = {
+	...DELETE_ACCOUNT,
+	plus: "loading",
+};
 export const DELETE_ACCOUNT_SIGN_OUT_LEFT: Sheet = {
 	...DELETE_ACCOUNT,
 	deleted: true,

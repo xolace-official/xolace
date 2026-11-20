@@ -45,8 +45,9 @@ export function PlusCard({
 				colors={[from, to]}
 				end={TO}
 				start={FROM}
+				style={card.kind === "loading" ? { minHeight: H_PLUS } : undefined}
 			>
-				<PlusHighlight height={plus ? H_PLUS : H_FREE} />
+				<PlusHighlight height={card.kind === "free" ? H_FREE : H_PLUS} />
 				<View className="flex-row items-center gap-2.5">
 					<View className="size-7.5 items-center justify-center rounded-[9px] border-continuous bg-on-art/16">
 						<Icon color={white} name={HOME_ICONS.plus} size={17} />
@@ -76,7 +77,8 @@ export function PlusCard({
 						</View>
 					) : null}
 				</View>
-				{plus ? <PlusTime card={card} /> : <FreeOffer />}
+				{plus ? <PlusTime card={card} /> : null}
+				{card.kind === "free" ? <FreeOffer /> : null}
 			</LinearGradient>
 		</Pressable>
 	);

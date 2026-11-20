@@ -36,9 +36,9 @@ type Params = { slug: string; from?: BrowseFrom; stepId?: Id<"path_steps"> };
 
 export function usePlayerData(): { player: Player; clock: PlayerClock } {
 	const { slug, from, stepId } = useLocalSearchParams<Params>();
-	const { isPlus, isLoading } = usePlusEntitlement();
+	const { status: plus, isPlus } = usePlusEntitlement();
 	const posthog = usePostHog();
-	const lapsed = !(isLoading || isPlus);
+	const lapsed = plus === "free";
 
 	useEffect(() => {
 		if (!lapsed) {
@@ -67,7 +67,7 @@ export function usePlayerData(): { player: Player; clock: PlayerClock } {
 	const slept = useSleepTimer((t) => t.slept);
 	const status = playerStatus({
 		error: !!p.error,
-		gated: !isPlus,
+		plus,
 		track: p.track,
 	});
 	const { track, isPlaying, loop, volume } = p;

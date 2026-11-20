@@ -49,22 +49,28 @@ describe("the track", () => {
 
 describe("the status", () => {
 	it("gates before anything loads", () => {
-		expect(playerStatus({ error: true, gated: true, track: undefined })).toBe(
+		expect(playerStatus({ error: true, plus: "free", track: undefined })).toBe(
 			"gated"
 		);
 	});
 
-	it("tells loading, gone, error and ready apart", () => {
-		expect(playerStatus({ error: false, gated: false, track: undefined })).toBe(
+	it("loads, never gates, while Xolace+ loads", () => {
+		expect(playerStatus({ error: true, plus: "loading", track: {} })).toBe(
 			"loading"
 		);
-		expect(playerStatus({ error: false, gated: false, track: null })).toBe(
+	});
+
+	it("tells loading, gone, error and ready apart", () => {
+		expect(playerStatus({ error: false, plus: "plus", track: undefined })).toBe(
+			"loading"
+		);
+		expect(playerStatus({ error: false, plus: "plus", track: null })).toBe(
 			"gone"
 		);
-		expect(playerStatus({ error: true, gated: false, track: undefined })).toBe(
+		expect(playerStatus({ error: true, plus: "plus", track: undefined })).toBe(
 			"error"
 		);
-		expect(playerStatus({ error: false, gated: false, track: {} })).toBe(
+		expect(playerStatus({ error: false, plus: "plus", track: {} })).toBe(
 			"ready"
 		);
 	});

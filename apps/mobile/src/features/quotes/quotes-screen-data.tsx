@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, use } from "react";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import type { QuoteUi, ShareFmt } from "./motion/quote-ui";
 import type { DailyQuoteSlot, OfferTrigger } from "./offer/daily-quote-offer";
 import type { KeptCard, QuoteBackground, Reason } from "./quotes-model";
@@ -11,7 +12,7 @@ export type QuotesState = {
 	resonated: boolean;
 	saved: boolean;
 	saveLocked: boolean;
-	isPlus: boolean;
+	plus: PlusStatus;
 	keptCount: number;
 	reply?: string;
 	replyFlagged: boolean;

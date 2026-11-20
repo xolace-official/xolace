@@ -1,11 +1,12 @@
 import { createContext, type ReactNode, use } from "react";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import type { SheetKind } from "@/features/settings/privacy/copy";
 import { useDeleteSheet } from "@/features/settings/privacy/delete/use-delete-sheet";
 
 export type DeleteSheet = {
 	state: {
 		kind: SheetKind;
-		plus: boolean;
+		plus: PlusStatus;
 		busy: boolean;
 		deleted: boolean;
 	};

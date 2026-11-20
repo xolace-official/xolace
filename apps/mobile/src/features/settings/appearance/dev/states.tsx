@@ -5,6 +5,7 @@ import {
 	APPEARANCE_CALMED,
 	APPEARANCE_DARK_ROSE,
 	APPEARANCE_FREE,
+	APPEARANCE_PLUS_LOADING,
 	APPEARANCE_REPLAY,
 	APPEARANCE_TOP,
 } from "@/features/settings/appearance/dev/fixtures";
@@ -31,6 +32,12 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureAppearance state={APPEARANCE_FREE} />,
 		title: "Appearance, free with the Plus themes locked (render 09)",
+	},
+	{
+		id: "appearance-plus-loading",
+		options: OPTIONS,
+		Screen: () => <FixtureAppearance state={APPEARANCE_PLUS_LOADING} />,
+		title: "Appearance, Rosé while Xolace+ is still loading: nothing locked",
 	},
 	{
 		id: "appearance-dark-rose",

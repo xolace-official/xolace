@@ -1,3 +1,4 @@
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import type { SleepChoice, SleepTimer } from "@/lib/now-playing/sleep-timer";
 import { SLEEP_FADE_S } from "@/lib/now-playing/sleep-timer";
 import { PLAYER_COPY } from "./copy";
@@ -56,12 +57,15 @@ export function toPlayerTrack(t: BoundTrackFields): PlayerTrack {
 export type PlayerStatus = "gated" | "loading" | "gone" | "error" | "ready";
 
 export function playerStatus(input: {
-	gated: boolean;
+	plus: PlusStatus;
 	error: boolean;
 	track: unknown;
 }): PlayerStatus {
-	if (input.gated) {
+	if (input.plus === "free") {
 		return "gated";
+	}
+	if (input.plus === "loading") {
+		return "loading";
 	}
 	if (input.error) {
 		return "error";

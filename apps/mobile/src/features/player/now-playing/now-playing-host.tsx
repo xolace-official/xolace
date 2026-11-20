@@ -11,9 +11,8 @@ import { useNowPlayingAudio } from "./use-now-playing-audio";
 export function NowPlayingHost() {
 	const np = useNowPlaying();
 	const attempt = useNowPlayingAttempt();
-	const { isPlus, isResolved } = usePlusEntitlement();
+	const lapsed = usePlusEntitlement().status === "free";
 	useEffect(() => clearNowPlaying, []);
-	const lapsed = isResolved && !isPlus;
 	useEffect(() => {
 		if (lapsed) {
 			clearNowPlaying();

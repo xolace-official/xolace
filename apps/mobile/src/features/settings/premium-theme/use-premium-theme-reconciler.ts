@@ -7,7 +7,7 @@ import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
 
 export function usePremiumThemeReconciler() {
-	const { isPlus, isResolved } = usePlusEntitlement();
+	const { status } = usePlusEntitlement();
 	const colorThemeId = useAppStore((s) => s.colorThemeId);
 	const updatePreferences = usePreferenceMutation();
 
@@ -22,8 +22,7 @@ export function usePremiumThemeReconciler() {
 		const plan = planPremiumThemeReset({
 			colorThemeId,
 			currentTheme: targetTheme(),
-			isPlus,
-			isResolved,
+			plus: status,
 			previousTheme,
 			storedTheme,
 		});
@@ -40,5 +39,5 @@ export function usePremiumThemeReconciler() {
 		if (plan.applyBaseTheme !== null) {
 			setThemeWithFonts(plan.applyBaseTheme as ThemeName | "system");
 		}
-	}, [isPlus, isResolved, colorThemeId, updatePreferences]);
+	}, [status, colorThemeId, updatePreferences]);
 }

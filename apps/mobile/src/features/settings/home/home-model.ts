@@ -1,3 +1,4 @@
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { HOME_COPY as C } from "@/features/settings/home/copy";
 import { WEEKLY_TALK_S } from "@/lib/talk/talk-time";
 
@@ -32,6 +33,7 @@ export function signInOf(providers: readonly string[]): SignIn {
 export type TalkTime = { secondsLeft: number } | null | undefined;
 
 export type PlusCard =
+	| { kind: "loading"; a11y: string; opensPaywall: false }
 	| { kind: "free"; a11y: string; opensPaywall: true }
 	| {
 			kind: "plus";
@@ -41,8 +43,11 @@ export type PlusCard =
 			a11y: string;
 	  };
 
-export function plusCard(isPlus: boolean, time: TalkTime): PlusCard {
-	if (!isPlus) {
+export function plusCard(plus: PlusStatus, time: TalkTime): PlusCard {
+	if (plus === "loading") {
+		return { a11y: C.plus.name, kind: "loading", opensPaywall: false };
+	}
+	if (plus === "free") {
 		return { a11y: C.plus.a11yFree, kind: "free", opensPaywall: true };
 	}
 	if (!time) {

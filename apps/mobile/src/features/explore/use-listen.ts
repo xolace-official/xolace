@@ -14,8 +14,7 @@ import { usePushOnce } from "@/lib/use-push-once";
 export function useListen(screen: BrowseFrom): Listen {
 	const posthog = usePostHog();
 	const pushOnce = usePushOnce();
-	const { isPlus, isLoading } = usePlusEntitlement();
-	const locked = !(isLoading || isPlus);
+	const locked = usePlusEntitlement().status === "free";
 	const np = useNowPlaying();
 	const nowPlaying = np && !np.preview ? np.slug : null;
 	const playing = useNowPlayingIsPlaying();

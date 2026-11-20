@@ -6,7 +6,7 @@ import { reasonLine } from "@/features/quotes/quotes-model";
 import type { QuotesState } from "@/features/quotes/quotes-screen-data";
 
 const OPTIONS = { headerShown: false };
-const FREE = { isPlus: false };
+const FREE = { plus: "free" } as const;
 const REPLY = "Slower today, and that's fine.";
 
 const state = (

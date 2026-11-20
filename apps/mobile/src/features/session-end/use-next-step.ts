@@ -48,7 +48,7 @@ export function useNextStep(
 		const timer = setTimeout(() => setWaitedOut(true), SLOT_WAIT_MS);
 		return () => clearTimeout(timer);
 	}, []);
-	const { isPlus, isResolved } = usePlusEntitlement();
+	const { status, isPlus } = usePlusEntitlement();
 	const qualifies = useQuery(
 		api.paths.isKindlingQualifyingSession,
 		sessionId ? { sessionId } : "skip"
@@ -66,11 +66,9 @@ export function useNextStep(
 	const shownSessionId = useAppStore((s) => s.plusOfferShownSessionId);
 	const upsellLive = useQuery(
 		api.compounding.upsell.get,
-		sessionId && isResolved && !isPlus ? { sessionId } : "skip"
+		sessionId && status === "free" ? { sessionId } : "skip"
 	);
-	const upsell = useHeld(
-		sessionId === null || (isResolved && isPlus) ? null : upsellLive
-	);
+	const upsell = useHeld(sessionId === null || isPlus ? null : upsellLive);
 	const unlockRead =
 		session === undefined
 			? undefined
@@ -101,7 +99,8 @@ export function useNextStep(
 			listener: listener.status,
 			pitchAllowed: allowed,
 			plus: isPlus,
-			qualifies: isResolved ? sessionId !== null && qualifies : undefined,
+			qualifies:
+				status === "loading" ? undefined : sessionId !== null && qualifies,
 			unlock: unlock === undefined ? undefined : unlock !== null,
 			upsell: upsell === undefined ? undefined : upsell !== null,
 			waitedOut,

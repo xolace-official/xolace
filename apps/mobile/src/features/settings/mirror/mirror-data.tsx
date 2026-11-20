@@ -1,7 +1,7 @@
 import type { TalkPace } from "@xolace/backend/convex/lib/voices";
 import { createContext, type ReactNode, use } from "react";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import type {
-	Entitlement,
 	MirrorTone,
 	VoiceSlug,
 } from "@/features/settings/mirror/mirror-model";
@@ -17,7 +17,7 @@ export type TalkStyle = {
 
 export type MirrorSettings = {
 	state: {
-		plus: Entitlement;
+		plus: PlusStatus;
 		tone: MirrorTone;
 		voice: VoiceValue;
 		saved: { tone: MirrorTone; voice: VoiceValue };

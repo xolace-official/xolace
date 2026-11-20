@@ -19,7 +19,7 @@ export function useDeleteSheet(
 	const requestDataWipe = useMutation(api.users.requestDataWipe);
 	const requestDeletion = useMutation(api.users.requestDeletion);
 	const { signOut, userId } = useAuth();
-	const { isPlus } = usePlusEntitlement();
+	const { status } = usePlusEntitlement();
 	const navigation = useNavigation();
 	const flight = useSingleFlight();
 	const [deleted, setDeleted] = useState(false);
@@ -76,6 +76,6 @@ export function useDeleteSheet(
 				}
 			},
 		},
-		state: { busy: flight.busy, deleted, kind, plus: isPlus },
+		state: { busy: flight.busy, deleted, kind, plus: status },
 	};
 }

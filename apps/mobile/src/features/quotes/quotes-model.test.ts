@@ -130,18 +130,24 @@ describe("shownBackground", () => {
 	const list = resolveBackgrounds(ROWS, STILLS);
 
 	it("shows the saved choice", () => {
-		expect(shownBackground("dunes", list, true).key).toBe("dunes");
-		expect(shownBackground("first-light", list, false).key).toBe("first-light");
+		expect(shownBackground("dunes", list, "plus").key).toBe("dunes");
+		expect(shownBackground("first-light", list, "free").key).toBe(
+			"first-light"
+		);
 	});
 
 	it("falls back to Poster when Xolace+ lapsed", () => {
-		expect(shownBackground("dunes", list, false).key).toBe("poster");
+		expect(shownBackground("dunes", list, "free").key).toBe("poster");
+	});
+
+	it("keeps a saved Plus background while Xolace+ loads", () => {
+		expect(shownBackground("dunes", list, "loading").key).toBe("dunes");
 	});
 
 	it("falls back to Poster for a key it doesn't have", () => {
-		expect(shownBackground("gone", list, true).key).toBe("poster");
-		expect(shownBackground(undefined, list, true).key).toBe("poster");
-		expect(shownBackground("gone", [], true)).toBe(POSTER);
+		expect(shownBackground("gone", list, "plus").key).toBe("poster");
+		expect(shownBackground(undefined, list, "plus").key).toBe("poster");
+		expect(shownBackground("gone", [], "plus")).toBe(POSTER);
 	});
 });
 
@@ -164,16 +170,21 @@ describe("tileTap", () => {
 	const first = list[1];
 
 	it("does nothing on the current one", () => {
-		expect(tileTap(dunes, "dunes", false)).toBe("none");
+		expect(tileTap(dunes, "dunes", "free")).toBe("none");
 	});
 
 	it("opens Xolace+ for a free account on a Plus tile, without applying it", () => {
-		expect(tileTap(dunes, "poster", false)).toBe("plus");
+		expect(tileTap(dunes, "poster", "free")).toBe("plus");
 	});
 
 	it("applies a free tile, or any tile with Xolace+", () => {
-		expect(tileTap(first, "poster", false)).toBe("apply");
-		expect(tileTap(dunes, "poster", true)).toBe("apply");
+		expect(tileTap(first, "poster", "free")).toBe("apply");
+		expect(tileTap(dunes, "poster", "plus")).toBe("apply");
+	});
+
+	it("neither applies nor opens Xolace+ on a Plus tile while it loads", () => {
+		expect(tileTap(dunes, "poster", "loading")).toBe("wait");
+		expect(tileTap(first, "poster", "loading")).toBe("apply");
 	});
 });
 

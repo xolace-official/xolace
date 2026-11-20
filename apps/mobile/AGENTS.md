@@ -89,6 +89,10 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   feature; a paywall that needs feature data gets it as a prop from its route.
   `src/features/import-cycles.test.ts` enforces all three, and its failure lists
   the imports to move.
+- **Xolace+ status:** `usePlusEntitlement().status` is `"loading" | "plus" | "free"`
+  (`PlusStatus`, `features/purchases/plus-status.ts`). While `"loading"`, never lock,
+  upsell, track as free or revoke; draw a neutral state. `isPlus` is only for
+  Plus-only queries and rendering.
 - **Unused code:** `bun run knip` from the root (config in `knip.jsonc`). An
   export kept on purpose before anything uses it gets a `/** @public <why> */` tag.
 - **Files** under ~200 lines; imports via the `@/` alias (`@/*` → `./src/*`; `@/assets/*` and `@/modules/*` keep their top-level folders).

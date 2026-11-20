@@ -26,7 +26,7 @@ const FEATURE = "intensity_history";
 
 export function useYouWeek(enabled: boolean, sessionCount: number) {
 	const posthog = usePostHog();
-	const { isPlus, isLoading } = usePlusEntitlement();
+	const { status, isPlus } = usePlusEntitlement();
 	const openPaywall = usePaywall((s) => s.open);
 	const [offset, setOffset] = useState(0);
 	const asked = isPlus ? offset : 0;
@@ -55,7 +55,7 @@ export function useYouWeek(enabled: boolean, sessionCount: number) {
 	return {
 		actions: {
 			openEarlierWeeks: () => {
-				if (isLoading || isPlus) {
+				if (status !== "free") {
 					return;
 				}
 				posthog.capture("premium_gate_hit", {
