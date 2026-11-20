@@ -1,13 +1,15 @@
 import { View } from "react-native";
 import { useShallow } from "zustand/react/shallow";
+import { quoteVideoAvailable } from "@/modules/quote-video";
 import { BackgroundSheet } from "../background/background-sheet";
 import type { InkPalette, QuoteInk } from "../chrome/quote-ink";
 import { KeptStack } from "../kept/kept-stack";
 import { type QuoteView, useQuoteUi } from "../motion/quote-ui";
 import type { QuoteHandlers } from "../motion/use-quote-handlers";
 import { useQuotesScreen } from "../quotes-screen-data";
-import { CARD_REF } from "../share/make-share-file";
+import { CARD_REF, OVERLAY_REF } from "../share/make-share-file";
 import { ShareCard } from "../share/share-card";
+import { canShareVideo } from "../share/share-kind";
 import { ShareSheet } from "../share/share-sheet";
 import { GateSheet } from "./gate-sheet";
 import { OfferSheet } from "./offer-sheet";
@@ -40,11 +42,14 @@ export function QuoteSheets({
 			hist: s.hist,
 			making: s.making,
 			set: s.set,
+			shareKind: s.shareKind,
 			view: s.view,
 		}))
 	);
 	const text = state.quote?.text ?? "";
 	const b = state.background;
+	const canVideo = canShareVideo(b, quoteVideoAvailable);
+	const video = canVideo && ui.shareKind === "video";
 
 	return (
 		<>
@@ -94,12 +99,16 @@ export function QuoteSheets({
 			{shownSheet === "share" && (
 				<ShareSheet
 					background={b}
+					canVideo={canVideo}
 					drop={inks.drop}
 					fmt={ui.fmt}
 					ink={ink}
+					kind={ui.shareKind}
 					making={ui.making}
+					moving={moving}
 					onClose={h.toToday}
 					onFmt={(fmt) => ui.set({ fmt })}
+					onKind={(shareKind) => ui.set({ shareKind })}
 					onSave={h.save}
 					onShare={h.shareGo}
 					text={text}
@@ -132,6 +141,16 @@ export function QuoteSheets({
 						scale={CAPTURE_SCALE}
 						text={text}
 					/>
+					{video && (
+						<ShareCard
+							background={b}
+							fmt={ui.fmt}
+							ref={OVERLAY_REF}
+							scale={CAPTURE_SCALE}
+							text={text}
+							transparent
+						/>
+					)}
 				</View>
 			)}
 		</>

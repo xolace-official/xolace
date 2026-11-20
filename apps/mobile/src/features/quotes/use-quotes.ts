@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useStablePaginatedQuery } from "@/lib/convex/use-stable-query";
+import { quoteVideoAvailable } from "@/modules/quote-video";
 import { useAppStore } from "@/store/store";
 import { useSoundMemory } from "./background/sound-memory";
 import { STILLS } from "./background/stills";
@@ -25,7 +26,13 @@ import {
 	shownBackground,
 } from "./quotes-model";
 import type { QuotesScreenValue, ReplyOutcome } from "./quotes-screen-data";
-import { makeStill, saveToPhotos, shareImage } from "./share/make-share-file";
+import {
+	localLoop,
+	makeShareFile,
+	saveToPhotos,
+	shareFile,
+} from "./share/make-share-file";
+import { canShareVideo, type ShareKind } from "./share/share-kind";
 import { useColdStart } from "./use-cold-start";
 
 const KEPT_PAGE = 12;
@@ -206,13 +213,22 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	// Promise chains, not try/catch, here and below: the React Compiler can't compile a try that
 	// holds a condition yet, and this hook must stay compiled so `{ state, actions }` keeps its
 	// identity between renders.
-	const share = (fmt: "story" | "square", go: "save" | "share") =>
-		makeStill(fmt)
-			.then((uri) => (go === "save" ? saveToPhotos(uri) : shareImage(uri)))
+	const share = (
+		fmt: "story" | "square",
+		kind: ShareKind,
+		go: "save" | "share"
+	) =>
+		makeShareFile(background, fmt, kind)
+			.then((file) =>
+				go === "save" ? saveToPhotos(file.uri) : shareFile(file)
+			)
 			.then(() => {
-				posthog.capture(go === "save" ? "quote_image_saved" : "quote_shared", {
+				const saved =
+					kind === "video" ? "quote_video_saved" : "quote_image_saved";
+				posthog.capture(go === "save" ? saved : "quote_shared", {
 					background: background.key,
 					format: fmt,
+					kind,
 				});
 				return null;
 			})
@@ -255,6 +271,11 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 						console.error("[quotes] background failed", e);
 						return false;
 					}),
+			prepareShare: () => {
+				if (canShareVideo(background, quoteVideoAvailable)) {
+					localLoop(background).catch(() => undefined);
+				}
+			},
 			reflect: (reply, flagged) => {
 				const seed = reflectSeed({
 					flagged,
@@ -294,7 +315,7 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 					});
 			},
 			retry,
-			saveImage: (fmt) => share(fmt, "save"),
+			saveImage: (fmt, kind = "still") => share(fmt, kind, "save"),
 			setResonated: (on) => {
 				if (!raw) {
 					return;
@@ -333,7 +354,7 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 				useSoundMemory.setState({ soundOn: on });
 				posthog.capture("quote_sound_toggled", { on });
 			},
-			shareImage: (fmt) => share(fmt, "share"),
+			shareImage: (fmt, kind = "still") => share(fmt, kind, "share"),
 			talk: () => router.push("/crisis-resources?from=quotes"),
 		},
 		state,

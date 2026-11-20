@@ -1,6 +1,7 @@
 import { createContext, use, useState } from "react";
 import { useStore } from "zustand";
 import { createStore, type StoreApi } from "zustand/vanilla";
+import type { ShareKind } from "../share/share-kind";
 
 export type QuoteView =
 	| "today"
@@ -18,6 +19,7 @@ export type ShareFmt = "story" | "square";
 export type QuoteUi = {
 	view: QuoteView;
 	fmt: ShareFmt;
+	shareKind: ShareKind;
 	draft: string;
 	hist: number;
 	clear: boolean;
@@ -38,6 +40,7 @@ const QUOTE_UI_DEFAULTS: QuoteUi = {
 	hist: 0,
 	making: false,
 	paused: false,
+	shareKind: "video",
 	starKey: 0,
 	toast: null,
 	view: "today",
