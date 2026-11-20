@@ -127,7 +127,6 @@ export function useAskFlow({
 	};
 
 	return {
-		ageGate,
 		handleAsk,
 		handlePrimerClose,
 		handlePrimerConfirm,
