@@ -26,8 +26,8 @@ import {
 } from "./quotes-model";
 import type { QuotesScreenValue, ReplyOutcome } from "./quotes-screen-data";
 import { makeStill, saveToPhotos, shareImage } from "./share/make-share-file";
+import { useColdStart } from "./use-cold-start";
 
-const COLD_START_WAIT_MS = 45_000;
 const KEPT_PAGE = 12;
 
 const readable = (e: unknown) =>
@@ -121,38 +121,20 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	const soundOn = useSoundMemory((s) => s.soundOn);
 	const rest = useLoopRest();
 	const [sending, setSending] = useState(false);
-	const [coldError, setColdError] = useState(false);
-	const issued = useRef(false);
 	const tracked = useRef({ gate: false, viewed: false });
 
 	const raw = today?.session ?? today?.curated ?? null;
 	const opened = useRef(new Set<string>());
 	const waiting = today !== undefined && prefs !== undefined && raw === null;
 
-	useEffect(() => {
-		if (!waiting || issued.current) {
-			return;
-		}
-		issued.current = true;
-		const first =
-			prefs === null
+	const { coldError, retry } = useColdStart({
+		start: () =>
+			(prefs === null
 				? setPrefs({ notificationEnabled: false, themes: [] })
-				: Promise.resolve(null);
-		first
-			.then(() => coldStart())
-			.catch((e: unknown) => {
-				console.error("[quotes] cold start failed", e);
-				setColdError(true);
-			});
-	}, [waiting, prefs, setPrefs, coldStart]);
-
-	useEffect(() => {
-		if (!waiting || coldError) {
-			return;
-		}
-		const t = setTimeout(() => setColdError(true), COLD_START_WAIT_MS);
-		return () => clearTimeout(t);
-	}, [waiting, coldError]);
+				: Promise.resolve(null)
+			).then(() => coldStart()),
+		waiting,
+	});
 
 	useEffect(() => {
 		if (!raw || tracked.current.viewed) {
@@ -311,10 +293,7 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 						return outcome;
 					});
 			},
-			retry: () => {
-				issued.current = false;
-				setColdError(false);
-			},
+			retry,
 			saveImage: (fmt) => share(fmt, "save"),
 			setResonated: (on) => {
 				if (!raw) {

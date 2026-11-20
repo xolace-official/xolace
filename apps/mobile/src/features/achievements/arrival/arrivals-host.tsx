@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { BackHandler } from "react-native";
 import Animated, {
 	Easing,
@@ -57,15 +57,19 @@ export function ArrivalOverlay({ still }: { still?: Still }) {
 		);
 	};
 
+	const appear = useEffectEvent(() => {
+		arrival.current?.start();
+		shown.set(withTiming(1, fade));
+	});
+	const back = useEffectEvent(leave);
 	useEffect(() => {
 		if (!open) {
 			return;
 		}
-		arrival.current?.start();
-		shown.set(withTiming(1, fade));
+		appear();
 		setArrivalOpen(true);
 		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-			leave();
+			back();
 			return true;
 		});
 		return () => {

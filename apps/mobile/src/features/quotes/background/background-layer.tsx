@@ -1,5 +1,4 @@
 import { useVideoPlayer, VideoView } from "expo-video";
-import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
@@ -9,7 +8,7 @@ import Animated, {
 import { Image, LinearGradient } from "@/components/shared/styled";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useQuoteInk } from "../chrome/quote-ink";
-import type { QuoteBackground } from "../quotes-model";
+import { type QuoteBackground, readyOn } from "../quotes-model";
 import { POSTER_WASH } from "../quotes-palette";
 
 const FIRST_FRAME_FADE = 180;
@@ -30,15 +29,13 @@ export function BackgroundLayer({
 }: {
 	background: QuoteBackground;
 	play: boolean;
+	/** Called once the layer has drawn, unless `readyOn` is "now". */
 	onReady?: () => void;
 }) {
 	const { night } = useQuoteInk();
-	const loop = b.kind === "loop" && play && b.videoUrl !== undefined;
-	useEffect(() => {
-		if (!loop) {
-			onReady?.();
-		}
-	}, [loop, onReady]);
+	const ready = readyOn(b, play);
+	const loop = ready === "frame";
+	const imageReady = ready === "image" ? () => onReady?.() : undefined;
 
 	return (
 		<View
@@ -65,6 +62,8 @@ export function BackgroundLayer({
 					className="absolute inset-0"
 					contentFit="cover"
 					contentPosition={contentPosition(b)}
+					onDisplay={imageReady}
+					onError={imageReady}
 					source={b.image}
 					transition={0}
 				/>

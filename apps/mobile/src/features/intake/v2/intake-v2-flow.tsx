@@ -55,16 +55,9 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 		dispatch({ resources: reading.resources, type: "LATE_SAFETY" });
 	});
 
-	useEffect(() => {
-		if (state.step !== "interpret") {
-			return;
-		}
-		let live = true;
-		const read = async () => {
-			const outcome = await readAnswer(state);
-			if (!live) {
-				return;
-			}
+	const startRead = useEffectEvent(() => readAnswer(state));
+	const onRead = useEffectEvent(
+		(outcome: Awaited<ReturnType<typeof readAnswer>>) => {
 			if ("fallback" in outcome) {
 				trackReadFallback(posthog, outcome.fallback);
 				dispatch({ type: "READ_FAILED" });
@@ -77,36 +70,46 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 				trackSafetyRouted(posthog, outcome.reading.safeguardLevel);
 			}
 			dispatch({ reading: outcome.reading, type: "READ_DONE" });
-		};
-		void read();
+		}
+	);
+	// Reads the first answer on arrival at `interpret`, from the state it arrived with.
+	useEffect(() => {
+		if (state.step !== "interpret") {
+			return;
+		}
+		let live = true;
+		void startRead().then((outcome) => {
+			if (live) {
+				onRead(outcome);
+			}
+		});
 		return () => {
 			live = false;
 		};
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.step]);
 
+	// `followUp` is set only together with the step (FRESH_READ), so this fires once per arrival.
 	useEffect(() => {
 		if (state.step === "followUp" && state.followUp) {
 			trackFollowUpShown(posthog, state.followUp.field);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [state.step]);
+	}, [posthog, state.step, state.followUp]);
 
 	const writing = useRef(false);
+	const write = useEffectEvent(async () => {
+		const written = await complete(state);
+		writing.current = false;
+		if (!written) {
+			dispatch({ type: "COMPLETE_FAILED" });
+		}
+	});
+	// Saves on arrival at `done`; `writing` keeps a re-render from saving twice.
 	useEffect(() => {
 		if (state.step !== "done" || writing.current) {
 			return;
 		}
 		writing.current = true;
-		const write = async () => {
-			const written = await complete(state);
-			writing.current = false;
-			if (!written) {
-				dispatch({ type: "COMPLETE_FAILED" });
-			}
-		};
 		void write();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.step]);
 
 	const offering =

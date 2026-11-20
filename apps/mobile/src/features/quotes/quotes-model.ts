@@ -105,6 +105,20 @@ export function shownBackground(
 	return found;
 }
 
+/**
+ * When a freshly mounted background layer has drawn: a gradient or flat still at once, an image
+ * once it shows (it loads from disk), a playing loop on its first frame.
+ */
+export function readyOn(
+	b: QuoteBackground,
+	play: boolean
+): "now" | "image" | "frame" {
+	if (b.kind === "loop" && play && b.videoUrl !== undefined) {
+		return "frame";
+	}
+	return b.image === undefined ? "now" : "image";
+}
+
 export const keptBackground = (
 	key: string | undefined,
 	list: readonly QuoteBackground[]

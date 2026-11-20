@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import type { FieldControl } from "@/features/vent/field/field-control";
 import type { VentBackend } from "@/features/vent/vent-backend";
 import { ceilingPlan } from "@/features/vent/vent-model";
@@ -11,37 +11,37 @@ export function useListening(
 	onSoon: () => void
 ): boolean {
 	const [soon, setSoon] = useState(false);
-	const handlers = useRef({ onCeiling, onSoon });
-	useEffect(() => {
-		handlers.current = { onCeiling, onSoon };
-	});
 	const { ceilingMs } = backend.state;
 	const { recordedMs } = backend.actions;
 
+	const plan = useEffectEvent((ceiling: number) => {
+		const recorded = recordedMs();
+		field.go("rec", { ceilMs: ceiling, recOff: recorded });
+		return ceilingPlan(ceiling, recorded);
+	});
+	const nearCeiling = useEffectEvent(() => {
+		setSoon(true);
+		onSoon();
+	});
+	const atCeiling = useEffectEvent(onCeiling);
+
+	// A new take or a new ceiling re-plans.
 	useEffect(() => {
 		if (!listening) {
 			return;
 		}
-		const recorded = recordedMs();
-		const plan = ceilingPlan(ceilingMs, recorded);
-		field.go("rec", { ceilMs: ceilingMs, recOff: recorded });
-		setSoon(plan.soonNow);
+		const { soonNow, soonIn, releaseIn } = plan(ceilingMs);
+		setSoon(soonNow);
 		const timers: ReturnType<typeof setTimeout>[] = [];
-		if (plan.soonIn !== null) {
-			timers.push(
-				setTimeout(() => {
-					setSoon(true);
-					handlers.current.onSoon();
-				}, plan.soonIn)
-			);
+		if (soonIn !== null) {
+			timers.push(setTimeout(nearCeiling, soonIn));
 		}
-		timers.push(setTimeout(() => handlers.current.onCeiling(), plan.releaseIn));
+		timers.push(setTimeout(atCeiling, releaseIn));
 		return () => {
 			for (const t of timers) {
 				clearTimeout(t);
 			}
 		};
-		// A new take or a new ceiling re-plans; the field and the reader are stable.
 	}, [listening, ceilingMs]);
 
 	return soon;

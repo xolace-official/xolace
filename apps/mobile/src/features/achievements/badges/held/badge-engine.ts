@@ -1,4 +1,10 @@
-import { type RefObject, useEffect, useRef, useState } from "react";
+import {
+	type RefObject,
+	useEffect,
+	useEffectEvent,
+	useRef,
+	useState,
+} from "react";
 import {
 	AccessibilityInfo,
 	findNodeHandle,
@@ -172,18 +178,25 @@ export function useBadgeEngine({
 	}, [running, clock]);
 
 	const n = open && out ? out.n : 0;
+	const build = useEffectEvent(
+		(g: ReturnType<typeof geo>, isReduced: boolean) => {
+			if (!out) {
+				return false;
+			}
+			const e = fresh(out, g, locked, isReduced);
+			eng.set(e);
+			pose.set(poseAt(e, out.opts.still ? STILL_AGE : 0));
+			return true;
+		}
+	);
+	// A new held badge, or a new layout or motion setting, starts a fresh engine.
 	useEffect(() => {
-		const o = cur.current.out;
-		if (!(n && o)) {
+		if (!(n && build(geo(top, width), reduced))) {
 			return;
 		}
-		const locked = cur.current.badge?.earnedAt === undefined;
-		const e = fresh(o, geo(top, width), locked, reduced);
-		eng.set(e);
-		pose.set(poseAt(e, o.opts.still ? STILL_AGE : 0));
 		const id = setTimeout(() => focusNow(title.current), FOCUS_MS);
 		return () => clearTimeout(id);
-	}, [n, top, width, reduced, eng, pose, title]);
+	}, [n, top, width, reduced, title]);
 
 	const wake = () => setStopped(0);
 	const close = () => {

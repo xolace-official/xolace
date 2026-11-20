@@ -1,4 +1,10 @@
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+	type ReactNode,
+	useEffect,
+	useEffectEvent,
+	useRef,
+	useState,
+} from "react";
 import { View } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -51,11 +57,7 @@ export function TwigCard({ open, reduced, bottom, render, onHeight }: Props) {
 		}
 	};
 
-	useEffect(() => {
-		if (first.current) {
-			first.current = false;
-			return;
-		}
+	const crossfade = useEffectEvent((front: number) => {
 		const fade = { duration: REDUCED_FADE_MS, ...PLAY_AS_CHOSEN };
 		const into = {
 			duration: KMOTION.inMs,
@@ -69,7 +71,7 @@ export function TwigCard({ open, reduced, bottom, render, onHeight }: Props) {
 		};
 		for (const [k, o] of opacity.entries()) {
 			const y = rise[k];
-			if (k === layers.front) {
+			if (k === front) {
 				o.set(0);
 				o.set(
 					reduced
@@ -95,10 +97,18 @@ export function TwigCard({ open, reduced, bottom, render, onHeight }: Props) {
 				y?.set(reduced ? 0 : withTiming(KMOTION.outRise, out));
 			}
 		}
-		const h = measured.current[layers.front] ?? 0;
+		const h = measured.current[front] ?? 0;
 		if (h > 0) {
 			grow(h);
 		}
+	});
+	// A new front card crossfades in; the first one is already shown.
+	useEffect(() => {
+		if (first.current) {
+			first.current = false;
+			return;
+		}
+		crossfade(layers.front);
 	}, [layers.front]);
 
 	const box = useAnimatedStyle(() =>

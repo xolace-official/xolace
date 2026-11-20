@@ -111,22 +111,20 @@ export function useListenTake({
 		return () => clearTimeout(timer);
 	}, [stopping]);
 
-	useEffect(() => {
-		if (!voice.isRecording) {
-			return;
-		}
-		const timer = setInterval(() => setSeconds((s) => s + 1), SECOND_MS);
-		return () => clearInterval(timer);
-	}, [voice.isRecording]);
-
-	const onTick = useEffectEvent((elapsed: number) => {
+	const tick = useEffectEvent(() => {
+		const elapsed = seconds + 1;
+		setSeconds(elapsed);
 		if (elapsed >= maxSeconds) {
 			stop();
 		}
 	});
 	useEffect(() => {
-		onTick(seconds);
-	}, [seconds]);
+		if (!voice.isRecording) {
+			return;
+		}
+		const timer = setInterval(tick, SECOND_MS);
+		return () => clearInterval(timer);
+	}, [voice.isRecording]);
 
 	return {
 		listening: voice.isRecording,

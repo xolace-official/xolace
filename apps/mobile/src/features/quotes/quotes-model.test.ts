@@ -12,6 +12,7 @@ import {
 	POSTER,
 	plainQuote,
 	quoteType,
+	readyOn,
 	reasonLine,
 	reflectSeed,
 	resolveBackgrounds,
@@ -148,6 +149,31 @@ describe("shownBackground", () => {
 		expect(shownBackground("gone", list, "plus").key).toBe("poster");
 		expect(shownBackground(undefined, list, "plus").key).toBe("poster");
 		expect(shownBackground("gone", [], "plus")).toBe(POSTER);
+	});
+});
+
+describe("readyOn", () => {
+	const all = resolveBackgrounds(ROWS, STILLS);
+	const bg = (key: string) => {
+		const found = all.find((b) => b.key === key);
+		if (!found) {
+			throw new Error(`no background ${key}`);
+		}
+		return found;
+	};
+
+	it("is ready at once for a drawn still", () => {
+		expect(readyOn(POSTER, true)).toBe("now");
+		expect(readyOn(bg("night"), true)).toBe("now");
+	});
+
+	it("waits for an image still to show", () => {
+		expect(readyOn(bg("first-light"), true)).toBe("image");
+	});
+
+	it("waits for a playing loop's first frame, or its poster when it rests", () => {
+		expect(readyOn(bg("rain-window"), true)).toBe("frame");
+		expect(readyOn(bg("rain-window"), false)).toBe("image");
 	});
 });
 

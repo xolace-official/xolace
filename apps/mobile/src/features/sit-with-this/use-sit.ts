@@ -4,7 +4,7 @@ import type { Id } from "@xolace/backend/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { BackHandler } from "react-native";
 import { useSessionMode } from "@/context/session-mode-context";
 import { goHome } from "@/lib/landing";
@@ -115,16 +115,17 @@ export function useSitData(): Sit {
 		router.replace(afterPath("solo"));
 	};
 
+	const back = useEffectEvent(() => finish(false));
 	useEffect(() => {
 		if (!focused) {
 			return;
 		}
 		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-			finish(false);
+			back();
 			return true;
 		});
 		return () => sub.remove();
-	});
+	}, [focused]);
 
 	let status: Sit["state"]["status"] = "ready";
 	if (result === undefined || !(standalone || session)) {

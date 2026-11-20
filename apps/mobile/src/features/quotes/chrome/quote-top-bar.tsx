@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { View } from "react-native";
 import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 import Animated, {
@@ -29,6 +29,7 @@ type Props = {
 	paused: boolean;
 	soundOn: boolean;
 	saved: boolean;
+	starKey: number;
 	locked: boolean;
 	onClose: () => void;
 	onPause: () => void;
@@ -48,8 +49,9 @@ export function QuoteTopBar(p: Props) {
 			withTiming(p.hidden ? 1 : 0, { duration: T.chrome, ...PLAY_AS_CHOSEN })
 		);
 	}, [p.hidden, gone]);
-	useEffect(() => {
-		if (!p.saved || m.reduced) {
+	// Pops on a keep (the handler bumps `starKey`), not when the quote loads already kept.
+	const pop = useEffectEvent(() => {
+		if (m.reduced) {
 			return;
 		}
 		const ms = T.starPop;
@@ -60,7 +62,12 @@ export function QuoteTopBar(p: Props) {
 				withTiming(1, { duration: ms * (1 - STAR_DIP_AT), ...step })
 			)
 		);
-	}, [p.saved, m.reduced, star]);
+	});
+	useEffect(() => {
+		if (p.starKey > 0) {
+			pop();
+		}
+	}, [p.starKey]);
 
 	const { progress: kb } = useReanimatedKeyboardAnimation();
 	const bar = useAnimatedStyle(() => ({

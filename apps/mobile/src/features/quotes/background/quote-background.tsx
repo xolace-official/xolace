@@ -12,7 +12,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { LinearGradient } from "@/components/shared/styled";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { EASE, SOFT, slice, T, useQuoteMotion } from "../motion/quote-motion";
-import type { QuoteBackground as Background } from "../quotes-model";
+import { type QuoteBackground as Background, readyOn } from "../quotes-model";
 import { SCRIM_CLEAR, scrimOf } from "../quotes-palette";
 import { BackgroundLayer } from "./background-layer";
 
@@ -31,7 +31,7 @@ export function QuoteBackground({
 	const { width, height } = useWindowDimensions();
 	const [base, setBase] = useState(background);
 	const [top, setTop] = useState<Background | null>(null);
-	const [settling, setSettling] = useState(false);
+	const [settling, setSettling] = useState<false | "drawing" | "frame">(false);
 	const reveal = useSharedValue(1);
 
 	if (background.key !== base.key && background.key !== top?.key) {
@@ -40,6 +40,18 @@ export function QuoteBackground({
 		}
 		setTop(background);
 		setSettling(false);
+	} else if (settling) {
+		const waitsOn = readyOn(base, play);
+		if (waitsOn === "now" || (settling === "frame" && waitsOn !== "frame")) {
+			// The new base is already drawn under the revealed top. An image or a loop drops the top
+			// from `onReady` instead, once it has drawn, so the swap never shows an empty frame.
+			// A loop that stops playing before its first frame has no draw left to wait for: its
+			// poster showed while it waited.
+			setTop(null);
+			setSettling(false);
+		} else if (waitsOn === "frame" && settling !== "frame") {
+			setSettling("frame");
+		}
 	}
 
 	useEffect(() => {
@@ -49,7 +61,7 @@ export function QuoteBackground({
 		reveal.set(0);
 		const done = () => {
 			setBase(top);
-			setSettling(true);
+			setSettling("drawing");
 		};
 		reveal.set(
 			withTiming(
@@ -96,7 +108,7 @@ export function QuoteBackground({
 					background={base}
 					key={base.key}
 					onReady={settling ? settled : undefined}
-					play={play && (!top || settling)}
+					play={play && (!top || settling !== false)}
 				/>
 				{top && (
 					<MaskedView

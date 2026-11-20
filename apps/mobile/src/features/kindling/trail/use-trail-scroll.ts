@@ -1,5 +1,5 @@
 import { useHeaderHeight } from "expo-router/react-navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { type LayoutChangeEvent, useWindowDimensions } from "react-native";
 import type Animated from "react-native-reanimated";
 import {
@@ -32,16 +32,11 @@ export function useTrailScroll({
 	const { height } = useWindowDimensions();
 	const scroll = useAnimatedRef<Animated.ScrollView>();
 	const headerH = useHeaderHeight();
-	const scrollY = useSharedValue(Number.NaN);
+	// No scroll event fires on mount: it starts at minus the header's height.
+	const scrollY = useSharedValue(-headerH);
 	const onScroll = useAnimatedScrollHandler((e) => {
 		scrollY.set(e.contentOffset.y);
 	});
-	// No scroll event fires on mount: it starts at minus the header's height.
-	useEffect(() => {
-		if (Number.isNaN(scrollY.get())) {
-			scrollY.set(-headerH);
-		}
-	}, [headerH, scrollY]);
 	const [trailTop, setTrailTop] = useState(0);
 	const onTrailLayout = (e: LayoutChangeEvent) =>
 		setTrailTop(e.nativeEvent.layout.y);
@@ -63,35 +58,38 @@ export function useTrailScroll({
 	};
 
 	const viewMax = Math.min(VIEW_MAX, height - bottom - cardH - CIRCLE);
-	useEffect(() => {
-		const stop = stops[open];
-		if (!(stop && trailTop)) {
-			return;
-		}
-		const y = trailTop + stop[1];
+	// Stops sit at distinct heights, so a new open stop always moves `openY`.
+	const stop = stops[open];
+	const openY = stop && trailTop ? trailTop + stop[1] : null;
+	const reveal = useEffectEvent((y: number, max: number, animated: boolean) => {
 		const seen = y - scrollY.get();
 		if (seen < VIEW_MIN) {
-			scrollToY(y - VIEW_MIN, !reduced);
-		} else if (seen > viewMax) {
-			scrollToY(y - viewMax, !reduced);
+			scrollToY(y - VIEW_MIN, animated);
+		} else if (seen > max) {
+			scrollToY(y - max, animated);
 		}
-	}, [open, reduced, trailTop, viewMax]);
+	});
+	useEffect(() => {
+		if (openY !== null) {
+			reveal(openY, viewMax, !reduced);
+		}
+	}, [openY, reduced, viewMax]);
 
+	// The first scroll to the fire, once the trail and card are measured, jumps; later ones glide.
 	const arrived = useRef(false);
 	useEffect(() => {
-		if (!(caught && trailTop && cardH)) {
+		if (!(trailTop && cardH)) {
 			return;
 		}
-		const animated = arrived.current && !reduced;
+		const first = !arrived.current;
 		arrived.current = true;
+		if (!caught) {
+			return;
+		}
+		const animated = !(first || reduced);
 		const id = setTimeout(() => scroll.current?.scrollToEnd({ animated }), 0);
 		return () => clearTimeout(id);
 	}, [caught, cardH, reduced, scroll, trailTop]);
-	useEffect(() => {
-		if (trailTop && cardH) {
-			arrived.current = true;
-		}
-	}, [cardH, trailTop]);
 
 	return {
 		onScroll,

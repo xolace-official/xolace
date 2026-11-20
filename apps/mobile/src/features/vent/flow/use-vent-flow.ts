@@ -1,5 +1,5 @@
 import type { SkTypeface } from "@shopify/react-native-skia";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { AccessibilityInfo, PixelRatio } from "react-native";
 import { withTiming } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
@@ -11,10 +11,10 @@ import {
 	useFieldControl,
 } from "@/features/vent/field/field-control";
 import { ASH_RUN_MS } from "@/features/vent/field/particle-after";
-import { COMPRESS_MS } from "@/features/vent/field/particle-config";
+import { COMPRESS_MS, FLASH_MS } from "@/features/vent/field/particle-config";
+import { useCrackle } from "@/features/vent/flow/use-crackle";
 import { useDrop } from "@/features/vent/flow/use-drop";
 import { useListening } from "@/features/vent/flow/use-listening";
-import { useVentSounds } from "@/features/vent/flow/use-vent-sounds";
 import { playReply, ventClock } from "@/features/vent/flow/vent-clock";
 import { useVentHaptics } from "@/features/vent/flow/vent-haptics";
 import type { VentBackend } from "@/features/vent/vent-backend";
@@ -95,7 +95,7 @@ export function useVentFlow(
 	const releasedAt = useRef(0);
 	const reply = backend.state.reply;
 	const words = reply ? replyWords(reply.words) : [];
-	useVentSounds(phase === "burn", reduced);
+	const crackle = useCrackle();
 
 	const release = (how: "tap" | "flick" | "ceiling", flx = 0, fly = 0) => {
 		if (phaseRef.current !== "rec") {
@@ -111,6 +111,8 @@ export function useVentFlow(
 		act().stop(how === "ceiling");
 		field.go("burn", { flx, fly });
 		say(VENT_COPY.said.letting);
+		// The crackle lands at the scatter, after the recorder has stopped.
+		at(COMPRESS_MS + FLASH_MS, () => crackle(reduced));
 	};
 	const soon = useListening(
 		phase === "rec",
@@ -198,17 +200,20 @@ export function useVentFlow(
 	};
 
 	const stage = backend.state.stage;
-	useEffect(() => {
+	const onStage = useEffectEvent((next: typeof stage) => {
 		if (phaseRef.current !== "burn") {
 			return;
 		}
-		if (stage === "heard") {
+		if (next === "heard") {
 			afterBurn();
 		}
-		if (stage === "gone") {
+		if (next === "gone") {
 			toGone();
 		}
-		// Only a new stage moves it on.
+	});
+	// Only a new stage moves the burn on.
+	useEffect(() => {
+		onStage(stage);
 	}, [stage]);
 
 	const drop = useDrop(phaseRef, (reason) => {
