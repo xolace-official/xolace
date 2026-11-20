@@ -24,8 +24,9 @@ const END_CLEAR = 40;
 
 /**
  * Moments (was Timeline): the mirror's line leads each card, grouped by day under a native large
- * title that folds on scroll. The list is the screen's first descendant (the soft edge needs it);
- * the free window's door floats after it.
+ * title that folds on scroll. The list is the screen's first native view, with no wrapper: iOS
+ * folds the large title (and draws the soft edge) only for a scroll view it finds there. The
+ * header's `contentStyle` paints the background; the free window's door floats after the list.
  */
 export function MomentsScreen() {
 	const { state, actions } = useMomentsScreen();
@@ -37,7 +38,7 @@ export function MomentsScreen() {
 	const [arriving, setArriving] = useState(true);
 	const door = state?.windowDays ?? null;
 	return (
-		<View className="flex-1 bg-background">
+		<>
 			<Stack.Screen
 				options={{
 					...header,
@@ -107,6 +108,6 @@ export function MomentsScreen() {
 					onSeen={actions.doorSeen}
 				/>
 			)}
-		</View>
+		</>
 	);
 }

@@ -35,8 +35,8 @@ type Props = {
  */
 export function WritingBox({ running, reduced, onWriting, inputRef }: Props) {
 	const { state, actions } = useReflect();
-	const { text, late, listening, takeN, prompt } = state;
-	const drop = useTakeDrop(text, listening, takeN);
+	const { text, late, listening, takeN, prompt, take } = state;
+	const drop = useTakeDrop(text, listening, takeN, !take.scribe);
 	const [warm, setWarm] = useState<Warmth | null>(null);
 	const stamp = useRef(0);
 

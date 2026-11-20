@@ -50,6 +50,7 @@ type Props = {
 	pickMode: boolean;
 	canDrag: boolean;
 	reduced: boolean;
+	/** Runs on the RN runtime (`scheduleOnRN`): a plain function, never a Pulsar preset (a worklet). */
 	onArm: () => void;
 	onChoose: (i: number) => void;
 	onTap: (i: number) => void;
