@@ -31,12 +31,14 @@ describe("createSingleFlight", () => {
 	});
 
 	it("lets go after a failed attempt, so Start can be tried again", async () => {
-		const gate = createSingleFlight();
+		const seen: boolean[] = [];
+		const gate = createSingleFlight((busy) => seen.push(busy));
 		const failing = deferred();
 		const a = gate.run(() => failing.promise);
 		failing.reject(new Error("no mic"));
 		await expect(a).rejects.toThrow("no mic");
 		expect(gate.busy).toBe(false);
+		expect(seen).toEqual([true, false]);
 		expect(await gate.run(async () => undefined)).toBe(true);
 	});
 
