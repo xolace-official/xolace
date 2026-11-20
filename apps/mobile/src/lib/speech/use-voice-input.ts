@@ -12,7 +12,8 @@ import { joinDictation } from "@/lib/speech/dictation-transcript";
 
 export type VoiceStart = "started" | "denied" | "unavailable" | "left";
 
-export function useVoiceInput() {
+/** `onPartial` hears each transcript as it grows, the same text `partialTranscript` holds. */
+export function useVoiceInput(onPartial?: (transcript: string) => void) {
 	const [isRecording, setIsRecording] = useState(false);
 	const [partialTranscript, setPartialTranscript] = useState("");
 	const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export function useVoiceInput() {
 		}
 		if (text) {
 			setPartialTranscript(text);
+			onPartial?.(text);
 		}
 	});
 

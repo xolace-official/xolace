@@ -1,6 +1,6 @@
 import { useIsFocused } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { MorphLoader } from "@/components/shared/loader/morph/morph-loader";
@@ -77,16 +77,19 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 
 	const started = useRef(false);
 	const live = ready && faces;
-	useEffect(() => {
-		if (!live || started.current) {
-			return;
-		}
-		started.current = true;
+	const arrive = useEffectEvent(() => {
 		flow.arrive(scene?.at?.clock !== "c1");
 		if (scene) {
 			applyScene(scene, { clocks, face, flow, send, slider });
 		}
 	});
+	useEffect(() => {
+		if (!live || started.current) {
+			return;
+		}
+		started.current = true;
+		arrive();
+	}, [live]);
 
 	const ctaTop = H - LAYOUT.cta.bottom2 - LAYOUT.cta.height;
 	return (

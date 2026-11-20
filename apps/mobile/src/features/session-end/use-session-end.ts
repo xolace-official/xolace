@@ -79,7 +79,7 @@ export function useSessionEndData({
 			left.current = true;
 			goHome();
 		}
-	}, [missing, router]);
+	}, [missing]);
 
 	const unseenUnlock =
 		session?.domainUnlock !== undefined &&

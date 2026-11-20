@@ -1,7 +1,6 @@
-import { useEffect } from "react";
 import { View } from "react-native";
 import { useHeaderScrollY } from "react-native-collapsible-tab";
-import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
+import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
 import { Aura } from "@/components/shared/aura";
@@ -24,10 +23,7 @@ const AURA_TOKENS = ["you-aura-warm", "you-aura-cool"] as const;
 export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 	const { hero } = useYouHome().state;
 	const { tip, closeTip } = useYouUi();
-	const tipOpen = useSharedValue(tip.open);
-	useEffect(() => {
-		tipOpen.set(tip.open);
-	}, [tip.open, tipOpen]);
+	const tipOpen = tip.open;
 	const collapse = useHeaderScrollY();
 	useCollapseFollowsRange();
 	const [warm = "", cool = ""] = useTokenColors(AURA_TOKENS);
@@ -35,7 +31,7 @@ export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 	useAnimatedReaction(
 		() => Math.round(collapse.get() / SCROLL_STEP),
 		(now, before) => {
-			if (tipOpen.get() && before !== null && now !== before) {
+			if (tipOpen && before !== null && now !== before) {
 				scheduleOnRN(closeTip);
 			}
 		}

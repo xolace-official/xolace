@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import type { SessionEnd } from "./session-end-data";
 import { type NextKey, nextKey } from "./session-end-model";
 
@@ -18,13 +18,10 @@ export function useNextKey({
 	if (moment === 2 && kept === null && live !== "loading") {
 		setKept(live);
 	}
-	const shown = useRef(session.actions.nextShown);
-	useEffect(() => {
-		shown.current = session.actions.nextShown;
-	});
+	const shown = useEffectEvent(session.actions.nextShown);
 	useEffect(() => {
 		if (kept !== null) {
-			shown.current(kept);
+			shown(kept);
 		}
 	}, [kept]);
 	return kept ?? live;

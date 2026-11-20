@@ -7,7 +7,14 @@ import {
 // (the host object answers `'logEvent' in target` without exposing the method).
 import { AppMetrics } from "expo-observe";
 import { usePostHog } from "posthog-react-native";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import {
+	useCallback,
+	useEffect,
+	useEffectEvent,
+	useReducer,
+	useRef,
+	useState,
+} from "react";
 import {
 	clearReflectDraft,
 	onReflectDraftWiped,
@@ -21,12 +28,13 @@ import {
 } from "@/features/reflect/session/session-service";
 import type {
 	FeedbackType,
+	ReflectionAction,
 	ReflectionStateName,
 } from "@/features/reflect/session/types";
 import { useSession } from "@/features/reflect/session/use-session";
 import { useDictation } from "@/features/reflect/write/dictation/use-dictation";
 import { trackFirstReflection } from "@/lib/intake-analytics";
-import { initialState, reducer } from "./reflection-reducer";
+import { initialState, timedReducer } from "./reflection-reducer";
 
 const MIRROR_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
 	"mirror",
@@ -38,26 +46,38 @@ const MIRROR_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
 
 export function useReflectionMachine() {
 	const { userId } = useAuth();
-	const [state, dispatch] = useReducer(reducer, initialState, (s) => ({
+	const [state, dispatchAt] = useReducer(timedReducer, initialState, (s) => ({
 		...s,
 		entryText: readReflectDraft(userId),
 	}));
+	// Stable like a reducer's dispatch: this hook bails out of the compiler (try/finally),
+	// so the callbacks below list their deps by hand.
+	const dispatch = useCallback(
+		(action: ReflectionAction) => dispatchAt({ ...action, at: Date.now() }),
+		[]
+	);
 	const [draftOwner, setDraftOwner] = useState(userId);
 	if (draftOwner !== userId) {
 		setDraftOwner(userId);
 		dispatch({ entryText: readReflectDraft(userId), type: "ACCOUNT_SWITCHED" });
 	}
 	const posthog = usePostHog();
+	const voicePrefixRef = useRef("");
 	const {
 		isRecording,
-		partialTranscript,
 		plusDictation,
 		dictationUpsell,
 		startRecording,
 		stopRecording,
 		abortRecording,
-	} = useDictation((text) => dispatch({ text, type: "VOICE_APPEND" }));
-	const voicePrefixRef = useRef("");
+	} = useDictation(
+		(text) => dispatch({ text, type: "VOICE_APPEND" }),
+		(partial) => {
+			const prefix = voicePrefixRef.current;
+			const text = prefix ? `${prefix} ${partial}` : partial;
+			dispatch({ text, type: "VOICE_TRANSCRIPT" });
+		}
+	);
 	usePersistReflectDraft(userId, state.entryText, state.screen);
 	useEffect(
 		() => onReflectDraftWiped(() => dispatch({ type: "DISCARD_DRAFT" })),
@@ -85,20 +105,12 @@ export function useReflectionMachine() {
 
 	const prevServerStateRef = useRef<string | null>(null);
 	const shownSessionRef = useRef<typeof sessionId>(null);
-	const typingStartRef = useRef<number | null>(null);
 	const submitTimestampRef = useRef<number | null>(null);
-	const freezeOccurredRef = useRef(false);
-	const freezeStartRef = useRef<number | null>(null);
-	const freezeDurationRef = useRef<number | undefined>(undefined);
 	const busyRef = useRef(false);
 
 	const clearRefs = useCallback(() => {
 		prevServerStateRef.current = null;
-		typingStartRef.current = null;
 		submitTimestampRef.current = null;
-		freezeOccurredRef.current = false;
-		freezeStartRef.current = null;
-		freezeDurationRef.current = undefined;
 		busyRef.current = false;
 		voicePrefixRef.current = "";
 	}, []);
@@ -111,16 +123,7 @@ export function useReflectionMachine() {
 		[posthog]
 	);
 
-	useEffect(() => {
-		if (!partialTranscript) {
-			return;
-		}
-		const prefix = voicePrefixRef.current;
-		const text = prefix ? `${prefix} ${partialTranscript}` : partialTranscript;
-		dispatch({ text, type: "VOICE_TRANSCRIPT" });
-	}, [partialTranscript]);
-
-	useEffect(() => {
+	const projectServerState = useEffectEvent(() => {
 		if (!serverState || serverState === prevServerStateRef.current) {
 			return;
 		}
@@ -175,20 +178,17 @@ export function useReflectionMachine() {
 		} else if (next && next !== state.screen) {
 			dispatch({ screen: next, type: "SESSION_RESUMED" });
 		}
-	}, [
-		serverState,
-		mirrorText,
-		errorCode,
-		errorMessage,
-		state.screen,
-		session,
-		resetSession,
-		clearRefs,
-		posthog,
-		dispatchError,
-		abortRecording,
-	]);
+	});
+	useEffect(() => {
+		projectServerState();
+	}, [serverState, mirrorText]);
 
+	const resetIfGone = useEffectEvent(() => {
+		if (MIRROR_SCREENS.has(state.screen)) {
+			clearRefs();
+			dispatch({ type: "RESET" });
+		}
+	});
 	useEffect(() => {
 		if (sessionId) {
 			shownSessionRef.current = sessionId;
@@ -198,29 +198,8 @@ export function useReflectionMachine() {
 			return;
 		}
 		shownSessionRef.current = null;
-		if (MIRROR_SCREENS.has(state.screen)) {
-			clearRefs();
-			dispatch({ type: "RESET" });
-		}
-	}, [sessionId, isLoading, state.screen, clearRefs]);
-
-	useEffect(() => {
-		if (state.screen === "typing-nudge") {
-			freezeOccurredRef.current = true;
-			freezeStartRef.current = Date.now();
-		} else if (state.screen === "typing" && freezeStartRef.current) {
-			freezeDurationRef.current =
-				(freezeDurationRef.current ?? 0) +
-				(Date.now() - freezeStartRef.current);
-			freezeStartRef.current = null;
-		}
-	}, [state.screen]);
-
-	useEffect(() => {
-		if (state.screen === "typing" && !typingStartRef.current) {
-			typingStartRef.current = Date.now();
-		}
-	}, [state.screen]);
+		resetIfGone();
+	}, [sessionId, isLoading]);
 
 	const submitReflection = useCallback(async () => {
 		if (busyRef.current) {
@@ -229,21 +208,21 @@ export function useReflectionMachine() {
 		busyRef.current = true;
 		abortRecording();
 		dispatch({ type: "SUBMIT" });
-		const duration = typingStartRef.current
-			? Date.now() - typingStartRef.current
-			: undefined;
+		const { typing } = state;
+		const duration =
+			typing.startedAt === null ? undefined : Date.now() - typing.startedAt;
 		try {
 			await initiateAndSubmit(
 				state.entryText,
 				state.entryType,
 				duration,
-				freezeOccurredRef.current,
-				freezeDurationRef.current
+				typing.froze,
+				typing.frozeMs
 			);
 			clearReflectDraft();
 			posthog.capture("reflection_submitted", {
 				entry_type: state.entryType,
-				freeze_occurred: freezeOccurredRef.current,
+				freeze_occurred: typing.froze,
 				input_length: state.entryText.length,
 			});
 			trackFirstReflection(posthog);
@@ -256,6 +235,7 @@ export function useReflectionMachine() {
 	}, [
 		state.entryText,
 		state.entryType,
+		state.typing,
 		initiateAndSubmit,
 		posthog,
 		dispatchError,
@@ -333,36 +313,38 @@ export function useReflectionMachine() {
 		}
 	}, [turnsCount, confirmMirror, posthog, dispatchError]);
 
-	const handleNotQuite = useCallback(() => {
+	const handleNotQuite = useCallback((): boolean => {
 		if (state.screen !== "mirror") {
-			return;
+			return false;
 		}
 		if (turnsCount >= REFINEMENT_MAX_TURNS) {
 			dispatch({ screen: "gave-up", type: "SESSION_RESUMED" });
-		} else {
-			posthog.capture("mirror_not_quite", {
-				claimStrength: session?.claimStrength ?? null,
-				sessionId,
-				turns_count: turnsCount,
-			});
-			dispatch({ type: "NOT_QUITE" });
+			return false;
 		}
+		posthog.capture("mirror_not_quite", {
+			claimStrength: session?.claimStrength ?? null,
+			sessionId,
+			turns_count: turnsCount,
+		});
+		dispatch({ type: "NOT_QUITE" });
+		return true;
 	}, [state.screen, turnsCount, posthog, sessionId, session?.claimStrength]);
 
-	const handleSayMore = useCallback(() => {
+	const handleSayMore = useCallback((): boolean => {
 		if (state.screen !== "mirror") {
-			return;
+			return false;
 		}
 		if (turnsCount >= REFINEMENT_MAX_TURNS) {
 			dispatch({ screen: "gave-up", type: "SESSION_RESUMED" });
-		} else {
-			posthog.capture("mirror_say_more", {
-				claimStrength: session?.claimStrength ?? null,
-				sessionId,
-				turns_count: turnsCount,
-			});
-			dispatch({ type: "SAY_MORE" });
+			return false;
 		}
+		posthog.capture("mirror_say_more", {
+			claimStrength: session?.claimStrength ?? null,
+			sessionId,
+			turns_count: turnsCount,
+		});
+		dispatch({ type: "SAY_MORE" });
+		return true;
 	}, [state.screen, turnsCount, posthog, sessionId, session?.claimStrength]);
 
 	const handleGaveUpPathSelection = useCallback(async () => {
@@ -395,31 +377,36 @@ export function useReflectionMachine() {
 		}
 	}, [completeAsExit, posthog, dispatchError]);
 
-	const handleSelectSolo = useCallback(async () => {
+	// Resolve false only when the selection failed and the error screen is up.
+	const handleSelectSolo = useCallback(async (): Promise<boolean> => {
 		if (busyRef.current) {
-			return;
+			return true;
 		}
 		busyRef.current = true;
 		try {
 			await selectPath("solo");
 			posthog.capture("path_selected", { path: "solo" });
+			return true;
 		} catch (error) {
 			dispatchError(extractErrorMessage(error));
+			return false;
 		} finally {
 			busyRef.current = false;
 		}
 	}, [selectPath, posthog, dispatchError]);
 
-	const handleSelectPeers = useCallback(async () => {
+	const handleSelectPeers = useCallback(async (): Promise<boolean> => {
 		if (busyRef.current) {
-			return;
+			return true;
 		}
 		busyRef.current = true;
 		try {
 			await selectPath("peers");
 			posthog.capture("path_selected", { path: "peers" });
+			return true;
 		} catch (error) {
 			dispatchError(extractErrorMessage(error));
+			return false;
 		} finally {
 			busyRef.current = false;
 		}
@@ -512,16 +499,12 @@ export function useReflectionMachine() {
 		}
 	}, [abandon, resetSession, clearRefs, abortRecording]);
 
-	const abortRecordingRef = useRef(abortRecording);
-	useEffect(() => {
-		abortRecordingRef.current = abortRecording;
-	});
-	const dispatchAction = useCallback<typeof dispatch>((action) => {
+	const dispatchAction = (action: ReflectionAction) => {
 		if (action.type === "DISCARD_DRAFT") {
-			abortRecordingRef.current();
+			abortRecording();
 		}
 		dispatch(action);
-	}, []);
+	};
 
 	const handleRetry = useCallback(async () => {
 		if (busyRef.current) {

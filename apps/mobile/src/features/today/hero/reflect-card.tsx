@@ -52,23 +52,17 @@ export function ReflectCard() {
 	}, [focused, release, rest]);
 
 	const cardRef = useRef<ComponentRef<typeof View>>(null);
-	const [refocus, setRefocus] = useState(false);
+	const refocus = useRef<ReturnType<typeof setTimeout>>(undefined);
+	useEffect(() => () => clearTimeout(refocus.current), []);
 	const writeInstead = () => {
 		unchoose();
-		setRefocus(true);
-	};
-	useEffect(() => {
-		if (!refocus || chosen) {
-			return;
-		}
-		const id = setTimeout(() => {
-			setRefocus(false);
+		clearTimeout(refocus.current);
+		refocus.current = setTimeout(() => {
 			if (cardRef.current) {
 				AccessibilityInfo.sendAccessibilityEvent(cardRef.current, "focus");
 			}
 		}, HERO.bodyOutMs);
-		return () => clearTimeout(id);
-	}, [refocus, chosen]);
+	};
 
 	const top = useSharedValue(0);
 	const onScreen = useOnScreen(top, size?.h ?? FALLBACK_H);

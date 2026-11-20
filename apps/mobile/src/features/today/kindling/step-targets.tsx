@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { AccessibilityInfo, Pressable } from "react-native";
 import { COPY } from "../copy";
 import { PATH_H, type TwigView } from "./kindling-model";
@@ -27,41 +26,42 @@ type Props = {
 	twigs: readonly TwigView[];
 	shown: readonly TwigView["state"][];
 	current: number;
-	peek: number;
 	onPeek: (i: number) => void;
 };
 
-export function StepTargets({
-	nodes,
-	twigs,
-	shown,
-	current,
-	peek,
-	onPeek,
-}: Props) {
-	const peeked = peek >= 0 ? twigs[peek] : undefined;
-	const peekLine = peeked
-		? `${peeked.title}, ${stepState(shown[peek], false)}`
-		: null;
-	useEffect(() => {
-		if (peekLine) {
-			AccessibilityInfo.announceForAccessibility(peekLine);
+export function StepTargets({ nodes, twigs, shown, current, onPeek }: Props) {
+	const peekAt = (i: number) => {
+		if (i === current) {
+			return;
 		}
-	}, [peekLine]);
+		onPeek(i);
+		const twig = twigs[i];
+		if (twig) {
+			AccessibilityInfo.announceForAccessibility(
+				`${twig.title}, ${stepState(shown[i], false)}`
+			);
+		}
+	};
 
-	return nodes.map(([x], i) => {
-		const isCurrent = i === current;
-		return (
-			<Pressable
-				accessibilityHint={isCurrent ? undefined : COPY.kindling.a11y.peekHint}
-				accessibilityLabel={twigs[i]?.title}
-				accessibilityRole={isCurrent ? "text" : "button"}
-				accessibilityValue={{ text: stepState(shown[i], isCurrent) }}
-				className="absolute"
-				key={twigs[i]?.id ?? i}
-				onPress={() => onPeek(i)}
-				style={{ height: PATH_H, left: x - HIT / 2, top: 0, width: HIT }}
-			/>
-		);
-	});
+	return (
+		<>
+			{nodes.map(([x], i) => {
+				const isCurrent = i === current;
+				return (
+					<Pressable
+						accessibilityHint={
+							isCurrent ? undefined : COPY.kindling.a11y.peekHint
+						}
+						accessibilityLabel={twigs[i]?.title}
+						accessibilityRole={isCurrent ? "text" : "button"}
+						accessibilityValue={{ text: stepState(shown[i], isCurrent) }}
+						className="absolute"
+						key={twigs[i]?.id ?? i}
+						onPress={() => peekAt(i)}
+						style={{ height: PATH_H, left: x - HIT / 2, top: 0, width: HIT }}
+					/>
+				);
+			})}
+		</>
+	);
 }

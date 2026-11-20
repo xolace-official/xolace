@@ -14,8 +14,16 @@ const QUALITY = {
 	window: 2000,
 } as const;
 
+/**
+ * Measures frame times once `run` turns true, then holds the verdict. A started measurement
+ * runs to its verdict even if `run` turns false again; only unmounting stops it.
+ */
 export function useQualityGate(run: boolean): boolean {
 	const [low, setLow] = useState(false);
+	const [started, setStarted] = useState(run);
+	if (run && !started) {
+		setStarted(true);
+	}
 	const smooth = useSharedValue(0);
 	const startedAt = useSharedValue(-1);
 	const slow = useSharedValue(0);
@@ -51,12 +59,12 @@ export function useQualityGate(run: boolean): boolean {
 
 	useEffect(() => {
 		gateRef.current = gate;
-		if (!run) {
+		if (!started) {
 			return;
 		}
 		gate.setActive(true);
 		return () => gate.setActive(false);
-	}, [gate, run]);
+	}, [gate, started]);
 
 	return low;
 }

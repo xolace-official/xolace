@@ -8,7 +8,6 @@ import { useFace } from "@/components/xolace-face/use-face";
 import { fadeUp } from "@/design/entering";
 import { cn } from "@/lib/cn";
 import { playErrorNotice, useProcessingBreathHaptic } from "@/lib/haptics";
-import { useQualityGate } from "@/lib/motion/use-quality-gate";
 import { COPY } from "../copy";
 import { FACE } from "../face-poses";
 import { LAYOUT, useBoardY } from "../layout";
@@ -24,12 +23,11 @@ const E = LAYOUT.enso;
 const W = COPY.wait;
 const GAZE_AT_YOU = { x: 0, y: -0.2 } as const;
 const CARD_IN = { ms: 400, rise: 10 } as const;
-let gateRan = false;
 
 export function WaitStage() {
 	const { state, actions } = useReflect();
 	const { stage, waitStage, slow, offline, error } = state;
-	const { late, reduced, live, low, setLow } = useReflectDraw();
+	const { late, reduced, live, low } = useReflectDraw();
 	const y = useBoardY();
 	const { width } = useWindowDimensions();
 	const landed = stage === "land";
@@ -49,16 +47,6 @@ export function WaitStage() {
 			playErrorNotice();
 		}
 	}, [failed]);
-
-	const gateLow = useQualityGate(!gateRan && live);
-	useEffect(() => {
-		if (live) {
-			gateRan = true;
-		}
-		if (gateLow) {
-			setLow(true);
-		}
-	}, [gateLow, live, setLow]);
 
 	useEffect(() => {
 		breath();

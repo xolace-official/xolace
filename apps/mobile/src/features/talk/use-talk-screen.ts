@@ -72,24 +72,18 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 		}
 	});
 	useEffect(() => startReopened(), []);
-	useEffect(() => {
-		if (talk.error) {
-			justEnded.current = false;
+	const leave = useEffectEvent(() => {
+		if (justEnded.current && !talk.error) {
+			toast(TALK_COPY.live.ended);
 		}
-	}, [talk.error]);
-	useEffect(
-		() => () => {
-			if (justEnded.current) {
-				toast(TALK_COPY.live.ended);
-			}
-		},
-		[]
-	);
+	});
+	useEffect(() => () => leave(), []);
 
 	return {
 		actions: {
 			begin: () =>
 				void runStart(async () => {
+					justEnded.current = false;
 					setStartError(null);
 					preview.stop();
 					if (isLow(week) || talk.started) {

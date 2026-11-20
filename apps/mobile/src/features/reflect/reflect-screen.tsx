@@ -11,6 +11,7 @@ import Animated, {
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { useClock, useLive } from "@/lib/motion/clock";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useQualityGate } from "@/lib/motion/use-quality-gate";
 import { AmbientLight } from "./chrome/ambient-light";
 import { ReflectHeader } from "./chrome/reflect-header";
 import { ReflectSky } from "./chrome/reflect-sky";
@@ -45,13 +46,17 @@ const VIEWS: Record<StageView, () => JSX.Element> = {
 	wait: WaitStage,
 	write: WriteStage,
 };
+// The gate measures once per app run; its verdict holds for every later Reflect.
+let gateRan = false;
+let lowDevice = false;
 
 export function ReflectScreen() {
 	const { state } = useReflect();
 	const { stage, heavy, late, ready } = state;
 	const reduced = useEffectiveReducedMotion();
 	const live = useLive(reduced);
-	const [low, setLow] = useState(false);
+	const [firstReflect] = useState(() => !gateRan);
+	const [lowBefore] = useState(() => lowDevice);
 
 	const clock = useClock(live);
 	const breath = useDerivedValue(
@@ -81,6 +86,21 @@ export function ReflectScreen() {
 		return () => cancelAnimationFrame(id);
 	}, [stageUp, ready]);
 
+	const view = VIEW_OF[stage];
+	const gating = firstReflect && stageUp && ready && view === "wait" && live;
+	const gateLow = useQualityGate(gating);
+	const low = lowBefore || gateLow;
+	useEffect(() => {
+		if (gating) {
+			gateRan = true;
+		}
+	}, [gating]);
+	useEffect(() => {
+		if (gateLow) {
+			lowDevice = true;
+		}
+	}, [gateLow]);
+
 	const draw: ReflectDraw = {
 		late,
 		liftFrom,
@@ -88,9 +108,7 @@ export function ReflectScreen() {
 		live,
 		low,
 		reduced,
-		setLow,
 	};
-	const view = VIEW_OF[stage];
 	const Stage = VIEWS[view];
 	const fade = reduced ? REDUCED_FADE_MS : STAGE_FADE_MS;
 

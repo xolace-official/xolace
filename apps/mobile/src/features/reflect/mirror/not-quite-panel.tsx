@@ -57,9 +57,7 @@ export function NotQuitePanel({ line }: { line: string }) {
 				...PLAY_AS_CHOSEN,
 			})
 		);
-		if (open) {
-			Presets.wobble();
-		} else {
+		if (!open) {
 			input.current?.blur();
 		}
 	}, [open, shown]);

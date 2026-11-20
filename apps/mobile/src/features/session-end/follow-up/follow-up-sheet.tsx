@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,20 +25,14 @@ export function FollowUpSheet() {
 	const insets = useSafeAreaInsets();
 	const { state, actions } = useFollowUpSheet();
 	const answered = useRef(false);
-	const answer = useRef(actions.answer);
 	const { open } = state;
 
-	useEffect(() => {
-		answer.current = actions.answer;
+	const dismissed = useEffectEvent(() => {
+		if (!answered.current) {
+			actions.answer(null);
+		}
 	});
-	useEffect(
-		() => () => {
-			if (!answered.current) {
-				answer.current(null);
-			}
-		},
-		[]
-	);
+	useEffect(() => () => dismissed(), []);
 	useEffect(() => {
 		if (!(open || answered.current)) {
 			answered.current = true;

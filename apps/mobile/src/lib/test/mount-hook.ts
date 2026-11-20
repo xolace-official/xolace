@@ -6,9 +6,24 @@ import {
 } from "react-reconciler/constants";
 
 export function mountHook(hook: () => unknown): void {
+	renderHook(hook, undefined).unmount();
+}
+
+export type RenderedHook<P, R> = {
+	result: () => R;
+	rerender: (props: P) => void;
+	unmount: () => void;
+};
+
+/** Keeps the hook mounted, so a test can re-render it with new props. */
+export function renderHook<P, R>(
+	hook: (props: P) => R,
+	props: P
+): RenderedHook<P, R> {
 	(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-	const Probe = () => {
-		hook();
+	let latest: { value: R } | null = null;
+	const Probe = (p: { props: P }) => {
+		latest = { value: hook(p.props) };
 		return null;
 	};
 	const container = { children: [] as unknown[] };
@@ -24,15 +39,27 @@ export function mountHook(hook: () => unknown): void {
 		noop,
 		null
 	);
-	act(() =>
-		reconciler.updateContainer(
-			createElement(Probe) as ReactNode,
-			root,
-			null,
-			null
-		)
-	);
-	act(() => reconciler.updateContainer(null, root, null, null));
+	const render = (next: P) =>
+		act(() =>
+			reconciler.updateContainer(
+				createElement(Probe, { props: next }) as ReactNode,
+				root,
+				null,
+				null
+			)
+		);
+	render(props);
+	return {
+		rerender: render,
+		result: () => {
+			if (!latest) {
+				throw new Error("The hook has not rendered");
+			}
+			return latest.value;
+		},
+		unmount: () =>
+			act(() => reconciler.updateContainer(null, root, null, null)),
+	};
 }
 
 const noop = () => {};
