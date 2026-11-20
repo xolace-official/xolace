@@ -74,6 +74,7 @@ describe("a Quotes visit's UI state", () => {
 		act(() => {
 			vi.runAllTimers();
 		});
+		expect(first.store.getState().view).toBe("offer");
 
 		const next = open();
 		expect(next.seen[0]).toBe("today");
