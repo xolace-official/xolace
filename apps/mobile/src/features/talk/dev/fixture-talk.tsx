@@ -8,9 +8,9 @@ import { requestRecordingPermissionsAsync } from "expo-audio";
 import { router } from "expo-router";
 import { useEffect, useEffectEvent, useState } from "react";
 import { playAffirmativePress } from "@/lib/haptics";
+import { createSingleFlight } from "@/lib/single-flight";
 import type { Directness } from "@/lib/talk/use-talk-style";
 import { useVoicePreview } from "@/lib/talk/use-voice-preview";
-import { createStartGate } from "../start-gate";
 import {
 	type TalkHelp,
 	type TalkScreen,
@@ -47,7 +47,7 @@ export function FixtureTalk(p: FixtureTalkProps) {
 	const [view, setView] = useState<TalkView>(p.view ?? "companion");
 	const [micAsk, setMicAsk] = useState(p.micAsk ?? false);
 
-	const [gate] = useState(createStartGate);
+	const [gate] = useState(createSingleFlight);
 	const [starting, setStarting] = useState(false);
 
 	const begin = () =>

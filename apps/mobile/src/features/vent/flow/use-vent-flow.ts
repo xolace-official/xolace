@@ -122,6 +122,9 @@ export function useVentFlow(
 
 	const startRec = async () => {
 		const got = await act().start();
+		if (got === "busy") {
+			return;
+		}
 		if (!clock.live) {
 			if (got === "started") {
 				act().drop("unmounted");

@@ -4,6 +4,8 @@ export type VentStage = "idle" | "recording" | "processing" | "heard" | "gone";
 
 export type VentReply = { words: string; crisis: boolean };
 
+export type VentStart = "started" | "off" | "failed" | "busy";
+
 export type VentBackend = {
 	state: {
 		stage: VentStage;
@@ -17,7 +19,7 @@ export type VentBackend = {
 	};
 	actions: {
 		understand: () => void;
-		start: () => Promise<"started" | "off" | "failed">;
+		start: () => Promise<VentStart>;
 		recordedMs: () => number;
 		stop: (atCeiling: boolean) => void;
 		burnt: () => void;

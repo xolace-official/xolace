@@ -2,13 +2,14 @@ import { useAuth } from "@clerk/expo";
 import { api } from "@xolace/backend/api";
 import { useMutation } from "convex/react";
 import { router, useNavigation } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { DELETE_COPY, type SheetKind } from "@/features/settings/privacy/copy";
 import type { DeleteSheet } from "@/features/settings/privacy/delete/delete-sheet-data";
 import { deletionAlreadyRequested } from "@/features/settings/privacy/privacy-model";
 import { convexErrorCode } from "@/lib/convex-error-code";
+import { useSingleFlight } from "@/lib/use-single-flight";
 import { useAppStore } from "@/store/store";
 
 export function useDeleteSheet(
@@ -20,10 +21,9 @@ export function useDeleteSheet(
 	const { signOut, userId } = useAuth();
 	const { isPlus } = usePlusEntitlement();
 	const navigation = useNavigation();
-	const inFlight = useRef(false);
-	const [busy, setBusy] = useState(false);
+	const flight = useSingleFlight();
 	const [deleted, setDeleted] = useState(false);
-	const locked = busy || deleted;
+	const locked = flight.busy || deleted;
 
 	useEffect(() => {
 		navigation.setOptions({ gestureEnabled: !locked });
@@ -53,29 +53,22 @@ export function useDeleteSheet(
 	};
 
 	const confirm = async () => {
-		setBusy(true);
+		const remove = kind === "data" ? deleteData : deleteAccount;
 		try {
-			await (kind === "data" ? deleteData() : deleteAccount());
+			await remove();
 			toast(DELETE_COPY.sheets[kind].done);
 		} catch {
 			toast(DELETE_COPY.failed.title, {
 				description: DELETE_COPY.failed.description,
 				variant: "danger",
 			});
-		} finally {
-			inFlight.current = false;
-			setBusy(false);
 		}
 	};
 
 	return {
 		actions: {
 			confirm: () => {
-				if (inFlight.current) {
-					return;
-				}
-				inFlight.current = true;
-				confirm().catch(() => undefined);
+				flight.run(confirm).catch(() => undefined);
 			},
 			keep: () => {
 				if (!locked) {
@@ -83,6 +76,6 @@ export function useDeleteSheet(
 				}
 			},
 		},
-		state: { busy, deleted, kind, plus: isPlus },
+		state: { busy: flight.busy, deleted, kind, plus: isPlus },
 	};
 }

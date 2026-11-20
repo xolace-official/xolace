@@ -13,6 +13,7 @@ import type {
 	VentBackend,
 	VentReply,
 	VentStage,
+	VentStart,
 } from "@/features/vent/vent-backend";
 import {
 	afterBurn,
@@ -21,6 +22,7 @@ import {
 } from "@/features/vent/vent-model";
 import { useMeteringRecorder } from "@/lib/audio/use-metering-recorder";
 import { useVoiceProcessingConsent } from "@/lib/consent/use-voice-processing-consent";
+import { createSingleFlight } from "@/lib/single-flight";
 import { useAppStore } from "@/store/store";
 
 function deleteTake(uri: string) {
@@ -58,6 +60,7 @@ export function useVent(): VentBackend {
 	const durationAtStop = useRef(0);
 	const takeUri = useRef<string | null>(null);
 	const consent = useRef<Promise<void> | null>(null);
+	const [startFlight] = useState(createSingleFlight);
 
 	useEffect(() => {
 		if (!micOff) {
@@ -96,7 +99,7 @@ export function useVent(): VentBackend {
 		}
 	};
 
-	const start = async () => {
+	const begin = async () => {
 		if (stageRef.current !== "idle") {
 			return "failed" as const;
 		}
@@ -116,6 +119,14 @@ export function useVent(): VentBackend {
 		setStage("recording");
 		posthog.capture("vent_started");
 		return "started" as const;
+	};
+
+	const start = async (): Promise<VentStart> => {
+		let got: VentStart = "busy";
+		await startFlight.run(async () => {
+			got = await begin();
+		});
+		return got;
 	};
 
 	const upload = async (uri: string, durationMs: number) => {

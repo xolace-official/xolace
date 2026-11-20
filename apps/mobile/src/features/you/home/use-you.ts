@@ -1,7 +1,6 @@
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
-import { useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
@@ -28,6 +27,7 @@ import { convexErrorCode } from "@/lib/convex-error-code";
 import { playAffirmativePress } from "@/lib/haptics";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { freezeReason, freezeRefusal } from "@/lib/streak-freeze";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
 export function useYou(): YouHome {
 	const summary = useProfileSummary();
@@ -41,8 +41,7 @@ export function useYou(): YouHome {
 	const { isPlus, isLoading: plusLoading } = usePlusEntitlement();
 	const openPaywall = usePaywall((s) => s.open);
 	const buyFreeze = useMutation(api.achievements.sparks.buyFreeze);
-	const [buying, setBuying] = useState(false);
-	const inFlight = useRef(false);
+	const purchase = useSingleFlight();
 
 	const indexed = history
 		? indexHistory(history, todayIn(history.timezone))
@@ -56,7 +55,7 @@ export function useYou(): YouHome {
 		hidden === undefined ? undefined : hidden.includes(card);
 
 	const buy = async () => {
-		if (!shelf || inFlight.current) {
+		if (!shelf || purchase.isBusy()) {
 			return;
 		}
 		const reason = freezeReason(shelf);
@@ -64,19 +63,16 @@ export function useYou(): YouHome {
 			toast(reason, { variant: "warning" });
 			return;
 		}
-		inFlight.current = true;
-		setBuying(true);
-		try {
-			await buyFreeze();
-			playAffirmativePress();
-		} catch (error) {
-			toast(freezeRefusal(convexErrorCode(error), shelf.freezeCap), {
-				variant: "warning",
-			});
-		} finally {
-			inFlight.current = false;
-			setBuying(false);
-		}
+		await purchase.run(async () => {
+			try {
+				await buyFreeze();
+				playAffirmativePress();
+			} catch (error) {
+				toast(freezeRefusal(convexErrorCode(error), shelf.freezeCap), {
+					variant: "warning",
+				});
+			}
+		});
 	};
 
 	const daysHidden = hides("calendar");
@@ -101,7 +97,7 @@ export function useYou(): YouHome {
 		state: {
 			avatar: avatars ? resolveAvatar(avatars, summary?.avatarId) : undefined,
 			badges: shelf ? badgesRowView(shelf) : undefined,
-			buying,
+			buying: purchase.busy,
 			chips: summary ? chipsView(summary) : [],
 			days: daysHidden === undefined ? undefined : daysHidden ? null : indexed,
 			followUps: followUps.state,

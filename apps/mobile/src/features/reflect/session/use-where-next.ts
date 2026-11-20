@@ -10,6 +10,7 @@ import { useFullContext } from "@/lib/convex/use-full-context";
 import { LANDING } from "@/lib/landing";
 import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { useProfileSummary } from "@/lib/profile-summary";
+import { useSingleFlight } from "@/lib/use-single-flight";
 import { useAppStore } from "@/store/store";
 import { COPY, type PathId } from "../copy";
 import type { ResourceRow } from "../reflect-model";
@@ -36,7 +37,7 @@ export function useWhereNext(m: Machine) {
 	useEffect(() => {
 		screen.current = m.state.screen;
 	});
-	const busy = useRef(false);
+	const going = useSingleFlight();
 
 	if (heard && m.state.screen === "error") {
 		setHeard(null);
@@ -64,12 +65,8 @@ export function useWhereNext(m: Machine) {
 		}
 	};
 
-	const goPath = async (path: PathId) => {
-		if (busy.current) {
-			return;
-		}
-		busy.current = true;
-		try {
+	const goPath = (path: PathId) =>
+		going.run(async () => {
 			if (path === "exit") {
 				setHeard(m.sessionId);
 				await m.handleSelectExit();
@@ -79,10 +76,7 @@ export function useWhereNext(m: Machine) {
 			if (screen.current !== "error") {
 				router.replace(ACTIVITY[path]);
 			}
-		} finally {
-			busy.current = false;
-		}
-	};
+		});
 
 	return {
 		close: () => {
