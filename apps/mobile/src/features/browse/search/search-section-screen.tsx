@@ -18,6 +18,7 @@ import {
 	type SearchSection,
 } from "@/features/browse/search/search-sections";
 import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const PAGE_SIZE = 20;
 
@@ -34,24 +35,28 @@ function Paged<T extends { _id: string }>({
 	row: (item: T, position: number) => ReactElement;
 }) {
 	const playerInset = useMiniPlayerInset();
-	if (status === "LoadingFirstPage") {
-		return <RowsSkeleton count={4} />;
-	}
+	const muted = useTokenColor("muted");
+	// The skeleton sits inside the list, so it clears the header like the rows.
+	const loading = status === "LoadingFirstPage";
 	return (
 		<LegendList
 			contentContainerStyle={{ paddingBottom: 40 + playerInset }}
 			contentInsetAdjustmentBehavior="automatic"
-			data={results}
+			data={loading ? [] : results}
 			estimatedItemSize={80}
 			keyExtractor={(item) => item._id}
 			ListEmptyComponent={
-				<AppText className="px-4 pt-8 text-[15px] text-muted">
-					Nothing matches that.
-				</AppText>
+				loading ? (
+					<RowsSkeleton count={4} />
+				) : (
+					<AppText className="px-gutter pt-6" color="muted" variant="callout">
+						Nothing matches that.
+					</AppText>
+				)
 			}
 			ListFooterComponent={
 				isLoading && results.length > 0 ? (
-					<ActivityIndicator className="py-4" />
+					<ActivityIndicator className="py-4" color={muted} />
 				) : null
 			}
 			onEndReached={
