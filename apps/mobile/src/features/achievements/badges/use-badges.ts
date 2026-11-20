@@ -1,6 +1,5 @@
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
-import { useRef, useState } from "react";
 import { Share } from "react-native";
 import { toast } from "@/components/shared/toast";
 import { longDate } from "@/features/achievements/achievements-model";
@@ -20,6 +19,7 @@ import {
 	playSoftPress,
 } from "@/lib/haptics";
 import { freezeRefusal } from "@/lib/streak-freeze";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
 const WARN_AFTER_MS = 120;
 
@@ -48,8 +48,7 @@ export function useBadges(): Badges {
 		);
 	});
 	const buyFreeze = useMutation(api.achievements.sparks.buyFreeze);
-	const [buying, setBuying] = useState(false);
-	const inFlight = useRef(false);
+	const purchase = useSingleFlight();
 	const view = overview ? badgesView(overview) : undefined;
 
 	const togglePin = (b: BadgeView) => {
@@ -83,32 +82,29 @@ export function useBadges(): Badges {
 
 	const freeze = shelf ? freezeView(shelf) : undefined;
 	const buy = async () => {
-		if (!(shelf && freeze) || inFlight.current) {
+		if (!(shelf && freeze) || purchase.isBusy()) {
 			return;
 		}
 		if (freeze.reason) {
 			toast(freeze.reason, { variant: "warning" });
 			return;
 		}
-		inFlight.current = true;
-		setBuying(true);
-		try {
-			await buyFreeze();
-			playAffirmativePress();
-		} catch (error) {
-			toast(freezeRefusal(convexErrorCode(error), shelf.freezeCap), {
-				variant: "warning",
-			});
-		} finally {
-			inFlight.current = false;
-			setBuying(false);
-		}
+		await purchase.run(async () => {
+			try {
+				await buyFreeze();
+				playAffirmativePress();
+			} catch (error) {
+				toast(freezeRefusal(convexErrorCode(error), shelf.freezeCap), {
+					variant: "warning",
+				});
+			}
+		});
 	};
 
 	const missing = () => toast(COPY.badge.gone);
 
 	return {
 		actions: { buyFreeze: buy, missing, share, togglePin },
-		state: { buying, freeze, view },
+		state: { buying: purchase.busy, freeze, view },
 	};
 }

@@ -2,10 +2,11 @@ import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { posthog } from "@/config/posthog";
 import { playSoftPress } from "@/lib/haptics";
+import { useSingleFlight } from "@/lib/use-single-flight";
 import { useAppStore } from "@/store/store";
 import { CLIENT_VERSION, useAgeGate } from "../age-gate/use-age-gate";
 import { chatLimitError, declineCooldownNote } from "../chat-rules";
@@ -32,51 +33,43 @@ export function useAskFlow({
 	const setPrimerSeen = useAppStore((s) => s.setXolacerPrimerSeen);
 	const [primerMode, setPrimerMode] = useState<PrimerMode>(null);
 	const ageGate = useAgeGate();
-	const inFlight = useRef(false);
-	const [sending, setSending] = useState(false);
+	const sending = useSingleFlight();
 
 	const openThread = (conversationId: string) =>
 		router.replace(`/chat/${conversationId}`);
 
 	const sendRequest = (fromGate: boolean) => {
-		if (inFlight.current) {
-			return;
-		}
-		inFlight.current = true;
-		setSending(true);
-		requestConversation({ clientVersion: CLIENT_VERSION, xolacerProfileId })
-			.then((conversationId) => {
-				if (fromGate) {
-					setPrimerSeen(true);
-					posthog.capture("xolacer_primer_resolved", { outcome: "sent" });
-				}
-				setPrimerMode(null);
-				if (stepId) {
-					completeStep({ stepId }).catch(() => {});
-				}
-				openThread(conversationId);
-			})
-			.catch((error: unknown) => {
-				if (ageGate.handleRefusal(error, () => sendRequest(fromGate))) {
+		void sending.run(() =>
+			requestConversation({ clientVersion: CLIENT_VERSION, xolacerProfileId })
+				.then((conversationId) => {
+					if (fromGate) {
+						setPrimerSeen(true);
+						posthog.capture("xolacer_primer_resolved", { outcome: "sent" });
+					}
 					setPrimerMode(null);
-					return;
-				}
-				const data = chatLimitError(error);
-				toast(
-					data?.code === "decline_cooldown" && data.until
-						? declineCooldownNote(displayName, data.until)
-						: data?.code === "pending_request_limit"
-							? PROFILE.toast.pendingLimit(data.max ?? PENDING_CAP)
-							: data?.code === "open_conversation_limit"
-								? PROFILE.toast.openLimit(data.max ?? SEEKER_OPEN_CAP)
-								: PROFILE.toast.notTaking(displayName),
-					{ variant: "warning" }
-				);
-			})
-			.finally(() => {
-				inFlight.current = false;
-				setSending(false);
-			});
+					if (stepId) {
+						completeStep({ stepId }).catch(() => {});
+					}
+					openThread(conversationId);
+				})
+				.catch((error: unknown) => {
+					if (ageGate.handleRefusal(error, () => sendRequest(fromGate))) {
+						setPrimerMode(null);
+						return;
+					}
+					const data = chatLimitError(error);
+					toast(
+						data?.code === "decline_cooldown" && data.until
+							? declineCooldownNote(displayName, data.until)
+							: data?.code === "pending_request_limit"
+								? PROFILE.toast.pendingLimit(data.max ?? PENDING_CAP)
+								: data?.code === "open_conversation_limit"
+									? PROFILE.toast.openLimit(data.max ?? SEEKER_OPEN_CAP)
+									: PROFILE.toast.notTaking(displayName),
+						{ variant: "warning" }
+					);
+				})
+		);
 	};
 
 	const handleAsk = () => {
@@ -97,7 +90,7 @@ export function useAskFlow({
 	};
 
 	const handlePrimerClose = () => {
-		if (inFlight.current) {
+		if (sending.isBusy()) {
 			return;
 		}
 		if (primerMode === "gate") {
@@ -118,6 +111,6 @@ export function useAskFlow({
 		openPrimerReference,
 		openThread,
 		primerMode,
-		sending,
+		sending: sending.busy,
 	};
 }

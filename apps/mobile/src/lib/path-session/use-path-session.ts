@@ -1,63 +1,43 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useCallback, useRef } from "react";
+import { useCallback, useState } from "react";
+import { createPathFlight } from "./path-flight";
 
 export function usePathSession() {
 	const activeSession = useQuery(api.sessions.getActive);
 	const startPathMutation = useMutation(api.sessions.startPath);
 	const completePathMutation = useMutation(api.sessions.completePath);
-	const busyRef = useRef(false);
+	const [flight] = useState(createPathFlight);
 
 	const sessionId = activeSession?._id ?? null;
 	const session = activeSession;
 	const isLoading = activeSession === undefined;
 
 	const startPath = useCallback(
-		async (exerciseId?: Id<"exercises">): Promise<boolean> => {
-			if (!sessionId || busyRef.current) {
-				return false;
+		(exerciseId?: Id<"exercises">): Promise<boolean> => {
+			if (!sessionId || session?.state !== "path_selected") {
+				return Promise.resolve(false);
 			}
-			if (session?.state !== "path_selected") {
-				return false;
-			}
-			busyRef.current = true;
-			try {
-				await startPathMutation({ exerciseId, sessionId });
-				return true;
-			} catch {
-				return false;
-			} finally {
-				busyRef.current = false;
-			}
+			return flight.start(() => startPathMutation({ exerciseId, sessionId }));
 		},
-		[sessionId, session?.state, startPathMutation]
+		[flight, sessionId, session?.state, startPathMutation]
 	);
 
 	const completePath = useCallback(
-		async (pathCompleted: boolean): Promise<boolean> => {
-			if (!sessionId || busyRef.current) {
-				return false;
-			}
+		(pathCompleted: boolean): Promise<boolean> => {
 			const s = session?.state;
 			if (
-				s !== "path_in_progress" &&
-				s !== "path_selected" &&
-				s !== "confirmed"
+				!sessionId ||
+				(s !== "path_in_progress" && s !== "path_selected" && s !== "confirmed")
 			) {
-				return false;
+				return Promise.resolve(false);
 			}
-			busyRef.current = true;
-			try {
-				await completePathMutation({ pathCompleted, sessionId });
-				return true;
-			} catch {
-				return false;
-			} finally {
-				busyRef.current = false;
-			}
+			return flight.complete(() =>
+				completePathMutation({ pathCompleted, sessionId })
+			);
 		},
-		[sessionId, session?.state, completePathMutation]
+		[flight, sessionId, session?.state, completePathMutation]
 	);
 
 	return {

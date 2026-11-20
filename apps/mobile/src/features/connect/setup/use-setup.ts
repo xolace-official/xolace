@@ -9,6 +9,7 @@ import { Keyboard } from "react-native";
 import { goBack } from "@/components/shared/back-button";
 import { toast } from "@/components/shared/toast";
 import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
+import { useSingleFlight } from "@/lib/use-single-flight";
 import { SETUP } from "./copy";
 import type { SetupScreenData } from "./setup-data";
 import {
@@ -40,7 +41,7 @@ export function useSetup(): SetupScreenData {
 	const [edits, setEdits] = useState<TextEdits>({});
 	const [picked, setPicked] = useState<readonly string[] | null>(null);
 	const [activeEdit, setActiveEdit] = useState<boolean | null>(null);
-	const [uploading, setUploading] = useState(false);
+	const photo = useSingleFlight();
 	const [busy, setBusy] = useState(false);
 
 	const draft: SetupDraft = {
@@ -61,26 +62,22 @@ export function useSetup(): SetupScreenData {
 			specialties: draft.specialties as Specialty[],
 		});
 
-	const pickPhoto = async () => {
-		if (uploading) {
-			return;
-		}
-		const result = await ImagePicker.launchImageLibraryAsync(PICK).catch(
-			() => null
-		);
-		const asset = result?.canceled ? undefined : result?.assets[0];
-		if (!result) {
-			toast(SETUP.failed.photo, { variant: "danger" });
-		}
-		if (!asset) {
-			return;
-		}
-		setUploading(true);
-		// `.finally()`, not try/finally: the React Compiler skips try/finally bodies.
-		await uploadPhoto(asset.uri, asset.mimeType, uploadUrl, setPhoto)
-			.finally(() => setUploading(false))
-			.catch(() => toast(SETUP.failed.photo, { variant: "danger" }));
-	};
+	const pickPhoto = () =>
+		photo.run(async () => {
+			const result = await ImagePicker.launchImageLibraryAsync(PICK).catch(
+				() => null
+			);
+			const asset = result?.canceled ? undefined : result?.assets[0];
+			if (!result) {
+				toast(SETUP.failed.photo, { variant: "danger" });
+			}
+			if (!asset) {
+				return;
+			}
+			await uploadPhoto(asset.uri, asset.mimeType, uploadUrl, setPhoto).catch(
+				() => toast(SETUP.failed.photo, { variant: "danger" })
+			);
+		});
 
 	const next = () => {
 		if (at < LAST_STEP) {
@@ -165,7 +162,7 @@ export function useSetup(): SetupScreenData {
 			draft,
 			phase: "ready",
 			step: at,
-			uploading,
+			uploading: photo.busy,
 		},
 	};
 }

@@ -14,8 +14,8 @@ import { useCompanionName } from "@/lib/talk/use-companion-name";
 import { useTalkStyle } from "@/lib/talk/use-talk-style";
 import { useTalkTime } from "@/lib/talk/use-talk-time";
 import { useVoicePreview } from "@/lib/talk/use-voice-preview";
+import { useSingleFlight } from "@/lib/use-single-flight";
 import { TALK_COPY } from "./copy";
-import { createStartGate } from "./start-gate";
 import type { TalkScreen } from "./talk-data";
 import { isLow, phaseOf, resourceUrl } from "./talk-model";
 import { useTalk } from "./use-talk";
@@ -56,8 +56,7 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			talk.sessionId ? { sessionId: talk.sessionId } : "skip"
 		) ?? null;
 	const [micAsk, setMicAsk] = useState(false);
-	const [gate] = useState(createStartGate);
-	const [starting, setStarting] = useState(false);
+	const { busy: starting, run: runStart } = useSingleFlight();
 	const [startError, setStartError] = useState<string | null>(null);
 	const justEnded = useRef(false);
 	const week = time === undefined || time === null ? time : time.secondsLeft;
@@ -90,34 +89,27 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 	return {
 		actions: {
 			begin: () =>
-				void gate
-					.run(async () => {
-						setStartError(null);
-						preview.stop();
-						if (isLow(week) || talk.started) {
-							return;
-						}
-						setStarting(true);
-						playAffirmativePress();
-						try {
-							const { granted } = await requestRecordingPermissionsAsync();
-							setMicAsk(false);
-							if (!granted) {
-								toast(TALK_COPY.start.micOff, {
-									action: {
-										label: TALK_COPY.start.openSettings,
-										onPress: () => void Linking.openSettings(),
-									},
-									variant: "warning",
-								});
-								return;
-							}
-							await talk.start();
-						} finally {
-							setStarting(false);
-						}
-					})
-					.catch(() => setStartError(TALK_COPY.start.couldNotStart)),
+				void runStart(async () => {
+					setStartError(null);
+					preview.stop();
+					if (isLow(week) || talk.started) {
+						return;
+					}
+					playAffirmativePress();
+					const { granted } = await requestRecordingPermissionsAsync();
+					setMicAsk(false);
+					if (!granted) {
+						toast(TALK_COPY.start.micOff, {
+							action: {
+								label: TALK_COPY.start.openSettings,
+								onPress: () => void Linking.openSettings(),
+							},
+							variant: "warning",
+						});
+						return;
+					}
+					await talk.start();
+				}).catch(() => setStartError(TALK_COPY.start.couldNotStart)),
 			end() {
 				justEnded.current = false;
 				talk.end();

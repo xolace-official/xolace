@@ -15,6 +15,7 @@ import { useRevenueCat } from "@/features/purchases/revenuecat-context";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { usePlans } from "@/features/purchases/use-plans";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useSingleFlight } from "@/lib/use-single-flight";
 import type { RowId } from "./copy";
 import type { FirstLookValue } from "./first-look-data";
 import { keepTalkingLabel, saidWords } from "./first-look-model";
@@ -48,14 +49,14 @@ export function useFirstLook({
 	const { isLoading, plans, purchase, refreshOfferings, unavailable } =
 		usePlans();
 	const [picked, setPicked] = useState<PlanId | null>(null);
-	const [buying, setBuying] = useState(false);
+	const purchasing = useSingleFlight();
+	const buying = purchasing.busy;
 	const [restoring, setRestoring] = useState(false);
 	const [retrying, setRetrying] = useState(false);
 	const [demoOpen, setDemoOpen] = useState(false);
 	const plan = picked ?? defaultPlan(plans);
 	const demoSafety = useRef(false);
 	const settled = useRef(false);
-	const purchasing = useRef(false);
 	const purchased = useRef(false);
 	const shown = useRef(false);
 
@@ -76,32 +77,33 @@ export function useFirstLook({
 
 	const buy = async () => {
 		const pkg = plans[plan].pkg;
-		if (!pkg || purchasing.current || isPlus) {
+		if (!pkg || isPlus) {
 			return;
 		}
-		purchasing.current = true;
 		const trial = startsTrial(plan, plans);
-		setBuying(true);
-		onStoreCall(true);
-		try {
-			if (await purchase(pkg, INTAKE_PLUS_SURFACE)) {
-				trackPlusPurchased(posthog, plan, trial);
-				purchased.current = true;
-				settled.current = true;
-				if (demoSafety.current) {
-					setDemoOpen(true);
-				} else {
-					onExit("purchased");
-				}
-			}
-		} finally {
-			purchasing.current = false;
-			setBuying(false);
-			onStoreCall(false);
-			if (demoSafety.current && !settled.current) {
-				setDemoOpen(true);
-			}
-		}
+		await purchasing.run(() => {
+			onStoreCall(true);
+			return purchase(pkg, INTAKE_PLUS_SURFACE)
+				.then((ok) => {
+					if (!ok) {
+						return;
+					}
+					trackPlusPurchased(posthog, plan, trial);
+					purchased.current = true;
+					settled.current = true;
+					if (demoSafety.current) {
+						setDemoOpen(true);
+					} else {
+						onExit("purchased");
+					}
+				})
+				.finally(() => {
+					onStoreCall(false);
+					if (demoSafety.current && !settled.current) {
+						setDemoOpen(true);
+					}
+				});
+		});
 	};
 
 	const restore = async () => {
@@ -166,7 +168,7 @@ export function useFirstLook({
 			},
 			onSafety: () => {
 				demoSafety.current = true;
-				if (!(settled.current || purchasing.current)) {
+				if (!(settled.current || purchasing.isBusy())) {
 					setDemoOpen(true);
 				}
 			},

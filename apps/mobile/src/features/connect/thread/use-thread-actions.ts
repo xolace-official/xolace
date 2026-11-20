@@ -2,10 +2,11 @@ import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/api";
 import { useAction, useMutation } from "convex/react";
 import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Linking } from "react-native";
 import { toast } from "@/components/shared/toast";
 import { playSoftPress } from "@/lib/haptics";
+import { useSingleFlight } from "@/lib/use-single-flight";
 import { CLIENT_VERSION, useAgeGate } from "../age-gate/use-age-gate";
 import {
 	acceptFailureLabel,
@@ -29,15 +30,12 @@ export function useThreadActions(
 	const block = useAction(api.xolacerChat.blockConversation);
 	const ageGate = useAgeGate();
 	const [confirming, setConfirming] = useState(false);
-	const [blocking, setBlocking] = useState(false);
-	const answeringRef = useRef(false);
-	const [answering, setAnswering] = useState(false);
+	const blocking = useSingleFlight();
+	const answering = useSingleFlight();
+	const resuming = useSingleFlight();
 	const answer = (call: () => Promise<unknown>) => {
-		answeringRef.current = true;
-		setAnswering(true);
-		call().finally(() => {
-			answeringRef.current = false;
-			setAnswering(false);
+		void answering.run(async () => {
+			await call();
 		});
 	};
 	const c = conversation;
@@ -46,29 +44,31 @@ export function useThreadActions(
 		if (!c) {
 			return;
 		}
-		resume({ clientVersion: CLIENT_VERSION, conversationId: c.id })
-			.then((result) => {
-				if (!result.resumed) {
-					toast(THREAD.toast.resumeQuiet);
-				}
-			})
-			.catch((error: unknown) => {
-				if (ageGate.handleRefusal(error, resumeNow)) {
-					return;
-				}
-				const limit = chatLimitError(error);
-				toast(
-					limit?.code === "open_conversation_limit"
-						? THREAD.toast.resumeLimit(limit.max ?? SEEKER_OPEN_CAP)
-						: THREAD.toast.resumeFailed,
-					{ variant: "danger" }
-				);
-			});
+		void resuming.run(() =>
+			resume({ clientVersion: CLIENT_VERSION, conversationId: c.id })
+				.then((result) => {
+					if (!result.resumed) {
+						toast(THREAD.toast.resumeQuiet);
+					}
+				})
+				.catch((error: unknown) => {
+					if (ageGate.handleRefusal(error, resumeNow)) {
+						return;
+					}
+					const limit = chatLimitError(error);
+					toast(
+						limit?.code === "open_conversation_limit"
+							? THREAD.toast.resumeLimit(limit.max ?? SEEKER_OPEN_CAP)
+							: THREAD.toast.resumeFailed,
+						{ variant: "danger" }
+					);
+				})
+		);
 	};
 
 	const actions: Omit<ThreadScreenData["actions"], "retry" | "flag"> = {
 		accept: () => {
-			if (!c || answeringRef.current) {
+			if (!c || answering.isBusy()) {
 				return;
 			}
 			playSoftPress();
@@ -83,32 +83,32 @@ export function useThreadActions(
 			setConfirming(true);
 		},
 		cancelBlock: () => {
-			if (!blocking) {
+			if (!blocking.busy) {
 				setConfirming(false);
 			}
 		},
 		confirmBlock: () => {
-			if (blocking || !c) {
+			if (!c) {
 				return;
 			}
-			setBlocking(true);
-			block({ conversationId: c.id })
-				.then(() => {
-					setConfirming(false);
-					router.back();
-				})
-				.catch((error: unknown) => {
-					Sentry.captureException(error, { tags: { action: "block" } });
-					setConfirming(false);
-					toast(THREAD.toast.blockFailed, {
-						description: THREAD.toast.tryAgain,
-						variant: "danger",
-					});
-				})
-				.finally(() => setBlocking(false));
+			void blocking.run(() =>
+				block({ conversationId: c.id })
+					.then(() => {
+						setConfirming(false);
+						router.back();
+					})
+					.catch((error: unknown) => {
+						Sentry.captureException(error, { tags: { action: "block" } });
+						setConfirming(false);
+						toast(THREAD.toast.blockFailed, {
+							description: THREAD.toast.tryAgain,
+							variant: "danger",
+						});
+					})
+			);
 		},
 		decline: () => {
-			if (!c || answeringRef.current) {
+			if (!c || answering.isBusy()) {
 				return;
 			}
 			playSoftPress();
@@ -175,7 +175,7 @@ export function useThreadActions(
 
 	return {
 		actions,
-		answering,
-		blocking: { open: confirming, pending: blocking },
+		answering: answering.busy,
+		blocking: { open: confirming, pending: blocking.busy },
 	};
 }

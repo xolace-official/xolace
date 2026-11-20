@@ -3,7 +3,7 @@ import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Linking, Platform } from "react-native";
 import { toast } from "@/components/shared/toast";
 import { useRevenueCat } from "@/features/purchases/revenuecat-context";
@@ -24,6 +24,7 @@ import { saveFailed } from "@/features/settings/use-save-failed";
 import { getGrantedPushToken } from "@/lib/push-token";
 import { COMPANION_FALLBACK_NAME } from "@/lib/talk/use-companion-name";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
 const PUSH_DETACH_TIMEOUT_MS = 2500;
 
@@ -71,9 +72,10 @@ export function useAccount(): Account {
 		draft: string;
 	} | null>(null);
 	const [serverError, setServerError] = useState<string | null>(null);
-	const [restoring, setRestoring] = useState(false);
 	const [logOutOpen, setLogOutOpen] = useState(false);
-	const busy = useRef({ loggingOut: false, restoring: false, saving: false });
+	const saving = useSingleFlight();
+	const loggingOut = useSingleFlight();
+	const restoring = useSingleFlight();
 
 	const name = summary?.displayName;
 	const space =
@@ -84,34 +86,30 @@ export function useAccount(): Account {
 		setServerError(null);
 	};
 
-	const saveName = async (trimmed: string) => {
-		busy.current.saving = true;
-		try {
-			await updateDisplayName({ displayName: trimmed });
-			close();
-		} catch (error) {
-			setServerError(errorText(error));
-		} finally {
-			busy.current.saving = false;
-		}
-	};
-
-	const logOut = async () => {
-		busy.current.loggingOut = true;
-		try {
-			if (await signOut()) {
-				toast(C.signedOut);
+	const saveName = (trimmed: string) =>
+		saving.run(async () => {
+			try {
+				await updateDisplayName({ displayName: trimmed });
+				close();
+			} catch (error) {
+				setServerError(errorText(error));
 			}
-		} catch {
-			toast(C.logOutFailed.title, {
-				description: C.logOutFailed.description,
-				variant: "danger",
-			});
-		} finally {
-			busy.current.loggingOut = false;
+		});
+
+	const logOut = () =>
+		loggingOut.run(async () => {
+			try {
+				if (await signOut()) {
+					toast(C.signedOut);
+				}
+			} catch {
+				toast(C.logOutFailed.title, {
+					description: C.logOutFailed.description,
+					variant: "danger",
+				});
+			}
 			setLogOutOpen(false);
-		}
-	};
+		});
 
 	return {
 		actions: {
@@ -131,9 +129,7 @@ export function useAccount(): Account {
 				}
 			},
 			logOut: () => {
-				if (!busy.current.loggingOut) {
-					logOut().catch(() => undefined);
-				}
+				logOut().catch(() => undefined);
 			},
 			manageSubscription: () => {
 				Linking.openURL(
@@ -146,20 +142,14 @@ export function useAccount(): Account {
 				updatePreferences({ spaceName: null }).catch(saveFailed);
 			},
 			restore: () => {
-				if (busy.current.restoring) {
-					return;
-				}
-				busy.current.restoring = true;
-				setRestoring(true);
-				restorePurchases()
-					.catch(() => undefined)
-					.finally(() => {
-						busy.current.restoring = false;
-						setRestoring(false);
-					});
+				restoring
+					.run(async () => {
+						await restorePurchases();
+					})
+					.catch(() => undefined);
 			},
 			save: (trimmed) => {
-				if (!editing || busy.current.saving) {
+				if (!editing || saving.isBusy()) {
 					return;
 				}
 				if (editing.kind === "space") {
@@ -189,7 +179,7 @@ export function useAccount(): Account {
 			logOutOpen,
 			name,
 			plus: plusLoading ? undefined : isPlus,
-			restoring,
+			restoring: restoring.busy,
 			signIn: user
 				? signInOf(user.externalAccounts.map((a) => a.provider ?? ""))
 				: undefined,
