@@ -1,8 +1,3 @@
-/**
- * The reader's data hook: the entry, its read signals, Up next, the narration, the appearance,
- * and every action the page takes (save, share, This helped, Reflect on this, the sheets). The
- * one reader file, with its signal and audio hooks, that calls Convex, PostHog or the toast.
- */
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useQuery } from "convex/react";
@@ -37,11 +32,9 @@ const DAY_MS = 86_400_000;
 
 type Params = { from?: ReaderFrom; hub?: string; stepId?: Id<"path_steps"> };
 
-/** The entry by slug: undefined while it loads, null once it's not in Lantern. */
 export const useReaderEntry = (slug: string) =>
 	useQuery(api.library.entries.getEntry, { slug });
 
-/** Opens a link outside the app; a toast when nothing can open it. */
 export const openLink = (url: string) => {
 	Linking.openURL(url).catch(() => toast(COPY.reader.linkFailed));
 };
@@ -52,7 +45,6 @@ export function useReader(
 		audio,
 		showHelpline,
 	}: {
-		/** The narration, from the host above (its time stays out of the reader). */
 		audio: { state: ReaderAudio; actions: ReaderAudioActions };
 		showHelpline: boolean;
 	}
@@ -125,7 +117,6 @@ export function useReader(
 				const saved = !state.saved;
 				Presets.System.selection();
 				record({ entryId: entry._id, saved }).catch(() => undefined);
-				// From the reader, saving says where to find it.
 				toast(saved ? COPY.reader.savedToast : COPY.reader.unsavedToast, {
 					variant: saved ? "success" : "default",
 				});

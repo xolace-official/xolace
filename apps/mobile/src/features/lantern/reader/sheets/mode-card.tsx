@@ -13,14 +13,12 @@ import { useTokenColors } from "@/lib/use-token-color";
 const LINES = [1, 0.85, 0.95, 0.6] as const;
 const ROOMY = 1.6;
 
-/** The page and ink each mode's card shows, from its tokens; Classic is the app's own. */
 const PAGE_TOKENS = {
 	app: ["background", "foreground"],
 	night: ["reader-night-bg", "reader-night-ink"],
 	paper: ["reader-paper-bg", "reader-paper-ink"],
 } as const;
 
-/** One reading mode: "Aa" in its face and four lines on its page (3:4), its name and blurb. */
 export function ModeCard({ mode }: { mode: ReadingModeKey }) {
 	const { state, actions } = useAppearance();
 	const faces = useThemeFaces();

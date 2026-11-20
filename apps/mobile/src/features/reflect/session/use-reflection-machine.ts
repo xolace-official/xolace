@@ -24,8 +24,6 @@ import { useDictation } from "@/features/reflect/write/dictation/use-dictation";
 import { trackFirstReflection } from "@/lib/intake-analytics";
 import { initialState, MAX_TURNS, reducer } from "./reflection-reducer";
 
-// Screens that show a server session's mirror. Processing and error also
-// stand before a session exists, so they are not here.
 const MIRROR_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
 	"mirror",
 	"clarify",
@@ -34,15 +32,12 @@ const MIRROR_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
 	"escalation",
 ]);
 
-/** Drives the reflection UI state machine and bridges it to the session API. */
 export function useReflectionMachine() {
 	const { userId } = useAuth();
 	const [state, dispatch] = useReducer(reducer, initialState, (s) => ({
 		...s,
 		entryText: readReflectDraft(userId),
 	}));
-	// Reset during render, not in an effect: an effect would let usePersistReflectDraft
-	// save the previous account's words under the new userId.
 	const [draftOwner, setDraftOwner] = useState(userId);
 	if (draftOwner !== userId) {
 		setDraftOwner(userId);
@@ -84,7 +79,6 @@ export function useReflectionMachine() {
 	} = useSession();
 
 	const prevServerStateRef = useRef<string | null>(null);
-	/** The last session this screen had, to notice it going. */
 	const shownSessionRef = useRef<typeof sessionId>(null);
 	const typingStartRef = useRef<number | null>(null);
 	const submitTimestampRef = useRef<number | null>(null);
@@ -121,13 +115,10 @@ export function useReflectionMachine() {
 		dispatch({ text, type: "VOICE_TRANSCRIPT" });
 	}, [partialTranscript]);
 
-	// Applies projectScreen (session-service.ts) once per server-state change;
-	// between edges, local dispatches own the screen.
 	useEffect(() => {
 		if (!serverState || serverState === prevServerStateRef.current) {
 			return;
 		}
-		// Mirror not readable yet: leave unhandled so the effect re-fires when mirrorText arrives.
 		if (serverState === "mirror_delivered" && !mirrorText) {
 			return;
 		}
@@ -189,8 +180,6 @@ export function useReflectionMachine() {
 		abortRecording,
 	]);
 
-	// The session on screen left getActive without a terminal state (a talk ended
-	// with "Just end" from "Say more", #636). Reset rather than show a mirror with no session.
 	useEffect(() => {
 		if (sessionId) {
 			shownSessionRef.current = sessionId;
@@ -242,7 +231,6 @@ export function useReflectionMachine() {
 				freezeOccurredRef.current,
 				freezeDurationRef.current
 			);
-			// The server holds the words now; a restart must not offer them as unsent.
 			clearReflectDraft();
 			posthog.capture("reflection_submitted", {
 				entry_type: state.entryType,
@@ -343,8 +331,6 @@ export function useReflectionMachine() {
 		if (turnsCount >= MAX_TURNS) {
 			dispatch({ screen: "gave-up", type: "SESSION_RESUMED" });
 		} else {
-			// sessionId joins the press to its clarify_delivered (§9.4); the
-			// claim strength is what the mirror on screen was carrying.
 			posthog.capture("mirror_not_quite", {
 				claimStrength: session?.claimStrength ?? null,
 				sessionId,
@@ -391,8 +377,6 @@ export function useReflectionMachine() {
 		}
 		busyRef.current = true;
 		try {
-			// Exit has no activity: one terminal transition, so the session is complete
-			// before the "Heard." screen reads it by id.
 			await completeAsExit();
 			posthog.capture("path_selected", { path: "exit" });
 		} catch (error) {
@@ -485,7 +469,6 @@ export function useReflectionMachine() {
 			stopRecording();
 			return;
 		}
-		// A kept draft (#258) is the prefix too, or the first word would replace it.
 		voicePrefixRef.current = state.entryText.trim();
 		await startRecording(() => dispatch({ type: "VOICE_START" }));
 	};
@@ -520,8 +503,6 @@ export function useReflectionMachine() {
 		}
 	}, [abandon, resetSession, clearRefs, abortRecording]);
 
-	// DISCARD_DRAFT must also stop a live mic, or its next transcript refills the draft.
-	// Stable identity on purpose: downstream effects depend on `dispatch`.
 	const abortRecordingRef = useRef(abortRecording);
 	useEffect(() => {
 		abortRecordingRef.current = abortRecording;
@@ -550,7 +531,6 @@ export function useReflectionMachine() {
 	return {
 		abortRecording,
 		claimStrength: session?.claimStrength ?? null,
-		/** A talk's mirror names who it was with. */
 		companionName:
 			session?.entryType === "talk" ? (session.companionName ?? null) : null,
 		dictationUpsell,
@@ -573,11 +553,8 @@ export function useReflectionMachine() {
 		isRecording,
 		mirrorText,
 		plusDictation,
-		// Gated on the server state: the processing screen shows optimistically while
-		// the row still carries the previous run's stage.
 		processingStage:
 			serverState === "processing" ? session?.processingStage : undefined,
-		// What retry reprocesses; present after a cold resume, unlike entryText.
 		rawInput: session?.rawInput ?? "",
 		sessionId,
 		startVoiceFromIdle,

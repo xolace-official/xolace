@@ -16,26 +16,17 @@ import { DRAW, LAYOUT, MOTION, TIMING, YOU } from "../peers-look";
 import { MarkCanvas, type MarkProps } from "./mark-canvas";
 import { YouStar } from "./you-star";
 
-/** `ring`: r 9 → 3.4×, α .7 → 0 over 3.2 s, the second half a cycle behind. */
 const RING = { from: 0.7, scale: 3.4, stroke: 1.2 } as const;
 const RING_EASE: CubicBezier = [0.2, 0.6, 0.3, 1];
-/** Reduce Motion: one still ring (handoff §4; board `.still`). */
 const STILL_RING = { alpha: 0.32, scale: 2.1 } as const;
 const FOREVER = -1;
 
 type Props = Omit<MarkProps, "ox" | "oy" | "ld"> & {
 	W: number;
 	breath: SharedValue<number>;
-	/** Done is up. */
 	ui: boolean;
 };
 
-/**
- * The band at the top of the scroll (board `.band`, `.cst`): the mark, centred
- * (x + (W − 390) / 2), your star over it, and for None yet the rings going out
- * from you. Loading, the tile's three circles breathe in turn, once the wait
- * passes 300 ms. Hidden from VoiceOver.
- */
 export function MarkBand({ W, breath, ui, ...mark }: Props) {
 	const { none, loading, reduced } = mark;
 	const H = none ? LAYOUT.band.noneHeight : LAYOUT.band.height;
@@ -43,7 +34,6 @@ export function MarkBand({ W, breath, ui, ...mark }: Props) {
 	const oy = none ? LAYOUT.band.noneShift : 0;
 	const ld = useSharedValue(0);
 
-	// The loading breath stays on Reanimated: the Skia canvas reads it as a value.
 	useEffect(() => {
 		if (!loading || reduced) {
 			cancelAnimation(ld);
@@ -98,15 +88,9 @@ type RingsProps = {
 	y: number;
 	color: string;
 	reduced: boolean;
-	/** Done is up: the rings start with it (board `.alone` from `ui`). */
 	ui: boolean;
 };
 
-/**
- * None yet's two rings going out from you, on Ease (an infinite loop costs
- * nothing per frame there). The second starts half a cycle behind: it mounts
- * then, since Ease shows a delayed loop's starting ring while it waits.
- */
 function AloneRings({ ui, reduced, ...at }: RingsProps) {
 	const [second, setSecond] = useState(false);
 	useEffect(() => {

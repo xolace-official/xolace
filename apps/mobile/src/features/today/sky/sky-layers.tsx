@@ -21,15 +21,11 @@ import {
 } from "./sky-model";
 import type { SkyMotion } from "./use-sky-motion";
 
-/** The sky's layers that don't move with the clock: drawn live while they change, baked at rest. */
-
 const TOP = vec(0, 0);
 const BOTTOM = vec(0, SKY.h);
 const DAYS = ["dawn", "day", "evening"] as const;
-/** A Skia prop that is either fixed (a baked layer) or animated (the live one). */
 type Live<T> = T | SharedValue<T>;
 export type Day = (typeof DAYS)[number];
-/** A baked texture, drawn 1:1 with the device's pixels. */
 export function BakedImage({
 	image,
 	width,
@@ -53,11 +49,6 @@ type BackdropProps = Record<Day, Live<number>> & {
 	page: string;
 };
 
-/**
- * The three palettes, then night falling from the top (night-sleep-score's
- * front, without a shader): the late palette is shown through a mask whose
- * feathered edge travels down.
- */
 export function Backdrop({
 	width,
 	page,

@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-/** The held frame for a step whose content has not loaded. Not a skeleton on purpose. */
 export function IntakeBlank() {
 	return <View className="flex-1 bg-background" />;
 }

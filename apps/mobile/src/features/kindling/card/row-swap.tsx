@@ -8,12 +8,7 @@ import Animated, {
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { KMOTION } from "../kindling-motion";
 
-/** Both rows of a swap fill the 50 pt box, in a row with a 10 pt gap. */
 const FILL = "absolute inset-0 flex-row items-center gap-2.5";
-/**
- * The card's bottom row. A change in place (tended, passed, Undo) never swaps the card's
- * layer: only this row crossfades, fading and rising 4 pt over 280 ms (§6).
- */
 export function RowSwap<Id extends string>({
 	id,
 	reduced,
@@ -21,7 +16,6 @@ export function RowSwap<Id extends string>({
 }: {
 	id: Id;
 	reduced: boolean;
-	/** Draws a row by its id: the incoming one, and the outgoing one while it fades. */
 	render: (id: Id) => ReactNode;
 }) {
 	const [rows, setRows] = useState<{ id: Id; was: Id | null }>({

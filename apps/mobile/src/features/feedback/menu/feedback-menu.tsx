@@ -9,10 +9,8 @@ const M = FEEDBACK_COPY.menu;
 const BUG: IconName = { android: "bug_report", ios: "ant.fill" };
 const IDEA: IconName = { android: "lightbulb", ios: "lightbulb.fill" };
 const NEW: IconName = { android: "auto_awesome", ios: "sparkles" };
-/** The unseen dot sits on the tile's top-right corner (row padding 16 + tile 30). */
 const DOT_LEFT = 41;
 
-/** The shake menu: report a bug, suggest an idea, or what's new, as the settings kit's rows. */
 export function FeedbackMenu() {
 	const { state, actions } = useFeedbackScreen();
 	return (

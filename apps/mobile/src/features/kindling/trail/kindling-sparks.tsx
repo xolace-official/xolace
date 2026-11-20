@@ -12,7 +12,6 @@ import { useSparkColours } from "./kindling-colours";
 import { FLASH, SparkGlow, StopFlash } from "./spark-parts";
 import type { Trail } from "./trail-geometry";
 
-/** fuse-burn's layer sizes; the catch's flash is a 90 pt circle at the flame. */
 const FX = {
 	emberWidth: 3.4,
 	fireFlashR: 45,
@@ -24,18 +23,11 @@ const FX = {
 type Props = {
 	trail: Trail;
 	burns: SharedValue<Burn[]>;
-	/** The burns' clock: it holds still while nothing burns, so this layer does no work. */
 	time: SharedValue<number>;
-	/** The trail clock when the fire's embers began rising (−1: none). */
 	embersAt: SharedValue<number>;
 	day: boolean;
 };
 
-/**
- * The tend's light, over the stops (§4, §5): the match flare and the spark's glow, thrown sparks,
- * the ember, smoke, the bursts and white-hot flashes, and the fire's rising embers. Added light
- * (`plus`) in Dusk; Daylight blends normally, since `plus` washes out on a light page.
- */
 export function KindlingSparks({ trail, burns, time, embersAt, day }: Props) {
 	const c = useSparkColours();
 	const blend = day ? "srcOver" : "plus";
@@ -54,8 +46,6 @@ export function KindlingSparks({ trail, burns, time, embersAt, day }: Props) {
 	const emberAlpha = useDerivedValue(() => paths.get().emberLevel);
 	const smoke = useDerivedValue(() => paths.get().smoke);
 	const embers = useDerivedValue(() => paths.get().embers);
-	// A spark per burn that can be in flight at once: each stop's own leg (a stop is tended once,
-	// and a refused tend's burn goes), and a catch in place. Four tends on return all glow.
 	const slots = Array.from(
 		{ length: maxBurns(trail.stops.length) },
 		(_, k) => `spark${k}`

@@ -1,4 +1,3 @@
-/** The avatar sheet on fixtures: the board's ten stand-ins; a pick only closes it. */
 import { AvatarProvider } from "@/features/you/avatar/avatar-data";
 import { AvatarSheet } from "@/features/you/avatar/avatar-sheet";
 import { FIXTURE_AVATARS } from "@/features/you/avatar/dev/avatars";

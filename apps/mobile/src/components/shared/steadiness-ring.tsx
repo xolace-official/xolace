@@ -1,9 +1,3 @@
-/**
- * One part of life's steadiness as an open ring: a 300° arc filled to `value` (0–100) in the
- * state's colour, over a dotted disc, with the domain's icon in the gap at the bottom (#491).
- * Dashed and empty while a part is still warming. Optionally a notch at your usual, and a fill
- * that follows a shared value. Used by the Steadiness screen and by intake's Xolace+ example.
- */
 import { SymbolView } from "expo-symbols";
 import type { ComponentProps, ReactNode } from "react";
 import { View } from "react-native";
@@ -22,13 +16,10 @@ import Svg, {
 import type { IconName } from "@/components/shared/icon";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** Colour is state, never domain: quiet is muted (subtle on the redesign's screens), heavier
- * than your usual ember. */
 export type RingTone = "accent" | "ember" | "muted" | "subtle";
 
-const SWEEP = 300; // degrees of arc; the remaining 60° is the bottom gap
-const START = 90 + (360 - SWEEP) / 2; // svg angles run clockwise from +x
-/** The usual's notch: a 2.2 pt line, 6.5 pt either side of the ring's centre line. */
+const SWEEP = 300;
+const START = 90 + (360 - SWEEP) / 2;
 const NOTCH_HALF = 6.5;
 const NOTCH_W = 2.2;
 
@@ -37,15 +28,11 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 type Props = {
 	size: number;
 	stroke?: number;
-	/** 0–100, or null for an unfilled ring (warming, or the free view). */
 	value: number | null;
-	/** Colour is state, never domain. */
 	tone: RingTone;
 	dashed?: boolean;
 	icon: IconName;
-	/** 0–100: a notch across the ring at your usual. */
 	usual?: number | null;
-	/** 0–1: how much of `value` is drawn, so rings can fill on one clock. All of it when absent. */
 	fill?: SharedValue<number>;
 	children?: ReactNode;
 };
@@ -69,7 +56,6 @@ export function SteadinessRing({
 	const c = size / 2;
 	const circ = 2 * Math.PI * r;
 	const arc = (circ * SWEEP) / 360;
-	// The icon sits in the gap; keep the inner disc clear of it.
 	const iconSize = Math.round(size * 0.16);
 	const iconBottom = Math.max(0, stroke / 2 - 2);
 	const discR = Math.min(
@@ -78,7 +64,6 @@ export function SteadinessRing({
 	);
 	const rotate = `rotate(${START} ${c} ${c})`;
 	const lit = value === null ? 0 : (arc * value) / 100;
-	// What the lit arc shares with the track.
 	const arcProps = {
 		cx: c,
 		cy: c,
@@ -177,7 +162,6 @@ export function SteadinessRing({
 	);
 }
 
-/** The lit arc, drawn to `fill` of its length on the UI thread (the dash slides in from the start). */
 function FillArc({
 	arcProps,
 	dash,

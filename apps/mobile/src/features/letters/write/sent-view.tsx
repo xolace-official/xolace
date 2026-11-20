@@ -10,7 +10,6 @@ import { LETTER_MOTION } from "../letter-motion";
 import { backToLetters } from "../letters-routes";
 
 const L = LETTER_MOTION.label;
-/** "It's on its way." in the mirror's Newsreader, 32/38 (board `.sent h2`). */
 const TITLE = {
 	fontFamily: FONTS.mirror,
 	fontSize: 32,
@@ -18,7 +17,6 @@ const TITLE = {
 } as const;
 const TITLE_MAX_SCALE = 1.4;
 
-/** "It's on its way." at +2 s: 320 ms, 120 ms late, 6 pt up; then See your letters · Done. */
 export function SentView({
 	show,
 	reduced,

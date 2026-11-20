@@ -1,5 +1,3 @@
-// The top of the first look: the Xolace+ pill, the headline, Flux, and "You said …" in their
-// own words (or the plain line when they skipped).
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import type { PaletteName } from "@/components/xolace-face/face-palette";
@@ -8,7 +6,6 @@ import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { FIRST_LOOK } from "../copy";
 import { useFirstLookData } from "../first-look-data";
 
-/** Flux's box; the face drawing bleeds a little past it, so nothing above may clip it. */
 const FACE_SIZE = 78;
 const HEADLINE_MAX_SCALE = 1.25;
 

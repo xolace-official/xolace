@@ -18,11 +18,6 @@ vi.mock("@/store/store", () => ({
 	useAppStore: (pick: (s: typeof store) => unknown) => pick(store),
 }));
 
-/**
- * The redesign's motion helpers take `reduced` from this one resolver. The prototype read the
- * OS setting with a Review-menu override; production's in-app preference takes that place, so
- * a forced choice wins over the OS either way.
- */
 describe("reduced motion: the in-app preference, then the OS", () => {
 	const cases: [MotionPreference, boolean, boolean][] = [
 		["system", false, false],
@@ -46,7 +41,6 @@ describe("reduced motion: the in-app preference, then the OS", () => {
 	});
 });
 
-// The hook only calls other hooks, all mocked here, so it runs as a plain function.
 describe("useEffectiveReducedMotion", () => {
 	const signedIn = (isAuthenticated: boolean) =>
 		vi.mocked(useConvexAuth).mockReturnValue({

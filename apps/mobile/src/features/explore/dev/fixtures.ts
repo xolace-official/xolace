@@ -1,8 +1,3 @@
-/**
- * The doors' screens on the board's data (`ExploreDoors`: `TOPICS`, `TR`, `SLEEP`, `SPOOL`,
- * `MPOOL`, `LIST`), shaped as `getTopics`, `getTopicHeader`, `getTopic` and `listByFamily` serve
- * them. Music runs 4 to 5 minutes, as the prototype's player had it.
- */
 import type { Id } from "@xolace/backend/dataModel";
 import type {
 	ExploreTrack,
@@ -11,7 +6,6 @@ import type {
 } from "@/features/explore/explore-model";
 import { art } from "./covers";
 
-/** title, kind, topic, minutes (0: music), art, then the series and episode. */
 type Row = readonly [
 	string,
 	"s" | "m",
@@ -143,7 +137,6 @@ const TR = {
 } as const satisfies Record<string, Row>;
 export type TrackId = keyof typeof TR;
 
-/** title, art: the board's `TOPICS`, alphabetical by slug. */
 const TOPICS = {
 	anger: ["Anger", 6, 0, "#7A3A34", "#E39A82"],
 	anxiety: ["Anxiety", 14, 5, "#3E8C9A", "#A8E0D8"],
@@ -192,7 +185,6 @@ function track(id: TrackId, i: number): ExploreTrack {
 }
 const tracks = (ids: readonly TrackId[]) => ids.map(track);
 
-/** One board track, by its key: Explore home's shelves draw from the same table. */
 export const trackOf = (id: TrackId) => track(id, Object.keys(TR).indexOf(id));
 
 const SLEEP = {
@@ -236,13 +228,11 @@ const MPOOL = [
 	"fields",
 ] as const;
 
-/** The two lists, in production's order (the order the rows were added). */
 export const LIST = {
 	music: tracks([...SLEEP.mu, ...MPOOL]),
 	support: tracks([...SLEEP.eps, ...SLEEP.sp, ...SPOOL]),
 };
 
-/** Every topic's tile. */
 export const TILES: readonly TopicTile[] = Object.entries(TOPICS).map(
 	([slug, [title, supportCount, musicCount, a, b]]) => ({
 		musicCount,
@@ -254,7 +244,6 @@ export const TILES: readonly TopicTile[] = Object.entries(TOPICS).map(
 	})
 );
 
-/** Sleep has its own; any other topic takes its own tracks first, then fills from the pools. */
 export function topicTracks(slug: Slug): ExploreTrack[] {
 	if (slug === "sleep") {
 		return tracks([...SLEEP.eps, ...SLEEP.sp, ...SLEEP.mu]);
@@ -268,7 +257,6 @@ export function topicTracks(slug: Slug): ExploreTrack[] {
 	return tracks([...pick(SPOOL, spoken), ...pick(MPOOL, music)]);
 }
 
-/** The topic's cover, its counts the rows it lists. */
 export function topicHeader(slug: Slug): TopicHeader {
 	const rows = topicTracks(slug);
 	const supportCount = rows.filter((t) => t.family === "support").length;

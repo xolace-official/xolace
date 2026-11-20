@@ -23,11 +23,6 @@ import type { ThreadLine } from "./use-thread";
 
 type Reopen = { sessionId: Id<"sessions">; thread: ThreadLine[] };
 
-/**
- * "Say more" on a talk's mirror (`/talk?reopen=<session>`, #604): the talk's thread, read
- * once, not subscribed (every synced turn would re-send the whole thread mid-call, and the
- * talk keeps its own thread from here). Undefined for a new talk.
- */
 export function useReopenedThread(): Reopen | "loading" | undefined {
 	const { reopen } = useLocalSearchParams<{ reopen?: string }>();
 	const sessionId = reopen as Id<"sessions"> | undefined;
@@ -49,11 +44,6 @@ export function useReopenedThread(): Reopen | "loading" | undefined {
 	return thread ? { sessionId, thread } : "loading";
 }
 
-/**
- * The talk screen on production's voice pipeline (`use-talk.ts`: ElevenLabs, the thread,
- * the session's state machine, untouched), the person's talk choices, this week's time,
- * the help the server raised and the voice samples.
- */
 export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 	const talk = useTalk(reopen);
 	const style = useTalkStyle();
@@ -66,28 +56,23 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			talk.sessionId ? { sessionId: talk.sessionId } : "skip"
 		) ?? null;
 	const [micAsk, setMicAsk] = useState(false);
-	// Held from the first tap on Start until that attempt is over: one session per Start.
 	const [gate] = useState(createStartGate);
 	const [starting, setStarting] = useState(false);
-	// The mic ask itself failing (not a "no"): shown like the pipeline's own errors.
 	const [startError, setStartError] = useState<string | null>(null);
 	const justEnded = useRef(false);
 	const week = time === undefined || time === null ? time : time.secondsLeft;
 
-	// The first talk asks for the microphone; after that the footnote drops the line.
 	useEffect(() => {
 		getRecordingPermissionsAsync()
 			.then((p) => setMicAsk(p.status === "undetermined"))
 			.catch(() => setMicAsk(false));
 	}, []);
-	// A reopened talk goes straight in, once, on open.
 	const startReopened = useEffectEvent(() => {
 		if (reopen) {
 			void talk.start();
 		}
 	});
 	useEffect(() => startReopened(), []);
-	// "Just end" says so once the talk has gone; a talk that couldn't end stays, and says why.
 	useEffect(() => {
 		if (talk.error) {
 			justEnded.current = false;
@@ -115,7 +100,6 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 						setStarting(true);
 						playAffirmativePress();
 						try {
-							// The first talk's system alert; `start` asks again, and the OS answers at once.
 							const { granted } = await requestRecordingPermissionsAsync();
 							setMicAsk(false);
 							if (!granted) {

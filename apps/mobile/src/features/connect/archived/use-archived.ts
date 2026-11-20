@@ -1,5 +1,3 @@
-/** Archived on Convex and Stream: the same `myConversations` subscription as Connect (Convex
- * dedupes it), the archived rows, and the same row actions. */
 import { api } from "@xolace/backend/api";
 import { useQuery } from "convex/react";
 import { deviceClock } from "../device-clock";

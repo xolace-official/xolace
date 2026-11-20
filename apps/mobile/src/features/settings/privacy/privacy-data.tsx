@@ -4,29 +4,16 @@ import type { PastRetention } from "@/features/settings/privacy/privacy-model";
 import { usePrivacy } from "@/features/settings/privacy/use-privacy";
 import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 
-/**
- * Everything Settings › Privacy & Data reads and does. Two adapters fill it: Convex in the app
- * (`PrivacyData`), fixtures in its dev states (`dev/`).
- */
 export type Privacy = {
 	state: {
-		/** Preferences haven't arrived yet. */
 		loading: boolean;
-		/** `personalMemoryEnabled`, on unless turned off. */
 		memory: boolean;
-		/** `contributeByDefault`. */
 		share: boolean;
-		/** Letters' opt-in (composed in by the route): off until it's "yes"; null while it loads. */
 		receiveLetters: boolean | null;
-		/** `dataRetentionPreference`, as saved. */
 		retention: Retention;
-		/** A shorter period being counted or asked about; the list shows it meanwhile. */
 		pending: Retention | null;
-		/** What the pending period would delete: set, the alert is up. */
 		past: PastRetention | null;
-		/** "Delete them" is on its way. */
 		applying: boolean;
-		/** The privacy policy sheet is up. */
 		policyOpen: boolean;
 	};
 	actions: {
@@ -34,9 +21,7 @@ export type Privacy = {
 		setShare: (on: boolean) => void;
 		setReceiveLetters: (on: boolean) => void;
 		pickRetention: (retention: Retention) => void;
-		/** The alert's Cancel: the previous choice stays. */
 		cancelRetention: () => void;
-		/** The alert's "Delete them": saves and deletes what it counted, now. */
 		confirmRetention: () => void;
 		openCopy: () => void;
 		openPolicy: () => void;
@@ -57,7 +42,6 @@ export function PrivacyProvider({
 	return <PrivacyContext value={value}>{children}</PrivacyContext>;
 }
 
-/** The app's adapter, with letters' opt-in composed in by the route. */
 export function PrivacyData({
 	letters,
 	children,

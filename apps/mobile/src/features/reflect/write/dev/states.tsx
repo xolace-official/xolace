@@ -1,10 +1,6 @@
-/** Write's dictation on fixtures, `xolace://dev/reflect/<id>`: holding the mic, a Plus take's
- * countdown, its "writing it down" and its note, and the first mic tap's upsell. Registered
- * under Reflect with the rest of its states (`../../dev/states.tsx`). */
 import type { DevState } from "@/dev/dev-state";
 import { reflect } from "../../dev/fixture-reflect";
 
-/** As `dictation-fallback.ts` words it when the day's budget is spent. */
 const TAKE_NOTE = "Sharper dictation is back tomorrow.";
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

@@ -18,10 +18,6 @@ import { BLOCK, HEIGHT, layout, PAD } from "./promise-words-layout";
 
 const RM_FADE_MS = 200;
 
-/**
- * The promise, written word by word with a gleam, then its three lines surfacing: one Skia
- * canvas, one picture per frame from the promise's engine.
- */
 export function PromiseWords({
 	eng,
 	faces,

@@ -18,26 +18,17 @@ import { TonePills } from "@/features/settings/mirror/tones/tone-pills";
 import { VoiceOrbs } from "@/features/settings/mirror/voice/voice-orbs";
 import type { VoiceValue } from "@/lib/talk/voice-options";
 
-/** Section titles line up with the 20 pt page inset (board `.sec`). */
 const INSET = 20;
 const TITLE_GAP = 12;
 
 type Section = "mirror" | "talk";
 
-/** Where a dev state opens: Witnessed shown on a free account, a locked voice described, or
- * scrolled to Talk. The app opens on none of them. */
 export type MirrorOpens = {
 	peek?: MirrorTone;
 	focus?: VoiceValue;
 	scrollToTalk?: boolean;
 };
 
-/**
- * Mirror (board "Mirror v2", P/design/handoff/settings.md): a sample card in the chosen tone,
- * tone pills, voices as orbs you tap to choose and hear, and Talk with <companion> (Plus only).
- * A free account can look at Witnessed and hear the named voices; choosing them needs Plus.
- * Nothing animates in.
- */
 export function MirrorScreen({ opens = {} }: { opens?: MirrorOpens }) {
 	const { state, actions } = useMirror();
 	const [peek, setPeek] = useState<MirrorTone | null>(opens.peek ?? null);

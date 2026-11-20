@@ -1,7 +1,3 @@
-/**
- * What the thread's bar and menu do: accept, decline, pick back up (behind the age gate for a
- * seeker), block, rate, report, and the ways out. Production's mutations, toasts and haptics.
- */
 import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/api";
 import { useAction, useMutation } from "convex/react";
@@ -34,9 +30,6 @@ export function useThreadActions(
 	const ageGate = useAgeGate();
 	const [confirming, setConfirming] = useState(false);
 	const [blocking, setBlocking] = useState(false);
-	// A request is answered once: a second tap while the first is in flight does nothing. The
-	// ref guards (state read in this closure can be a render behind a fast second tap); the
-	// state is for the buttons, which show the wait.
 	const answeringRef = useRef(false);
 	const [answering, setAnswering] = useState(false);
 	const answer = (call: () => Promise<unknown>) => {
@@ -102,12 +95,10 @@ export function useThreadActions(
 			block({ conversationId: c.id })
 				.then(() => {
 					setConfirming(false);
-					// The row is gone from the list behind us; nothing here to return to.
 					router.back();
 				})
 				.catch((error: unknown) => {
 					Sentry.captureException(error, { tags: { action: "block" } });
-					// Closed, not left open: nothing was blocked, and the server is idempotent.
 					setConfirming(false);
 					toast(THREAD.toast.blockFailed, {
 						description: THREAD.toast.tryAgain,
@@ -127,7 +118,6 @@ export function useThreadActions(
 					.catch(() => toast(THREAD.toast.declineFailed, { variant: "danger" }))
 			);
 		},
-		// Back to the tabs under the thread, never a second copy of them.
 		findAnother: () => {
 			playSoftPress();
 			router.dismissTo("/connect");
@@ -137,7 +127,6 @@ export function useThreadActions(
 			router.push(CHAT_HELP_HREF);
 		},
 		openProfile: () => {
-			// Only a seeker's counterpart has a public profile.
 			if (c?.role !== "user") {
 				return;
 			}
@@ -174,8 +163,6 @@ export function useThreadActions(
 				profileId: c.counterpartProfileId,
 			});
 		},
-		// Picking a resting chat back up restarts it, so a seeker meets the age gate first
-		// (#716); the Xolacer's side isn't asked.
 		resume: () => {
 			playSoftPress();
 			if (c?.role === "user") {

@@ -10,10 +10,6 @@ const LINES_IN = FadeIn.duration(900).delay(300).reduceMotion(NEVER);
 const UNDERSTAND_IN = FadeIn.duration(700).delay(1400).reduceMotion(NEVER);
 const OUT = FadeOut.duration(500).reduceMotion(NEVER);
 
-/**
- * Production's first-time intro, shown once over the sparse drift (the field's `sparse`): three
- * quiet lines and a text-only "I understand".
- */
 export function VentIntro() {
 	const { state, actions } = useVentScreen();
 	if (state.phase !== "intro") {

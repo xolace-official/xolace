@@ -1,6 +1,3 @@
-// Scrolling the middle to a row as it opens. The content is still growing while it scrolls,
-// so the scroll follows a timing on the UI thread (a plain animated scrollTo would stop at the
-// content's old end).
 import { useRef } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import type Animated from "react-native-reanimated";
@@ -25,7 +22,6 @@ export function useRowScroll(reduced: boolean) {
 	const follow = useSharedValue(IDLE);
 	const contentH = useRef(0);
 	const viewH = useRef(0);
-	// Each open preview's laid-out height; the board's until it has laid out.
 	const heights = useRef(new Map<RowId, number>());
 
 	const onScroll = useAnimatedScrollHandler((e) => {
@@ -47,7 +43,6 @@ export function useRowScroll(reduced: boolean) {
 				FIRST_LOOK.rows.find((r) => r.id === id)?.height ??
 				0);
 
-	/** `next` opened as `prev` closed. */
 	const toRow = (next: RowId, prev: RowId | null) => {
 		const target = scrollTargetFor({
 			contentH: contentH.current,
@@ -60,7 +55,6 @@ export function useRowScroll(reduced: boolean) {
 			return;
 		}
 		if (reduced) {
-			// Nothing to follow: the row is already at its full height.
 			ref.current?.scrollTo({ animated: false, y: target });
 			return;
 		}

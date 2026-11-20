@@ -9,11 +9,6 @@ import { cn } from "@/lib/cn";
 
 export const NAME_H = 36;
 
-/**
- * A part this badge may not have (a locked one has no date, Share or Pin): kept
- * mounted and hidden by its own wrapper, so switching between earned and locked
- * doesn't re-render what's inside.
- */
 export function Part({ on, children }: { on: boolean; children: ReactNode }) {
 	return (
 		<View
@@ -25,7 +20,6 @@ export function Part({ on, children }: { on: boolean; children: ReactNode }) {
 	);
 }
 
-/** The title grows out of the medallion's label onto its spot, on the x/y/size springs. */
 export function Name({
 	pose,
 	width,
@@ -53,7 +47,6 @@ export function Name({
 	);
 }
 
-/** One of the page's words or buttons: fades over 240 ms and rises 12 pt over 420 ms, staggered. */
 export function Reveal({
 	pose,
 	i,
@@ -63,7 +56,6 @@ export function Reveal({
 }: {
 	pose: SharedValue<Pose>;
 	i: number;
-	/** Its static place (sides, alignment); `style` has the top or bottom. */
 	className: string;
 	style: StyleProp<ViewStyle>;
 	children: ReactNode;

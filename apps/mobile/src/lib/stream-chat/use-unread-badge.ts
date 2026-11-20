@@ -27,22 +27,16 @@ function totalFor(client: StreamChat): number | null {
 	return total;
 }
 
-/** The one unread number across every conversation, feeding the tab and icon badges. `null`
- * means unknown, not zero: a push-set icon badge stays until Stream says otherwise. */
 export function useUnreadBadge(): number | null {
 	const { client, status } = useStreamStatus();
 	const connected = status === "ready" ? client : null;
 
-	// Stable per client for the same reason as `useConversationUnreadCount`.
 	const subscribe = useCallback(
 		(onStoreChange: () => void) => {
 			if (!connected) {
 				return () => {};
 			}
 			totalFor(connected);
-			// Always notifies: the first listener to run already updated the map, so
-			// skipping "unchanged" would leave every later subscriber never re-rendering.
-			// React bails out itself when the snapshot is equal.
 			const { unsubscribe } = connected.on((event) => {
 				totals.set(connected, {
 					total: badgeFromEvents(totalFor(connected) ?? 0, event),

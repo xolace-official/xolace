@@ -1,13 +1,8 @@
-/**
- * What the clock is told about the current beat, as plain numbers for the
- * worklet. React hands it over on beat changes only (`use-sit-clock.ts`).
- */
 import type { RunState } from "../run/sit-run";
 import { type Beat, isBreathing } from "../sit-model";
 import { durOf } from "../sit-timing";
 import { PATTERNS, type PhaseKind, type Step } from "./breath";
 
-/** Beat kinds as numbers, for the worklet. */
 export const K = {
 	breath: 2,
 	haptic: 4,
@@ -24,13 +19,9 @@ export type ClockCfg = {
 	kind: number;
 	steps: readonly Step[];
 	cyc: number;
-	/** ms, or −1 for an untimed beat (the prompt). */
 	d: number;
-	/** Start this far in (a dev state's frozen frame). */
 	seek: number;
-	/** Make room: the caption follows the phase (0 the in-line, 1 the out-line). */
 	split: boolean;
-	/** Bumped when playing (re)starts. */
 	playRun: number;
 };
 
@@ -46,7 +37,6 @@ export const IDLE_CFG: ClockCfg = {
 	steps: [],
 };
 
-/** The clock's config for the run's current beat. */
 export function clockCfg(run: RunState, beat: Beat): ClockCfg {
 	const breath = beat.k === "breath" || beat.k === "sync";
 	const d = durOf(beat);
@@ -63,9 +53,7 @@ export function clockCfg(run: RunState, beat: Beat): ClockCfg {
 	};
 }
 
-/** What the clock tells the JS side, in the frame it happens. */
 export type ClockEvents = {
-	/** A breath phase began (`first`: the beat's first): its haptic, and VoiceOver hears it. */
 	phase: (
 		serial: number,
 		kind: PhaseKind,
@@ -73,12 +61,8 @@ export type ClockEvents = {
 		caption: number,
 		first: boolean
 	) => void;
-	/** A hand pulse. */
 	pulse: (serial: number) => void;
-	/** The beat's time is up. */
 	beatEnd: (serial: number) => void;
-	/** 3 s of playing: "Something different" may show. */
 	linkReady: () => void;
-	/** "You stayed."'s Done has drained. */
 	doneReady: (serial: number) => void;
 };

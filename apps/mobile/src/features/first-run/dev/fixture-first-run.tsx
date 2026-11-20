@@ -11,12 +11,10 @@ type Props = {
 	day?: boolean;
 	reduced?: boolean;
 	scene?: FirstRun["state"]["scene"];
-	/** What a tap on a sign-in button comes back with, after `after` ms; none keeps it waiting. */
 	outcome?: SignInOutcome;
 	after?: number;
 };
 
-/** First run on fixtures: nothing reaches Clerk, PostHog or the store. */
 export function FixtureFirstRun({
 	start = "promise",
 	day,

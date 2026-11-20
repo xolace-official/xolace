@@ -6,12 +6,6 @@ import { holdShows, waitForQuietSpinner } from "./launch-clock";
 import type { HoldReason } from "./launch-model";
 import { useLaunchHold, useLaunchRevealed } from "./launch-store";
 
-/**
- * In place of a loader: while the launch cover is up it holds the cover and draws nothing under
- * it. After launch (a bootstrap retry mid-session, the gate reloading, or the cover timing out)
- * it is a quiet loading state on the theme's background: a spinner, shown only if the wait runs
- * past `quietSpinnerAfterMs`, so a load that resolves at once shows nothing.
- */
 export function LaunchHold({ reason }: { reason: HoldReason }) {
 	useLaunchHold(true, reason);
 	const revealed = useLaunchRevealed();

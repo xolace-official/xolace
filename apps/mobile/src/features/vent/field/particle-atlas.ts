@@ -14,18 +14,10 @@ import {
 	RAMP_STEPS,
 } from "@/features/vent/field/particle-config";
 
-/**
- * v2: every spark is one sprite in one `drawAtlas` call (native-cook firefly-swarm) instead of
- * production's 100 circles each with a 2.5 blur mask filter. The sprite is a pre-softened white
- * disc; each spark tints it with its colour along the ramp and adds in `BlendMode.Plus`, so where
- * sparks overlap the core runs hotter.
- */
 const SPRITE = 64;
-/** The board's soft dot: a radial falloff drawn at radius size + 5 (Skia's 2.5 blur, ported). */
 const STOPS = [0, 0.34, 0.62, 1];
 const ALPHAS = [1, 0.92, 0.34, 0];
 const SOFT_EDGE = 5;
-/** Below these the dot is invisible; skip it. */
 const MIN_ALPHA = 0.004;
 const MIN_SIZE = 0.05;
 
@@ -53,7 +45,6 @@ export function makeSprite(): SkImage | null {
 	return surface.makeImageSnapshot();
 }
 
-/** One frame's sparks, drawn together at the end. */
 export type Batch = {
 	src: SkRect;
 	rects: SkRect[];
@@ -71,7 +62,6 @@ export function newBatch(): Batch {
 	};
 }
 
-/** A soft spark at (x, y): size in pt, warmth 0–1 along the ramp, alpha (capped at 1). */
 export function dot(
 	b: Batch,
 	x: number,

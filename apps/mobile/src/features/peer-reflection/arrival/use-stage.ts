@@ -14,26 +14,15 @@ import { CARD_STAR } from "../peers-look";
 import { wordsIn } from "./arrival-time";
 import { useArrival } from "./use-arrival";
 
-/** Dev states: a moment held or played on fixtures. */
 export type PeersScene = {
-	/** Hold the arrival at this many ms; `Infinity` holds it arrived. */
 	hold?: number;
-	/** As Reduce Motion draws it, whatever the setting. */
 	reduced?: boolean;
-	/** Press this card's "I've felt this too" once the screen settles. */
 	tap?: number;
-	/** Scroll to the end once the screen settles. */
 	scrollEnd?: boolean;
 };
 
-/** A dev scene's press waits for the screen to settle (the board's jumps: 60–90 ms). */
 const SCENE_MS = 120;
 
-/**
- * You're not alone's moments, around the provider's data: the arrival clock,
- * the mark's values, the face and the haptics. React hears only the moments
- * that change what's drawn: a card landing, Done, reading, a press.
- */
 export function useStage(
 	{ state, actions }: PeerReflection,
 	scene: PeersScene | undefined,
@@ -84,8 +73,6 @@ export function useStage(
 		words: wordsIn(title.rows),
 	});
 
-	// A card lit or put out moves its line and star: at once on the visit's start,
-	// over its own time after.
 	const seen = useRef<Map<string, { on: boolean; gone: boolean }>>(new Map());
 	const lit = cards.map((c) => `${c.on ? 1 : 0}${c.gone ? 1 : 0}`).join();
 	useEffect(() => {
@@ -126,7 +113,6 @@ export function useStage(
 		actions.done();
 	};
 
-	// Dev states: once the screen has settled, press or scroll as the scene says.
 	const sceneRan = useRef(false);
 	useEffect(() => {
 		if (!ui || sceneRan.current || !scene) {

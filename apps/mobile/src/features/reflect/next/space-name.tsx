@@ -7,18 +7,12 @@ import { NameDialog } from "@/components/settings-kit/name-dialog";
 import { COPY } from "../copy";
 import { useReflect } from "../reflect-data";
 
-/**
- * Production's space-name prompt, asked once on Where next (kit `NameDialog`). The validator's
- * own words say what's wrong once you type; empty, Save just waits. A save the server turns down
- * shows its reason.
- */
 export function SpaceName() {
 	const { state, actions } = useReflect();
 	const [draft, setDraft] = useState("");
 	const [serverError, setServerError] = useState("");
 	const empty = draft.trim() === "";
 	const checked = validateSpaceName(draft);
-	// As production's prompt did: an empty field says nothing, Save just waits.
 	const error = checked.ok || empty ? serverError : checked.message;
 
 	const onDraft = (value: string) => {

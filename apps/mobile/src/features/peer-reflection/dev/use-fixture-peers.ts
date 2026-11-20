@@ -12,7 +12,6 @@ import {
 } from "../peer-reflection-model";
 import { MOTION } from "../peers-look";
 
-/** The prototype server's answer time for a rate-limited turn-on (the board's `slow()`). */
 const LIMIT_REPLY_MS = 640;
 
 export type FixtureProps = {
@@ -20,20 +19,11 @@ export type FixtureProps = {
 	rows?: readonly ReflectionRow[];
 	loading?: boolean;
 	late: boolean;
-	/** Session end will offer "Leave it for someone" (the bridge line). */
 	bridge?: boolean;
-	/** The next turn-on comes back rate-limited (board "Slow down"). */
 	slowNext?: boolean;
-	/** Fold this card as a report would, once the screen has settled (board "Reported"). */
 	reportAfter?: number;
 };
 
-/**
- * You're not alone on fixtures, through the same `{ state, actions }` as the
- * app: "I've felt this too" flips (and can flip back, rate-limited), Hide this
- * folds the card, Report… opens the sheet's own dev state, Done goes back.
- * Nothing reaches the backend.
- */
 export function useFixturePeers({
 	set = "match",
 	rows: given,
@@ -54,7 +44,6 @@ export function useFixturePeers({
 		setRows((r) => recount(r, id, on));
 	};
 
-	// A report as the sheet sends it: the card folds a beat after the screen opens.
 	const reportId = reportAfter === undefined ? null : given?.[reportAfter]?._id;
 	useEffect(() => {
 		if (!reportId) {

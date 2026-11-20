@@ -8,10 +8,6 @@ import { LETTER_MOTION } from "../letter-motion";
 const L = LETTER_MOTION.label;
 const LABEL = "absolute inset-0 items-center justify-center";
 
-/**
- * Send, and while the check runs "Reading it over…": the label rolls up 6 pt (320 ms, 120 ms
- * late). Off (under 40 characters, or a held letter unchanged) it's a quiet fill.
- */
 export function SendButton({
 	waiting,
 	off,

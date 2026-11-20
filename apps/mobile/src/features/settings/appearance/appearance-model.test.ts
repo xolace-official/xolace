@@ -39,10 +39,8 @@ describe("mode", () => {
 
 	it("System hands Uniwind 'system'; Light and Dark keep the theme on screen", () => {
 		expect(modeTheme("system", "rose")).toBe("system");
-		// The saved colour theme, whatever is on screen (System draws Default until relaunch).
 		expect(modeTheme("dark", "rose")).toBe("rose-dark");
 		expect(modeTheme("light", "default")).toBe("light");
-		// Anything the registry doesn't know falls back to Default.
 		expect(modeTheme("dark", "nope")).toBe("dark");
 	});
 

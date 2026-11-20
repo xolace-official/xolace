@@ -16,7 +16,6 @@ import { StartGroup } from "./start-group";
 import { PaceLine, TalkFacts } from "./talk-facts";
 import { VoicePills } from "./voice-pills";
 
-/** Bricolage 29/33 at 750 (the 700 cut is the nearest loaded), −0.025 em. */
 const TITLE = { fontSize: 29, letterSpacing: -0.725, lineHeight: 33 } as const;
 const MIN_SPACER = 20;
 
@@ -26,21 +25,14 @@ type Props = {
 	before: boolean;
 	face: number;
 	index: number;
-	/** The orbs turn only while the start screen is in front. */
 	orbs: boolean;
 	reduced: boolean;
 	carTop: SharedValue<number>;
 	startTop: SharedValue<number>;
 	onDot: (i: number) => void;
-	/** Large text: how much the content overflows (> 0) or how much room is spare (< 0). */
 	onFit: (overflow: number) => void;
 };
 
-/**
- * The start screen (handoff §2), in VoiceOver's order: title, sub, look, voice, pace and
- * directness, the facts. The carousel and Start live over it (they move into the talk), so
- * here they are placeholders whose place on screen the overlays follow, scroll included.
- */
 export function TalkStart({
 	geo,
 	motion,

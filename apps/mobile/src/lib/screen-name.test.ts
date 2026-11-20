@@ -3,7 +3,6 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { OBSERVE_FILTERED_PARAMS, screenName } from "./screen-name";
 
-/** A Convex document id, as a letter's is. */
 const LETTER_ID = "k57ah2mk2gpx4bh4x7zm8j3c9h7v2yq1";
 
 const LETTERS_ROUTES = join(
@@ -14,7 +13,6 @@ const LETTERS_ROUTES = join(
 	"letters"
 );
 
-/** Every dynamic segment's param name under the letters routes (`read/[id]` → `id`). */
 function letterRouteParams(dir: string): string[] {
 	return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
 		const param = /^\[(?:\.\.\.)?([^\]]+)\]/.exec(entry.name)?.[1];

@@ -22,7 +22,6 @@ import { SetupProgress } from "./setup-progress";
 import { SetupReview } from "./setup-review";
 import { SpecialtyChips } from "./specialty-chips";
 
-/** Production cross-fades the steps over 150 ms; Reduce Motion keeps it (it's only a fade). */
 const CROSS = {
 	animate: { opacity: 1 },
 	initialAnimate: { opacity: 0 },
@@ -30,15 +29,9 @@ const CROSS = {
 } as const;
 const CLOSE = { android: "close", ios: "xmark" } as const;
 
-/**
- * Xolacer setup (C2): five steps on one screen. Close on step 1, back a step after; Continue
- * always works on 1 to 4 (a step can be left for later, the progress line says what's missing);
- * Publish waits for all four.
- */
 export function SetupScreen() {
 	const { state, actions } = useSetupScreen();
 	if (state.phase !== "ready") {
-		// No profile to set up is the edit screen's case; setup is only reached with one.
 		return <SetupSkeleton />;
 	}
 	const { draft, step, busy } = state;
@@ -153,7 +146,6 @@ function StepBody() {
 	}
 }
 
-/** The screen's shape while the profile loads: the bar, the progress, a title, the photo. */
 function SetupSkeleton() {
 	return (
 		<View className="flex-1 bg-background pt-safe-offset-2">

@@ -5,7 +5,6 @@ import { cn } from "@/lib/cn";
 import { QuoteIcon } from "../chrome/quote-icons";
 import { QUOTE_COPY } from "../copy";
 
-/** Words you kept's newer and older buttons. */
 export function KeptNav(p: {
 	label: string;
 	icon: "chevronLeft" | "chevronRight";
@@ -31,7 +30,6 @@ export function KeptNav(p: {
 	);
 }
 
-/** Back to today's quote, the title, and where the front card sits ("3 of 14"). */
 export function KeptHeader(p: {
 	ink: string;
 	soft: string;

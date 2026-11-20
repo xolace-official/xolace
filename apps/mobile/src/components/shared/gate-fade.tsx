@@ -3,18 +3,12 @@ import { Canvas, LinearGradient, Rect, vec } from "@shopify/react-native-skia";
 type Props = {
 	width: number;
 	height: number;
-	/** Base frost color (resolved token hex, e.g. surface). */
 	color: string;
-	/** Alpha (2-hex) at the transparent edge. */
 	startAlpha?: string;
-	/** Alpha (2-hex) at the frosted edge. */
 	endAlpha?: string;
-	/** When true the opaque edge is the top instead of the bottom. */
 	flip?: boolean;
 };
 
-/** Vertical gradient veil that dissolves live content into a frosted edge
- * (color + "XX" → color + "00"). Position it absolutely over the seam. */
 export function GateFade({
 	width,
 	height,

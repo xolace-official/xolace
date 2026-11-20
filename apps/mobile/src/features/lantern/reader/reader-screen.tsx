@@ -38,13 +38,7 @@ import { useTokenColor } from "@/lib/use-token-color";
 const PILL_GAP = 16;
 const SHEET_BOTTOM = 96;
 
-/** The Lantern reader on its reading mode's page (handoff §5). The Aa sheet sits outside it. */
-export function ReaderScreen({
-	startAt,
-}: {
-	/** Dev states only: open scrolled this far; negative counts from the end. */
-	startAt?: number;
-}) {
+export function ReaderScreen({ startAt }: { startAt?: number }) {
 	const { mode } = useReaderScreen().state.prefs;
 	return (
 		<ReaderPageScope page={READING_MODES[mode].page}>
@@ -53,18 +47,11 @@ export function ReaderScreen({
 	);
 }
 
-/**
- * Production's cover fold, in the redesign's type and colours. New in v2: Pick up at 40%, minutes
- * left in the bar, and the place kept when the Aa sheet reflows the text. React never hears
- * about the scroll.
- */
 function ReaderView({ startAt }: { startAt?: number }) {
 	const { state, actions } = useReaderScreen();
 	const insets = useSafeAreaInsets();
-	// The Aa sheet leaves the reader touchable: the bar and swipe back go inert under it.
 	const focused = useIsFocused();
 	const reduced = useEffectiveReducedMotion();
-	// From the hook, not `bg-background`: the class misses the scoped page here (#401).
 	const page = useTokenColor("background");
 	const f = useFold();
 	const [contentH, setContentH] = useState(1);
@@ -118,10 +105,8 @@ function ReaderView({ startAt }: { startAt?: number }) {
 			onLayout={(e) => setViewH(e.nativeEvent.layout.height)}
 			style={{ backgroundColor: page }}
 		>
-			{/* No swipe back while the Aa sheet is up (production's `gestureEnabled: focused`). */}
 			<Stack.Screen options={{ gestureEnabled: focused }} />
 			{focused ? <StatusBar style="light" /> : null}
-			{/* Cover-sized, so a photo card zooms into the photo. Hidden from screen readers. */}
 			<Link.AppleZoomTarget>
 				<View
 					accessibilityElementsHidden
@@ -148,7 +133,6 @@ function ReaderView({ startAt }: { startAt?: number }) {
 				>
 					{f.ax ? null : title}
 				</Animated.View>
-				{/* Under the Aa sheet the page still scrolls, but nothing on it takes a tap. */}
 				<View
 					className="rounded-t-[28px] px-6 pt-6"
 					pointerEvents={focused ? "auto" : "none"}
@@ -191,7 +175,6 @@ function ReaderView({ startAt }: { startAt?: number }) {
 				y={y}
 			/>
 			<AudioDock bottom={insets.bottom} inert={!focused} />
-			{/* By the fire's dim goes over everything, the pills and the dock too (§5.2). */}
 			<FireDim />
 		</View>
 	);

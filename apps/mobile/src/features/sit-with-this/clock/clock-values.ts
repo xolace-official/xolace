@@ -4,7 +4,6 @@ import { ARC, type Arcs, arcsAt } from "@/design/breath-arc";
 import { type ClockCfg, IDLE_CFG } from "./clock-config";
 import { G } from "./phases";
 
-/** What the clock remembers about the beat it's playing. */
 export type Memo = {
 	serial: number;
 	playRun: number;
@@ -16,15 +15,9 @@ export type Memo = {
 	capStart: number;
 };
 
-/**
- * The clock's values: what it's told (`cfg`), its time, and everything it
- * writes for the views to read on the UI thread (the breath, the light, the
- * label and caption, the thread, the arcs' geometry and paths).
- */
 export function useClockValues(W: number, H: number) {
 	const cfg = useSharedValue<ClockCfg>(IDLE_CFG);
 	const vt = useSharedValue(0);
-	/** The beat (serial) `vt` belongs to: a view of a newer beat reads 0 until the clock catches up. */
 	const at = useSharedValue(-1);
 	const playT = useSharedValue(0);
 	const closeT = useSharedValue(0);

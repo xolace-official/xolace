@@ -29,11 +29,6 @@ import { useStoryScene } from "./use-story-scene";
 
 const MOUNT_STEP_MS = 120;
 
-/**
- * The story's engine: one shared value stepped by one frame callback on the UI thread, waiting
- * under the promise's hand-off until `gate` opens. React hears of a beat change, the seat, the
- * seated moment and the haptics; signing in runs the seat's clock from the real Clerk result.
- */
 export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 	const { state, actions } = useFirstRunContext();
 	const scene = state.scene?.story;
@@ -43,18 +38,15 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 	);
 	const [beat, setBeat] = useState(start);
 	const [open, setOpen] = useState(seat);
-	/** The provider whose sheet is up, until it comes back without an account. */
 	const [signing, setSigning] = useState<AuthProvider | null>(
 		scene?.auth ?? null
 	);
 	const [seated, setSeated] = useState(
 		scene?.auth !== undefined && (scene.aa ?? 0) >= AUTH.seated
 	);
-	/** The last sign-in came back signed in, and the seated moment hasn't handed over yet. */
 	const [succeeded, setSucceeded] = useState(false);
 	const handedOff = useRef(false);
 	const breath = useProcessingBreathHaptic();
-	/** The cover mounts first, the other beats after the first frame, one every 120 ms. */
 	const [ready, setReady] = useState(0);
 	useEffect(() => {
 		if (ready === 0 || ready >= NB) {
@@ -64,7 +56,6 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 		return () => clearTimeout(id);
 	}, [ready]);
 	useStoryScene(eng, scene);
-	// The story waits on a screen reader (no auto-advance); it follows the reader on and off.
 	useEffect(() => {
 		let alive = true;
 		const setSr = (sr: boolean) => {
@@ -154,8 +145,6 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 		}
 	});
 
-	// The hold let go (its deadline, the background) or Clerk signed out while first run is still
-	// up: nothing will move the root on, so the seat goes back to its buttons instead of a dead end.
 	const lost = succeeded && !state.sessionHeld;
 	useEffect(() => {
 		if (!lost || handedOff.current) {

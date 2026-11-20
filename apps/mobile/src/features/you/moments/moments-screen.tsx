@@ -15,10 +15,8 @@ import { useHeaderOptions } from "@/lib/header-options";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const L = MOMENTS_COPY.list;
-/** A card before it's measured: a two-line quote, the line and the gap. */
 const CARD_ESTIMATE = 128;
 const LOAD_AHEAD = 0.4;
-/** Clears the floating door (the prototype's pb-35), or just the home indicator. */
 const DOOR_CLEAR = 140;
 const END_CLEAR = 40;
 
@@ -33,8 +31,6 @@ export function MomentsScreen() {
 	const header = useHeaderOptions();
 	const reduced = useEffectiveReducedMotion();
 	const { screenReaderEnabled } = useAccessibilityInfo();
-	// Cards rise in on arrival only: rows remount as they scroll back into view, and must not
-	// replay it.
 	const [arriving, setArriving] = useState(true);
 	const door = state?.windowDays ?? null;
 	return (
@@ -75,7 +71,6 @@ export function MomentsScreen() {
 				onEndReached={state?.canLoadMore ? actions.loadMore : undefined}
 				onEndReachedThreshold={LOAD_AHEAD}
 				onScrollBeginDrag={() => setArriving(false)}
-				// Rows remount on reuse (cards hold an entering animation and a zoom trigger).
 				recycleItems={false}
 				renderItem={({ item }: { item: ListItem }) =>
 					item.kind === "when" ? (

@@ -13,23 +13,10 @@ import { LiveRidges, RidgesArt, RidgesAt } from "./sky-ridges";
 import { SkySprites } from "./sky-sprites";
 import { useSkyMotion } from "./use-sky-motion";
 
-/**
- * The sky draws at 30 fps: at that rate the halo breath (6 s), cloud drift (1.6 pt/s
- * at most) and twinkles move well under a pixel a frame, the embers about one.
- */
 const SKY_FPS = 30;
 
 type Props = { phase: TodayPhase; width: number };
 
-/**
- * The sky behind Today's header: one declarative Skia canvas, 420 pt tall,
- * scrolling with the page. One phase drives every layer (walking-steps-buddy);
- * the clock only runs while the sky is on screen and Today is live.
- *
- * At rest, the layers that don't move with the clock (the three palettes, the
- * night front and the ridges) are drawn from two textures baked for the phase;
- * from a phase change until they have finished moving, they are drawn live.
- */
 export function SkyCanvas({ phase, width }: Props) {
 	const { scrollY, live, reduced, low } = useTodayFrame();
 	const dark = useScheme() === "dark";
@@ -43,8 +30,6 @@ export function SkyCanvas({ phase, width }: Props) {
 	const settled = useSkySettled(phase, reduced);
 	const rest = restOf(phase);
 	const baked = useSkyBake(
-		// The scheme is in the key as well as the page: a theme change must re-bake even
-		// if two themes shared a page colour (a static picture would keep the old sky).
 		`${phase}|${width}|${page}|${dark ? "dark" : "light"}`,
 		{
 			element: (
@@ -65,9 +50,6 @@ export function SkyCanvas({ phase, width }: Props) {
 		}
 	);
 	const cached = settled ? baked : null;
-	// Dawn and day show no stars or embers: the atlas mounts only by evening and
-	// late, and through any phase change (the slowest sprite fade, the first
-	// star's 0.4 + 1.2 s, ends inside the settle time).
 	const sprites = phase === "evening" || phase === "late" || !settled;
 
 	return (
@@ -106,7 +88,6 @@ export function SkyCanvas({ phase, width }: Props) {
 	);
 }
 
-/** The static layers' values at rest in a phase: where useSkyMotion's timings end. */
 function restOf(phase: TodayPhase) {
 	const late = phase === "late";
 	const night = late ? 1 : -NIGHT_FEATHER;

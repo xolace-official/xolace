@@ -1,6 +1,3 @@
-// What the drawn features share: the per-frame geometry derived from a pose, in the body's
-// 100×100 box, and the colours they paint with.
-
 import type { SharedValue } from "react-native-reanimated";
 
 export type EyeStyle = "round" | "sleepy" | "sparkle";
@@ -18,7 +15,6 @@ export type Geo = {
 	asym: number;
 	brow: number;
 	cheeks: number;
-	/** face centre x and eye line y, after lean, jitter and nod */
 	cx: number;
 	ey: number;
 	gx: number;
@@ -27,7 +23,6 @@ export type Geo = {
 	mouth: number;
 	mouthOpen: number;
 	open: number;
-	/** 0 round … 1 crescent (`Pose.eyeShape`). */
 	shape: number;
 };
 

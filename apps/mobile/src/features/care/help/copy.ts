@@ -1,4 +1,3 @@
-/** Get help now: the prototype's `HELP` strings, plus production's toasts and disclaimer. */
 export const COPY = {
 	actions: { call: "Call", email: "Email", open: "Open" },
 	directory: {
@@ -7,7 +6,6 @@ export const COPY = {
 	},
 	disclaimer:
 		"Xolace Inc assumes no responsibility or liability for the professional ability, reputation, or quality of services provided by the entities or individuals listed above. Inclusion on this list does not constitute an endorsement by Xolace Inc. The order does not imply any ranking or evaluation. Xolace Inc cannot vouch for the contact information's accuracy;",
-	/** The menu's last choice: a country the list has no lines for. */
 	elsewhere: "Somewhere else",
 	elsewhereNote:
 		"We don't have local lines for where you are yet. Your local emergency number still works, and the directory below lists crisis centres near you.",

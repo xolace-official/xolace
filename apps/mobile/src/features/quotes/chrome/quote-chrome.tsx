@@ -9,7 +9,6 @@ import { ClearHint, HeartBurst, QuoteToast } from "./quote-flourish";
 import type { InkPalette } from "./quote-ink";
 import { QuoteTopBar } from "./quote-top-bar";
 
-/** What sits over the quote: the top bar, the action row, Clear view's hint, the heart, the toast. */
 export function QuoteChrome({
 	h,
 	ink,

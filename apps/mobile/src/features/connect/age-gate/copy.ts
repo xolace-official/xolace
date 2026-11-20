@@ -1,8 +1,3 @@
-/**
- * The age gate (C2). Production's copy (`age-gate-steps.tsx`), apostrophes curled and each way
- * on split into a title and a line. The copy says why, never where the lines are, so the sheet
- * doesn't teach which year to pick.
- */
 import type { Href } from "expo-router";
 import type { IconName } from "@/components/shared/icon";
 
@@ -21,7 +16,6 @@ export const AGE = {
 		decline: "Prefer not to say",
 		lead: "It decides who you can be matched with.",
 		picker: "Date of birth",
-		/** Who never sees the answer, by what it was asked for. */
 		private: {
 			letters: "Kept private. No one you write to or hear from sees it.",
 			xolacer_chat: "Kept private. Xolacers never see it.",

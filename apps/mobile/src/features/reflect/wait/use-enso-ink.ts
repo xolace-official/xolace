@@ -18,11 +18,9 @@ const DEG = Math.PI / 180;
 const MS = 1000;
 const FRAME_MS = 16;
 const MAX_STEP_MS = 50;
-/** Board `.blot`: the landing blot grows from 20% of its radius. */
 const BLOT_FROM = 0.2;
 const CLOSE_EASE = Easing.bezier(0.2, 0.8, 0.2, 1);
 const BLEED_EASE = Easing.out(Easing.cubic);
-/** Board `.woff`: offline, the brush barely starts (6% over 1 s) and waits. */
 const OFFLINE = { ms: 1000, reach: 0.06 } as const;
 
 type Options = {
@@ -34,7 +32,6 @@ type Options = {
 	face: FaceHandle | null;
 	follow: boolean;
 	bleedOnce?: { delayMs: number; ms: number };
-	/** The sweep's length, and the length with the tail that closes it. */
 	length: number;
 	full: number;
 };
@@ -46,11 +43,6 @@ const bleedIn = (delayMs: number, ms: number) =>
 		ReduceMotion.Never
 	);
 
-/**
- * The ensō's ink, on the board's pace: the head runs to .85·(1 − e^(−t/2 s)) of the sweep,
- * advanced from frame deltas so a pause resumes in place, and closes in .42 s when the answer
- * comes, then bleeds. Reduce Motion draws it still: open at .85 while it waits, then closed.
- */
 export function useEnsoInk({
 	mode,
 	landed,
@@ -87,7 +79,6 @@ export function useEnsoInk({
 		return () => setActive(false);
 	}, [painting, running, reduced, setActive]);
 
-	// Reduce Motion: no brush, the circle as it would stand, open.
 	useEffect(() => {
 		if (painting && reduced) {
 			head.set(ENSO.cap * length);

@@ -1,13 +1,8 @@
-/** You're not alone on fixtures: `xolace://dev/peer-reflection/<id>`. The handoff's
- * renders (`peers.md` §10, numbered as they are) and the prototype's Review jumps.
- * A still holds the arrival at that instant; "arrived" holds it at its end. */
 import type { DevState } from "@/dev/dev-state";
 import { peers, reportSheet } from "./fixture-peers";
 import { LONG, MATCH, RECENT } from "./fixtures";
 
-/** The arrival held at its end: everything landed and written. */
 const ARRIVED = Number.POSITIVE_INFINITY;
-/** 02 and 03 are pinned mid-arrival (board ms). */
 const AT_900 = 900;
 const AT_1450 = 1450;
 const FIRST = 0;

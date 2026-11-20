@@ -12,7 +12,6 @@ import { useTokenColor, useTokenColors } from "@/lib/use-token-color";
 
 const MARK = 16;
 
-/** Google's mark in its own colours (board `GoogleMark`), the one brand colour on the page. */
 function GoogleMark() {
 	const [blue, green, yellow, red] = useTokenColors([
 		"account-google-blue",
@@ -42,7 +41,6 @@ function GoogleMark() {
 	);
 }
 
-/** Apple's mark in the ink (production's sign-in glyph), drawn so Android shows it too. */
 function AppleMark() {
 	const ink = useTokenColor("foreground");
 	return (
@@ -55,10 +53,8 @@ function AppleMark() {
 	);
 }
 
-/** Sign-in: one row, the provider's mark on a neutral tile (email on the accent tile). */
 export function SignInCard() {
 	const { signIn } = useAccountScreen().state;
-	// While Clerk loads: the row's height, named for VoiceOver, with nothing drawn in it.
 	let row = (
 		<View accessibilityLabel={C.signInLoading} accessible className={ROW} />
 	);

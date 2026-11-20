@@ -17,21 +17,15 @@ type Props = {
 	text: string;
 	color: string;
 	variant: TypeVariant;
-	/** The line's size, tracking and case. Its colour is `color`. */
 	className: string;
 	weight?: Weight;
 	reduced: boolean;
-	/** "lift": fuse's label swap (rise 8, shrink .96, 500 ms). "fade": a plain crossfade. */
 	mode: "lift" | "fade";
 	numberOfLines?: number;
 };
 
 type Lines = { now: string; nowColor: string; was: string; wasColor: string };
 
-/**
- * Text that changes in place without a flash (§2.4, §6): the old line leaves as the new one
- * arrives, both in the same box (the old one absolutely, so nothing jumps), each in its colour.
- */
 export function SwapText({
 	text,
 	color,

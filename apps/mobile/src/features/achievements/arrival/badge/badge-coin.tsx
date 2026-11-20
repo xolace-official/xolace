@@ -19,7 +19,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 const SPREAD = { from: 40, to: 760 } as const;
 
-/** Badge `i`'s pose for the coin, its colour and glow: unseen unless it's the one out. */
 function useArrivalPose(
 	eng: SharedValue<Eng>,
 	fa: SharedValue<number>,
@@ -66,7 +65,6 @@ type One = {
 	dark: boolean;
 };
 
-/** Badge `i`'s colour and glow. */
 export function BadgeGlow({
 	reach,
 	...one
@@ -89,7 +87,6 @@ export function BadgeGlow({
 	);
 }
 
-/** Badge `i` itself: the badge page's coin, its back engraved "Today". */
 export function BadgeFace({ eng, fa, geo, i, b, dark }: One) {
 	const pose = useArrivalPose(eng, fa, geo, i);
 	return (
@@ -101,7 +98,6 @@ export function BadgeFace({ eng, fa, geo, i, b, dark }: One) {
 				title: b.title,
 			}}
 			dark={dark}
-			// It drops in from above the screen.
 			greyAfterMs={GREY_AFTER.offScreen}
 			lit={!b.art.unlit}
 			n={i}

@@ -1,5 +1,3 @@
-/** Privacy & Data's fixture adapters: the real screens under providers filled from fixtures. */
-
 import { View } from "react-native";
 import { DeleteSheetScreen } from "@/features/settings/privacy/delete/delete-sheet";
 import {
@@ -30,9 +28,6 @@ export function FixturePrivacy({
 	);
 }
 
-/** The sheet's content, pushed: a dev state can't present a form sheet. */
-/** The delete sheet as its form sheet presents it: no header, the sheet at the bottom with the
- * sheet's top corners. A dev state can't present a real form sheet (states open pushed). */
 export function FixtureDeleteSheet({ state }: { state: DeleteSheet["state"] }) {
 	return (
 		<DeleteSheetProvider value={{ actions: DELETE_ACTIONS, state }}>

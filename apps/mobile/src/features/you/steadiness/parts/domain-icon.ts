@@ -1,7 +1,6 @@
 import type { IconName } from "@/components/shared/icon";
 import type { Domain } from "@/features/you/steadiness/steadiness-model";
 
-/** Production's domain icons (insights/domains.ts), SF Symbol and Material twin. */
 export const DOMAIN_ICON: Record<Domain, IconName> = {
 	belonging: { android: "groups", ios: "person.3.fill" },
 	family: {

@@ -1,8 +1,3 @@
-/**
- * Moments and a moment's strings: the prototype's (`P/src/fixtures/you.ts`, `MOMENTS_PAGE` and
- * `MOMENT_COPY`) where it drew one, production's timeline where it kept production's words (the
- * empty line, the free window's length from the server).
- */
 export const MONTHS = [
 	"January",
 	"February",
@@ -28,7 +23,6 @@ export const WEEKDAYS = [
 	"Saturday",
 ] as const;
 
-/** 7 → "week", 14 → "2 weeks", 30 → "30 days" (production's `formatWindow`). */
 const windowOf = (days: number) => {
 	if (days === 7) {
 		return "week";
@@ -41,13 +35,11 @@ const windowOf = (days: number) => {
 
 export const MOMENTS_COPY = {
 	list: {
-		/** The empty state (C2): a written headline, production's line in the redesign's words. */
 		empty: "Your reflections will appear here after your first session.",
 		emptyTitle: "No moments yet",
 		limitSub: "Xolace+ keeps every moment",
 		limitTitle: (days: number) => `You're seeing the last ${windowOf(days)}`,
 		loading: "Loading your moments",
-		/** A card, read as one link. */
 		row: (quote: string, line: string, tone: string | null) =>
 			[`“${quote}”`, line, tone].filter(Boolean).join(". "),
 		seeAll: "See all",
@@ -57,7 +49,6 @@ export const MOMENTS_COPY = {
 	},
 	moment: {
 		again: "Reflect on this again",
-		/** The id led nowhere: deleted, or another person's. */
 		gone: "This moment isn't here any more.",
 		pause: "Pause the mirror",
 		play: "Play the mirror",
@@ -72,7 +63,6 @@ export const MOMENTS_COPY = {
 		solo: "sat with this",
 		talk: "talk",
 	},
-	/** The feeling when the session has none (production's `getEmotionLabel`). */
 	reflection: "Reflection",
 	tones: {
 		direct: "Direct",

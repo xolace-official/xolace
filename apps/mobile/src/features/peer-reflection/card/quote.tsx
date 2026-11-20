@@ -17,7 +17,6 @@ const QUOTE = {
 	fontSize: Q.size,
 	lineHeight: Q.line,
 } as const;
-/** Production's expand: damping 18, stiffness 120. */
 const EXPAND = LinearTransition.springify().damping(18).stiffness(120);
 const ACTIONS = [
 	{ label: COPY.actions.report, name: "report" },
@@ -26,7 +25,6 @@ const ACTIONS = [
 
 type Props = {
 	text: string;
-	/** ms since this card started writing (< 0: not yet). */
 	write: SharedValue<number>;
 	lineCount: SharedValue<number>;
 	lastFrac: SharedValue<number>;
@@ -35,12 +33,6 @@ type Props = {
 	onHide: () => void;
 };
 
-/**
- * The quote (board `.q`): full length, Newsreader italic 19.5/27, writing itself
- * in line by line (the shared write-on). A seven-line clamp with "Read more" is
- * only a safety net, told from the visible quote's own `onTextLayout`, with no
- * hidden copy. VoiceOver reads the quote as one element with Report and Hide.
- */
 export function Quote({
 	text,
 	write,

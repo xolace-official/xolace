@@ -1,5 +1,3 @@
-/** The Xolacers roster: the directory, the person's own chats and a filter in, the filter chips
- * and the cards out. Pure. */
 import type { api } from "@xolace/backend/api";
 import {
 	SPECIALTIES,
@@ -20,25 +18,17 @@ export type RosterCard = {
 	name: string;
 	photoUrl?: string;
 	present: boolean;
-	/** Presence as a word: here now, replies within a day, or full. */
 	presence: string;
-	/** "★ 4.9", or null for someone under the rating threshold (they get "New Xolacer"). */
 	rating: string | null;
-	/** An open chat with them already. */
 	talking: boolean;
 	bio: string;
 	tags: string[];
-	/** At capacity: still listed, stepped back. */
 	muted: boolean;
 	a11y: string;
 };
 
-/** Fewer offered than this and the chip row isn't worth showing (production's rule). */
 const MIN_FILTERS = 2;
 
-/** Everyone, then every specialty someone on the roster declares, in the taxonomy's order; none
- * when fewer than two are offered. An active filter is always offered, or a routed specialty
- * nobody declares leaves no way back. */
 export function filterChips(
 	directory: readonly DirectoryRow[],
 	active: string | null
@@ -66,8 +56,6 @@ function presenceWord(x: DirectoryRow): string {
 	return x.present ? COPY.roster.hereNow : COPY.roster.repliesInADay;
 }
 
-/** The cards: filtered by specialty, then present people first by the frozen snapshot (so a
- * reactive re-sort never slides a card from under a tap). The presence word reads live. */
 export function rosterCards(
 	directory: readonly DirectoryRow[],
 	conversations: readonly ConversationRow[],
@@ -119,16 +107,11 @@ export function rosterCards(
 	});
 }
 
-/** The ids present right now: the snapshot the roster freezes while it's on screen. */
 export const presentIds = (directory: readonly DirectoryRow[]) =>
 	new Set<string>(
 		directory.filter((x) => x.present).map((x) => x.xolacerProfileId)
 	);
 
-/** The roster's presence order between renders. Kept while the directory stays loaded (a
- * reactive re-sort would slide a card from under a tap); dropped once Connect stops reading the
- * directory (Chats), so the next visit to Xolacers sorts by who's here then; taken at once on a
- * load with none held. Focus retakes it separately. */
 export function settleSnapshot(
 	held: ReadonlySet<string> | null,
 	directory: readonly DirectoryRow[] | undefined

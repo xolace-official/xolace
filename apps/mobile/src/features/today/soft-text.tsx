@@ -11,22 +11,16 @@ import { clearOf } from "@/design/clear-of";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** The soft copy's glyphs under their halo (the board: ink at 22%, halo at 69%), from the resolved ink. */
 const SOFT = { glyphs: 0.22, halo: 0.69 } as const;
 
 type Props = Omit<ComponentProps<typeof AppText>, "children"> & {
 	text: string;
-	/** Plays on mount; remount (a new key) to play again. */
 	play: boolean;
 	duration: number;
 	delay?: number;
-	/** Rises this many points into place. */
 	rise: number;
-	/** The blur the text comes out of (its halo radius). */
 	blur: number;
-	/** The worklet curve, applied to progress. */
 	ease: (x: number) => number;
-	/** Colour of the soft copy's halo; the text's own colour by default. */
 	inkColor?: string;
 };
 

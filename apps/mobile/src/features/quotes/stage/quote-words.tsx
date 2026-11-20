@@ -9,10 +9,8 @@ import { POSTER_MEDIUM } from "./quote-type";
 
 type TextLayoutLine = TextLayoutEvent["nativeEvent"]["lines"][number];
 
-/** CSS's −0.02em tracking and the .24em between words. */
 const TRACKING = -0.02;
 const WORD_GAP = 0.24;
-/** A balanced width keeps the line count of the full width, a little wider than the average line. */
 const BALANCE_SLACK = 1.06;
 
 type Props = {
@@ -24,11 +22,6 @@ type Props = {
 	shadowColor: string;
 };
 
-/**
- * The quote, set like CSS's `text-wrap: balance` and drawn word by word so each word arrives on
- * its own slice of the one arrival clock. Two hidden measures pick the lines (the full width,
- * then the balanced width); after that it never lays out again.
- */
 export function QuoteWords({
 	text,
 	size,

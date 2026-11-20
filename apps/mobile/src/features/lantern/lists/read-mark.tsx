@@ -11,10 +11,6 @@ const M = LS.mark;
 const CHECK = { android: "check", ios: "checkmark" } as const;
 const CHIP_BLUR = 12;
 
-/**
- * The read mark on a row's photo (v2, handoff §3.1): a thin line partway through, a "Read" chip
- * once finished, nothing when unread. Fixed white-on-photo inks (`--color-cover-*`).
- */
 export function ReadMark({ mark }: { mark: Mark | null }) {
 	if (!mark) {
 		return null;
@@ -26,7 +22,6 @@ export function ReadMark({ mark }: { mark: Mark | null }) {
 	);
 }
 
-/** Partway through: a 3 pt line 8 in from the photo's sides and 7 up from its bottom. */
 function PartwayLine({ share }: { share: number }) {
 	return (
 		<View
@@ -41,7 +36,6 @@ function PartwayLine({ share }: { share: number }) {
 	);
 }
 
-/** Finished: "✓ Read" on a small dark chip at the bottom left. */
 function ReadChip() {
 	const ink = useTokenColor("cover-ink");
 	return (

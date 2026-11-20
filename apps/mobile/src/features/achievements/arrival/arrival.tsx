@@ -18,7 +18,6 @@ import { ShownContext } from "@/features/achievements/arrival/once-shown";
 import { cn } from "@/lib/cn";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** A milestone plays in the fire's room; badges alone on the page. */
 const roomOf = (hasMs: boolean, dark: boolean) => {
 	if (!hasMs) {
 		return "bg-background";
@@ -26,30 +25,21 @@ const roomOf = (hasMs: boolean, dark: boolean) => {
 	return dark ? "bg-arrival-fire-dusk" : "bg-arrival-fire-day";
 };
 
-/** The milestone's cards that aren't drawn play no haptic: the week's today flick, the freeze's Feather. */
 const silentEvents = (m: Milestone | null): number[] => [
 	...(m?.week ? [] : [EV.today]),
 	...(m?.freeze ? [] : [EV.token]),
 ];
 
-/** Starts an arrival staged hidden (by the host): a fresh engine and the clock. */
 export type ArrivalHandle = { start: () => void };
 
 type Props = {
 	badges: readonly ArrivingBadge[];
 	milestone: Milestone | null;
-	/** A dev state's held frame. */
 	still?: Still;
-	/** Everything has faded: leave (go back, or the host fades out). */
 	onDone: () => void;
 	ref?: Ref<ArrivalHandle>;
 };
 
-/**
- * One full-screen moment (arrivals §2, §3): the milestone if there is one, then
- * each badge in turn. One clock steps the engine on the UI thread and stops when
- * nothing moves; React renders only on Next and once per sparks number.
- */
 export function Arrival({ badges, milestone, still, onDone, ref }: Props) {
 	const insets = useSafeAreaInsets();
 	const { width, height } = useWindowDimensions();
@@ -68,7 +58,6 @@ export function Arrival({ badges, milestone, still, onDone, ref }: Props) {
 	const { eng, phase } = flow;
 	useImperativeHandle(ref, () => ({ start: flow.start }));
 
-	// Nothing mounts late: decode every badge's art now (§6).
 	useEffect(() => {
 		for (const b of badges) {
 			if (typeof b.art.source === "string") {

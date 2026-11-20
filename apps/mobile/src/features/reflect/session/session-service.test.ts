@@ -9,35 +9,26 @@ import {
 import type { ReflectionStateName } from "./types";
 
 describe("projectScreen", () => {
-	// [serverState, localScreen, escalationTriggered, expected]
 	const table: [
 		ServerSessionState,
 		ReflectionStateName,
 		boolean,
 		ReflectionStateName | null,
 	][] = [
-		// Pre-processing: local always wins
 		["initiated", "idle", false, null],
 		["input_received", "processing", false, null],
-		// Processing: server wins
 		["processing", "mirror", false, "processing"],
-		// Mirror delivered: server wins at the edge…
 		["mirror_delivered", "processing", false, "mirror"],
-		["mirror_delivered", "idle", false, "mirror"], // cold resume
+		["mirror_delivered", "idle", false, "mirror"],
 		["mirror_delivered", "processing", true, "escalation"],
-		// …but local sub-modes and optimistic advances win
 		["mirror_delivered", "clarify", false, null],
 		["mirror_delivered", "gave-up", false, null],
 		["mirror_delivered", "path-selection", false, null],
 		["mirror_delivered", "clarify", true, null],
-		// Confirmed: server wins
 		["confirmed", "mirror", false, "path-selection"],
-		// In-path: owned by the path screens; a stale session via getActive must not resurrect one
 		["path_selected", "path-selection", false, null],
 		["path_in_progress", "idle", false, null],
-		// Error: server wins
 		["error", "processing", false, "error"],
-		// Terminal: no screen; the machine resets
 		["completed", "path-selection", false, null],
 		["abandoned", "typing", false, null],
 	];

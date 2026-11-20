@@ -1,5 +1,3 @@
-/** The paywall's "plans unavailable" state on its own: `xolace://dev/purchases/<id>`. The paywall
- * and First Look's footer draw it when the store sends nothing to sell. */
 import { View } from "react-native";
 import type { DevState } from "@/dev/dev-state";
 import { PaywallPlansUnavailable } from "../screens/paywall-plans-unavailable";

@@ -1,12 +1,5 @@
 import type { Palette, ThemePalettes } from "./themes";
 
-/**
- * Production's colour themes, as they were in the hand-written
- * src/themes/**.css before the generator (checked equal on 2026-11-16).
- * Only what differs from SHARED in scripts/themes/build.ts is listed.
- * Xolace extras production has no name for (accent-wash, subtle, glass …)
- * are left out on purpose: the generator derives them.
- */
 export const PRODUCTION_PALETTES = {
 	emerald: {
 		dark: {
@@ -186,11 +179,6 @@ export const PRODUCTION_PALETTES = {
 			"warning-foreground": "oklch(21% 0.01 80)",
 		},
 	},
-	/**
-	 * Night's light side: moonlit, deep blue-grey, never bright. The redesign
-	 * dropped it (its Night is Default's dark); kept because production users
-	 * can have it saved (open question 9).
-	 */
 	nightly: {
 		light: {
 			accent: "oklch(50% 0.07 275)",
@@ -416,13 +404,6 @@ export const PRODUCTION_PALETTES = {
 			"warning-foreground": "oklch(21% 0.01 80)",
 		},
 	},
-	/**
-	 * Chunky and bright (trial): a saturated green accent and a solid "lip" under
-	 * pressable things. The lip and stroke variables are Playful-only;
-	 * src/themes/playful-components.css reads them, and every other theme sets
-	 * them to HeroUI's own defaults (SHARED). Trial palette, to be replaced with
-	 * Xolace's own playful colours.
-	 */
 	playful: {
 		dark: {
 			accent: "#6fd31f",

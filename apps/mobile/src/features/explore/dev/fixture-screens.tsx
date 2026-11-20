@@ -1,8 +1,3 @@
-/**
- * Explore's doors on fixtures, each under its own provider through the same `{ state, actions }`
- * as the app. A row's tap plays and pauses it on screen (no sound), so the playing mark can be
- * seen; a free listener's tap does nothing (the app opens Xolace+).
- */
 import { useState } from "react";
 import type { Family } from "@/features/explore/copy";
 import {
@@ -24,7 +19,6 @@ import { TopicsScreen } from "@/features/explore/topics/topics-screen";
 
 const NO_ACTIONS = {};
 
-/** Plays on screen: a tap loads a track, a second tap pauses it. */
 function useFixtureListen(locked: boolean, start?: string): Listen {
 	const [nowPlaying, setNowPlaying] = useState<string | null>(start ?? null);
 	const [playing, setPlaying] = useState(start !== undefined);
@@ -79,7 +73,6 @@ export function FixtureList({
 	);
 }
 
-/** `slug` null: a topic that isn't there; undefined: still loading. */
 export function FixtureTopic({
 	slug,
 	family,
@@ -89,7 +82,6 @@ export function FixtureTopic({
 	slug: Slug | null | undefined;
 	family?: Family;
 	locked?: boolean;
-	/** A track's slug already in the mini player, playing. */
 	playing?: string;
 }) {
 	const listen = useFixtureListen(locked, playing);

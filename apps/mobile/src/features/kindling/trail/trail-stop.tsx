@@ -15,7 +15,6 @@ import { CIRCLE, isRight } from "./trail-points";
 const LABEL_GAP = 14;
 const RING_CLASS = "absolute inset-0 rounded-full border-solid";
 const HALO = 10;
-/** The open stop's violet wash breathes .12 ↔ .26, .94 ↔ 1.06 (§2.4). */
 const BREATH_FROM = { opacity: 0.12, scale: 0.94 };
 const BREATH_TO = { opacity: 0.26, scale: 1.06 };
 
@@ -27,20 +26,14 @@ type Props = {
 	y: number;
 	state: TwigState;
 	open: boolean;
-	/** A waiting twig after the suggestion, not open: the veil (§3). */
 	dim: boolean;
 	suggested: boolean;
 	reduced: boolean;
-	/** The screen is in front and the app active: the halo may breathe. */
 	live: boolean;
 	c: KindlingColours;
 	onPress: (i: number) => void;
 };
 
-/**
- * One stop (handoff §2.4): the opaque disc with Flux, its ring and halo, the check badge, and the
- * label beside it with no card. The whole stop is the button.
- */
 export function TrailStop({
 	twig,
 	index,
@@ -87,7 +80,6 @@ export function TrailStop({
 			onPress={() => onPress(index)}
 			style={{
 				gap: LABEL_GAP,
-				// A tall label (large text) overflows above and below; the disc stays on the road.
 				height: CIRCLE,
 				left: right
 					? x + CIRCLE / 2 - CIRCLE - LABEL_GAP - LABEL_W

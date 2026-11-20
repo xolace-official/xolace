@@ -17,7 +17,6 @@ const CHEVRON: IconName = { android: "arrow_back", ios: "chevron.left" };
 const SHARE: IconName = { android: "ios_share", ios: "square.and.arrow.up" };
 const GLYPH = 17;
 
-/** Back (top left), Pin / Pinned (top right, earned only) and Share at the foot (earned only). */
 export function HeldChrome({
 	pose,
 	badge,

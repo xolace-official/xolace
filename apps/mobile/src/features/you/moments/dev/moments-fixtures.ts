@@ -1,11 +1,8 @@
-/** Moments on fixtures: the prototype's (`P/src/fixtures/you.ts`, `MOMENTS_PAGE` and
- * `MOMENT_DETAIL`), as the server sends them. */
 import type {
 	MomentRow,
 	MomentSession,
 } from "@/features/you/moments/moments-model";
 
-/** Wednesday 18 November 2026, 9 pm. */
 export const MO_NOW = new Date(2026, 10, 18, 21, 0);
 const at = (day: number, h: number, m: number) =>
 	new Date(2026, 10, day, h, m).getTime();
@@ -81,8 +78,6 @@ export const MOMENT_ROWS: readonly MomentRow[] = [
 	),
 ];
 
-/** What the server can send at the edges: no feeling, no path, an "adaptive" tone (no chip), a
- * long mirror with an em dash, a talk with no path. */
 export const EDGE_ROWS: readonly MomentRow[] = [
 	row("e-bare", at(18, 9, 2), "You showed up today.", null, null, null),
 	row(
@@ -148,7 +143,6 @@ export const TALK_LINES = [
 	},
 ] as const;
 
-/** A session that never got its mirror or kept your words: what the details query can send. */
 export const BARE_SESSION: MomentSession = {
 	createdAt: at(18, 9, 2),
 	entryType: "open_prompt",

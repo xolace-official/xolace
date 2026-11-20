@@ -6,7 +6,6 @@ import { COIN_D } from "@/features/achievements/coin/pose";
 import { COPY } from "@/features/achievements/copy";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** The bronze disc, gold rim and faint brushed lines, drawn once (the prototype's make-badge-glows.py). */
 const DISC = require("@/assets/images/badges/back-disc.png");
 const FLAME =
 	"M50 97C25 97 9 82 9 61C9 43 19 31 31 22C39 16 47 10 51 2C55 10 55 18 60 23C64 20 70 16 77 12C78 19 79 25 82 31C88 40 91 50 91 61C91 82 75 97 50 97Z";
@@ -16,10 +15,6 @@ const FLAME_OPACITY = 0.85;
 /** One text shadow is all React Native draws: the engraving's dark top edge. */
 const EDGE = { height: -1, width: 0 };
 
-/**
- * The back (board `.fc.bk`, `.eng`): a bronze disc engraved with the title, the
- * short date, the sparks and XOLACE. It repeats the page, so VoiceOver skips it.
- */
 export function BadgeBack({
 	title,
 	date,

@@ -10,7 +10,6 @@ import { BackgroundLayer } from "./background-layer";
 
 export const TILE = { gap: 10, h: 136, radius: 20, ring: 2.5, w: 92 } as const;
 
-/** One background in the sheet: live while on screen, "+" on a Xolace+ one, ringed when chosen. */
 export function BackgroundTile({
 	background: b,
 	ink,

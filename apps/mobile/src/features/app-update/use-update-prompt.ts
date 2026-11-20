@@ -5,12 +5,6 @@ import { useVersionCheck } from "@/helpers/hooks/use-version-check";
 import { useAppStore } from "@/store/store";
 import { mayPresent, type UpdateMode } from "./update-model";
 
-/**
- * Checks the store and EAS for an update (release builds only) and opens `/update` when one is
- * ready, once the root gate settled, the launch cover left and no sheet or modal is up (`revealed`
- * and `presented`, from the launch cover and navigation: the root layout composes them). Mount
- * once, in the root layout.
- */
 export function useUpdatePrompt({
 	gateLoading,
 	presented,

@@ -32,13 +32,11 @@ type Props = {
 	recipient?: Partial<BridgeScreenData["state"]["recipient"]>;
 	status?: DraftStatus;
 	text?: string;
-	/** The draft as written; unset, the text is shown as edited (no settle). */
 	written?: string | null;
 	shared?: boolean;
 	quota?: BridgeQuota;
 };
 
-/** Trusted Bridge on fixtures, through the same `{ state, actions }`. Taps do nothing. */
 export function FixtureBridge({
 	step,
 	recipient,

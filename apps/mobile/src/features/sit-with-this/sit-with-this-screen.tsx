@@ -9,11 +9,6 @@ import { SitRunView } from "./run/sit-run-view";
 import { useSit } from "./sit-data";
 import { SitLoading } from "./sit-loading";
 
-/**
- * Sit with this ("Two arcs, one breath", design/handoff/sit.md), opened from a
- * reflection's path, a kindling twig or Today's Sit door. Beats run on timers without a
- * touch, so the screen stays on throughout. `scene` is for dev states only.
- */
 export function SitWithThisScreen({ scene }: { scene?: SitScene }) {
 	useKeepAwake();
 	const { state, actions } = useSit();

@@ -1,17 +1,10 @@
-// The body gradients a `--color-face-*` token cannot express. Fixed on purpose: the face is
-// a printed brand object (fixed-palette convention, CLAUDE.md). Each set keeps its mouth
-// beside its stops because the mouth is picked to stay legible on that gradient.
-
 export type GradientSet = {
 	mouth: string;
 	positions: number[];
 	stops: string[];
 };
 
-/** Curated, never a free picker: every set keeps the face legible. "theme" (not here)
- * follows the app's accent instead, and "muted" its muted grey: a face at rest, set aside. */
 export const PALETTES = {
-	/** bottom-left → top-right, the logo's peach → gold → pink → lilac → cyan */
 	brand: {
 		mouth: "#d9734a",
 		positions: [0, 0.3, 0.6, 0.8, 1],

@@ -27,14 +27,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * The arcs never leave (board card 04): one canvas that changes size with the
- * beat, small above a line, full to breathe, mid for the hand pulse, gone while
- * writing. The whole group moves on a critically damped spring from its
- * centre, as the board's `.arcs` transform; "gone" also fades over .6 s. Under
- * reduced motion the size still changes, on the same spring, so the arcs never
- * jump.
- */
 export function ArcsStage({
 	W,
 	H,

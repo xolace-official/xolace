@@ -4,11 +4,6 @@ import { FeedbackDialog } from "@/features/settings/follow/feedback/feedback-dia
 import { SocialsSection } from "@/features/settings/follow/socials/socials-section";
 import { SupportSections } from "@/features/settings/follow/support/support-sections";
 
-/**
- * Follow & Support (board "Follow & Support v2", P/design/handoff/settings-sections.md): how to
- * reach us, a review (the 🎁 is the owner's), and where Xolace lives, in production's order and
- * links. Production's feedback dialog, kept. Nothing animates in.
- */
 export function FollowScreen({ ref }: { ref?: Ref<ScrollViewInstance> }) {
 	return (
 		<>

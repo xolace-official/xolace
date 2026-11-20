@@ -22,30 +22,21 @@ import type { Hold, Share } from "./use-send";
 const C = LAYOUT.card;
 
 type Props = {
-	/** The distilled words. */
 	words: string;
 	c2: SharedValue<number>;
 	cs: SharedValue<number>;
-	/** 0 resting, 1 held, 2 ready (React hears the changes; the visuals read `holdSv`). */
 	hold: Hold;
 	holdSv: SharedValue<number>;
 	share: Share;
 	colors: SessionColors;
 	reduced: boolean;
-	/** The card can be held (moment 2, nothing answered yet). */
 	holdable: boolean;
 	onHold: (h: Hold) => void;
 	onLeave: (how: "tap" | "hold") => void;
 	onKeep: () => void;
-	/** Where the quote's middle sits, in the card's own space (the point of light starts there). */
 	onQuoteMid: (y: number) => void;
 };
 
-/**
- * "Leave it for someone?" (board `.lv`, `.cd`): You're not alone's card (Peers'), rising 28 pt at .82 s. Hold the
- * card itself (not its buttons) and it lifts and warms from below; at 700 ms it's ready, and letting go
- * sends it (paper-lantern-confirm's hold, on Gesture Handler 3's long press). VoiceOver uses the buttons.
- */
 export function ShareCard({
 	words,
 	c2,

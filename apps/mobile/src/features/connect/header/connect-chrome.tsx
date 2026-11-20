@@ -14,7 +14,6 @@ import type { DeleteConfirm } from "../list/row-actions";
 const IOS = process.env.EXPO_OS === "ios";
 const ARROW = { android: "arrow_forward", ios: "arrow.right" } as const;
 
-/** A published Xolacer's way to their own profile, in the header; a moon while they're paused. */
 export function MyProfileButton({
 	paused,
 	onPress,
@@ -46,7 +45,6 @@ export function MyProfileButton({
 	);
 }
 
-/** For a Xolacer whose profile isn't published yet: the only way into setup. */
 export function SetupBanner({ onPress }: { onPress: () => void }) {
 	const accent = useTokenColor("accent-ink");
 	return (
@@ -70,7 +68,6 @@ export function SetupBanner({ onPress }: { onPress: () => void }) {
 	);
 }
 
-/** Delete request asks first: it can't be undone. */
 export function DeleteDialog({ deleting }: { deleting: DeleteConfirm }) {
 	return (
 		<ConfirmationDialog

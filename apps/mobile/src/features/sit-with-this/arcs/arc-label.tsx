@@ -14,7 +14,6 @@ import { COPY } from "../copy";
 import { FADE } from "../sit-look";
 import { SoftCopy } from "../soft-copy";
 
-/** Board `.a-lab span`: Bricolage 21/650, −.015em (700 is the loaded cut). */
 const LABEL_TYPE = {
 	fontSize: 21,
 	letterSpacing: -0.3,
@@ -30,14 +29,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * The label inside the bottom arc ("Breathe in", "A little more", "Breathe
- * out"; "Paused"), tracked to the arc's centre every frame. Like
- * noodle-net-orbit's `labelsAt`, the three labels are stacked and each one's
- * look comes from the clock on the UI thread, so a phase change shows in the
- * same frame as the shape. The current label rises 10 pt out of a soft blur
- * over .45 s.
- */
 export function ArcLabel({ W, clock, shown, paused, reduced }: Props) {
 	const { geo, lab, labE } = clock;
 	const visible = useSharedValue(shown ? 1 : 0);

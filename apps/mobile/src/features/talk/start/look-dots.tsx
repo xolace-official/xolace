@@ -27,7 +27,6 @@ function Dot({ on, onPress }: { on: boolean; onPress: () => void }) {
 	);
 }
 
-/** Seven dots under the look's name: 6 pt, gap 6, the active one 18 wide (§2.2). */
 export function LookDots({
 	index,
 	onDot,

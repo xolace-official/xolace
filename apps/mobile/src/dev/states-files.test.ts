@@ -1,7 +1,3 @@
-/** Every real `dev/states.tsx` against the registry's rules, in CI, so two PRs that
- * each add the same id to one feature fail here rather than on someone's simulator.
- * The files import screens, which need React Native, so this reads their `devStates`
- * ids from the source instead of importing them. */
 import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
@@ -10,11 +6,9 @@ import { devRegistry, type StatesFile } from "@/dev/registry";
 import { SRC } from "@/features/import-graph";
 
 const FEATURES = path.join(SRC, "features");
-/** The same files `discovered.ts`'s `require.context` matches. */
 const STATES_FILE = /(^|\/)dev\/states\.tsx$/;
 const Screen = () => null;
 
-/** The `devStates` array literal, if the file exports one. */
 function devStatesArray(source: ts.SourceFile) {
 	for (const statement of source.statements) {
 		if (
@@ -47,7 +41,6 @@ function devStatesArray(source: ts.SourceFile) {
 	}
 }
 
-/** Each state's `id`, or null where it isn't a string literal. */
 function stateIds(array: ts.ArrayLiteralExpression): (string | null)[] {
 	return array.elements.map((element) => {
 		if (!ts.isObjectLiteralExpression(element)) {

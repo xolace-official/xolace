@@ -10,14 +10,9 @@ import { WHATS_NEW_COPY as C } from "../copy";
 import { useWhatsNewScreen } from "../whats-new-data";
 import { WhatsNewIcon } from "./whats-new-icon";
 
-/** Canvas: 76 pt from the top of the phone (the inset plus this), 34 at the bottom. */
 const TOP = 17;
 const BOTTOM = 34;
 
-/**
- * What's New (canvas "Ratings Alive", first phone): the app theme, so it follows every theme and
- * Night. Continue goes on to the rating screen when a plain open has it due; otherwise it closes.
- */
 export function WhatsNewScreen() {
 	const { state, actions } = useWhatsNewScreen();
 	const insets = useSafeAreaInsets();
@@ -32,7 +27,6 @@ export function WhatsNewScreen() {
 				paddingTop: insets.top + TOP,
 			}}
 		>
-			{/* A full-screen modal sets its own status bar: light ink on dark themes and Night. */}
 			<Stack.Screen
 				options={{ statusBarStyle: scheme === "dark" ? "light" : "dark" }}
 			/>

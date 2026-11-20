@@ -16,19 +16,12 @@ type Props = {
 	title: string;
 	eyebrow: string;
 	eyebrowColor: string;
-	/** A right-hand stop: the label sits on its left, right-aligned. */
 	right: boolean;
 	reduced: boolean;
-	/** The label's opacity (.45 when later, .6 when passed). */
 	label: SharedValue<number>;
-	/** The page colour, for the title's halo. */
 	page: string;
 };
 
-/**
- * The label beside a stop (§2.4), with no card behind it: the eyebrow swaps like fuse's label
- * ("To hear" → "Tended"), and the title has a soft page-coloured halo so it reads over the road.
- */
 export function StopLabel({
 	title,
 	eyebrow,
@@ -74,7 +67,6 @@ type BadgeProps = {
 	onEmber: string;
 };
 
-/** The check badge: 26 pt ember with a 3 pt page-coloured ring, on the stop's inner side. */
 export function CheckBadge({ right, scale, onEmber }: BadgeProps) {
 	const style = useAnimatedStyle(() => ({
 		transform: [{ scale: scale.get() }],

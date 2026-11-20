@@ -1,5 +1,3 @@
-// Reflect (S2), pushed over the tabs from Today's card and toolbar. The screen runs on
-// production's session; the route adds what it shares with other features: shake-to-feedback.
 import { useObserve } from "expo-observe";
 import { useEffect } from "react";
 import { View } from "react-native";
@@ -20,16 +18,13 @@ export default function ReflectRoute() {
 	);
 }
 
-/** Shake-to-feedback stays out of the way while someone writes or waits on the mirror. */
 function ReflectShake() {
 	const { stage, error } = useReflect().state;
-	// On the error card nothing is being written or waited on, so shake works again, as before.
 	const busy = stage === "write" || (stage === "wait" && error === null);
 	useFeedbackShake({ enabled: !busy });
 	return null;
 }
 
-/** Interactive once the profile is in: the stages can read it. */
 function ReflectReady() {
 	const fullContext = useFullContext();
 	const { markInteractive } = useObserve();

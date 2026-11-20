@@ -1,4 +1,3 @@
-/** The old Lantern row's copy and share (see `library-row.tsx`); they go with Browse in S7. */
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
 import * as Linking from "expo-linking";
@@ -39,7 +38,5 @@ export async function shareEntry(
 		if (action === Share.sharedAction) {
 			trackLibrary(posthog, "library_entry_shared", { slug: entry.slug });
 		}
-	} catch {
-		// The sheet failed to open; nothing was shared.
-	}
+	} catch {}
 }

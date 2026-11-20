@@ -18,23 +18,14 @@ export type VentFixture = {
 	introSeen: boolean;
 	answer: FixtureAnswer;
 	voice: Loudness;
-	/** The mic is turned off: a tap says so. */
 	micOff?: boolean;
-	/** v2: today's replies are used, known before. */
 	capBefore?: boolean;
-	/** ms already spoken when it starts listening (Near the limit). */
 	recordedFrom?: number;
-	/** Where production's state machine starts (a jump past the burn). */
 	stage?: VentStage;
 };
 
 const ignore = () => undefined;
 
-/**
- * The backend on fixtures: no mic, no server, no voice credits. Listening writes a pretend voice
- * into the level; letting go "answers" a few seconds later, and production's rule still holds:
- * the reply waits for both the burn and the answer. Leaving goes back to the dev index.
- */
 export function useFixtureBackend(
 	fx: VentFixture,
 	reduced: boolean

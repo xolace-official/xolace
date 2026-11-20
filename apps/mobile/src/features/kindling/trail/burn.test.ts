@@ -61,7 +61,6 @@ describe("planBurn", () => {
 describe("the burn on its leg", () => {
 	const b = planBurn(trail, 0, 10, false);
 	const run = trail.runs[0];
-	/** Just past the burn's end on the trail clock. */
 	const burnt = 10 + BURN_AT + b.d + 0.01;
 
 	it("runs the gold from the disc's edge to the next, then hands over", () => {

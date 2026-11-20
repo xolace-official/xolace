@@ -14,17 +14,11 @@ import { LaurelStars } from "./laurel-stars";
 import { CloseButton, RateFooter } from "./rate-parts";
 import { ReviewNotes } from "./review-notes";
 
-/** Canvas: the laurel 112 pt from the top of the phone, the notes at 368, the footer 34 up. */
 const HERO_TOP = 53;
 const NOTES_GAP = 46;
 const BOTTOM = 34;
 const FOOTER_SIDE = 24;
 
-/**
- * "Help someone find Xolace" (canvas "Ratings Alive", second phone): always the dark ember scene.
- * Rate asks the store's prompt, then the pill turns into Write a review with a thank-you line.
- * "Tell us" opens the feedback sheet; sending a note there closes this screen too.
- */
 export function RateScreen() {
 	const { state, actions } = useRateScreen();
 	const insets = useSafeAreaInsets();

@@ -1,14 +1,7 @@
-/**
- * First run's words: the promise, the story's six beats and the seat. Production's own, verbatim
- * (`story-beats.ts`, `moods.ts`); the story's layout depends on them, so change them with care.
- */
-
-/** A word of a story sentence; `k` is its key group (the turn it lights in), −1 for none. */
 export type StoryWord = { t: string; k: number; br: boolean };
 
 type Line = readonly (string | readonly [string, number])[];
 
-/** Sentences as lines of words, a `[word, group]` pair for each key word. */
 const words = (lines: readonly Line[]): StoryWord[] =>
 	lines.flatMap((line, li) =>
 		line.map((x, wi) => ({
@@ -18,7 +11,6 @@ const words = (lines: readonly Line[]): StoryWord[] =>
 		}))
 	);
 
-/** The marquee's eight moods, in order. */
 export const MOOD_WORDS = [
 	"heavy",
 	"anxious",
@@ -32,11 +24,9 @@ export const MOOD_WORDS = [
 
 export const PROMISE = {
 	body: "What you share here is private. No one sees it. No one judges it. It’s yours.",
-	/** The line breaks after "space". */
 	breakAfter: 3,
 	cta: "I’d like that",
 	haveAccount: "I already have an account",
-	/** Each line, then the part in ember. */
 	lines: [
 		["What you share here is private.", ""],
 		["No one sees it. No one judges it.", ""],
@@ -45,7 +35,6 @@ export const PROMISE = {
 	moods: (list: readonly string[]) => `Moods: ${list.join(", ")}`,
 	named: "is welcome here.",
 	title: "This is a space to be honest.",
-	/** Written word by word. */
 	words: ["This", "is", "a", "space", "to", "be", "honest."] as const,
 } as const;
 
@@ -57,11 +46,9 @@ export type Beat = {
 	words: StoryWord[];
 	aside: string;
 	tag?: string;
-	/** How long the bar takes to fill, ms. */
 	ms: number;
 };
 
-/** `story-beats.ts`, word for word, in order. */
 export const BEATS: readonly Beat[] = [
 	{
 		aside:
@@ -151,14 +138,12 @@ export const BEATS: readonly Beat[] = [
 ];
 
 export const STORY = {
-	/** Production's placeholder count (its TODO #200). */
 	count: 22,
 	countCaption: [
 		"people sat by the fire this week.",
 		"Each one alone, none of them the only one.",
 	] as const,
 	mirrorLabel: "The Mirror",
-	/** The Mirror's words, cycled by a touch. */
 	mirrorWords: [
 		"worn down.",
 		"unheard.",
@@ -169,7 +154,6 @@ export const STORY = {
 		header: "Six weeks, from far enough away",
 		hint: "Drag down to step back",
 	},
-	/** "2 of 6. The Mirror" */
 	position: (n: number, of: number, label: string) => `${n} of ${of}. ${label}`,
 	quote: "“I don’t really need a lot of words to express myself.”",
 	quoteBy: "RosieeeBD · a review on the App Store",
@@ -184,7 +168,6 @@ export const STORY = {
 	you: { sub: "No name.\nNo face.", title: "You" },
 } as const;
 
-/** Made-up Xolacers: the story's illustration, not real people. */
 export const XOLACERS = [
 	{
 		name: "Ama",
@@ -209,7 +192,6 @@ export const XOLACERS = [
 export const xolacerLabel = (x: (typeof XOLACERS)[number]) =>
 	`${x.name}, ${x.since}. ${STORY.xolacersTopics} ${x.topics.join(", ")}. ${x.when}.`;
 
-/** Xolace+'s panel: signal words on production's PatternLine points, the noise, and the notes. */
 export const PATTERN = {
 	noise: [
 		[58, 44, "mum"],
@@ -254,7 +236,6 @@ export const SEAT = {
 	title: "The fire’s already lit.",
 } as const;
 
-/** The sign-in error toast, as production words it. */
 export const SIGN_IN_ERROR = {
 	description: "Something went wrong. Try again.",
 	label: (provider: "apple" | "google") =>

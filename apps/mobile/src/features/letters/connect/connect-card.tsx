@@ -15,11 +15,9 @@ import { ArrivalLetter } from "./arrival-letter";
 import { ConnectCardData, useConnectCard } from "./connect-card-data";
 import { LettersMark } from "./letters-mark";
 
-/** The card grows to fit what it shows (the offer, the shelf) over 240 ms. */
 const GROW_MS = 240;
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
 
-/** Connect's route composes this into the screen's slot, on the letters data module. */
 export function ConnectLettersCard() {
 	return (
 		<ConnectCardData>
@@ -28,12 +26,6 @@ export function ConnectLettersCard() {
 	);
 }
 
-/**
- * The Letters card on Connect, above the Chats / Xolacers segment (handoff §1, placement A;
- * render 01). A header row (Letters, one status line, a chevron to the Letters screen), the
- * one-time offer to receive, the shelf when a letter is waiting (it arrives there, render 18), and
- * Write a letter: the quiet button, ember wash and ember ink, so it doesn't outshout Connect.
- */
 export function LettersCard() {
 	const { state, actions } = useConnectCard();
 	const { optIn, unopenedId, writeLimit } = state.status;

@@ -1,6 +1,3 @@
-/** Sit with this on fixtures: `xolace://dev/sit-with-this/<id>`. The handoff's renders
- * (`sit.md` §9, numbered as they are), the prototype's Review jumps, and each exercise
- * to play live. A still holds the clock at that instant without the paused look. */
 import type { DevState } from "@/dev/dev-state";
 import { live, play, still } from "./fixture-sit";
 import { FixtureSwapSheet } from "./fixture-swap";
@@ -13,19 +10,14 @@ import {
 	SPEAK_TO_IT,
 } from "./fixtures";
 
-/** The sheet's state: no header, swipe back to the exercise. */
 const SHEET = { headerShown: false };
 
-/** ms into a beat: a line written, the sigh's inhale, its top, its exhale. */
 const WRITTEN = 2600;
 const INHALE = 2200;
 const TOP = 4500;
 const EXHALE = 7600;
-/** Make room's extended exhale (4 s in, then out). */
 const ROOM_OUT = 6400;
-/** The hand pulse at its closest. */
 const PULSE = 400;
-/** "You stayed.": the seam swelling, Done half drained. */
 const DRAINING = 900;
 const DARK = { theme: "dark" } as const;
 const LATE = { late: true } as const;

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { joinDictation } from "@/lib/speech/dictation-transcript";
 
-/** Continuous on-device dictation (#554): finals are new segments, never cumulative. */
 describe("joinDictation", () => {
 	it("shows the live segment alone before anything is final", () => {
 		expect(joinDictation("", "sentence one")).toBe("sentence one");

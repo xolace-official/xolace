@@ -1,7 +1,6 @@
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 import type { BeatId } from "../copy";
 
-/** Board label icons (inline SVGs), in the beat's lit colour. */
 export function LabelIcon({ id, color }: { id: BeatId; color: string }) {
 	if (id === "dusk" || id === "proof") {
 		return (

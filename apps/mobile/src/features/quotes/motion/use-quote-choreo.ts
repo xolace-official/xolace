@@ -17,19 +17,12 @@ import {
 	type QuoteView,
 } from "./quote-ui";
 
-/** The arrival's whole length: the words' end plus the actions' rise. */
 const arrivalMs = (words: number) => wordsEnd(words) + T.acts.ms;
 const hidesStage = (v: QuoteView) => v === "share" || v === "kept";
 
-/**
- * Turns the screen's view into motion: one arrival clock, one sheet clock shared by the sheet and
- * the quote, the background's softness, Clear view and the action row. Keeps the last sheet
- * mounted while it slides away.
- */
 export function useQuoteChoreo(o: {
 	view: QuoteView;
 	clear: boolean;
-	/** Play the arrival: true once the words are there to arrive. */
 	arrive: boolean;
 	words: number;
 	reduced: boolean;
@@ -54,7 +47,6 @@ export function useQuoteChoreo(o: {
 		setShownSheet(view);
 	}
 
-	// The arrival plays once, the first time there are words to arrive.
 	useEffect(() => {
 		if (!arrive || arrived) {
 			return;

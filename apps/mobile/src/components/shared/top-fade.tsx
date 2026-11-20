@@ -1,6 +1,3 @@
-// TopFade: the page colour fading over scrolled content, no blur, under chrome a screen draws
-// itself. BandBlur (band-blur.tsx) when self-drawn chrome needs the content blurred too.
-
 import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
@@ -9,10 +6,6 @@ import { LinearGradient } from "@/components/shared/styled";
 import { clearOf } from "@/design/clear-of";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/**
- * Peers' `.topf` (You're not alone, After a session): the page fading over scrolled content under the header face,
- * solid to `solid`, clear by `height`. Shown only once the column has scrolled.
- */
 export function TopFade({
 	solid,
 	height,

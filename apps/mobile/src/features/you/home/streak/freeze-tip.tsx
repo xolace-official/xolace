@@ -16,16 +16,8 @@ import { cn } from "@/lib/cn";
 
 const IN_MS = 220;
 const OUT_MS = 150;
-/** After the fade starts: iOS drops a focus move onto a view that's still being inserted. */
 const FOCUS_DELAY_MS = 250;
 
-/**
- * Production's freeze explanation, dropped just below the streak card, with Buy one · 50
- * sparks. Drawn by the screen over everything (the tab bar follows the header); a tap anywhere
- * outside closes it, and any scroll does too. Buying keeps it open, now with the next reason.
- * For VoiceOver it's modal (the tabs behind it go quiet), takes focus as it opens, and the
- * escape gesture closes it.
- */
 export function FreezeTip() {
 	const { state, actions } = useYouHome();
 	const { tip, closeTip } = useYouUi();
@@ -45,7 +37,6 @@ export function FreezeTip() {
 		return () => clearTimeout(t);
 	}, [shown]);
 
-	// Placed once the streak card has measured where it ends.
 	if (!(shown && streak && freeze)) {
 		return null;
 	}

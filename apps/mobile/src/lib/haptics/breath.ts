@@ -5,13 +5,6 @@ import {
 	usePatternComposer,
 } from "react-native-pulsar";
 
-/**
- * Sit with this's breath, felt (production's breath beat, unchanged): the
- * inhale swells .35 → .9 at 70% → 1.0 at frequency .15, the top is one hit at
- * .5 / .3, the exhale falls 1.0 → .5 at 50% → 0 at .12. Each is as long as its
- * phase, so there is one composer per phase length (4 s or 3 s in, 8 s or 6 s
- * out). The same patterns on iOS and Android. Times in ms.
- */
 const INHALE_RISE = 0.7;
 const EXHALE_FALL = 0.5;
 
@@ -65,7 +58,6 @@ const OUT_SHORT = exhale(SHORT_OUT_MS);
 export type BreathStep = "in" | "top" | "out";
 
 type Composer = { play: () => void; stop: () => void };
-/** The breath's five composers, by phase and length. */
 export type BreathComposers = {
 	inLong: Composer;
 	inShort: Composer;
@@ -74,11 +66,6 @@ export type BreathComposers = {
 	top: Composer;
 };
 
-/**
- * `play` a phase as long as it lasts; `stop` everything that's playing (each
- * continuous composer, then Pulsar's own queue). Reads the composers through
- * `get`, so the two functions never change.
- */
 export function breathPlayer(get: () => BreathComposers) {
 	return {
 		play: (step: BreathStep, ms: number) => {
@@ -91,9 +78,7 @@ export function breathPlayer(get: () => BreathComposers) {
 				} else {
 					(ms <= SHORT_OUT_MS ? c.outShort : c.outLong).play();
 				}
-			} catch {
-				// Pulsar unavailable.
-			}
+			} catch {}
 		},
 		stop: () => {
 			const c = get();
@@ -102,17 +87,11 @@ export function breathPlayer(get: () => BreathComposers) {
 					composer.stop();
 				}
 				Settings.stopHaptics();
-			} catch {
-				// Pulsar unavailable: nothing is playing.
-			}
+			} catch {}
 		},
 	};
 }
 
-/**
- * The breath's composers as a player whose `play` and `stop` stay the same
- * for the screen's life, so a cleanup that stops it runs only when it should.
- */
 export function useBreathHaptics() {
 	const composers: BreathComposers = {
 		inLong: usePatternComposer(IN_LONG),

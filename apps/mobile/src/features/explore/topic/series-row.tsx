@@ -18,10 +18,6 @@ const E = TOPIC.ep;
 const LOCK: IconName = { android: "lock", ios: "lock" };
 const PLAY: IconName = { android: "play_arrow", ios: "play.fill" };
 
-/**
- * An episode: its number in the display face, the title and length, and a play circle, or a lock
- * for a free listener. While it's the one in the mini player, the number turns into the bars.
- */
 export function SeriesRow({
 	track,
 	listen,

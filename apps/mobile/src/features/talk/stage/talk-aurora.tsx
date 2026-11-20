@@ -18,11 +18,6 @@ import { useScheme } from "@/design/scheme";
 import { useTokenColor } from "@/lib/use-token-color";
 import { timing } from "../motion/talk-motion";
 
-/**
- * The talk's aurora (production's, as the board sketches it): two soft lights rising from
- * the bottom edge, drifting slowly, brighter in the talk and brightest while someone
- * speaks. A printed light, so its colours are fixed per theme (`--color-talk-aurora-*`).
- */
 const BLEED = 40;
 const BELOW = 60;
 const COVER = 0.52;
@@ -51,10 +46,6 @@ const LIGHTS = [
 	},
 ] as const;
 
-/**
- * Drifts sideways and stretches up from the bottom edge, there and back on a sine (a native
- * loop). Stopped (out of sight, or reduced), it eases back to rest.
- */
 function Light({
 	light,
 	w,
@@ -114,9 +105,7 @@ export function TalkAurora({
 	running,
 }: {
 	inTalk: boolean;
-	/** A sample or the companion speaking. */
 	talking: boolean;
-	/** Drifting while the talk is in front and motion isn't reduced. */
 	running: boolean;
 }) {
 	const { width, height } = useWindowDimensions();

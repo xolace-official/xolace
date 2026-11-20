@@ -1,19 +1,11 @@
-// Words stream into the thread as they are spoken (#593). ElevenLabs sends
-// each audio chunk with per-character timings; this turns one chunk into
-// word reveals on the clock, starting at `base` (when the chunk starts playing).
-
-/** The shape of `onAudioAlignment`'s argument. */
 export type Alignment = {
 	chars: string[];
 	char_start_times_ms: number[];
 	char_durations_ms: number[];
 };
 export type SpokenWord = { text: string; at: number };
-/** Carried across a turn's chunks: a tag can be split between two. */
 export type TagState = { inTag: boolean; space: boolean };
 
-/** The chunk without its audio tags (#603), whose characters come back in the
- * timings like any other. `state` is updated in place; reset it each turn. */
 export function withoutTags(a: Alignment, state: TagState): Alignment {
 	const out: Alignment = {
 		char_durations_ms: [],
@@ -44,7 +36,6 @@ export function spokenWords(
 ): { words: SpokenWord[]; end: number } {
 	const words: SpokenWord[] = [];
 	a.chars.forEach((ch, i) => {
-		// A word starts at a letter after a space; spaces ride with the word before.
 		const startsWord =
 			i === 0 || (ch.trim() !== "" && a.chars[i - 1].trim() === "");
 		if (startsWord) {

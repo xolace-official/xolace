@@ -21,14 +21,11 @@ import {
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
 
-// One full turn; every blob breathes a whole number of times per turn, so the loop is seamless.
 const CYCLE_MS = 24_000;
 const TAU = Math.PI * 2;
-const BLUR = 0.11; // of the orb
+const BLUR = 0.11;
 const RIM = 1.5;
 
-/** Centre and smallest/largest radius as fractions of the orb; `beats` per turn; which of
- * the voice's three colours (light, mid, deep). */
 type Blob = {
 	x: number;
 	y: number;
@@ -39,7 +36,6 @@ type Blob = {
 };
 
 const BLOBS: Record<VoiceSlug, [Blob, Blob, Blob]> = {
-	// Low and gravelly: two big slow blobs, low.
 	ash: [
 		{ beats: 5, offset: 0, r: [0.2, 0.34], tone: 1, x: 0.42, y: 0.62 },
 		{ beats: 6, offset: 0.4, r: [0.12, 0.22], tone: 2, x: 0.66, y: 0.42 },
@@ -55,7 +51,6 @@ const BLOBS: Record<VoiceSlug, [Blob, Blob, Blob]> = {
 		{ beats: 7, offset: 0.5, r: [0.04, 0.09], tone: 0, x: 0.3, y: 0.5 },
 		{ beats: 6, offset: 0.8, r: [0.07, 0.16], tone: 2, x: 0.56, y: 0.3 },
 	],
-	// Soft, with a lilt: quicker, smaller blobs.
 	wren: [
 		{ beats: 7, offset: 0, r: [0.14, 0.28], tone: 1, x: 0.4, y: 0.4 },
 		{ beats: 8, offset: 0.35, r: [0.07, 0.14], tone: 0, x: 0.66, y: 0.64 },
@@ -63,7 +58,6 @@ const BLOBS: Record<VoiceSlug, [Blob, Blob, Blob]> = {
 	],
 };
 
-/** The voice's light, mid and deep colours. */
 function useOrbTones(voice: VoiceSlug): [string, string, string] {
 	return [
 		useTokenColor(`orb-${voice}-light`),
@@ -84,15 +78,9 @@ function useBlobRadius(blob: Blob, size: number, phase: SharedValue<number>) {
 type Props = {
 	voice: VoiceSlug;
 	size: number;
-	/** `false` stops the turning: under a sheet, in the talk, or with Reduce Motion. */
 	running: boolean;
 };
 
-/**
- * A voice as a living orb (production's): three soft blobs in the voice's own tones
- * drifting inside a dark glass circle, one full turn every 24 s. A printed object, so its
- * colours are fixed (`--color-orb-*`).
- */
 export function VoiceOrb({ voice, size, running }: Props) {
 	const phase = useSharedValue(0);
 	const tones = useOrbTones(voice);
@@ -106,7 +94,6 @@ export function VoiceOrb({ voice, size, running }: Props) {
 		if (!running) {
 			return;
 		}
-		// Carry on from where it stopped, so a hidden orb doesn't jump when it shows.
 		const from = phase.get() % 1;
 		phase.set(from);
 		phase.set(
@@ -158,7 +145,6 @@ export function VoiceOrb({ voice, size, running }: Props) {
 						</Circle>
 					))}
 				</Group>
-				{/* A still sheen on top, so it reads as glass the blobs move behind. */}
 				<Circle cx={c} cy={c} r={c}>
 					<RadialGradient
 						c={vec(size * 0.32, size * 0.26)}

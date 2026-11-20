@@ -1,5 +1,3 @@
-/** Settings › Follow & Support on fixtures: `xolace://dev/settings/<id>` (handoff settings-sections.md §8–§9). */
-
 import { themeVariant } from "@/design/themes";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureFollow } from "@/features/settings/follow/dev/fixture-follow";
@@ -10,7 +8,6 @@ import {
 	FOLLOW_TYPING,
 } from "@/features/settings/follow/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Follow & Support" };
 const DEFAULT_DARK = themeVariant("default", "dark");
 

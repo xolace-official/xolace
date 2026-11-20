@@ -4,9 +4,6 @@ import { ThreadScreen } from "@/features/connect/thread/thread-screen";
 import { concernParams } from "@/features/feedback/feedback-model";
 import { useFeedbackContext } from "@/features/feedback/use-feedback-context";
 
-/** No `chat/_layout.tsx`: a navigator here would swallow the thread's header options and the back
- * chevron. Stream lives at the protected layout. The feedback sheet is its own feature, so Report
- * and Flag reach it from here. */
 export default function ChatThreadRoute() {
 	const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
 	const router = useRouter();

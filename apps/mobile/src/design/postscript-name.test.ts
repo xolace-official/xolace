@@ -20,7 +20,6 @@ const PACKAGE_OF: Record<string, string> = {
 const POSTSCRIPT_NAME_ID = 6;
 const WINDOWS = 3;
 
-/** The PostScript name (name ID 6) inside a TrueType file. */
 function postScriptNameIn(file: string): string {
 	const buf = readFileSync(file);
 	const tables = buf.readUInt16BE(4);

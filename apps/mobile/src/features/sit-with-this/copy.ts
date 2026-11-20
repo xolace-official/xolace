@@ -1,14 +1,6 @@
-/**
- * Every string Sit with this shows (design/handoff/sit.md, the board's `SIT`
- * and `LABEL`). The exercise's own lines come from the catalogue
- * (`exercises.getForSession`), through `sit-model.ts`.
- */
 export const COPY = {
-	/** The first screen's close, when Sit replays a kindling twig. */
 	backToKindling: "Back to your kindling",
-	/** The first screen's close, when a letter's care sheet opened it. */
 	backToLetter: "Back to your letter",
-	/** The first screen's close, when Today's Sit door opened it. */
 	backToToday: "Back to Today",
 	begin: "Begin",
 	different: "Something different",
@@ -16,7 +8,6 @@ export const COPY = {
 	eyebrow: "Sit with this",
 	fromMirror: "From your mirror",
 	leave: "Leave Sit with this",
-	/** The real length (board `lengthLabel`), never production's "about 90 seconds". */
 	length: {
 		minute: "About a minute.",
 		minutes: (m: number) => `About ${m} minutes.`,
@@ -35,7 +26,6 @@ export const COPY = {
 	pause: "Pause",
 	paused: "Paused",
 	pausedChip: "Paused. Tap play when you’re ready.",
-	/** The sigh's second phase is a second, short inhale, not "Hold" (handoff §0). */
 	phases: ["Breathe in", "A little more", "Breathe out"],
 	play: "Go on",
 	sheet: {
@@ -52,7 +42,6 @@ export const COPY = {
 		sub: "Take whatever you need from this.",
 		title: "You stayed.",
 	},
-	/** A catalogue entry this build doesn't name yet. */
 	unnamed: "Sit with this",
 	write: {
 		done: "Done",

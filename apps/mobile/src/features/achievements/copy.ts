@@ -1,18 +1,10 @@
-/**
- * Every word the badges and their arrival say that the server doesn't send.
- * Titles, lines and sparks come from the catalog (`achievements/catalog.ts`),
- * so a new badge reaches old builds without a release.
- */
 export const COPY = {
 	arrival: {
 		close: "Close",
-		/** "+7 sparks" while it counts up to `sparks`, the noun fixed by the total. */
 		counting: (shown: number, sparks: number) =>
 			`+${shown} ${sparks === 1 ? "spark" : "sparks"}`,
 		dotsLabel: (step: number, total: number) => `Badge ${step + 1} of ${total}`,
-		/** The back's engraving on the day it arrives. */
 		engravedDay: "Today",
-		/** "NEW BADGE" / "2 NEW BADGES". */
 		eyebrow: (count: number) =>
 			count > 1 ? `${count} NEW BADGES` : "NEW BADGE",
 		heading: (title: string, copy: string, sparks: number) =>
@@ -47,7 +39,6 @@ export const COPY = {
 		pinned: "Pinned",
 		putBack: "Put back",
 		share: "Share",
-		/** The share sheet's text until a badge image exists. */
 		shareMessage: (title: string, date: string) =>
 			`${title} · Unlocked on ${date} · Xolace`,
 		turnOver: "Turn over",

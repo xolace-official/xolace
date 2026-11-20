@@ -18,11 +18,8 @@ import { resist } from "./curves";
 import { type MirrorInk, MirrorWord, WordRow } from "./mirror-word";
 import { Shimmer } from "./shimmer";
 
-/** The arrow pops past the threshold with overshoot (the block's POP 520/18). */
 const POP = { damping: 18, mass: 1, stiffness: 520 } as const;
-/** Reduce Motion: the pull's pieces fade instead of springing. */
 const REDUCED_MS = 150;
-/** Board `.mline.sel`: the chosen line steps in 14 pt behind a 2.5 pt ember bar (.25 s). */
 const SEL_PAD = 14;
 const BAR_W = 2.5;
 const SEL_MS = 250;
@@ -41,7 +38,6 @@ type Props = {
 	tl: Timeline;
 	heavy: boolean;
 	ink: MirrorInk;
-	/** The pick-mode wash's colour (`ember-wash`). */
 	wash: string;
 	flashN: number;
 	rewriting: boolean;
@@ -50,20 +46,12 @@ type Props = {
 	pickMode: boolean;
 	canDrag: boolean;
 	reduced: boolean;
-	/** Runs on the RN runtime (`scheduleOnRN`): a plain function, never a Pulsar preset (a worklet). */
 	onArm: () => void;
 	onChoose: (i: number) => void;
 	onTap: (i: number) => void;
 	ref?: Ref<ComponentRef<typeof View>>;
 };
 
-/**
- * One line of the mirror. Drag it right to say that part missed (S9: the line follows
- * `resist(d)`, an ember arrow chip appears on its left, it arms at 40 pt of pull and springs back
- * on 300/26); tap it to flash where you said it. While a refinement is with the server the line
- * shimmers with its layout held (S10). VoiceOver reads it as one block, with "This part missed"
- * as an action.
- */
 export function MirrorLine(props: Props) {
 	const { index, line, e, tl, heavy, ink, wash, flashN, reduced } = props;
 	const { selected, soft, pickMode, canDrag, onArm, onChoose, onTap } = props;
@@ -94,7 +82,6 @@ export function MirrorLine(props: Props) {
 				scheduleOnRN(onChoose, index);
 			}
 			armed.set(false);
-			// Everything the pull moved goes back together: `pull` keeps its value, `held` lets go.
 			held.set(
 				reduced
 					? withTiming(0, { duration: REDUCED_MS, ...PLAY_AS_CHOSEN })

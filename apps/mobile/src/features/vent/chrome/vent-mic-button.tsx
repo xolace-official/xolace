@@ -13,7 +13,6 @@ import { VENT_COPY } from "@/features/vent/copy";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const PULSE = { hi: 0.7, lo: 0.15, ms: 1000 } as const;
-/** v2, Reduce Motion: the ring holds still, halfway. */
 const REDUCED_RING = 0.45;
 const REC_MS = 250;
 const REC_SCALE = 1.12;
@@ -31,12 +30,6 @@ const HALF: TimingTransition = {
 	type: "timing",
 };
 
-/**
- * The ring as Ease props. Idle it pulses .15 ↔ .7 (a native loop); listening it goes to full and
- * 1.12 in 250 ms, the colour snapping. After listening it first eases back to .7 (`lead`), as
- * production's Reanimated loop did from wherever it was, then remounts on the loop (Ease loops
- * only what a view mounts with). Reduced: it holds .45.
- */
 function ringProps(
 	recording: boolean,
 	reduced: boolean,
@@ -78,19 +71,12 @@ function ringProps(
 
 type Props = { recording: boolean; reduced: boolean; onPress: () => void };
 
-/**
- * Production's mic button: an ash disc behind a hole in the page colour, read as a 2 pt ring
- * pulsing; while it listens the ring goes amber at full opacity and 1.12, and the icon becomes
- * the stop square. The disc is 60 pt, the hole 56, the button inside it 52 at white 5%.
- * v2: VoiceOver says "Let it go".
- */
 export function VentMicButton({ recording, reduced, onPress }: Props) {
 	const ink = {
 		ash: useTokenColor("vent-ash"),
 		cream: useTokenColor("vent-cream"),
 		ember: useTokenColor("vent-ember"),
 	};
-	// `n` keys the ring: it moves on only when the idle loop has to mount afresh.
 	const [ring, setRing] = useState({ lead: false, n: 0, was: recording });
 	if (ring.was !== recording) {
 		setRing({ lead: !recording, n: ring.n, was: recording });
@@ -111,8 +97,6 @@ export function VentMicButton({ recording, reduced, onPress }: Props) {
 			onPress={onPress}
 		>
 			<View className="size-15 items-center justify-center">
-				{/* A solid donut (a disc behind a hole): a 2 pt border on a scaled, fading view
-				    shows gaps on iOS. Only the disc scales, so while it listens the ring thickens. */}
 				<EaseView
 					className="absolute size-15 rounded-full"
 					key={`${ring.n}-${reduced}`}

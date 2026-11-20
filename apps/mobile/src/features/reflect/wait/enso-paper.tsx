@@ -9,10 +9,8 @@ import { PixelRatio } from "react-native";
 import { useTokenColors } from "@/lib/use-token-color";
 import { bakePaper } from "./enso-art";
 
-/** The paper's grain sits under the ink, faint, fading out toward the canvas edge. */
 const PAPER = { day: 0.35, night: 0.12 } as const;
 const FADE_AT = [0, 0.6, 1];
-/** Baked at no more than 2× (the grain is soft; 3× only costs memory). */
 const MAX_SCALE = 2;
 const FADE = [
 	"reflect-paper-fade-1",
@@ -20,7 +18,6 @@ const FADE = [
 	"reflect-paper-fade-3",
 ] as const;
 
-/** The rice paper under the ensō, baked once per size, masked to a soft disc. */
 export function EnsoPaper({ box, late }: { box: number; late: boolean }) {
 	const fade = useTokenColors(FADE);
 	const paper = bakePaper(box, box, Math.min(PixelRatio.get(), MAX_SCALE));

@@ -7,13 +7,8 @@ import {
 	trailSchedule,
 } from "./trail-schedule";
 
-/** How long a fake spark takes to land. */
 const BURN_MS = 1500;
 
-/**
- * A schedule on fake timers, with a fake tend: each play lands BURN_MS later, and the `last` of a
- * batch catches the fire as it lands. `resetTend` takes back every landing still on its way.
- */
 function setup() {
 	const moveCard = vi.fn();
 	const fire = vi.fn();
@@ -65,7 +60,6 @@ describe("tends played on return", () => {
 	it("share one ticket: a stop pressed while the plays are staggered keeps its card", () => {
 		const { moveCard, played, s } = setup();
 		s.playBatch([0, 1, 2, 3]);
-		// Spark 0 burns; sparks 1–3 haven't started when they tap stop 2.
 		vi.advanceTimersByTime(SETTLE_MS + STAGGER_MS / 2);
 		expect(played).toEqual([0]);
 		s.choose();
@@ -79,7 +73,6 @@ describe("tends played on return", () => {
 		const cancel = s.playBatch([0, 1, 2, 3]);
 		vi.advanceTimersByTime(SETTLE_MS + STAGGER_MS / 2);
 		expect(played).toEqual([0]);
-		// Not for me on stop 2: the states change, so the effect cancels and finds the rest again.
 		s.choose();
 		cancel();
 		s.playBatch([1, 2, 3]);

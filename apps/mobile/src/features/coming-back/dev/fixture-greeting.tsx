@@ -1,4 +1,3 @@
-/** The greeting on fixtures: a tap on a row plays its tick here; Close does nothing. */
 import { useEffect, useState } from "react";
 import type {
 	GreetMode,
@@ -15,7 +14,6 @@ import {
 import { WelcomeBackProvider } from "@/features/coming-back/welcome-back-data";
 import { WelcomeBackScreen } from "@/features/coming-back/welcome-back-screen";
 
-/** Long enough for the sheet to settle before a held tick plays. */
 const TICK_AFTER_MS = 600;
 const noop = () => undefined;
 
@@ -25,9 +23,7 @@ type Props = {
 	items?: Items;
 	outcomes?: Outcomes;
 	page?: "list" | "prompt";
-	/** Off: the card holds at rest (no rise, no settle tap). */
 	enter?: boolean;
-	/** A row that ticks just after it opens, to the outcome given. */
 	tick?: Row;
 };
 
@@ -48,7 +44,6 @@ export function FixtureGreeting({
 		const id = setTimeout(() => setTicked(true), TICK_AFTER_MS);
 		return () => clearTimeout(id);
 	}, [tick]);
-	// Before the tick lands, the row still waits.
 	let shown = outcomes;
 	if (tick && !ticked) {
 		shown =

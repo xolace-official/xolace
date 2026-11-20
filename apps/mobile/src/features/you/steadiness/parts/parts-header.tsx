@@ -19,8 +19,6 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { useTokenColor } from "@/lib/use-token-color";
 
 const S = COPY.steadinessScreen;
-// Production's ViewToggle, its one pill sliding as native-cook's pricing-segmented-button
-// (480 ms, bezier(.65, 0, .35, 1)); the icon tints cross-fade.
 const SEG_W = 46;
 const SEG_H = 30;
 const PILL_MS = 480;
@@ -31,7 +29,6 @@ const ICONS = {
 	list: { android: "view_list", ios: "list.bullet" },
 } as const;
 
-/** "Parts of your life" and the grid / list toggle. */
 export function PartsHeader() {
 	const { view, setView } = useSteadinessUi();
 	return (
@@ -100,7 +97,6 @@ function ViewToggle({
 	);
 }
 
-/** Two layers, one opacity: the tint follows the pill. */
 function ToggleIcon({ on, view }: { on: boolean; view: PartsView }) {
 	const subtle = useTokenColor("subtle");
 	const ink = useTokenColor("accent-foreground");

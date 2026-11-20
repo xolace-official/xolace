@@ -14,7 +14,6 @@ import { useYouHome } from "@/features/you/home/you-data";
 const ROW_ESTIMATE = 84;
 const TAB_BAR_ROOM = 110;
 
-/** Production's follow-ups: Waiting, Coming up, then Earlier, loaded a page at a time. */
 export function FollowUpsTab() {
 	const insets = useSafeAreaInsets();
 	const { state, actions } = useYouHome();

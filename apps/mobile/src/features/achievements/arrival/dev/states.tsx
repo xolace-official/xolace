@@ -1,9 +1,7 @@
-/** The badges' arrival on fixtures: `xolace://dev/achievements/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureArrival } from "@/features/achievements/arrival/dev/fixture-arrival";
 import { DAY_7, DAY_30, ONE, TWO } from "@/features/achievements/dev/fixtures";
 
-/** A full-screen moment: no header (swipe back, or close it). */
 const OPTIONS = { headerShown: false };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

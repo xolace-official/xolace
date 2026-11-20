@@ -1,7 +1,3 @@
-/**
- * A moment's data: production's session details, the talk's thread and the mirror's voice, plus
- * the two ways on (Reflect again, share the mirror).
- */
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useQuery } from "convex/react";
@@ -32,7 +28,6 @@ export function useMoment(id: string | undefined): MomentScreenData {
 	const posthog = usePostHog();
 
 	const state = (() => {
-		// No id: gone. A deleted or someone else's session throws instead (`MomentGuard`).
 		if (!sessionId) {
 			return null;
 		}
@@ -49,11 +44,9 @@ export function useMoment(id: string | undefined): MomentScreenData {
 
 	return {
 		actions: {
-			// Your first sentence becomes Reflect's question ("You wrote: …"), as a quote's reply does.
 			again: () => {
 				const seed = reflectSeed(moment?.said ?? null);
 				if (seed) {
-					// Lengths only, never the words (as quotes' `quote_reflection_seeded`).
 					posthog.capture("moment_reflection_seeded", {
 						entry_type: details?.entryType ?? null,
 						seed_length: seed.length,

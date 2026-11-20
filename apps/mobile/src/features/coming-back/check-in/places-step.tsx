@@ -9,26 +9,17 @@ import { useTokenColors } from "@/lib/use-token-color";
 import { useCheckIn } from "../check-in-data";
 import { CHECK_IN, HEAVIER_PLACES, PLACES, STILL_PLACES } from "../copy";
 
-/*
- * Board `.lk` rows 62 in one radius-20 group (their 6 pt padding keeps 62 at the default size and
- * lets them grow), icons 36; Not now 54.
- */
 const MESSAGE = { fontSize: 14.5, lineHeight: 21 } as const;
 const TITLE = { fontSize: 15 } as const;
 const SUB = { fontSize: 12.5 } as const;
 const BUTTON = { fontSize: 16 } as const;
 const GLYPH = { chevron: 13, icon: 16 } as const;
 
-/**
- * Still sitting with it, or got heavier (production's `StillHereStep` / `HeavierStep`): a line,
- * a few places close by (Talk to someone first when heavier), Not now.
- */
 export function PlacesStep({
 	answer,
 	offer,
 }: {
 	answer: "still_here" | "heavier";
-	/** The one-time Telegram offer (production #777), above Not now. */
 	offer?: ReactNode;
 }) {
 	const { actions } = useCheckIn();

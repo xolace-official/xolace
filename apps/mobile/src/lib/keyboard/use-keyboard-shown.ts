@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { Keyboard } from "react-native";
 
-/**
- * True while the software keyboard is up. iOS's will-show / will-hide, so
- * layout moves with it; Android only sends did-show / did-hide.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function useKeyboardShown(): boolean {
 	const [shown, setShown] = useState(false);
 	useEffect(() => {

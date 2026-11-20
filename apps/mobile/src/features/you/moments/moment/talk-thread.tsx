@@ -3,8 +3,6 @@ import { AppText } from "@/components/shared/app-text";
 import type { TalkLine } from "@/features/you/moments/moment/moment-data";
 import { cn } from "@/lib/cn";
 
-/** A past talk's thread, read-only, as it was: the companion on the left under the name it had
- * then, you on the right (production's `TalkTranscript`, in the redesign's surfaces). */
 export function TalkThread({
 	lines,
 	name,
@@ -24,7 +22,6 @@ export function TalkThread({
 								? "self-end bg-accent-wash"
 								: "self-start bg-surface-secondary"
 						)}
-						// The stored thread is append-only: a line's place is its identity.
 						key={i}
 					>
 						{mine ? null : (

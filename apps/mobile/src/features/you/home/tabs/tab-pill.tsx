@@ -7,8 +7,6 @@ import Animated, {
 import { AppText } from "@/components/shared/app-text";
 import { cn } from "@/lib/cn";
 
-/** One docked tab: a glass pill whose filled state slides between neighbours as the pager
- * swipes. The inverted label rides inside the fill, so text and fill change together. */
 export function TabPill({
 	label,
 	a11y,
@@ -74,7 +72,6 @@ function PillLabel({
 	);
 }
 
-/** The waiting count beside Follow-ups; nothing at zero. */
 export function TabBadge({
 	count,
 	inverted,

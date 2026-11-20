@@ -1,16 +1,3 @@
-/**
- * What letters keep on the device, never on the server (porting guide, Letters › State):
- *
- * - **The draft**: the words, "For", and the words of a held letter (Send stays off until they
- *   change). It survives leaving the screen, the care sheet and an app restart; only a send
- *   clears it (owner, handoff §7.4). A fixable or at-risk letter leaves nothing on the server.
- * - **The end card's memory**: when the write card last showed, passes running, rest until.
- *
- * Both are the signed-in user's own: the hooks read who that is, and a different account on
- * this device starts fresh (its first write replaces the last account's). Signed out, nothing
- * is written. What's read back from storage is checked field by field; anything malformed
- * starts fresh rather than, say, hiding the write card for good.
- */
 import { useAuth } from "@clerk/expo";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -21,7 +8,6 @@ import { END_CARD_FRESH, type EndCardMemory } from "./letters-model";
 type Mine = {
 	text: string;
 	forWho: LetterFor;
-	/** A held letter's words, unchanged: Send stays off for them. */
 	held: string;
 	endCard: EndCardMemory;
 };
@@ -35,7 +21,6 @@ export const FRESH: Mine = {
 	text: "",
 };
 
-/** The stored shape. Bump it, with a `migrate`, when `Kept` changes. */
 const VERSION = 1;
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -63,7 +48,6 @@ function validEndCard(v: unknown): EndCardMemory | null {
 		: null;
 }
 
-/** What storage held, checked: anything malformed is a fresh start with no owner. */
 export function validKept(stored: unknown): Kept {
 	if (!isRecord(stored)) {
 		return { ...FRESH, owner: null };
@@ -81,11 +65,9 @@ export function validKept(stored: unknown): Kept {
 		: { ...FRESH, owner: null };
 }
 
-/** This user's view of what's kept: another account's draft reads as fresh. */
 export const keptFor = (k: Kept, owner: string | null): Kept =>
 	k.owner === owner ? k : { ...FRESH, owner };
 
-/** A write as this user: it starts from fresh when the store was another account's. */
 export const withPatch = (
 	k: Kept,
 	owner: string,
@@ -102,16 +84,11 @@ const useKept = create<Kept>()(
 	})
 );
 
-/** One field of the signed-in user's draft or memory. */
 export function useKeptField<K extends keyof Mine>(key: K): Mine[K] {
 	const { userId } = useAuth();
 	return useKept((k) => keptFor(k, userId ?? null)[key]);
 }
 
-/**
- * Writes for the signed-in user. A send clears the draft (and any held words). Signed out,
- * they do nothing.
- */
 export function useKeep() {
 	const { userId } = useAuth();
 	const keep = (patch: Partial<Mine>) => {
@@ -121,7 +98,6 @@ export function useKeep() {
 	};
 	return {
 		clearDraft: () => keep({ forWho: FRESH.forWho, held: "", text: "" }),
-		/** The draft's words as they are now, for an answer that lands after a re-render. */
 		draftNow: () => keptFor(useKept.getState(), userId ?? null).text,
 		keep,
 	};

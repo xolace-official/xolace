@@ -1,14 +1,9 @@
-/**
- * After a session: every string the two moments show (the prototype's
- * `fixtures/session.ts`, from the board, curly apostrophes included).
- */
 export const COPY = {
 	another: "Start another",
 	chip: (day: number) => `Day ${day}`,
 	continue: "Continue",
 	done: "I’m done for now",
 	followUp: {
-		/** Step −4 and −5 (production's "high" bucket). */
 		high: {
 			ask: "What’s bearing down hardest right now?",
 			rows: [
@@ -18,7 +13,6 @@ export const COPY = {
 				{ key: "needed_to_say_it", label: "I needed to say it" },
 			],
 		},
-		/** Step −3 (production's "mid" bucket). */
 		mid: {
 			ask: "What’s keeping it this heavy?",
 			rows: [
@@ -47,12 +41,10 @@ export const COPY = {
 			sub: "3 small steps from tonight",
 			title: "Your kindling is ready",
 		},
-		/** Before this session's kindling has landed (production's slot said so too). */
 		kindlingSettingUp: {
 			sub: "It lands on Today when it’s ready",
 			title: "Setting up your kindling…",
 		},
-		/** Letters (handoff `letters.md` §2): until it's opened. */
 		letterRead: {
 			sub: "Someone wrote it for whoever needed it",
 			title: "A letter is waiting for you",
@@ -71,13 +63,11 @@ export const COPY = {
 			rated: (rating: number) => `Rated ${rating}`,
 			rating: (rating: number) => `★ ${rating}`,
 			repliesInADay: "Replies within a day",
-			/** Production's SuggestionCard line, its dash a colon. */
 			sub: "A trained peer, not a therapist. Nothing is sent: this only opens their profile.",
 			title: (name: string, listensTo: string) =>
 				`${name} listens to ${listensTo}`,
 		},
 		loading: "Finding something for you",
-		/** C2: a part of life came into focus (production's UnlockBeat, without the full stop). */
 		unlock: {
 			sub: (count: number) =>
 				count > 1
@@ -88,7 +78,6 @@ export const COPY = {
 					? `${names.slice(0, -1).join(", ")} and ${names.at(-1)} are coming into focus`
 					: `${names[0]} is coming into focus`,
 		},
-		/** C2, free: production's SessionEndUpsell line; "with Xolace+" says where the tap goes. */
 		upsell: {
 			sub: "See the pattern, with Xolace+",
 			title: (name: string) =>
@@ -114,7 +103,6 @@ export const COPY = {
 		leaving: "Leaving it for someone",
 		left: "Left for someone.",
 		letGo: "Let go",
-		/** The line under the title, by the path the session ended on. */
 		sub: {
 			peers: "Like the four you just read, someone out there might need yours.",
 			sit: "Someone out there might be carrying something just like this.",

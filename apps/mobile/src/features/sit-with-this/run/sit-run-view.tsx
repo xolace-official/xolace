@@ -28,13 +28,6 @@ import { useSitRun } from "./use-sit-run";
 
 type Props = { exercise: Exercise; scene?: SitScene };
 
-/**
- * One exercise, played (design/handoff/sit.md): production's arcs stay on
- * screen the whole time, lit like the Today card; there's a way out, a pause
- * and a thread at every beat, and the sheet waits. React renders on beat
- * changes only; the breath runs on the UI thread from one clock. A swap
- * remounts this with the new exercise, at its first beat.
- */
 export function SitRunView({ exercise, scene }: Props) {
 	const { state, actions } = useSit();
 	const { from, swaps, late } = state;
@@ -116,7 +109,6 @@ export function SitRunView({ exercise, scene }: Props) {
 				closeLabel={closeLabel(from, stage)}
 				face={face}
 				late={late}
-				// X on "You stayed." finishes: every beat has been played.
 				onClose={() => actions.finish(stage === "close")}
 				onPause={() => setPaused(!paused)}
 				paused={paused}

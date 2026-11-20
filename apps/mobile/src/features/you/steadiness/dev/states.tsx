@@ -1,11 +1,9 @@
-/** The Steadiness screen on fixtures: `xolace://dev/you/<id>` (P/design/handoff/steadiness.md §8). */
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureSteadiness } from "@/features/you/steadiness/dev/fixture-steadiness";
 import { FaceSheet } from "@/features/you/steadiness/face-sheet";
 
-/** In the app the face sheet is a form sheet; here, a page that starts under the bar. */
 const UNDER_BAR = 44;
 function FaceSheetPage() {
 	const { top } = useSafeAreaInsets();
@@ -16,7 +14,6 @@ function FaceSheetPage() {
 	);
 }
 
-/** The screen sets its own header (the title that becomes the chip). */
 const OPTIONS = { headerTransparent: true, title: "" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

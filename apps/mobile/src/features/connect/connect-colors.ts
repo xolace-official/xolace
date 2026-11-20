@@ -1,6 +1,5 @@
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** Avatar art pairs (`--color-connect-art-*`), one per person when they have no photo. */
 const ART = [
 	["connect-art-violet-from", "connect-art-violet-to"],
 	["connect-art-teal-from", "connect-art-teal-to"],
@@ -10,7 +9,6 @@ const FLAME = ["connect-flame-1", "connect-flame-2", "connect-flame-3"];
 const ALL = [...ART.flat(), ...FLAME];
 const HASH_MUL = 31;
 
-/** A stable pick from the art pairs for an id: the same person always wears the same art. */
 function artIndex(id: string): number {
 	let h = 0;
 	for (const ch of id) {
@@ -19,7 +17,6 @@ function artIndex(id: string): number {
 	return h % ART.length;
 }
 
-/** Connect's fixed art, read once: the avatar pairs and the Xolace flame. */
 export function useConnectColors() {
 	const c = useTokenColors(ALL);
 	const pairs = ART.map(

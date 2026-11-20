@@ -1,5 +1,3 @@
-/** Proactive Plus offer cadence state, the inputs to `choosePlusOffer`. Device-local; resets on
- * reinstall. */
 import {
 	PLUS_OFFER_DISMISSAL_LIMIT,
 	PLUS_OFFER_FULL_STOP_MS,
@@ -7,16 +5,10 @@ import {
 } from "@/features/purchases/plus-offer-policy";
 
 export type PlusOfferSlice = {
-	/** Last-dismissed epoch ms keyed by surface: a "no" silences the whole slot. */
 	plusOfferLastDismissedAt: Partial<Record<PlusOfferSurface, number>>;
-	/** Lifetime dismissals across all proactive surfaces. */
 	plusOfferDismissalCount: number;
-	/** When the 3-strike, 30-day full stop began. */
 	plusOfferFullStopAt: number | null;
-	/** Records a dismissal against one surface and rolls the full stop if it's the third. */
 	recordPlusOfferDismissal: (surface: PlusOfferSurface) => void;
-	/** Session an offer was last shown in. All three trigger points read and write it, so one
-	 * offer per session holds. */
 	plusOfferShownSessionId: string | null;
 	recordPlusOfferShown: (sessionId: string | null) => void;
 };
@@ -33,8 +25,6 @@ export const createPlusOfferSlice = (set: SetState): PlusOfferSlice => ({
 	recordPlusOfferDismissal: (surface) =>
 		set((s) => {
 			const now = Date.now();
-			// A full stop that has run its course clears the slate — otherwise
-			// the very next dismissal would re-trigger it off a stale count.
 			const lapsed =
 				s.plusOfferFullStopAt !== null &&
 				now - s.plusOfferFullStopAt >= PLUS_OFFER_FULL_STOP_MS;
@@ -57,7 +47,6 @@ export const createPlusOfferSlice = (set: SetState): PlusOfferSlice => ({
 		set(() => ({ plusOfferShownSessionId: sessionId })),
 });
 
-/** Keys persisted by the app store's `partialize`. */
 export const plusOfferPersistedKeys = (s: PlusOfferSlice) => ({
 	plusOfferDismissalCount: s.plusOfferDismissalCount,
 	plusOfferFullStopAt: s.plusOfferFullStopAt,

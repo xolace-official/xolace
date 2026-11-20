@@ -28,10 +28,8 @@ import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
 import { useLater } from "@/lib/use-later";
 
 const FOCUS_MS = 60;
-/** The host fades the arrival in over 350 ms; its Skia canvases mount once it's in. */
 const SHOWN_AFTER_MS = 360;
 
-/** VoiceOver focus on a heading as it comes out. */
 const focusNow = (node: ViewInstance | TextInstance | null | undefined) => {
 	const tag = node ? findNodeHandle(node) : null;
 	if (tag) {
@@ -39,11 +37,6 @@ const focusNow = (node: ViewInstance | TextInstance | null | undefined) => {
 	}
 };
 
-/**
- * The arrival's flow: the engine and its clock, the phase (milestone, then
- * badges), and what start, Next / Lovely and the close do. Every change goes to
- * the engine on the UI thread; React hears only the phase and the step.
- */
 export function useArrivalFlow({
 	total,
 	hasMilestone,
@@ -56,7 +49,6 @@ export function useArrivalFlow({
 	hasMilestone: boolean;
 	reduced: boolean;
 	still?: Still;
-	/** Events not felt: a card that isn't drawn (the week, the freeze) plays no haptic. */
 	silent: readonly number[];
 	onDone: () => void;
 }) {
@@ -84,13 +76,11 @@ export function useArrivalFlow({
 	const clock = useArrivalClock({ eng, fa, onEvent });
 	useEffect(() => () => clock.setActive(false), [clock]);
 
-	/** The clock runs until nothing moves; a touch, Next or a close starts it again. */
 	const wake = () => {
 		if (!still) {
 			clock.setActive(true);
 		}
 	};
-	/** Changes the engine on the UI thread, where the clock reads it. */
 	const act = (change: (e: Eng) => void) =>
 		scheduleOnUI(() => {
 			"worklet";
@@ -101,7 +91,6 @@ export function useArrivalFlow({
 			});
 		});
 
-	/** A staged arrival opens: a fresh engine and the clock. A held frame stays as it is. */
 	const start = () => {
 		later(() => setShown((n) => n + 1), SHOWN_AFTER_MS);
 		if (still) {

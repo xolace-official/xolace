@@ -1,4 +1,3 @@
-/** Browse search's edges (#552): the Need someone now? row and the no-results way-outs. */
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";

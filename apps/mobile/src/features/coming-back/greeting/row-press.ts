@@ -6,10 +6,8 @@ import {
 } from "react-native-reanimated";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 
-/** Board `.r:active`: `press .22s` down to .975 at 40%, then back. */
 const PRESS = { at: 0.4, ms: 220, scale: 0.975 } as const;
 
-/** A greeting row's press: the style to put on the row, and `play` for its tap (nothing under Reduce Motion). */
 export function useRowPress(reduced: boolean) {
 	const press = useSharedValue(1);
 	const style = useAnimatedStyle(() => ({

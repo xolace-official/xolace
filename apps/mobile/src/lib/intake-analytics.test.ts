@@ -16,7 +16,6 @@ describe("intakePersonProperties", () => {
 			weighing_on: ["work"],
 		});
 		expect(props.$set.intake_version).toBe(1);
-		// displayName is never a person property (T7 §3).
 		expect(JSON.stringify(props)).not.toContain("displayName");
 	});
 
@@ -36,7 +35,6 @@ describe("intakePersonProperties", () => {
 });
 
 describe("trackFirstReflection", () => {
-	// The funnel keeps its clock and latch per process; each test gets a fresh module.
 	let analytics: typeof import("@/lib/intake-analytics");
 	let capture: ReturnType<typeof vi.fn>;
 	let posthog: PostHog;

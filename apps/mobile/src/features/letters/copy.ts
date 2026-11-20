@@ -1,20 +1,8 @@
-/**
- * Every string Letters shows, and the limits its copy speaks of (handoff `letters.md` §3, the
- * board `LettersAlive.dc.html`). Words: letter, sender, recipient, received, acknowledge; never
- * message, note, DM or delivered. The caps (one a day, three waiting) are the contract's: the
- * server says when Write is off, and these lines only say why.
- */
-
-/** A letter needs at least this many characters to send. */
 export const LETTER_MIN = 40;
-/** And can't be longer than this. */
 export const LETTER_MAX = 500;
-/** The count shows under LETTER_MIN and past this. */
 export const COUNT_FROM = 400;
-/** Acknowledge and Hide can be undone for this long. */
 export const UNDO_SECONDS = 5;
 
-/** "For": Anyone by default, then the matching's feeling families (the board's stand-ins). */
 export const FOR = [
 	"Anyone",
 	"Anxiety",
@@ -25,7 +13,6 @@ export const FOR = [
 ] as const;
 export type LetterFor = (typeof FOR)[number];
 
-/** Human-written starters. They drop into the letter and stay editable. Never AI help. */
 export const STARTERS = [
 	"I don’t know what you’re carrying, but",
 	"Something that helped me:",
@@ -33,13 +20,8 @@ export const STARTERS = [
 	"On a hard day, I remind myself",
 ] as const;
 
-/**
- * The offer's wording, recorded with each answer as its consent version (`letters.optIn.set`'s
- * `promptVersion`). Bump it whenever `LETTERS.offer` changes.
- */
 export const LETTERS_OFFER_VERSION = "letters_offer.v1";
 
-/** Report's reasons, in the board's order; a reason is required (open question 30). */
 export const REPORT_REASONS = [
 	"unkind",
 	"selling",
@@ -55,7 +37,6 @@ export const LETTERS = {
 		waitingForYou: "A letter is here for you",
 		wroteToday: "You wrote today’s letter",
 	},
-	/** At risk: Reflect's care, word for word (open question 27), plus Talk to a Xolacer. */
 	care: {
 		body: "What you're carrying sounds heavier than a regular hard day. You don't have to hold it alone. There are people trained for moments like this.",
 		breathe: "Breathe with me first",
@@ -64,17 +45,11 @@ export const LETTERS = {
 		talk: "Talk to a Xolacer",
 		title: "I hear you.",
 	},
-	/**
-	 * The check's lines (#750). At risk has none; a check that can't finish reads as a pass. A
-	 * fixable letter's line is the server's (`outcome.line`): it names what to take out.
-	 */
 	check: {
 		held: "This letter can’t be sent.",
 		lang: "Letters are English-only for now.",
 	},
-	/** A returned or late-held row leaves Sent. */
 	dismiss: "Dismiss",
-	/** Above every letter. */
 	fixedLine: "Someone wrote this for whoever needed it",
 	hub: {
 		footnote: "Only you see this list. Nothing here says who received them.",
@@ -86,7 +61,6 @@ export const LETTERS = {
 		noneSent: "You haven’t written one yet.",
 		nothingYet: "Nothing yet. When a letter fits, it comes here.",
 		off: "Letters for you are off.",
-		/** The Letters screen's offer drops the "too" (board, hub `.hcard.offer`). */
 		offerTitle: "Receive letters?",
 		open: "Open",
 		sent: "Sent",
@@ -94,7 +68,6 @@ export const LETTERS = {
 		write: "Write a letter",
 		writeLine: "One a day, unsigned. Xolace places it with someone it fits.",
 	},
-	/** One line, first that applies, when Write is off. */
 	limit: {
 		three:
 			"Three of your letters are still waiting to be received. You can write again when one is.",
@@ -107,7 +80,6 @@ export const LETTERS = {
 		yes: "Yes",
 		yesA11y: "Yes, receive letters",
 	},
-	/** The three pushes (B12 sends them; open question 28: kept as written). */
 	push: {
 		acknowledged: "Your letter reached someone",
 		acknowledgedSub: "They acknowledged it.",
@@ -124,10 +96,8 @@ export const LETTERS = {
 		gone: "Reported. The letter is gone.",
 		hide: "Hide",
 		hint: "Drag the letter up to open it",
-		/** Proposed (the prototype has no line): a letter that's gone, or not yours. */
 		notThere: "This letter isn’t here anymore.",
 		open: "Open",
-		/** Proposed: Open failed, and the letter sealed again. */
 		openFailed: "Couldn’t open it. Try again.",
 		report: "Report",
 		rowAcknowledged: "Received · you acknowledged it",
@@ -157,13 +127,10 @@ export const LETTERS = {
 		seeLetters: "See your letters",
 		title: "It’s on its way.",
 	},
-	/** A sent letter's status: nothing about the recipient, and no "read". */
 	status: {
 		acknowledged: "Received · acknowledged",
-		/** A background re-check held it after it read as sent (spec §5.4). */
 		held: "This letter can’t be sent.",
 		received: "Received",
-		/** Not placed within 30 days, or a late re-check returned it (decision C). */
 		returned: "Not placed. No one it fit came along this time.",
 		waiting: "Waiting to be received",
 	},
@@ -176,13 +143,10 @@ export const LETTERS = {
 	},
 	write: {
 		countLeft: (n: number) => `${n} left`,
-		/** Under LETTER_MIN, then past COUNT_FROM. */
 		countUnder: (n: number) => `${n} more characters to send`,
-		/** Send didn't reach the server: the words stay; nothing else changes. */
 		failed: "Your letter didn’t send. Your words are still here.",
 		field: "Your letter",
 		for: "For",
-		/** Send refused before a first finished session (`no_session`): the words stay. */
 		noSession:
 			"Letters open after your first session. Your words are still here.",
 		placeholder: "Write to someone you’ll never meet…",

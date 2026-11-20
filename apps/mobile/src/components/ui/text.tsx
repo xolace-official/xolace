@@ -40,9 +40,6 @@ export interface TextProps
 
 export const Text = forwardRef<TextInstance, TextProps>(
 	({ className, size, weight, muted, style, ...props }, ref) => {
-		// `direction` is a Yoga layout property; RN aligns a paragraph from the global
-		// `I18nManager.isRTL`, so `writingDirection` is what makes text follow `<Direction>`.
-		// Only the direction: `textAlign` stays whatever the caller asked for.
 		const direction = useDirection();
 
 		return (
@@ -58,8 +55,6 @@ export const Text = forwardRef<TextInstance, TextProps>(
 
 Text.displayName = "Text";
 
-/** Wraps bare strings among `children` in `<Text>` so a View can hold them. Per child, since
- * children is usually an array. `render` picks the wrapper. */
 export function textChildren(
 	children: ReactNode,
 	render: (text: string | number) => ReactElement = (text) => (

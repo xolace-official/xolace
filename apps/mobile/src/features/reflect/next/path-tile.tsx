@@ -22,13 +22,10 @@ const ICON = 34;
 const BOX = 44;
 const S_MS = 1000;
 const RISE_EASE = Easing.bezier(0.23, 1, 0.32, 1);
-/** The resting mark: 2.2 at 35%. */
 const REST = { opacity: 0.35, width: 2.2 } as const;
-/** four-elements' spring settles by .65 s and overshoots no further than 1.045. */
 const LIFT = { cap: 1.045, decay: 10, freq: 14, settled: 0.65 } as const;
 const BORDER = { chosen: 1.5, rest: 1 } as const;
 
-/** four-elements' closed-form lift spring. */
 function liftSpring(age: number) {
 	"worklet";
 	if (age >= LIFT.settled) {
@@ -52,11 +49,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * A Where next tile (board `.tile`, S13 four-elements-class-picker). Choosing it traces its mark in
- * ember over .85 s and lifts the tile 4 pt on the block's spring with an ember outline. Under
- * Reduce Motion the mark shows traced and the tile lifted at once.
- */
 export function PathTile({
 	index,
 	title,

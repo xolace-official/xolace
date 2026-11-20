@@ -19,8 +19,6 @@ export const FAMILY_LABEL = {
 
 const COVER = { height: "100%", width: "100%" } as const;
 
-/** One catalogue row (§9.3), drawn as the kit's `MediaRow`; a tap opens the player (#340) or the
- * paywall (§9.4). */
 export function TrackRow({
 	track,
 	from,
@@ -28,7 +26,6 @@ export function TrackRow({
 }: {
 	track: TrackItem;
 	from: BrowseFrom;
-	/** Runs before the open, e.g. Browse search's tap analytics. */
 	onOpen?: () => void;
 }) {
 	const { open, locked } = useOpenTrack(from);

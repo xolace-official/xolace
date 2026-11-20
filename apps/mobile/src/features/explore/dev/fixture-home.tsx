@@ -1,8 +1,3 @@
-/**
- * Explore home on fixtures, through the same `{ state, actions }` as the app. A play button or a
- * ring plays and pauses on screen (no sound), Remove from here and Don't use my sessions here
- * take their shelf away, and a hold shows the preview; nothing reaches Convex.
- */
 import { Stack } from "expo-router";
 import { useState } from "react";
 import {
@@ -24,15 +19,11 @@ import type { DayPhase } from "@/lib/day-phase";
 type Options = {
 	phase?: DayPhase;
 	locked?: boolean;
-	/** A new member: nothing to pick up, no sessions to name. */
 	fresh?: boolean;
-	/** "Don't use my sessions here" is on. */
 	noSessions?: boolean;
 	loading?: boolean;
-	/** This slug is in the mini player, playing. */
 	playing?: string;
 	startPicked?: boolean;
-	/** Hold to hear turned on, with this cover heard. */
 	hearing?: string;
 };
 

@@ -5,7 +5,6 @@ import { BEAT_COLORS, css, STORY_COLORS } from "../first-run-palette";
 import { drawRun, type Run } from "../skia-words";
 import { type SEng, W, WE } from "./story-scene";
 
-/** Board `.hl`: 32 left, top 120, 34/41, display 720, −.028em, words .22em apart. */
 export const HL = {
 	gap: 0.22,
 	left: 32,
@@ -14,7 +13,6 @@ export const HL = {
 	top: 120,
 	track: -0.028,
 };
-/** Board `.big`: top 318, 104/110, display 780, −.05em, #F7D58C; it pops about 50% 60%. */
 export const BIG = {
 	lineH: 110,
 	originY: 0.6,
@@ -79,7 +77,6 @@ export function drawSentence(
 			color = css(mixRGB(BASE, LIT[i], lp), 1);
 			glowR = 16 * fl;
 			glow = css(HOT[i], 0.9 * fl);
-			// "You don't.": lit, then veiled. The asymmetry, said in type.
 			if (i === XO_BEAT && k === VEIL_GROUP) {
 				const vp = ease(seg(b, la + 600, la + 1200));
 				blur += 2.4 * vp;
@@ -95,7 +92,6 @@ export function drawSentence(
 	}
 }
 
-/** The week's count: the lit embers, settling with a 6% pop and a glow. */
 export function drawCount(
 	c: SkCanvas,
 	e: SEng,

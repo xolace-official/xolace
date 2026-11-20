@@ -29,11 +29,6 @@ import { ConversationIdentityProvider } from "./message-identity";
 import { OfflineStrip } from "./offline-strip";
 import { useThreadStreamStyle } from "./thread-theme";
 
-/**
- * The message surface: Stream's list and composer (sending, retry, read state, typing, reactions
- * and the long-press actions all stay Stream's), in the thread's look. Text only, the seven
- * reactions, no attachments, as production.
- */
 export function ThreadMessages({
 	conversation,
 	channel,
@@ -70,10 +65,8 @@ export function ThreadMessages({
 								placeholder: THREAD.placeholder(conversation.counterpartName),
 							}}
 							channel={channel}
-							// One reaction per person per message; picking another swaps it.
 							enforceUniqueReaction
 							hasCameraPicker={false}
-							// A messaging channel ships with giphy on by default.
 							hasCommands={false}
 							hasFilePicker={false}
 							hasImagePicker={false}

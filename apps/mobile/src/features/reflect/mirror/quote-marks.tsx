@@ -20,10 +20,8 @@ type Portion = {
 	prefix: string;
 	piece: string;
 };
-/** Wide enough that a measured run never wraps. */
 const MEASURE_W = 2000;
 
-/** Each pair's character range in your words. */
 function pairRanges(segs: readonly Seg[]) {
 	const out: { pair: number; a: number; b: number }[] = [];
 	let at = 0;
@@ -36,7 +34,6 @@ function pairRanges(segs: readonly Seg[]) {
 	return out;
 }
 
-/** For each pair, the part on each laid-out line, and what to measure for its x and width. */
 function portions(full: string, segs: readonly Seg[], lines: Line[]) {
 	const ranges = pairRanges(segs);
 	const out: Portion[] = [];
@@ -65,21 +62,10 @@ type Props = {
 	segs: readonly Seg[];
 	e: SharedValue<number>;
 	tl: Timeline;
-	/** The pairs of the tapped line, and a count per tap. */
 	flash: { pairs: readonly number[]; n: number };
 	flashColor: string;
 };
 
-/**
- * Your words with marker bands under the phrases the mirror borrowed (S8, pinch-to-summarize).
- * The phrases sit mid-paragraph, so:
- * 1. lay the paragraph out once on a hidden copy (`onTextLayout` gives its lines' text);
- * 2. find each phrase's line(s) from the lines' text;
- * 3. get its x and width by measuring, in one pass of hidden single-line texts, the line's text
- *    up to and through the phrase, and the phrase alone;
- * 4. draw one band per line segment under the text, growing left to right in its turn, as the
- *    phrase turns ink.
- */
 export function QuoteMarks({ segs, e, tl, flash, flashColor }: Props) {
 	const text = segs.map(([t]) => t).join("");
 	const [lines, setLines] = useState<Line[] | null>(null);

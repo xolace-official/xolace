@@ -20,10 +20,6 @@ import {
 	WEEK_BEAT,
 } from "./story-words-draw";
 
-/**
- * Every beat's sentence in one Skia canvas (ember-glow-story): words written in turn, rising out of
- * a blur, key words lit with a flash. Only the current beat and the one leaving are drawn.
- */
 export function StoryWords({
 	eng,
 	bold,

@@ -22,14 +22,10 @@ import { StageLine } from "./stage-line";
 
 const E = LAYOUT.enso;
 const W = COPY.wait;
-/** Stuck, it looks up at you (the composer's after-a-pause glance). */
 const GAZE_AT_YOU = { x: 0, y: -0.2 } as const;
-/** Board `.slow`: the card rises 10 pt in .4 s. */
 const CARD_IN = { ms: 400, rise: 10 } as const;
-/** The quality check runs on a session's first wait only; later waits keep its verdict. */
 let gateRan = false;
 
-/** The wait (board card 04, renders 04–06): your words at the top, the ensō painting, one line. */
 export function WaitStage() {
 	const { state, actions } = useReflect();
 	const { stage, waitStage, slow, offline, error } = state;
@@ -41,14 +37,12 @@ export function WaitStage() {
 	const { to, nod, look } = face;
 	const breath = useProcessingBreathHaptic();
 
-	// Keep waiting puts the slow card away until the next slow spell.
 	const [kept, setKept] = useState(false);
 	if (kept && !slow) {
 		setKept(false);
 	}
 	const stuck = (slow && !kept) || offline || error !== null;
 
-	// Production's error notice, once each time the send fails.
 	const failed = error !== null;
 	useEffect(() => {
 		if (failed) {
@@ -56,7 +50,6 @@ export function WaitStage() {
 		}
 	}, [failed]);
 
-	// The 2 s quality check on the first wait (S15): if frames run long, no bleed and no paper.
 	const gateLow = useQualityGate(!gateRan && live);
 	useEffect(() => {
 		if (live) {
@@ -67,12 +60,10 @@ export function WaitStage() {
 		}
 	}, [gateLow, live, setLow]);
 
-	// One slow processing breath on arrival, as production's processing state.
 	useEffect(() => {
 		breath();
 	}, [breath]);
 
-	// Stuck: production's `waiting`, looking at you; the circle closing: a nod.
 	useEffect(() => {
 		if (landed) {
 			to(PRESETS.nod);
@@ -89,7 +80,6 @@ export function WaitStage() {
 	let card: { body: string; primary: CardAction; secondary?: CardAction };
 	const startOver = { go: actions.startOver, label: W.startOver };
 	if (error !== null) {
-		// A retry would only meet the safeguard or the cap again, so those offer a way on instead.
 		const primary: Record<WaitError["kind"], CardAction> = {
 			failed: { go: actions.retry, label: W.tryAgain },
 			limit: { go: actions.seePlus, label: W.seePlus },

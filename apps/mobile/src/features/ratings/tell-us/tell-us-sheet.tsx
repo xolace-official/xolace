@@ -11,9 +11,7 @@ import { canSend, TELL_US_MAX } from "../ratings-model";
 import { useTellUsSheet } from "../tell-us-data";
 
 const BOTTOM = 34;
-/** Six lines of 23 pt, plus the field's own padding. */
 const FIELD_H = 166;
-/** The thank-you takes the form's place at the same height, so the sheet doesn't jump. */
 const BODY_H = 372;
 const THANKS_FADE = {
 	animate: { opacity: 1 },
@@ -55,10 +53,6 @@ function Thanks({ onDone }: { onDone: () => void }) {
 	);
 }
 
-/**
- * "Tell us" (canvas "Ratings Alive", the feedback sheet): a native form sheet in the app theme.
- * The note goes without the person's name: only its words are kept.
- */
 export function TellUsSheet() {
 	const { state, actions } = useTellUsSheet();
 	const insets = useSafeAreaInsets();

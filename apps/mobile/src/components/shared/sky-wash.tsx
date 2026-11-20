@@ -3,27 +3,16 @@ import { useBoardY } from "@/design/board";
 import { useScheme } from "@/design/scheme";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** Reflect's `.rsky` stops, by day and late. */
 const STOPS = { day: [0, 0.38, 0.62, 1], late: [0, 0.45, 1] } as const;
-/** Board points: the wash covers the top 300. */
 const HEIGHT = 300;
-/** Reflect's opacity by day; dusk is opaque. */
 const DAY_OPACITY = 0.6;
-/** On a dark theme the evening light is a faint wash, not a near-white glow. */
 const DARK_OPACITY = 0.14;
 
 type Props = {
-	/** The night window: dusk instead of the evening's last light. */
 	late: boolean;
-	/** The day wash's strength as a share of Reflect's (After a session: .38 / .6). Late stays opaque. */
 	scale?: number;
 };
 
-/**
- * The evening sky's last light over the top of the page (Reflect's `.rsky`):
- * Reflect, Sit with this, You're not alone and After a session draw it. Late,
- * the dusk sky, opaque.
- */
 export function SkyWash({ late, scale = 1 }: Props) {
 	const y = useBoardY();
 	const dark = useScheme() === "dark";

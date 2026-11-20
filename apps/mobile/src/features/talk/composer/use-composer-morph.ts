@@ -15,14 +15,11 @@ import {
 } from "../motion/talk-motion";
 import type { TalkMotion } from "../motion/use-talk-motion";
 
-/** Liquid Glass on iOS 26; elsewhere the composer keeps its translucent fill. */
 export const HAS_GLASS = isLiquidGlassAvailable();
-/** Once the box has landed, the glass fades in under the field over this. */
 const GLASS_MS = 220;
 export const ROUND = { borderRadius: LAYOUT.composerH / 2 } as const;
 const HAIRLINE = 0.5;
 
-/** How far the glass has taken over from the fill: after the morph, or at once reduced. */
 function glassIn(g: number, reduced: boolean) {
 	"worklet";
 	if (!HAS_GLASS) {
@@ -33,11 +30,6 @@ function glassIn(g: number, reduced: boolean) {
 		: seg(g, GO.morph, GLASS_MS);
 }
 
-/**
- * The Start button's morph into the composer (§6), on the start → talk timeline: the box
- * (place, size, corners, hairline, the entrance's last step and the press), its fill turning
- * to glass, the label going and the field arriving. All on the UI thread.
- */
 export function useComposerMorph({
 	geo,
 	motion,
@@ -52,7 +44,6 @@ export function useComposerMorph({
 	startTop: SharedValue<number>;
 	lift: SharedValue<number>;
 	pressed: SharedValue<number>;
-	/** The button's fill (ink, or the well when time is low) and the composer's glass colour. */
 	fill: string;
 	glass: string;
 }) {
@@ -63,7 +54,6 @@ export function useComposerMorph({
 		const m = reduced ? Number(g > half) : seg(g, 0, GO.morph, OUT_EASE);
 		const to = geo.composerTop - lift.get();
 		const from = startTop.get();
-		// The entrance cascade's last step (§2.8).
 		const i = motion.intro.get();
 		const inP = reduced
 			? seg(i, 0, GO.reduced)
@@ -89,8 +79,6 @@ export function useComposerMorph({
 			],
 		};
 	});
-	// The ink fill turns to the translucent glass colour as the box moves. On iOS 26 real
-	// glass takes over once the box has landed: a crossfade by opacity, never a colour into it.
 	const fillStyle = useAnimatedStyle(() => {
 		const g = motion.go.get();
 		const reduced = motion.reduced.get();

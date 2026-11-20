@@ -49,14 +49,11 @@ describe("store partialize", () => {
 		expect(persisted).toContain("libraryIntroSeen");
 	});
 
-	// The whole point of the cooldown is that a "no" survives a relaunch.
 	it("plus offer cadence state is persisted", () => {
 		const persisted = persistedKeys();
 		expect(persisted).toContain("plusOfferLastDismissedAt");
 		expect(persisted).toContain("plusOfferDismissalCount");
 		expect(persisted).toContain("plusOfferFullStopAt");
-		// "Never two sessions in a row" is only enforceable if the id survives a
-		// relaunch — the app is routinely closed between one session and the next.
 		expect(persisted).toContain("plusOfferShownSessionId");
 	});
 });
@@ -74,7 +71,6 @@ describe("account flags", () => {
 		expect(has("user_b", "findingCardDismissed")).toBe(false);
 	});
 
-	// A flag added after the per-account move has no device-wide stand-in.
 	it("the Telegram offer's Not now is kept per account", () => {
 		useAppStore.setState(noFlags);
 		useAppStore.getState().markAccountFlag("user_a", "telegramOfferDismissed");
@@ -130,7 +126,6 @@ describe("account flags", () => {
 		expect(has("user_b", "findingCardDismissed")).toBe(true);
 	});
 
-	// Unclaimed old marks have to survive too: the update can land while signed out.
 	it("flags and unclaimed old marks are persisted", () => {
 		expect(persistedKeys()).toEqual(
 			expect.arrayContaining(["accountFlags", "findingCardDismissed"])

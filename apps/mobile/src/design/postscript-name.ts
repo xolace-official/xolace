@@ -3,8 +3,6 @@
  * `useFonts` key. For the upright faces in src/design/font-pairs.ts the two
  * differ only in the weight part (`Figtree_700Bold` → `Figtree-Bold`); checked
  * against the font files (postscript-name.test.ts).
- *
- * @public For SwiftUI text in the redesign's screens (rolling numbers).
  */
 export function postScriptName(key: string): string {
 	if (key.includes("_Italic")) {

@@ -19,14 +19,8 @@ const SETS = TEXTURE_SET_IDS.map((id) => ({
 	id,
 	label: TEXTURE_SET_LABELS[id],
 }));
-/** The chips keep their height; past this their words would outgrow it. */
 const MAX_SCALE = 1.4;
 
-/**
- * "Or just tap what feels close" (production's texture band, S18d): four sets, up to four
- * words. A fifth tap says "Four is plenty". Picked words show as ember chips under the question
- * and go out with the text. `onUse` runs on every tap in the band.
- */
 export function TexturePicker({ onUse }: { onUse?: () => void }) {
 	const { state, actions } = useReflect();
 	const { set, picks } = state;
@@ -56,7 +50,6 @@ export function TexturePicker({ onUse }: { onUse?: () => void }) {
 							accessibilityLabel={word}
 							accessibilityRole="button"
 							accessibilityState={{ selected: on }}
-							// Production's texture band: at the cap the unpicked words dim to 35%.
 							className={cn(
 								"justify-center rounded-full border px-3.5",
 								on

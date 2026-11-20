@@ -17,7 +17,6 @@ import { HiddenGroup } from "./hidden-group";
 import { useLettersHubScreen } from "./hub-data";
 import { ReceivedRow } from "./received-row";
 
-/** The offer and the shelf leave and arrive in 240 ms (the board's). */
 const SWAP_MS = 240;
 const HIT = 10;
 
@@ -34,11 +33,6 @@ export function SectionLabel({ text }: { text: string }) {
 	);
 }
 
-/**
- * For you (handoff §1): the offer while it hasn't been answered; "off" with Turn on after Not now
- * (or the Settings switch); otherwise the unopened letter on its shelf, then the letters you've
- * opened, to reread, and Hidden · N at the foot.
- */
 export function ForYouSection() {
 	const { state, actions } = useLettersHubScreen();
 	const reduced = useEffectiveReducedMotion();
@@ -48,7 +42,6 @@ export function ForYouSection() {
 	const { optIn, unopenedId } = state.status;
 	const { reread, hidden } = forYouRows(state.received);
 	return (
-		// Nothing fades in as the screen opens: only what changes while it's up.
 		<LayoutAnimationConfig skipEntering>
 			<SectionLabel text={LETTERS.hub.forYou} />
 			{optIn === "unset" ? (
@@ -86,7 +79,6 @@ export function ForYouSection() {
 			) : null}
 			{optIn === "yes" ? (
 				<Animated.View entering={enter}>
-					{/* The shelf fades in alone when a letter arrives, not again with its section. */}
 					<LayoutAnimationConfig skipEntering>
 						{unopenedId ? (
 							<Animated.View entering={enter} exiting={exit}>

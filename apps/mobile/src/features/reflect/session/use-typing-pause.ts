@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
 
-/** A typing-inactivity timer that calls `onPause` after `delay` ms. */
-
 export function useTypingPause(onPause: () => void, delay = 8000) {
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

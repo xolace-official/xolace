@@ -19,11 +19,9 @@ import { REDUCED_FADE_MS } from "@/design/springs";
 import { cn } from "@/lib/cn";
 import { playErrorNotice } from "@/lib/haptics";
 
-/** What `ToastBridge` hands over: HeroUI's live manager and the reduced-motion choice. */
 type Presenter = { manager: ToastManager; reduced: boolean };
 export const toastChannel = createToastChannel<Presenter>();
 
-/** A subtle dot says the variant; the pill itself stays the same. */
 const DOT: Record<ToastVariant, string | null> = {
 	danger: "bg-danger",
 	default: null,
@@ -33,7 +31,6 @@ const DOT: Record<ToastVariant, string | null> = {
 
 const ACTION_HIT_SLOP = 8;
 
-/** Reduced motion: a short fade in place of the slide and spring, played as chosen. */
 const fade = (kind: typeof FadeIn | typeof FadeOut) =>
 	kind.duration(REDUCED_FADE_MS).reduceMotion(ReduceMotion.Never);
 const REDUCED_ANIMATION: ToastRootAnimation = {
@@ -41,15 +38,6 @@ const REDUCED_ANIMATION: ToastRootAnimation = {
 	exiting: { bottom: fade(FadeOut), top: fade(FadeOut) },
 };
 
-/**
- * The app's toast, on HeroUI Native's: `toast("Saved")` from a data hook, a
- * store or a timer. New code calls this, never heroui's `useToast` directly.
- * One at a time: a new toast replaces the last. HeroUI draws toasts in iOS's
- * FullWindowOverlay, so they show above native sheets. Sent before
- * `ToastBridge` mounts, it waits and shows once it does.
- *
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function toast(message: string, opts: ToastOptions = {}) {
 	toastChannel.send(({ manager, reduced }) => {
 		const variant = opts.variant ?? "default";
@@ -81,7 +69,6 @@ type PillProps = ToastComponentProps & {
 	animation: ToastRootAnimation | undefined;
 };
 
-/** The ink colour as the fill, the page colour as the text, 8 pt under the safe area. */
 function Pill({ message, opts, variant, animation, ...props }: PillProps) {
 	const dot = DOT[variant];
 	const tall = Boolean(opts.description || opts.action);

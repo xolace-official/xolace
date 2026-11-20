@@ -1,7 +1,6 @@
 import { useConvex } from "convex/react";
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
-/** How long the socket must stay down before the wait says offline. */
 const OFFLINE_GRACE_MS = 1500;
 
 /**

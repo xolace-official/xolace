@@ -16,10 +16,6 @@ const SLOT_OPTIONS = DAILY_QUOTE_SLOTS.map((id) => ({
 	label: C.dailyQuoteSlots[id],
 }));
 
-/**
- * The daily quote push (B19): a switch, and while it's on, when in the day it comes. Says so when
- * the backoff paused it after quotes went unopened.
- */
 export function DailyQuoteSection() {
 	const { state, actions } = useNotificationsScreen();
 	const { dailyQuote } = state;

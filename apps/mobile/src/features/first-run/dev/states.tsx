@@ -1,18 +1,13 @@
-/** First run on fixtures: `xolace://dev/first-run/<id>`. Ages are ms; held states stand still. */
-
 import type { ComponentProps } from "react";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureFirstRun } from "@/features/first-run/dev/fixture-first-run";
 
-/** First run draws its own screen, edge to edge. */
 const OPTIONS = { headerShown: false };
 const show = (props: ComponentProps<typeof FixtureFirstRun>) => () => (
 	<FixtureFirstRun {...props} />
 );
-/** Story beat `i` held at `at` ms. */
 const beat = (i: number, at: number) =>
 	show({ scene: { story: { at, beat: i } }, start: "story" });
-/** The seat with a sign-in held at `aa` ms on the board's clock (1100 back, 1800 seated). */
 const signing = (auth: "apple" | "google", aa: number) =>
 	show({ scene: { story: { aa, at: 1500, auth } }, start: "seat" });
 

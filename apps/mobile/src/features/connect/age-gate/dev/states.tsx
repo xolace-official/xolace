@@ -1,4 +1,3 @@
-/** The age gate's sheet on fixtures: `xolace://dev/connect/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureAgeGate } from "./fixture-age-gate";
 

@@ -11,8 +11,6 @@ import { EXS } from "@/features/explore/explore-style";
 
 const R = EXS.row;
 
-/** Loading rows in the row's own shape and the shared look: the 52 pt cover, a title and its meta.
- * Breathes on its own; `bare` leaves that to a section that already breathes (Explore home). */
 export function RowsSkeleton({
 	count = 6,
 	bare,

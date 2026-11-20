@@ -10,12 +10,10 @@ type Props = {
 	placeholders: readonly string[];
 	running: boolean;
 	reduced: boolean;
-	/** Where the field and the mic sit, for VoiceOver's copy of the card. */
 	onInput: (frame: Frame) => void;
 	onMic: (frame: Frame) => void;
 };
 
-/** The card's field (board `.field`): 56 tall, radius 22, the well colour, a 42 pt ink mic. */
 export function CardField({
 	placeholders,
 	running,

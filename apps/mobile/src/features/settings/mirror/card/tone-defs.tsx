@@ -41,13 +41,11 @@ const TOKENS = [
 type Token = (typeof TOKENS)[number];
 export type Palette = Record<Token, string>;
 
-/** The card's colours, read once for all five layers. */
 export function usePalette(): Palette {
 	const values = useTokenColors(TOKENS);
 	return Object.fromEntries(TOKENS.map((t, i) => [t, values[i]])) as Palette;
 }
 
-/** A CSS angle as an SVG gradient line across the bounding box. */
 function line(deg: number) {
 	const r = (deg * Math.PI) / 180;
 	const dx = Math.sin(r) / 2;
@@ -87,10 +85,6 @@ export const fill = (id: string) => (
 
 type Lit = Exclude<MirrorTone, "direct">;
 
-/**
- * Each light: a linear a → b → c at a CSS angle (b at `mid`), and a radial glow (centre and
- * radii as fractions of the card) whose stops are [offset, token, opacity].
- */
 const LIGHTS: Record<
 	Lit,
 	{
@@ -139,11 +133,9 @@ const LIGHTS: Record<
 	},
 };
 
-/** Adaptive's stripes sit in a band across the middle, faded by a mask at its ends. */
 const STRIPE_MID = 127;
 const STRIPE_HALF = 23;
 
-/** The light's gradients: `mt-<tone>-l` (the linear) and `mt-<tone>-r` (the glow). */
 export function ArtDefs({ tone, h, c }: { tone: Lit; h: number; c: Palette }) {
 	const l = LIGHTS[tone];
 	const ink = c["on-art"];

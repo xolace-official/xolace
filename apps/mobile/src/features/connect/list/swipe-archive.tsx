@@ -16,10 +16,6 @@ const ARCHIVE = { android: "archive", ios: "archivebox" } as const;
 const UNARCHIVE = { android: "unarchive", ios: "tray.and.arrow.up" } as const;
 const ACTION_WIDTH = 88;
 
-/**
- * Production's trailing swipe: archive on Connect, unarchive on Archived. Releasing past half
- * the action commits; rightward drags never start, so the stack's back swipe stays free.
- */
 export function SwipeArchive({
 	row,
 	actions,
@@ -60,7 +56,6 @@ export function SwipeArchive({
 			overshootRight={false}
 			ref={swipeable}
 			renderRightActions={() => (
-				// The row carries this as an accessibility action.
 				<View
 					accessibilityElementsHidden
 					importantForAccessibility="no-hide-descendants"

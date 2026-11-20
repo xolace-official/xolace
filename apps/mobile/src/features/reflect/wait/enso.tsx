@@ -18,17 +18,13 @@ import { INK_SKSL } from "./enso-shader";
 import { type EnsoMode, useEnsoInk } from "./use-enso-ink";
 
 const inkEffect = Skia.RuntimeEffect.Make(INK_SKSL);
-/** Room around the circle for the bleed. */
 const PAD = 16;
-/** Board `.dry`: the dotted dry-brush guide, 3.5 pt outside the ink's centreline. */
 const DRY = { dash: [5, 10.8], out: 3.5, width: 2.2 };
-/** Board `.blot`: where the brush lands, r 8.5, at .95. */
 const BLOT = { opacity: 0.95, r: 8.5 };
 
 type Props = {
 	size: number;
 	mode: EnsoMode;
-	/** The answer arrived: the circle closes in .42 s and bleeds. */
 	landed: boolean;
 	running: boolean;
 	reduced: boolean;
@@ -36,24 +32,15 @@ type Props = {
 	late: boolean;
 	face?: FaceHandle | null;
 	faceSize: number;
-	/** The face's eyes follow the brush (the wait, not slow or offline). */
 	follow: boolean;
-	/** Heard: bleed once, starting this many ms in, over this long. */
 	bleedOnce?: { delayMs: number; ms: number };
 };
 
-/** A colour string as the shader's `inkColor`: 0–1 RGB. */
 function rgbOf(color: string): number[] {
 	const c = Skia.Color(color);
 	return [c[0], c[1], c[2]];
 }
 
-/**
- * The ensō (S5, native-cook brush-ink-splash): one Vertices mesh through the ink shader, on
- * paper baked once. Only `head` changes per frame while it paints (`useEnsoInk`). The face sits
- * inside, in this same canvas, its eyes on the brush. Decorative: the stage line says what it
- * means.
- */
 export function Enso({
 	size,
 	mode,
@@ -123,7 +110,6 @@ export function Enso({
 						<DashPathEffect intervals={DRY.dash} />
 					</Path>
 				)}
-				{/* Under the stroke, so the ink's own texture lies over the landing blot. */}
 				{closed ? null : (
 					<Circle
 						color={ink}

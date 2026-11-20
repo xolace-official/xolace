@@ -28,14 +28,9 @@ const ICON = {
 	heart: { android: "favorite_border", ios: "heart" },
 	heartOn: { android: "favorite", ios: "heart.fill" },
 } as const;
-/** The sheet's side padding, either side. */
 const SHEET_PAD = 48;
 const NEXT_RATIO = 0.75;
 
-/**
- * Attribution straight after the body (#469): an adapted read's View sources, then the licence
- * lines. `onLayout` marks the end of the article.
- */
 export function Credits({
 	onLayout,
 }: {
@@ -76,10 +71,6 @@ export function Credits({
 	);
 }
 
-/**
- * The end of a read (production's `EndOfRead`): Finished once the dwell has run (never a button),
- * This helped, the helped count once 15 say so, then Up next.
- */
 export function EndOfRead() {
 	const { state, actions } = useReaderScreen();
 	const { width } = useWindowDimensions();

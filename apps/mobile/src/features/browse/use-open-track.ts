@@ -6,11 +6,8 @@ import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/lib/haptics";
 import type { BrowseFrom } from "@/lib/now-playing/now-playing-store";
 
-// Where a play was reached from: it lives with the now-playing track (`browse_track_played`).
 export type { BrowseFrom };
 
-/** The tap every catalogue surface shares: Plus goes to the player, free gets the paywall
- * (§9.4). Never carries a `stepId`, so nothing opened here tends a twig (§9.6). */
 export function useOpenTrack(from: BrowseFrom) {
 	const posthog = usePostHog();
 	const { isPlus, isLoading } = usePlusEntitlement();

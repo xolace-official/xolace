@@ -1,10 +1,8 @@
-/** Intake's Xolace+ first look on fixtures: `xolace://dev/intake/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { saidWords } from "../first-look-model";
 import { FixtureFirstLook } from "./fixture-first-look";
 import { NO_PLANS, OFFERS_USED, TRIAL_ONLY } from "./sample-plans";
 
-/** Intake's routes have no header. */
 const OPTIONS = { headerShown: false };
 const LONG =
 	"I keep going over the same conversation with my sister and I can't stop replaying it";

@@ -1,4 +1,3 @@
-/** After a session on fixtures: `xolace://dev/session-end/<id>`, one per board render. */
 import type { DevState } from "@/dev/dev-state";
 import {
 	InsightsUpsell,
@@ -17,9 +16,7 @@ import {
 } from "./fixtures";
 import { LetterWaiting, LetterWrite } from "./letter-screen";
 
-/** The real route draws its own chrome: no header, no swipe back. */
 const OPTIONS = { gestureEnabled: false, headerShown: false };
-/** Thumb positions: much lighter, much heavier, "heavier" (step −3), a little lighter. */
 const LIGHTEST = 1;
 const HEAVIEST = 0;
 const HEAVIER = 0.2;

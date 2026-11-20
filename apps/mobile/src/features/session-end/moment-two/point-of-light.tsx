@@ -11,7 +11,6 @@ const SIZE = 11;
 const SAMPLES = 48;
 const TABLE = 96;
 
-/** Board `fly`: scale .2 → 1.15 (12%) → .8 (88%) → .7, α 0 → 1 → 1 → 0, each leg on the path's curve. */
 const KEYS = [0, 0.12, 0.88, 1] as const;
 const SCALE = [0.2, 1.15, 0.8, 0.7] as const;
 const ALPHA = [0, 1, 1, 0] as const;
@@ -27,7 +26,6 @@ function keyed(u: number, values: readonly number[]) {
 	return values[values.length - 1];
 }
 
-/** The cubic's points at even arc length (CSS `offset-distance` runs along the length, not the parameter). */
 function evenTable(p0: Pt, p1: Pt, p2: Pt, p3: Pt): Pt[] {
 	const pts: Pt[] = [];
 	const dist: number[] = [];
@@ -71,21 +69,13 @@ function evenTable(p0: Pt, p1: Pt, p2: Pt, p3: Pt): Pt[] {
 }
 
 type Props = {
-	/** Board → device. */
 	ox: number;
 	y: (v: number) => number;
-	/** Where the quote's middle is on the device (the path starts there, not at a fixed y). */
 	startY: number;
 	colors: SessionColors;
 	cs: SharedValue<number>;
 };
 
-/**
- * Board `.fl2`: the point of light, from your words up to the empty place, along
- * `M195 352 C140 300, 250 230, 195 158` over 1.15 s after .38 s (cubic-bezier(.45, 0, .25, 1)). One
- * 11 pt view whose position Reanimated computes on the UI thread from an even-length table; no Skia
- * picture. The path's first control point moves with its start. Not under Reduce Motion.
- */
 export function PointOfLight({ ox, y, startY, colors, cs }: Props) {
 	const d = startY - y(352);
 	const table = evenTable(

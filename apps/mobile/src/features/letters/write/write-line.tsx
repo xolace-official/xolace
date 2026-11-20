@@ -2,10 +2,6 @@ import { useState } from "react";
 import { AppText } from "@/components/shared/app-text";
 import { Fade } from "../fade";
 
-/**
- * The check's one line (fixable, held, not English), above For on the ember wash. It fades in as
- * the letter unfolds and is read out; VoiceOver hears it at once.
- */
 export function WriteLine({
 	line,
 	reduced,
@@ -13,7 +9,6 @@ export function WriteLine({
 	line: string | null;
 	reduced: boolean;
 }) {
-	// The last line stays drawn while it fades out.
 	const [last, setLast] = useState(line);
 	if (line !== null && line !== last) {
 		setLast(line);

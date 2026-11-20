@@ -21,19 +21,12 @@ import { OnceShown } from "@/features/achievements/arrival/once-shown";
 import { COPY } from "@/features/achievements/copy";
 import { easeOut, seg } from "@/features/achievements/motion-math";
 
-/** The board's tops (844 pt phone), before the lift. */
 const TOP = { count: 404, label: 494, line: 524 } as const;
-/** After Next it steps aside: down 24 pt as it fades. */
 const OUT_Y = 24;
 const LABEL_IN = 350;
 const LINE_IN = 400;
 const LINE_RISE = 10;
 
-/**
- * The milestone (§3): Flux by the fire, the glow, the count rolling over with a
- * ring of sparks, the line, the lift, the week lighting day by day, the earned
- * freeze. Transforms and opacity only.
- */
 export function Milestone({
 	eng,
 	geo,
@@ -50,7 +43,6 @@ export function Milestone({
 	milestone: MilestoneModel;
 }) {
 	const top = (y: number) => ({ top: y + geo.dy });
-	// The lift makes room for the cards under the line; with neither, it stays put.
 	const lifts = milestone.week !== null || milestone.freeze !== null;
 	const out = useAnimatedStyle(() => {
 		const o = outAt(eng.get());
@@ -122,7 +114,6 @@ export function Milestone({
 						</AppText>
 					</Animated.View>
 				</Animated.View>
-				{/* Only what the server has said: no card stands in for a guess. */}
 				{milestone.week ? (
 					<Week
 						dark={dark}

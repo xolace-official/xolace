@@ -22,10 +22,6 @@ import { useQuotesScreen } from "./quotes-screen-data";
 import { QuoteSheets } from "./sheets/quote-sheets";
 import { QuoteStage } from "./stage/quote-stage";
 
-/**
- * Quotes (S11, handoff `quotes.md`): today's quote full screen over a background you choose, with
- * Write back, Resonate (free), Keep (Xolace+), Share (an image) and Words you kept.
- */
 export function QuotesScreen() {
 	const value = useQuotesScreen();
 	const { state } = value;
@@ -33,7 +29,6 @@ export function QuotesScreen() {
 		...QUOTE_UI_DEFAULTS,
 		...state.initialUi,
 	}));
-	// Every open starts clean (or on a dev state's view), before the first paint.
 	useLayoutEffect(() => {
 		useQuoteUi.setState(initial);
 	}, [initial]);

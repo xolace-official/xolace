@@ -16,7 +16,6 @@ import { COPY } from "@/features/achievements/copy";
 const UNDER_BAR = -4;
 const FOOT = 26;
 
-/** The large title, the sparks card, the five category rows and the freeze card. */
 export function BadgesList({
 	scroll,
 	y,

@@ -1,7 +1,3 @@
-// Browse home with search (#549). Explore's home stays mounted under the results so
-// clearing restores it. Sections rank on their own (#550), show a few with See
-// all (#551); a crisis-term query gets Need someone now?; analytics carry only shape (#552).
-
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router, Stack } from "expo-router";
@@ -42,8 +38,6 @@ function Section<T>({
 	row,
 }: {
 	section: SearchSection;
-	/** Undefined while the rows are held from the last query: See all would open different
-	 * words. */
 	query: string | undefined;
 	items: T[];
 	row: (item: T, onOpen: () => void) => ReactNode;
@@ -69,10 +63,8 @@ function Section<T>({
 function SearchResults({ query }: { query: string }) {
 	const playerInset = useMiniPlayerInset();
 	const args = query ? { query } : "skip";
-	// Holds the last results while the next keystroke's load.
 	const lantern = useStableQuery(api.library.search.searchEntries, args);
 	const catalogue = useStableQuery(api.library.search.searchCatalogue, args);
-	// The same subscriptions, unheld: analytics count only this query's results.
 	const freshLantern = useQuery(api.library.search.searchEntries, args);
 	const freshCatalogue = useQuery(api.library.search.searchCatalogue, args);
 	useSearchShape(
@@ -146,11 +138,9 @@ function SearchResults({ query }: { query: string }) {
 	);
 }
 
-/** The search field over Explore's home (`children`), which stays mounted under the results. */
 export function BrowseHome({ children }: { children: ReactNode }) {
 	const [text, setText] = useState("");
 	const searching = text.trim() !== "";
-	// A clear lands at once, so a quick retype can't flash the old query's results.
 	const query = useDebounce(text.trim(), searching ? DEBOUNCE_MS : 0);
 
 	return (

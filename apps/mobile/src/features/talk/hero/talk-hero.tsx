@@ -18,10 +18,8 @@ import { LookCarouselView } from "./look-carousel";
 import type { StageFrame } from "./stage-frame";
 import type { LookCarousel } from "./use-look-carousel";
 
-/** The carousel's top before the start screen has measured it. */
 export const UNMEASURED = -100_000;
 
-/** The keyframe holds the face fully opaque until 78% of the flight to the pill. */
 const PILL_FADE_FROM = 0.78;
 
 type Props = {
@@ -29,20 +27,13 @@ type Props = {
 	motion: TalkMotion;
 	frame: StageFrame;
 	carousel: LookCarousel;
-	/** The carousel's top on screen (its place in the start screen, less any scroll). */
 	carTop: SharedValue<number>;
 	face: number;
 	index: number;
 	hero: FaceHandle;
-	/** Before the talk only: the carousel is one adjustable control. */
 	before: boolean;
 };
 
-/**
- * The face that persists across the whole screen (handoff §6): the carousel's centred face
- * on the start screen, the same face grown into the Companion stage, or flown into the title
- * pill. It is one element moved by one shared transform; it never remounts.
- */
 export function TalkHero({
 	geo,
 	motion,
@@ -65,14 +56,12 @@ export function TalkHero({
 		const from = top + height / 2;
 		const stage = frame.get();
 		const stageScale = (LAYOUT.stageFace / face) * stage.scale;
-		// The entrance cascade's second step (§2.8).
 		const i = motion.intro.get();
 		const inP = motion.reduced.get()
 			? seg(i, 0, GO.reduced)
 			: seg(i, INTRO.gap, INTRO.length, ENTER_EASE);
 		const rise = { translateY: INTRO.rise * (1 - inP) };
 		if (motion.reduced.get()) {
-			// Cross-fade in place: out at the carousel, in at the stage. The face doesn't travel.
 			const half = GO.reduced / 2;
 			const there = t > half;
 			return {

@@ -13,13 +13,11 @@ import { EASE } from "../peers-ease";
 import { CHIP, LAYOUT } from "../peers-look";
 
 const L = LAYOUT.chip;
-/** ember-charge's `beat()`: one lub-dub over 430 ms, 1 → 1.12 → 1 → 1.07 → 1. */
 const BEAT = {
 	dub: 0.07,
 	lub: 0.12,
 	steps: [90, 200, 270],
 } as const;
-/** The core fills from a third of its size (`.gly::after` .35 → 1). */
 const CORE_FROM = 0.35;
 
 function beat(ms: number): number {
@@ -45,19 +43,12 @@ function beat(ms: number): number {
 
 type Props = {
 	on: boolean;
-	/** Bumped on every turn-on, so the ember beats once per press. */
 	presses: number;
 	reduced: boolean;
 	colors: PeersColors;
-	/** The chip's light, 0 → 1: the warm ring follows it. */
 	lit: SharedValue<number>;
 };
 
-/**
- * The chip's round ember (board `.gly`): a 1.6 pt ink-3 ring; lit, the ring
- * warms with its glow and the core fills (.35 → 1), then beats once 80 ms after
- * the press. No heart. Reduce Motion: a 200 ms cross-fade, no beat.
- */
 export function EmberGlyph({ on, presses, reduced, colors, lit }: Props) {
 	const [ring, glow] = colors.glyph;
 	const [c0, c1, c2] = colors.ember;

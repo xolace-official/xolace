@@ -33,17 +33,13 @@ const CHEVRON_EASE = Easing.bezier(0.23, 1, 0.32, 1);
 
 export type RowProps = {
 	plus: boolean;
-	/** Free, and the store agrees: the locked card opens. */
 	doors: boolean;
 	now: Date;
-	/** The row open in place (Xolace+). */
 	open: Domain | null;
 	onTap: (part: PartView) => void;
 	onKindling: () => void;
 };
 
-/** One part: its icon, name and line, the number and change (Xolace+), the meter; a Xolace+
- * row opens in place to its usual, what Xolace noticed and the kindling. */
 export function Row({
 	part,
 	plus,

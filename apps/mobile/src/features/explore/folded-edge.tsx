@@ -15,7 +15,6 @@ import { EX_TIMING } from "@/features/explore/explore-style";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** Solid to the bar's bottom, then fading out this far below (the board's `.top .edge`). */
 const EDGE_FADE = 24;
 
 /**
@@ -61,15 +60,9 @@ export function FoldedEdge({
 	);
 }
 
-/** Content has scrolled a little under a small-title bar. */
 const FOLD_AT = 2;
-/** iOS 26's small-title bar is 54 tall (the scroll view's real inset is safe area + 54). */
 const SMALL_BAR = 54;
 
-/**
- * For screens with automatic insets: folded once the content moves past its resting offset. The
- * bar's bottom comes from the scroll view's own top inset, so the band ends exactly at the bar.
- */
 export function useSmallBarFold(safeTop: number) {
 	const [folded, setFolded] = useState(false);
 	const [barBottom, setBarBottom] = useState(safeTop + SMALL_BAR);

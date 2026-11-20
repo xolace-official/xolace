@@ -11,7 +11,6 @@ import { loopProps } from "./ease-loops";
 
 vi.mock("react-native-reanimated", () => import("./testing/reanimated-stub"));
 vi.mock("react-native-ease/uniwind", () => ({ EaseView: () => null }));
-// usePhasedBreath's only hook is useState: a first render is its initial state.
 vi.mock("react", () => ({
 	useState: (init: unknown) => [
 		typeof init === "function" ? init() : init,
@@ -40,12 +39,10 @@ describe("phased breath", () => {
 			u: 0.5,
 		});
 		expect(breathPhase(1000, 750)).toMatchObject({ rising: false, u: 0.5 });
-		// A phase past the period, or negative, wraps.
 		expect(breathPhase(1000, 1250)).toEqual(breathPhase(1000, 250));
 		expect(breathPhase(1000, -250)).toEqual(breathPhase(1000, 750));
 	});
 
-	// The bezier's y(x), with x handles at ⅓ and ⅔, is a cubic in time; compare it with the cosine.
 	const hermite = ([, y1, , y2]: number[], x: number) =>
 		3 * (1 - x) ** 2 * x * (y1 ?? 0) +
 		3 * (1 - x) * x ** 2 * (y2 ?? 1) +

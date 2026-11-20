@@ -1,4 +1,3 @@
-/** Quotes on fixtures: `xolace://dev/quotes/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureScreen } from "@/features/quotes/dev/fixture-screen";
 import { fixtureState, QUOTES } from "@/features/quotes/dev/fixtures";
@@ -6,12 +5,10 @@ import type { QuoteUi } from "@/features/quotes/motion/quote-ui";
 import { reasonLine } from "@/features/quotes/quotes-model";
 import type { QuotesState } from "@/features/quotes/quotes-screen-data";
 
-/** The real route draws its own chrome. */
 const OPTIONS = { headerShown: false };
 const FREE = { isPlus: false };
 const REPLY = "Slower today, and that's fine.";
 
-/** One state: the background it's on, what the fixture changes, and the view it opens on. */
 const state = (
 	title: string,
 	key: string,

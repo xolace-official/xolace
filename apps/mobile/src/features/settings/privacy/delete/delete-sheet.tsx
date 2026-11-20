@@ -23,7 +23,6 @@ function Item({ text, goes }: { text: string; goes: boolean }) {
 	);
 }
 
-/** "Goes" or "Stays": a heading over its items, read as one list. */
 function List({
 	title,
 	items,
@@ -56,10 +55,6 @@ function List({
 	);
 }
 
-/**
- * The delete sheet (board `.sh`), a native form sheet fitting its content: what goes, what stays,
- * a red button and an easy way out.
- */
 export function DeleteSheetScreen() {
 	const { state, actions } = useDeleteSheetScreen();
 	const sheet = deleteSheet(

@@ -19,11 +19,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * The title writes itself in (board `.ttl .tw` `glA`): gleam words on the
- * arrival's own value, .7 s each, .16 s apart from 120 ms; Bricolage 800 30/32,
- * centred. The sub fades in .5 s after .5 s.
- */
 export function PeersTitle({ rows, sub, arrive, reduced }: Props) {
 	const subStyle = useAnimatedStyle(() => {
 		const e = arrive.get() - T.title - (reduced ? 0 : MOTION.subDelay);

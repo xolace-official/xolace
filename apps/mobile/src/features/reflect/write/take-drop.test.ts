@@ -15,7 +15,6 @@ const idle = (live: boolean): TakeInput => ({
 	text: BEFORE,
 });
 
-/** Runs a take through each render's input, the way the hook does. */
 function run(inputs: TakeInput[]): Take[] {
 	const [first, ...rest] = inputs as [TakeInput, ...TakeInput[]];
 	const takes = [firstTake(first)];

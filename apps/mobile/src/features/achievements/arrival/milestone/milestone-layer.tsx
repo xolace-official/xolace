@@ -14,15 +14,9 @@ import {
 } from "@/features/achievements/arrival/arrival-motion";
 import { Milestone } from "@/features/achievements/arrival/milestone/milestone";
 
-/** Flux's box on the board (204 wide, from 128 to 400), where a tap puffs embers once it's lifted. */
 const FLUX_HIT = { bottom: 400, halfW: 102, top: 128 } as const;
 const TAP_SLOP = 10;
 
-/**
- * The milestone (arrivals §3), one VoiceOver element. Its taps: before 4.2 s a
- * tap anywhere jumps to the settled state; after it, a tap on Flux puffs embers
- * from the fire.
- */
 export function MilestoneLayer({
 	eng,
 	geo,
@@ -39,16 +33,13 @@ export function MilestoneLayer({
 	geo: Geo;
 	dark: boolean;
 	rm: boolean;
-	/** Staged in the host, not yet started. */
 	hidden: boolean;
-	/** The milestone is the phase on screen (not yet Next). */
 	on: boolean;
 	label: string;
 	milestone: MilestoneModel;
 	wake: () => void;
 	ref?: Ref<ViewInstance>;
 }) {
-	// Where Flux is once it has lifted (or not, with no cards to make room for).
 	const lift = milestone.week !== null || milestone.freeze !== null ? LIFT : 0;
 	const tap = Gesture.Tap()
 		.maxDistance(TAP_SLOP)

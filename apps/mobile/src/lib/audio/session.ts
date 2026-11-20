@@ -9,19 +9,14 @@ export const AUDIO_SESSION = {
 	shouldPlayInBackground: true,
 } as const;
 
-/** Who is audible: a per-hook identity (its ref object) and how to silence it. */
 type Focus = { owner: RefObject<unknown>; pause: () => void };
 let active: Focus | null = null;
-// Bumps whenever focus changes hands, so a play queued before an await can
-// tell that another source spoke up in the meantime.
 let epoch = 0;
 
 export const audioFocusEpoch = () => epoch;
 export const holdsAudioFocus = (owner: RefObject<unknown>) =>
 	active?.owner === owner;
 
-/** One sound at a time (S4): the claimant pauses whoever held focus. `owner` is the hook's ref
- * object, stable across re-mints. */
 export function claimAudioFocus(owner: RefObject<unknown>, pause: () => void) {
 	if (active?.owner !== owner) {
 		epoch++;
@@ -36,15 +31,12 @@ export function claimAudioFocus(owner: RefObject<unknown>, pause: () => void) {
 	active = { owner, pause };
 }
 
-/** A hook going away drops focus it still holds, so nobody later pauses a released player. No
- * epoch bump. */
 export function releaseAudioFocus(owner: RefObject<unknown>) {
 	if (active?.owner === owner) {
 		active = null;
 	}
 }
 
-/** Recorders: silence whatever is playing without taking focus themselves. */
 export function yieldAudioFocus() {
 	try {
 		active?.pause();
@@ -55,7 +47,6 @@ export function yieldAudioFocus() {
 	epoch++;
 }
 
-/** Every in-app player calls this right before `play()`. */
 export function claimAudioSession(
 	owner: RefObject<unknown>,
 	pause: () => void
@@ -64,16 +55,12 @@ export function claimAudioSession(
 	return setAudioModeAsync(AUDIO_SESSION);
 }
 
-/** Quotes' ambient sound (S11): under whatever else plays, silent with the ring/silent switch,
- * never in the background. */
 const AMBIENT_SESSION = {
 	interruptionMode: "mixWithOthers",
 	playsInSilentMode: false,
 	shouldPlayInBackground: false,
 } as const;
 
-/** An ambient player calls this right before `play()`: it takes focus like any other sound (so a
- * meditation or a voice note that starts later pauses it) but mixes with other apps' audio. */
 export function claimAmbientSession(
 	owner: RefObject<unknown>,
 	pause: () => void

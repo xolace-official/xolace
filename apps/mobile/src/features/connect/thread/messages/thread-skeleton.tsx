@@ -1,8 +1,6 @@
 import { Bone, SkeletonBreath } from "@/components/shared/skeleton";
 import { THREAD } from "../copy";
 
-/** Stands in for the message list in the shared look: bottom-anchored and bubble-shaped (22 pt,
- * the bubbles' radius) so real messages land without a reflow. */
 export function ThreadSkeleton() {
 	return (
 		<SkeletonBreath

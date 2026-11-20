@@ -6,7 +6,6 @@ import type { LetterReader } from "./read-data";
 
 const OPENS: LetterReader["state"]["opens"] = { undo: null };
 
-/** The reader on the letters data module. */
 export function useReader(id: string): LetterReader {
 	const letter = useReceivedLetter(id);
 	const calls = useLettersCalls();
@@ -20,7 +19,6 @@ export function useReader(id: string): LetterReader {
 					() => true,
 					(error: unknown) => {
 						report(error);
-						// The letter seals again; the reader puts VoiceOver back on Open.
 						toast(LETTERS.read.openFailed);
 						return false;
 					}

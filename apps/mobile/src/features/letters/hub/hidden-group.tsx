@@ -21,10 +21,6 @@ import { ReceivedRow } from "./received-row";
 const MS = LETTER_MOTION.starters.fadeMs;
 const CLOSED_TURN = -90;
 
-/**
- * Hidden · N at the foot of For you (handoff §1, render 35): hidden letters aren't deleted. It
- * expands in place, as Archived in Chats does; the rows fade in, 200 ms.
- */
 export function HiddenGroup({
 	letters,
 	startOpen,
@@ -75,7 +71,6 @@ export function HiddenGroup({
 					/>
 				</Animated.View>
 			</PressScale>
-			{/* Open as the screen opens (dev state): the rows are there, not fading in. */}
 			<LayoutAnimationConfig skipEntering>
 				{open
 					? letters.map((l) => (

@@ -1,13 +1,7 @@
 import { useCSSVariable } from "uniwind";
 
-/** Day, or the night window's late light. */
 type Tone = "day" | "late";
 
-/**
- * The fixed light this screen draws with (`--color-peers-*` in global.css, the
- * board's `COL`, `YOUC`, `.pl`, `.chip`, `.cd .lit`, `.cw .edge` and `.nx i`),
- * by tone, each a token name. The day stars and the edge are the Flux spectrum.
- */
 const NAMES = {
 	day: {
 		chip: ["peers-chip", "peers-chip-edge", "peers-chip-shadow"],
@@ -42,9 +36,7 @@ const NAMES = {
 	},
 } as const;
 
-/** Shared by both tones. */
 const COMMON = {
-	/** The ring None yet sends out (the Flux spectrum's peach). */
 	alone: "peach",
 	cardShadow: "peers-card-shadow",
 } as const;
@@ -56,11 +48,6 @@ export type PeersColors = Shape<(typeof NAMES)["day"]> & Shape<typeof COMMON>;
 
 const FALLBACK = "transparent";
 
-/**
- * Every colour of one tone, read once from the theme's CSS variables. The board
- * has no dark theme by day: there the lit chip takes the dusk wash, since the
- * day's near-white chip would put its light label on white.
- */
 export function usePeersColors(late: boolean, dark: boolean): PeersColors {
 	const table = {
 		...NAMES[late ? "late" : "day"],
@@ -83,7 +70,6 @@ export function usePeersColors(late: boolean, dark: boolean): PeersColors {
 	return out as PeersColors;
 }
 
-/** `#rrggbb` + α → `rgba(…)` (Skia gradients fading a token to clear). */
 export function withAlpha(color: string, alpha: number): string {
 	const hex = color.match(/^#([0-9a-f]{6})$/i);
 	if (!hex) {

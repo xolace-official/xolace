@@ -1,9 +1,3 @@
-/**
- * Everything Talk says (handoff `talk.md` §2–§4, §9): the start screen, its two sheets,
- * and the talk. The companion goes by the space name, so lines that name it take it.
- * What's kept is production's consent card, word for word (`PRIVACY_LINE` is rule 12:
- * literally true when it ships).
- */
 import { TALK_TIME_RESETS } from "@/lib/talk/talk-time";
 
 export const TALK_COPY = {
@@ -83,7 +77,6 @@ export const TALK_COPY = {
 		pace: "Pace",
 		paceLabel: (pace: string, directness: string) =>
 			`Pace ${pace}, Directness ${directness}`,
-		/** Under the weekly minimum, on the button. */
 		resets: TALK_TIME_RESETS,
 		sub: "Speak or type. When you finish, the talk becomes your mirror.",
 		title: (name: string) => `Talk it through\nwith ${name}`,

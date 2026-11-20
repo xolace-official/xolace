@@ -18,11 +18,9 @@ import { clamp, easeOut, fs, TAU } from "@/features/achievements/motion-math";
 
 const LOOP = require("@/assets/images/flux/flux-campfire-loop.webp");
 const STILL = require("@/assets/images/flux/flux-campfire-still.webp");
-/** Flux: 204 × 272 at the board's top 128, growing from its feet. */
 const FLUX = { h: 272, top: 128, w: 204 } as const;
 const FLUX_IN_MS = 450;
 const FLUX_GROW = { from: 0.92, w: 9, z: 0.62 } as const;
-/** The fire's glow: 440 pt, fading in over 700 ms and breathing on 2.6 s, scaling .7 → 1 over 900. */
 const GLOW_D = 440;
 const GLOW = {
 	in: 700,
@@ -35,7 +33,6 @@ const GLOW = {
 const GLOW_MID = 0.55;
 const REDUCED_FADE_MS = 200;
 
-/** Flux by the fire, and the fire's glow behind them. */
 export function Fire({
 	eng,
 	geo,
@@ -114,11 +111,6 @@ export function Fire({
 	);
 }
 
-/**
- * The campfire loop, or the still under Reduce Motion. Staged hidden in the
- * host, the loop holds its first frame (an image animating out of sight kept
- * the screen from settling) and plays from the clock's first step.
- */
 function Flux({
 	eng,
 	rm,
@@ -150,7 +142,6 @@ function Flux({
 	);
 }
 
-/** The fire's glow: a radial from the fire's colour to clear (Daylight softer). */
 function FireGlow({ dark }: { dark: boolean }) {
 	const c = dark ? FIRE_GLOW.dusk : FIRE_GLOW.day;
 	return (

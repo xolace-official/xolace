@@ -20,17 +20,11 @@ import {
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { BANNER } from "../copy";
 
-/** In on the Settle spring from 16 pt above, out over 300 ms back up; gone after 8 s
- * (production's stay). Reduced, both are the 200 ms fade in place. */
 const T = { out: 300, stay: 8000 } as const;
 const FROM_Y = -16;
 const SIDE = 16;
 const BELOW_TOP = 8;
 
-/**
- * "You were reached": the in-app banner for a notification tapped open while the app ran,
- * over Today. Glass chrome over the content; tap, or 8 s, and it lifts away.
- */
 export function NotificationBanner({
 	content,
 	onDismiss,
@@ -44,7 +38,6 @@ export function NotificationBanner({
 
 	useEffect(() => {
 		shown.set(spring("settle", 1, reduced));
-		// The enter plays once, as chosen at mount.
 	}, [shown]);
 
 	const dismiss = () => {

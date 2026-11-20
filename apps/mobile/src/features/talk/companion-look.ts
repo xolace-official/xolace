@@ -4,20 +4,11 @@ import type { EyeStyle } from "@/components/xolace-face/face-geo";
 import type { PaletteName } from "@/components/xolace-face/face-palette";
 import { TALK_LOOKS } from "@/lib/talk/talk-looks";
 
-/**
- * The companion's seven looks, in production's order (handoff §2.2). Two labels changed:
- * Xolace is now Flux and Ember is now Marigold, so it no longer shares a name with the
- * companion. Only the labels: the saved values stay `xolace` and `ember`.
- */
 type Look = {
 	label: string;
 	body: BodyName;
 	eyes: EyeStyle;
 	palette: PaletteName;
-	/**
-	 * The soft glow behind the centred face: one of the face's own palette tokens
-	 * (`--color-talk-glow-*`), or the theme's accent or ink for the two theme looks.
-	 */
 	glow: `talk-glow-${string}` | "accent" | "foreground";
 };
 
@@ -50,7 +41,6 @@ export const LOOKS: Record<TalkLook, Look> = {
 		label: "Moss",
 		palette: "moss",
 	},
-	// The orb follows the app's accent; the square is flat, in the theme's text colour.
 	theme: {
 		body: "orb",
 		eyes: "round",
@@ -74,7 +64,6 @@ export const LOOKS: Record<TalkLook, Look> = {
 	},
 };
 
-/** The carousel's order. */
 export const LOOK_ORDER = TALK_LOOKS;
 
 export const lookIndex = (look: TalkLook): number =>
@@ -83,7 +72,6 @@ export const lookIndex = (look: TalkLook): number =>
 export const lookAt = (index: number): TalkLook =>
 	LOOK_ORDER[index] ?? "xolace";
 
-/** The face props for a look. */
 export const faceProps = (look: TalkLook) => {
 	const { body, eyes, palette } = LOOKS[look];
 	return { body, eyes, palette };

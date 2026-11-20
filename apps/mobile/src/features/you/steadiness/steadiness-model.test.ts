@@ -186,7 +186,6 @@ describe("openLine", () => {
 			throw new Error("fixture changed");
 		}
 		expect(openLine(work, ST_NOW)).toBe("Usually 66 · down 8 since last week");
-		// Unlocked, not settled: a number but no usual yet, as the server sends it.
 		expect(family.usual).toBeNull();
 		expect(openLine(family, ST_NOW)).toBe("Same as last week");
 		expect(openLine({ ...family, trend: null }, ST_NOW)).toBeNull();

@@ -2,7 +2,6 @@ import { createContext, type ReactNode, use } from "react";
 import type { Subject } from "@/features/lantern/lantern-model";
 import { useSubjects } from "@/features/lantern/subjects/use-subjects";
 
-/** A–Z: every subject with something in it, and the letter it opened at (`?letter=`). */
 export type Subjects = {
 	state: { subjects: readonly Subject[] | undefined; letter?: string };
 };
@@ -19,7 +18,6 @@ export function SubjectsProvider({
 	return <SubjectsContext value={value}>{children}</SubjectsContext>;
 }
 
-/** The app's adapter: `getSubjects`, and the open counted once. */
 export function SubjectsData({
 	letter,
 	children,

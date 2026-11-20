@@ -11,10 +11,6 @@ import { useScheme } from "@/design/scheme";
 import { cn } from "@/lib/cn";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/**
- * A hub screen's open row (board `.r.tl`): a row on the page, its icon on a soft
- * 30 pt accent tile, the hairline from the label (62 pt) to 20 pt short.
- */
 const R = {
 	glyph: 17,
 	lineFrom: 62,
@@ -25,7 +21,6 @@ const R = {
 	tile: 30,
 	tileRadius: 9,
 } as const;
-/** At accessibility text sizes the value drops under the label instead of truncating. */
 const WRAP_AT = 1.35;
 const CHEVRON: IconName = { android: "chevron_right", ios: "chevron.right" };
 
@@ -38,9 +33,6 @@ type Props = {
 	onPress: () => void;
 };
 
-/**
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function OpenRow({
 	label,
 	icon,

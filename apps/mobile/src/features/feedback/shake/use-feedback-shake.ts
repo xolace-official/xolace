@@ -10,7 +10,6 @@ import { FEEDBACK_COPY } from "../copy";
 import { shakeTipDue } from "./shake-tip";
 import { useShakeToOpen } from "./use-shake-to-open";
 
-/** Opens the feedback sheet on its menu and records the open; structural only, no free text. */
 function useOpenFeedback() {
 	const router = useRouter();
 	const posthog = usePostHog();
@@ -21,19 +20,15 @@ function useOpenFeedback() {
 	};
 }
 
-/** Wires the shake to the sheet for one call site; the caller derives `enabled`. */
 export function useFeedbackShake({ enabled }: { enabled: boolean }) {
 	const open = useOpenFeedback();
 	useShakeToOpen({ enabled, onShake: () => open("shake") });
 }
 
-/** One-time discoverability toast, fired the first time the shake is eligible once the tip is
- * due (`shakeTipDue`: after v2's third session, #712). */
 export function useShakeHint(eligible: boolean) {
 	const shakeHintSeen = useAppStore((s) => s.shakeHintSeen);
 	const setShakeHintSeen = useAppStore((s) => s.setShakeHintSeen);
 	const { isAuthenticated } = useConvexAuth();
-	// Skipped once seen too, so a seen hint costs no subscription.
 	const accountPending = useAppStore((s) => s.accountPending);
 	const context = useFullContext(
 		!isAuthenticated || accountPending || shakeHintSeen

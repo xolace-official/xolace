@@ -4,7 +4,6 @@ import { REACH, type Reach } from "@/features/settings/notifications/copy";
 import { cn } from "@/lib/cn";
 import { tap } from "@/lib/haptics";
 
-/** How I reach out as three pills filling the width (board `.tones`), 40 tall; chosen = ink. */
 export function ReachPills({
 	value,
 	onPick,

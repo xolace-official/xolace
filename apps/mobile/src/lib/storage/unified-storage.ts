@@ -1,6 +1,3 @@
-/** Zustand storage adapter: localStorage on web, expo-sqlite/kv-store on native. `getItem` is
- * synchronous so hydration lands on first render. */
-
 import Storage from "expo-sqlite/kv-store";
 import { Platform } from "react-native";
 

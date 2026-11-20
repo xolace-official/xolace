@@ -4,16 +4,13 @@ import { DESIGN_W, type TrailPoints, trailPoints } from "./trail-points";
 
 export type Trail = TrailPoints & {
 	width: number;
-	/** One Skia path per leg, in the order of `legs`, with a key to draw it by. */
 	roads: { key: string; path: SkPath }[];
-	/** Each leg sampled by length, for the burn (`burn.ts`). */
 	runs: LegRun[];
 };
 
 const cache = new Map<string, Trail>();
 const SX_STEPS = 1000;
 
-/** The trail for this many twigs on this wide a phone: x stretches, strokes and circles don't. */
 export function trailGeometry(width: number, count: number): Trail {
 	const sx = Math.round((width / DESIGN_W) * SX_STEPS) / SX_STEPS;
 	const key = `${count}:${sx}`;

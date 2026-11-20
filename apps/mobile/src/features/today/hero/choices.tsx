@@ -13,7 +13,6 @@ import { Door } from "./door";
 import { BURST, DOORS, HERO } from "./hero-model";
 
 const FADE_DY = 6;
-/** fadeUp: 6 pt up and in over .4 s, CSS `ease` (react-native-ease). Reduced: the 200 ms fade. */
 function FadeUp({ delay, children }: { delay: number; children: ReactNode }) {
 	const { reduced } = useTodayFrame();
 	return (
@@ -25,15 +24,8 @@ function FadeUp({ delay, children }: { delay: number; children: ReactNode }) {
 	);
 }
 
-/**
- * "How do you want to let it out?": the doors (`DOORS`), and a way back to writing.
- * They sit inside the card, which is only as tall as the resting card (about 195 pt late at night,
- * a single-line prompt), so the doors take the room that's left, 112 pt at most and 88 at least,
- * and "Write instead" is never clipped.
- */
 export function Choices({ onBack }: { onBack: () => void }) {
 	const titleRef = useRef<ComponentRef<typeof Text>>(null);
-	// VoiceOver: the card it was on has gone, so land on the question the doors answer.
 	useEffect(() => {
 		const id = setTimeout(() => {
 			if (titleRef.current) {
@@ -50,7 +42,6 @@ export function Choices({ onBack }: { onBack: () => void }) {
 	return (
 		<View
 			className="absolute inset-0 gap-3 overflow-hidden px-4.5 pt-6 pb-3"
-			// VoiceOver's two-finger scrub is Write instead.
 			onAccessibilityEscape={onBack}
 			style={{ borderRadius: HERO.radius }}
 		>

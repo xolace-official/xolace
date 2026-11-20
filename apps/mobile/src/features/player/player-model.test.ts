@@ -31,7 +31,6 @@ describe("the track", () => {
 		expect(toPlayerTrack(SPOKEN).peaks).toHaveLength(60);
 		expect(toPlayerTrack(NO_PEAKS).peaks).toBeNull();
 		expect(toPlayerTrack({ ...SPOKEN, peaks: [] }).peaks).toBeNull();
-		// B4 never measures music; if it ever has peaks, music still draws the line.
 		expect(toPlayerTrack({ ...MUSIC, peaks: SPOKEN.peaks }).peaks).toBeNull();
 	});
 
@@ -96,13 +95,9 @@ describe("time", () => {
 
 	it("holds a seek's target until the clock reaches it", () => {
 		const seek = { at: 0, to: 300 };
-		// The stale tick before the seek lands doesn't move the playhead back.
 		expect(settledPosition(120, seek, 400)).toBe(300);
-		// Within a second of the target: landed, the clock leads again.
 		expect(settledPosition(299.4, seek, 400)).toBe(299.4);
-		// Still landing a second and a half on (a slow streamed seek).
 		expect(settledPosition(121, seek, 1500)).toBe(300);
-		// It never lands: after the cap the clock wins anyway.
 		expect(settledPosition(120, seek, SEEK_SETTLE_MS)).toBe(120);
 		expect(settledPosition(120, null, 400)).toBe(120);
 	});
@@ -124,7 +119,6 @@ describe("the sleep timer", () => {
 		expect(sleepPill({ choice: 30, left: 1680 })).toBe("28 min");
 		expect(sleepPill({ choice: 30, left: 1679 })).toBe("28 min");
 		expect(sleepPill({ choice: 30, left: 61 })).toBe("2 min");
-		// A minute exactly is still minutes, never "0:60".
 		expect(sleepPill({ choice: 30, left: 60 })).toBe("1 min");
 		expect(sleepPill({ choice: 30, left: 59.4 })).toBe("1 min");
 		expect(sleepPill({ choice: 30, left: 59 })).toBe("0:59");

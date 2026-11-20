@@ -19,15 +19,9 @@ import { useAccountFlag } from "@/store/use-account-flag";
 
 type Props = Pick<OfferContext, "answer" | "tier" | "escalationDerived">;
 
-/**
- * The one-time "Want the next check-in on Telegram?" offer under a follow-up
- * answer (#777). Link Telegram runs the same three steps as the sheet, with
- * `source: offer_card`; Not now hides it for good on this account.
- */
 export const TelegramOfferCard = (props: Props) => {
 	const flagOn = useReachMeOnFlag();
 	const [dismissed, markDismissed] = useAccountFlag("telegramOfferDismissed");
-	// Channels are read only at a moment that allows the offer.
 	const channels = useQuery(
 		api.outreach.reachMe.listChannels,
 		offerMoment({ ...props, dismissed, flagOn }) ? {} : "skip"
@@ -44,7 +38,6 @@ export const TelegramOfferCard = (props: Props) => {
 		dismissed,
 		flagOn,
 	});
-	// Mid-link the card stays, through the Linked confirmation.
 	const visible = offered || link.step !== "idle";
 
 	useEffect(() => {
@@ -83,7 +76,6 @@ export const TelegramOfferCard = (props: Props) => {
 								<Button.Label>Link Telegram</Button.Label>
 							</Button>
 							<Button
-								// Still with it has its own "Not now" (close) just above.
 								accessibilityLabel="Not now, don't offer Telegram again"
 								onPress={() => {
 									playSoftPress();

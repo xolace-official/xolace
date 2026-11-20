@@ -1,4 +1,3 @@
-/** The talk's pace and directness choices, production's labels (`talk-style-options.ts`). */
 import type { TalkPace } from "@xolace/backend/convex/lib/voices";
 import type { Choice } from "@/components/shared/choice-props";
 import type { Directness } from "@/lib/talk/use-talk-style";

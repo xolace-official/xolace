@@ -19,18 +19,10 @@ import { COPY } from "../copy";
 import { TIDE } from "../motion";
 import { useReflectDraw } from "../reflect-draw";
 
-/**
- * Breathe with me first (S12, breathing-tide-welcome). One scene time `s` runs on the UI thread
- * with linear timings: holding runs it through the inhale (2 s), and past the top it carries on
- * by itself through the hold (.6 s) and the exhale (3.3 s); letting go before the top sinks back at
- * the exhale's pace. The ring and the tide rise with the breath. A medium tick at the top, only
- * when a finger did the hold. Under Reduce Motion the ring and the tide rest; the words still step.
- */
 const TOP = TIDE.inhale;
 const END = TIDE.inhale + TIDE.hold + TIDE.exhale;
 const S_MS = 1000;
 const LINEAR = { easing: Easing.linear, ...PLAY_AS_CHOSEN };
-/** Board `.bring`: 190 pt, scale .58 at rest → 1.18 full. */
 const RING = { high: 1.18, low: 0.58, size: 190 };
 const PHASES = ["idle", "in", "out"] as const;
 type Phase = (typeof PHASES)[number];
@@ -40,7 +32,6 @@ function sine(x: number) {
 	"worklet";
 	return 0.5 - 0.5 * Math.cos(Math.PI * Math.min(1, Math.max(0, x)));
 }
-/** How full the breath is at scene time s: 0 at rest, 1 at the top. */
 function breath(s: number) {
 	"worklet";
 	if (s <= TOP) {
@@ -58,7 +49,6 @@ export function Breathe({ onBack }: { onBack: () => void }) {
 		"reflect-breath-3",
 	]);
 	const s = useSharedValue(0);
-	// Breathing in while a finger holds below the top; anything else in motion is breathing out.
 	const holding = useSharedValue(0);
 	const hand = useRef(false);
 	const [phase, setPhase] = useState<Phase>("idle");

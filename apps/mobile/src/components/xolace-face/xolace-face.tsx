@@ -1,9 +1,3 @@
-// The Xolace face: a body (the logo's flame by default) with the pose-driven face on it. The
-// whole body turns, rolls, squashes and breathes; the features move inside it.
-//
-// Decorative to screen readers: the screen around it says what it means. A placement that
-// makes it interactive wraps it in its own labelled Pressable.
-
 import {
 	Canvas,
 	Group,
@@ -33,7 +27,6 @@ type Props = {
 	body?: BodyName;
 	eyes?: EyeStyle;
 	face: FaceHandle;
-	/** Defaults to the brand gradient; an orb defaults to the theme accent. */
 	palette?: PaletteName;
 	size: number;
 };

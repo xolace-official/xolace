@@ -6,23 +6,18 @@ import { loopOrSettle, useLoopRun } from "@/design/ease-loops";
 import { keyframes } from "@/design/keyframes";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** Ignite (overshoots). */
 const igniteFn = Easing.bezierFn(0.3, 1.6, 0.5, 1);
-/** CSS `ease-in-out`, for the lean. */
 const easeInOutFn = Easing.bezierFn(0.42, 0, 0.58, 1);
 
-/** The board's 18 pt vector flame (24 pt viewBox). */
 const SIZE = 18;
 const OUTER =
 	"M12 2c1 4 6 6 6 12a6 6 0 1 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z";
 const CORE =
 	"M12 11c.6 2 3 3 3 6a3 3 0 1 1-6 0c0-1.6 1-2.6 1.6-3.2.2 1 .6 1.6 1.2 1.6 0-2-.4-3 .2-4.4z";
-/** Both shapes stand on y 20 of 24, centred on x 12: their fill-box bottoms. */
 const BASE = { x: (12 / 24) * SIZE, y: (20 / 24) * SIZE };
 const ORIGIN = `${BASE.x}px ${BASE.y}px`;
 const EASE_ORIGIN = { x: 0.5, y: 20 / 24 };
 
-/** flick, 1.9 s: lean and stretch from the base. */
 const FLICK_S = 1.9;
 const SKEW: readonly (readonly [number, number])[] = [
 	[0, 0],
@@ -36,11 +31,9 @@ const STRETCH: readonly (readonly [number, number])[] = [
 	[0.62, 0.97],
 	[1, 1],
 ];
-/** core, 0.9 s alternate: the white core flickers faster (streak-steps-widget): opacity .7 → 1, .9 → 1. */
 const CORE_MS = 1800;
 const CORE_LOW = { opacity: 0.7, scale: 0.9 };
 const CORE_HIGH = { opacity: 1, scale: 1 };
-/** ignite: 1 → 1.5 (2 pt up) at 18% → 1, over 0.9 s. */
 const IGNITE_SCALE: readonly (readonly [number, number])[] = [
 	[0, 1],
 	[0.18, 1.5],
@@ -53,20 +46,12 @@ const IGNITE_LIFT: readonly (readonly [number, number])[] = [
 ];
 
 type Props = {
-	/** Seconds; the outer flicker stops when this stops. Run it only while `running`. */
 	clock: SharedValue<number>;
-	/** The flame flickers (live and on screen); stopped, the core settles back. */
 	running: boolean;
-	/** 0 → 1 over the ignite (0.9 s); 1 at rest. */
 	ignite: SharedValue<number>;
 	reduced: boolean;
 };
 
-/**
- * A flame that's actually lit: the outer flame leans and stretches, the core flickers faster.
- * The core is a native loop (react-native-ease). The outer flame leans with skewX, which Ease
- * can't animate, so it stays on the clock (Reanimated).
- */
 export function Flame({ clock, running, ignite, reduced }: Props) {
 	const [ember, coreFill] = useTokenColors(["ember", "today-flame-core"]);
 	const whole = useAnimatedStyle(() => {

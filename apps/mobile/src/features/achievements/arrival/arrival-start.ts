@@ -7,10 +7,6 @@ import {
 	PH,
 } from "@/features/achievements/arrival/arrival-motion";
 
-/**
- * A dev state's held frame: the clock stopped at `at` ms into the milestone (or,
- * with `next`, into the badge after it), on badge `step`, maybe turned over.
- */
 export type Still = {
 	at: number;
 	next?: boolean;
@@ -18,7 +14,6 @@ export type Still = {
 	turned?: boolean;
 };
 
-/** The engine at its start, or at a held frame. */
 export function startEng(
 	hasMilestone: boolean,
 	reduced: boolean,
@@ -58,7 +53,6 @@ export function startEng(
 	return e;
 }
 
-/** Next out of the milestone: it steps aside and the badge drops 200 ms after. */
 export function toBadges(e: Eng) {
 	"worklet";
 	e.phase = PH.badge;
@@ -68,7 +62,6 @@ export function toBadges(e: Eng) {
 	e.la = -1;
 }
 
-/** Next between badges: the next one drops, face up, with no fall. */
 export function toNextBadge(e: Eng) {
 	"worklet";
 	e.step += 1;
@@ -83,7 +76,6 @@ export function toNextBadge(e: Eng) {
 	e.la = -1;
 }
 
-/** The close (Lovely, the close button): everything fades over 260 ms, once. */
 export function toClose(e: Eng) {
 	"worklet";
 	if (e.tc < 0) {

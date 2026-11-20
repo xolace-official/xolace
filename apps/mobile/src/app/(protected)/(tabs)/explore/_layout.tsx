@@ -1,12 +1,9 @@
 import { Stack } from "expo-router";
 import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
-// The hub sits under every deep jump that passes `withAnchor`, so sub-screens
-// always have a back button and a tab re-tap pops to the hub.
 export const unstable_settings = { anchor: "index" };
 
 const EXPLORE_OPTIONS = { title: "Explore" };
-// Sub-screens keep the regular (non-large) title; the hub owns the large one.
 const SUB_OPTIONS = {
 	headerBackButtonDisplayMode: "minimal" as const,
 	headerLargeTitle: false,
@@ -26,7 +23,6 @@ export default function ExploreLayout() {
 			/>
 			<Stack.Screen name="topic/[slug]" options={SUB_OPTIONS} />
 			<Stack.Screen name="search" options={SUB_OPTIONS} />
-			{/* Lantern (#409): the Library home keeps a large title of its own */}
 			<Stack.Screen
 				name="library/index"
 				options={{ headerBackButtonDisplayMode: "minimal", title: "Lantern" }}

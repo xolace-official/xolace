@@ -14,7 +14,6 @@ import { tap } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const L = MOMENTS_COPY.list;
-/** Above the home indicator, never closer than 12 to the edge, plus 4 (the prototype's). */
 const EDGE = 12;
 const LIFT = 4;
 const RISE = 12;
@@ -24,10 +23,6 @@ const styles = StyleSheet.create({
 	bar: { left: 12, position: "absolute", right: 12 },
 });
 
-/**
- * Free, with older moments hidden: a glass bar floating over the list's end, the server's window
- * length and the door to Xolace+ (production's banner, in the prototype's look).
- */
 export function WindowDoor({
 	days,
 	onSeeAll,
@@ -39,7 +34,6 @@ export function WindowDoor({
 }) {
 	const { bottom } = useSafeAreaInsets();
 	const reduced = useEffectiveReducedMotion();
-	// Seen once per visit: the hook keeps the count.
 	useEffect(() => {
 		onSeen();
 	}, [onSeen]);

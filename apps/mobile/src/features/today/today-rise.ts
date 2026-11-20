@@ -4,12 +4,6 @@ import { TIMING } from "./today-motion";
 
 const RISE_DY = 14;
 
-/**
- * First open of the day: a module rises 14 pt and fades in over 0.62 s in its slot (120,
- * 200, 280 ms), on the ease-out curve, not a spring. Spread onto the module's EaseView.
- * Undefined when it isn't the first open, so the module mounts in place. While `waiting`
- * (the launch cover is still up) it holds at the start.
- */
 export function todayRiseProps(
 	slot: number,
 	intro: boolean,
@@ -31,10 +25,6 @@ export function todayRiseProps(
 	);
 }
 
-/**
- * An Ease enter that waits (`TodayFrameValue.waiting`): it sits at its start until `waiting`
- * clears, then plays to its end with its own transition and delay.
- */
 export function heldAtStart(enter: EaseProps, waiting: boolean): EaseProps {
 	if (!(waiting && enter.initialAnimate)) {
 		return enter;

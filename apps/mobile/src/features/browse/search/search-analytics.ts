@@ -1,11 +1,8 @@
-/** Browse search analytics (#552): only the search's shape, never the words. */
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 
 import type { SearchSection } from "@/features/browse/search/search-sections";
 
-/** One `browse_search_results` per settled query. Pass fresh results (plain `useQuery`), never
- * held ones. */
 export function useSearchShape(
 	query: string,
 	counts: Record<SearchSection, number> | undefined
@@ -24,7 +21,6 @@ export function useSearchShape(
 	}, [query, counts, posthog]);
 }
 
-/** `tap(section, position)` → the row's `onOpen`; position counts from 1. */
 export function useSearchTap(from: "results" | "see_all") {
 	const posthog = usePostHog();
 	return (section: SearchSection, position: number) => () =>

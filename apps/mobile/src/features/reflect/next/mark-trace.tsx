@@ -16,14 +16,10 @@ import { type Mark, pointAt } from "./marks";
 
 const S_MS = 1000;
 const TRACE_S = TILES.traceMs / S_MS;
-/** four-elements' tip: in over .04 s, out .12 s after the trace ends. */
 const TIP_IN = 0.04;
 const TIP_OUT = 0.12;
-/** How long a pick's scene runs: the trace, the tip's fade, and a rest. */
 export const RUN_S = TRACE_S + TIP_OUT + 0.5;
-/** The board's trace ease (`.tile.on .tr`), with the block's even-speed tip on top. */
 const TRACE_EASE = Easing.bezierFn(0.2, 0.8, 0.2, 1);
-/** Board `.mark .tr`: 2.6 in the 44 box. */
 const TRACE_W = 2.6;
 const BOX = 44;
 const TIP = { core: 0.65, coreR: 1, glow: 0.22, glowR: 6, r: 3.2 } as const;
@@ -36,16 +32,11 @@ function clamp01(x: number) {
 
 type Props = {
 	mark: Mark;
-	/** Seconds since the tile was chosen. */
 	age: SharedValue<number>;
 	size: number;
 	left: number;
 };
 
-/**
- * A chosen tile's mark, traced in ink with an ember glow, and the glowing tip that draws it at
- * even speed along the arc-length table (S13 four-elements-class-picker).
- */
 export function MarkTrace({ mark, age, size, left }: Props) {
 	const [ember, eink, glowColor, core] = useTokenColors([
 		"ember",

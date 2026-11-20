@@ -4,7 +4,6 @@ import { COPY } from "@/features/you/copy";
 import { type IndexedHistory, readout } from "@/features/you/home/days-model";
 import { InfoButton } from "@/features/you/info-tip";
 
-/** Split out so only the readout re-renders as a hold moves between days. */
 export function DaysReadout({
 	dayKey,
 	history,
@@ -32,7 +31,6 @@ export function DaysReadout({
 					{caption}
 				</AppText>
 			) : (
-				// At rest the caption slot carries the hold hint, so nothing shifts when a day is held.
 				<View className="mt-0.75 flex-row items-center gap-1.5">
 					<InfoButton label={COPY.days.infoLabel} onPress={onInfo} />
 					<AppText

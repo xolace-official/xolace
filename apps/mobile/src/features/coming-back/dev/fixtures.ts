@@ -1,4 +1,3 @@
-/** Coming back's fixtures: the board's episode (a check-in from Tuesday, November's prompt). */
 import type { Id } from "@xolace/backend/dataModel";
 import type {
 	Items,
@@ -10,7 +9,6 @@ import { NO_OUTCOMES } from "@/features/coming-back/coming-back-model";
 import type { CheckInTier } from "@/features/coming-back/copy";
 
 export const FIXTURE_NAME = "Ama";
-/** Tuesday 17 November 2026, the evening of the session (the rows say the day as given). */
 const TUESDAY = new Date(2026, 10, 17, 21).getTime();
 const FIXTURE_STREAK = 12;
 
@@ -39,7 +37,6 @@ export const FIXTURE_EVENT: MonthEvent = {
 	title: "The weight we don’t say out loud",
 };
 
-/** What the board's "a few days away" lists: the freeze, the check-in, the prompt. */
 export const fixtureItems = (
 	over: Partial<Items> & { tier?: CheckInTier } = {}
 ): Items => {

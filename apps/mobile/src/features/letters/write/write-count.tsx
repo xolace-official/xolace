@@ -4,10 +4,6 @@ import { Fade } from "../fade";
 
 const COUNT = { height: 18, top: 8 };
 
-/**
- * The count under the letter, near the limits. It reports its foot (its bottom, in the content
- * above it) so the keyboard lift keeps it clear of Send at any text size.
- */
 export function WriteCount({
 	count,
 	on,

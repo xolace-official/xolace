@@ -17,10 +17,7 @@ import { CLIENT_VERSION } from "./use-age-gate";
 
 const PLATFORM = process.env.EXPO_OS === "android" ? "android" : "ios";
 
-/** The sheet on the waiting request: declares the date, then closes and carries the request on
- * (an adult), or shows where the answer leads. Closing it any way drops the request. */
 export function useAgeSheet(): AgeSheetScreenData {
-	// Read once: the store is cleared when the sheet closes, the request stays this sheet's.
 	const [request] = useState(() => useAgeGateRequest.getState().request);
 	const declare = useMutation(api.age.declarations.declare);
 	const [step, setStep] = useState<AgeGateStep>(request?.step ?? "ask");
@@ -28,7 +25,6 @@ export function useAgeSheet(): AgeSheetScreenData {
 	const [saving, setSaving] = useState(false);
 	const surface = request?.surface ?? "xolacer_chat";
 
-	// Swiped down, OK, or a way on: nothing is left waiting.
 	useEffect(() => clearAgeGate, []);
 
 	const submit = () => {

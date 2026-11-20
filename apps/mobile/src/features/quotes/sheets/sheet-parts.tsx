@@ -6,7 +6,6 @@ import { cn } from "@/lib/cn";
 import { QuoteIcon } from "../chrome/quote-icons";
 import type { InkPalette } from "../chrome/quote-ink";
 
-/** The sheets' two buttons: primary (`.btnp`) and ghost (`.btng`). */
 export function SheetButton({
 	ink,
 	label,
@@ -52,7 +51,6 @@ export function SheetButton({
 	);
 }
 
-/** The sheets' small note (`.shn`). */
 export function SheetNote({
 	ink,
 	children,
@@ -72,7 +70,6 @@ export function SheetNote({
 	);
 }
 
-/** A segmented control (`.sseg`): a row, or a column for the share formats. */
 export function Segments<K extends string>({
 	ink,
 	items,

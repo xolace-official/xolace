@@ -2,10 +2,6 @@ import { Skia, type SkPath } from "@shopify/react-native-skia";
 import { EASE, T2, TS } from "../session-look";
 import { clamp01 } from "../timeline";
 
-/**
- * The band (board `.cst2`, a 390 × 90 SVG at board y 96): you at (195, 62), the four others, and a
- * quadratic line from you to each (`M195 62 Q124 74 62 48`, …).
- */
 export const YOU = { x: 195, y: 62 } as const;
 export const STAR = [
 	[62, 48],
@@ -20,7 +16,6 @@ const CTRL = [
 	[266, 74],
 ] as const;
 
-/** `.o .in` faint (scale .8, α .55, halo .22) → lit (1, 1, .6); `.hl` r 11 blur 5; `.co` r 3.6; `.bk` r 10 blur 2. */
 export const DRAW = {
 	blink: 10,
 	blinkBlur: 2,
@@ -28,10 +23,8 @@ export const DRAW = {
 	faint: { alpha: 0.55, halo: 0.22, scale: 0.8 },
 	halo: 11,
 	haloBlur: 5,
-	/** `.lg` 4.5 blur 3 α .3, `.lk` 1.2 α .62. */
 	line: { coreA: 0.62, coreW: 1.2, glowA: 0.3, glowBlur: 3, glowW: 4.5 },
 	lit: { alpha: 1, halo: 0.6, scale: 1 },
-	/** `.me`: core r 6, halo r 20 blurred 7 at .75. */
 	me: {
 		breathLow: 0.82,
 		core: 6,
@@ -40,7 +33,6 @@ export const DRAW = {
 		haloA: 0.75,
 		haloBlur: 7,
 	},
-	/** `.slot`: r 9, 1.4 wide, dashed 2.2 / 3.2, α .55; warm 1.8, α 1. */
 	slot: { alpha: 0.55, dash: [2.2, 3.2], r: 9, w: 1.4, warmW: 1.8 },
 } as const;
 
@@ -51,10 +43,8 @@ export const LINES: readonly SkPath[] = [0, 1, 2, 3].map((k) =>
 		.build()
 );
 
-/** Each star's distance from you, board pt (the brighten and blink waves). */
 const DIST = STAR.map(([x, y]) => Math.hypot(x - YOU.x, y - YOU.y));
 
-/** Star k pops in to its faint state (board `popIn`, `--k`), at .35 s + order · .08 s of moment 2. */
 export function starPop(c2: number, k: number, reduced: boolean) {
 	"worklet";
 	const at = T2.stars.at + T2.stars.k[k] * T2.stars.step;
@@ -64,7 +54,6 @@ export function starPop(c2: number, k: number, reduced: boolean) {
 	return EASE.star(clamp01((c2 - at) / T2.stars.ms));
 }
 
-/** Star k brightening after your star lands (`--lk` = .35 s + d / 600), 0 → 1 (eased). */
 export function starLit(cs: number, k: number, reduced: boolean) {
 	"worklet";
 	if (cs < 0) {
@@ -77,7 +66,6 @@ export function starLit(cs: number, k: number, reduced: boolean) {
 	return clamp01((cs - at) / TS.lit.ms);
 }
 
-/** Line k drawing out (`--lk` = .05 s + .06 s · k): [draw, opacity]. */
 export function lineAt(cs: number, k: number, reduced: boolean) {
 	"worklet";
 	if (cs < 0) {
@@ -94,7 +82,6 @@ export function lineAt(cs: number, k: number, reduced: boolean) {
 	];
 }
 
-/** Star k's blink (`bk`, `--bd` = .55 s + d / 240): scale .6 → 1.25 → 1.6, α 0 → .95 → 0 over .9 s. */
 export function blinkAt(cs: number, k: number, reduced: boolean) {
 	"worklet";
 	if (cs < 0 || reduced) {

@@ -1,5 +1,3 @@
-/** Setup and edit on fixtures, through the same provider as the app. Fields, chips and steps
- * work; the photo picker, publishing and saving do nothing. */
 import { useState } from "react";
 import { Image } from "react-native";
 import { EditScreen } from "../edit-screen";
@@ -9,7 +7,6 @@ import { SetupScreen } from "../setup-screen";
 
 const noop = () => undefined;
 
-/** A bundled image stands in for the uploaded photo. */
 const PHOTO = Image.resolveAssetSource(
 	require("@/assets/images/onboarding/restless-mini.jpeg")
 )?.uri;
@@ -27,7 +24,6 @@ export function FixtureSetup({
 	step?: number;
 	uploading?: boolean;
 	phase?: Phase;
-	/** The edit screen instead of setup. */
 	edit?: boolean;
 }) {
 	const [d, setD] = useState<SetupDraft>({

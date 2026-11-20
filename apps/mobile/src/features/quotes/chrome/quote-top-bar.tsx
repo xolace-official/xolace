@@ -17,7 +17,6 @@ import { QuoteIcon, type QuoteIconName } from "./quote-icons";
 import { type InkPalette, useQuoteInk } from "./quote-ink";
 
 const PRESSED = 0.92;
-/** The star pops 1 → .78 (35%) → 1 over 450 ms when kept. */
 const STAR_DIP = 0.78;
 const STAR_DIP_AT = 0.35;
 const A11Y = QUOTE_COPY.accessibility;
@@ -25,7 +24,6 @@ const A11Y = QUOTE_COPY.accessibility;
 type Props = {
 	ink: InkPalette;
 	hidden: boolean;
-	/** A moving loop: pause, and the speaker when it has a sound. */
 	showPause: boolean;
 	showSound: boolean;
 	paused: boolean;
@@ -39,7 +37,6 @@ type Props = {
 	onStar: () => void;
 };
 
-/** ✕ on the left; sound and pause (loops only), palette and the star on the right. */
 export function QuoteTopBar(p: Props) {
 	const m = useQuoteMotion();
 	const { plus, plusInk } = useQuoteInk();
@@ -65,7 +62,6 @@ export function QuoteTopBar(p: Props) {
 		);
 	}, [p.saved, m.reduced, star]);
 
-	// The bar steps aside while typing, so the raised quote reads clearly.
 	const { progress: kb } = useReanimatedKeyboardAnimation();
 	const bar = useAnimatedStyle(() => ({
 		opacity:

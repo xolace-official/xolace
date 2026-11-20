@@ -31,11 +31,6 @@ import { ThreadLayer } from "./thread/thread-layer";
 import { useKeepAwakeWhile } from "./use-keep-awake-while";
 import { useTalkAnnouncements } from "./use-talk-announcements";
 
-/**
- * Talk (handoff `talk.md`): one screen, one tree, phases start → connecting → talk →
- * ending. The start screen and the talk share the face, the button that becomes the
- * composer and one timeline, so nothing that comes back disappears.
- */
 export function TalkScreen() {
 	const { state, actions } = useTalkScreen();
 	const reduced = useEffectiveReducedMotion();
@@ -43,7 +38,6 @@ export function TalkScreen() {
 	const geo = useTalkGeometry();
 	const index = lookIndex(state.look);
 	const [face, setFace] = useState<number>(LAYOUT.face);
-	// Unmeasured until the start screen lays its carousel slot out: the hero waits unseen.
 	const carTop = useSharedValue(UNMEASURED);
 	const startTop = useSharedValue(geo.startTop);
 	const { keyboard } = useKeyboardLift();
@@ -62,7 +56,6 @@ export function TalkScreen() {
 		view: state.view,
 	});
 	usePhaseMotion(motion, state.phase, state.view);
-	// A voice talk has long stretches without a touch; keep the screen on while it's in front.
 	useKeepAwakeWhile(focused);
 	const hero = useHeroFace({
 		before,
@@ -85,7 +78,6 @@ export function TalkScreen() {
 	});
 	const frame = useStageFrame(geo, keyboard);
 
-	// A sheet, a pushed screen or Start stops the sample (the start screen leaves the front).
 	const stopSample = useEffectEvent(() => actions.stopSample());
 	useEffect(() => {
 		if (focused && before) {

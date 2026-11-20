@@ -9,8 +9,6 @@ import {
 } from "react-native-reanimated";
 import type { UseLoaderAnimationConfig } from "./types";
 
-/** Drives the loader: builds the repeat/delay sequence and updates the progress SharedValue
- * (0–1). */
 export const useLoaderAnimation = (config: UseLoaderAnimationConfig) => {
 	const {
 		progress,

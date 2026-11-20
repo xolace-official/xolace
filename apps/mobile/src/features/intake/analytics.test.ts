@@ -8,7 +8,6 @@ import {
 } from "@/features/intake/v2/machine";
 
 describe("intake events (#704)", () => {
-	// Intake analytics keeps its clock and latches per process; each test gets a fresh module.
 	let analytics: typeof import("@/features/intake/analytics");
 	let capture: ReturnType<typeof vi.fn>;
 	let posthog: PostHog;

@@ -14,14 +14,6 @@ import {
 } from "@/features/settings/mirror/mirror-model";
 import { cn } from "@/lib/cn";
 
-/**
- * The tone's line on the card, in the tone's type: Adaptive and Gentle in the theme's body
- * face, Poetic in Newsreader italic (`font-mirror`), Witnessed in Literata (`font-reader`)
- * under a Newsreader italic lead, Direct in Space Grotesk Medium (`font-poster-medium`). The
- * board's Instrument Serif isn't bundled; these are the fixed faces nearest it (handoff §4).
- * It rises in when the tone changes (8 pt, 340 ms); with Reduce Motion it changes at once,
- * and it never animates in with the screen.
- */
 const RISE = {
 	duration: 340,
 	easing: Easing.bezier(0.2, 0.7, 0.2, 1),
@@ -40,7 +32,6 @@ const rise = () => {
 	};
 };
 
-/** Size, leading and tracking per tone (board `.ln.<tone>`). */
 const SIZE: Record<MirrorTone, string> = {
 	adaptive: "text-[21px] leading-[27.7px] tracking-[-0.1px]",
 	direct: "text-[20.5px] leading-[26.7px] tracking-[-0.2px]",
@@ -49,7 +40,6 @@ const SIZE: Record<MirrorTone, string> = {
 	witnessed: "text-[25px] leading-[30px]",
 };
 
-/** The fixed face, once it's loaded (until then the body face, so nothing waits). */
 const FACE: Partial<Record<MirrorTone, string>> = {
 	direct: "font-poster-medium",
 	poetic: "font-mirror",

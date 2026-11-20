@@ -19,11 +19,6 @@ function Row({ icon, text }: { icon: IconName; text: string }) {
 	);
 }
 
-/**
- * What's kept (handoff §2.7): production's consent card's six rows, word for word, with
- * their icons. The clock row is production's `talkTimeLine`; the lock row is
- * `PRIVACY_LINE`, exactly.
- */
 export function KeptSheet() {
 	const { state } = useTalkSheets();
 	const { kept } = TALK_COPY;

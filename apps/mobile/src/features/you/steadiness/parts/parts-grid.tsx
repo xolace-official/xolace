@@ -16,7 +16,6 @@ import { cn } from "@/lib/cn";
 
 const THREE_UP = 3;
 
-/** Production's grid: rings in three columns; the picked (or peeked) one sits on a tint. */
 export function PartsGrid({
 	parts,
 	plus,
@@ -48,7 +47,6 @@ export function PartsGrid({
 						tap={tapOf(part, plus, "grid", doors)}
 					/>
 				))}
-				{/* Keep a short last row left-aligned under justify-between. */}
 				{parts.length % THREE_UP === 2 ? <View className="w-[31%]" /> : null}
 			</Surface>
 		</ViewFade>

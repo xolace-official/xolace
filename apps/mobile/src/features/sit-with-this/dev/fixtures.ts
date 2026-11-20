@@ -1,9 +1,3 @@
-/**
- * The catalogue as `exercises.getForSession` serves it (`packages/backend/
- * convex/seed.ts`, the six beta exercises), and the board's slots from
- * Reflect's example. The dev states and the model tests play these through
- * the same model as the app.
- */
 import type { Id } from "@xolace/backend/dataModel";
 import type { CatalogueExercise, Slots } from "../sit-model";
 
@@ -272,7 +266,6 @@ export const RESET: CatalogueExercise = {
 	title: "reset",
 };
 
-/** The board's slots, built from Reflect's own example (the mirror's first line). */
 export const REFLECT_SLOTS: Slots = {
 	mirror_line: "It sounds like the meeting is still playing on a loop.",
 	user_emotion: "tired",

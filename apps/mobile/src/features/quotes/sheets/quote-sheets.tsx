@@ -13,11 +13,9 @@ import { GateSheet } from "./gate-sheet";
 import { OfferSheet } from "./offer-sheet";
 import { WriteSheet } from "./write-sheet";
 
-/** The capture card is 360 pt wide (2.4 × the board's 150), drawn off screen. */
 const CAPTURE_SCALE = 2.4;
 const OFFSCREEN = -10_000;
 
-/** The sheet that's up (or sliding away), Words you kept, and the card Share captures. */
 export function QuoteSheets({
 	h,
 	ink,

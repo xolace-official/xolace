@@ -11,10 +11,8 @@ import {
 import { useReadingFonts } from "@/features/lantern/reader/reading-modes";
 import { cn } from "@/lib/cn";
 
-// Callouts arrive as quotes led by their kind in bold (`prepareBody`), so the kind reads first.
 const A11Y_LABELS = { blockquote: { quote: "Quote" } };
 
-/** The body: the renderer handles headings, links, alt text, lists and quotes for screen readers. */
 export function ReaderBody() {
 	const { state, actions } = useReaderScreen();
 	const { entry, prefs } = state;
@@ -30,11 +28,6 @@ export function ReaderBody() {
 	);
 }
 
-/**
- * Production's `ReaderTitle`: the first stop for a screen reader, with Back to top and, when
- * there's a place to go back to, Resume as actions. White on the cover; at accessibility sizes
- * it moves onto the page.
- */
 export function ReaderTitle({
 	onCover,
 	onBackToTop,

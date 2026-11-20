@@ -1,7 +1,3 @@
-/**
- * Every string Lantern's home, lists and welcome show (`P/src/fixtures/lantern.ts`, the board's
- * copy). Reader-facing prose says "Lantern", never "library", "articles" or "content".
- */
 export const COPY = {
 	home: {
 		allSubjects: "All subjects",

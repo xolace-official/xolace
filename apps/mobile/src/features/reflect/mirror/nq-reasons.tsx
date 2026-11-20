@@ -6,7 +6,6 @@ import { cn } from "@/lib/cn";
 import { COPY } from "../copy";
 import { useReflect } from "../reflect-data";
 
-/** Production's four reasons (`MissReason`), as chips; the chosen one sets the placeholder. */
 export function NqReasons() {
 	const { state, actions } = useReflect();
 	return (

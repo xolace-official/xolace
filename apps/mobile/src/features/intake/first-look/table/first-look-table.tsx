@@ -1,5 +1,3 @@
-// What's free and what Plus adds, both columns from the first frame. The Plus column lights
-// row by row on the arrival clock, behind its band.
 import { View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
@@ -11,7 +9,6 @@ const HEAD_MAX_SCALE = 1.3;
 
 type Props = {
 	clock: SharedValue<number>;
-	/** The row the person opened, which VoiceOver moves into. */
 	focused: RowId | null;
 	mounted: readonly RowId[];
 	onHeight: (id: RowId, height: number) => void;

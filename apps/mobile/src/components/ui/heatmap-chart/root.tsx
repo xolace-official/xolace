@@ -42,8 +42,6 @@ export const HeatmapChartRoot = forwardRef<ViewInstance, HeatmapChartProps>(
 		ref
 	) {
 		const parts = useMemo(() => splitParts(children), [children]);
-		// The y-axis sits beside the grid, so its width comes out of the grid's before the
-		// cells are sized.
 		const axisWidth = parts.y ? (parts.y.props.width ?? DEFAULT_AXIS_WIDTH) : 0;
 
 		const {
@@ -115,7 +113,6 @@ export const HeatmapChartRoot = forwardRef<ViewInstance, HeatmapChartProps>(
 					onLayout={onLayout}
 					ref={ref}
 				>
-					{/* Above the axis gutter too: the header is about the whole chart. */}
 					{parts.header}
 
 					<ChartAccessibilityData
@@ -153,8 +150,6 @@ export const HeatmapChartRoot = forwardRef<ViewInstance, HeatmapChartProps>(
 						<View style={{ height: grid.height, width: grid.width }}>
 							{grid.width > 0 ? (
 								<>
-									{/* A native fade, not a width clip: on some TestFlight
-									    devices the clip never landed and nothing showed. */}
 									<EaseView
 										animate={{ opacity: 1 }}
 										initialAnimate={{ opacity: 0 }}

@@ -1,21 +1,15 @@
 import { useWindowDimensions, View } from "react-native";
 import { Bone, Line, Pill, SKELETON, SkeletonBreath } from "./skeleton";
 
-/**
- * The loading forms every list uses (C2), each the shape of the screen it stands in for, all with
- * one look (`skeleton.tsx`). Widths vary row to row so a list reads as text, never a barcode.
- */
 export const TITLE_W = ["62%", "48%", "70%", "55%", "66%", "44%"] as const;
 export const META_W = ["38%", "52%", "30%", "44%", "36%", "48%"] as const;
 const LOADING = "Loading";
 
-/** The `i`th of a run of widths, wrapping. */
 export const widthAt = <T,>(widths: readonly T[], i: number): T =>
 	widths[i % widths.length] as T;
 
 type Lead = "avatar" | "art" | "none";
 
-/** One row's lead: a 48 avatar, 52/r14 art, or nothing. */
 function RowLead({ lead }: { lead: Lead }) {
 	if (lead === "avatar") {
 		return <Bone h={48} r={24} w={48} />;
@@ -26,7 +20,6 @@ function RowLead({ lead }: { lead: Lead }) {
 	return null;
 }
 
-/** The rows alone (title and meta beside a lead), for a list whose card is already drawn. */
 export function SkeletonRows({
 	rows = 4,
 	lead = "avatar",
@@ -34,7 +27,6 @@ export function SkeletonRows({
 }: {
 	rows?: number;
 	lead?: Lead;
-	/** A hairline between rows, from 76 pt, as the grouped card draws them. */
 	hairline?: boolean;
 }) {
 	return (
@@ -57,7 +49,6 @@ export function SkeletonRows({
 	);
 }
 
-/** Discovery's cards (Xolacers, peers): avatar, name and presence, two quote lines, tags. */
 export function DiscoverySkeleton({
 	cards = 3,
 	label = LOADING,
@@ -95,7 +86,6 @@ export function DiscoverySkeleton({
 	);
 }
 
-/** A Xolacer's profile: the portrait, name, rating, their words, tags, then the facts card. */
 export function ProfileSkeleton({ label = LOADING }: { label?: string }) {
 	return (
 		<SkeletonBreath fill label={label}>
@@ -131,7 +121,6 @@ export function ProfileSkeleton({ label = LOADING }: { label?: string }) {
 	);
 }
 
-/** Lantern's reader: the cover (52% of the screen) with its title, then the page rising over it. */
 const COVER_SHARE = 0.52;
 const SHEET_OVERLAP = 28;
 const PARA = ["100%", "96%", "100%", "88%", "100%", "93%", "61%"] as const;
@@ -145,7 +134,6 @@ export function ReaderSkeleton({ label = LOADING }: { label?: string }) {
 				className="justify-end bg-surface-secondary px-6"
 				style={{ height: coverH, paddingBottom: SHEET_OVERLAP + 20 }}
 			>
-				{/* On the cover the bones are the page colour, as the title is light on the photo. */}
 				<Line className="bg-surface" h={24} lh={37} w="78%" />
 				<Line className="bg-surface" h={24} lh={37} w="48%" />
 				<View className="mt-2">

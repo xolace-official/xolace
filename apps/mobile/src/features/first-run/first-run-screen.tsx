@@ -9,15 +9,9 @@ import { StoryView } from "./story/story-view";
 
 type Phase = "promise" | "handoff" | "story";
 
-/**
- * First run: the promise, then the story and the seat. Letting go of the promise mounts the story
- * under it, clear and held at its first frame (`gate`), so its canvases are committed before the
- * swap; at the swap the story draws the same glow the promise ended on, and the promise goes.
- */
 export function FirstRunScreen() {
 	const { state, actions } = useFirstRunContext();
 	const stage = useStage();
-	// Loaded here once, so the story's first frame has them too.
 	const faces = useFirstRunFaces();
 	const fromPromise = state.start === "promise";
 	const gate = useSharedValue(fromPromise ? 0 : 1);

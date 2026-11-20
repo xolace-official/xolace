@@ -4,11 +4,6 @@ import { AgeAsk } from "./age-ask";
 import { useAgeSheetScreen } from "./age-gate-data";
 import { AgeOutcome } from "./age-outcome";
 
-/**
- * The age gate (C2): a native form sheet that fits its content (`/age-gate`, `fitSheet`), laid
- * out as the settings kit's sheets. The question, then wherever its answer leads; an outcome
- * fades in (200 ms) and the sheet resizes to it.
- */
 export function AgeGateSheet() {
 	const { state } = useAgeSheetScreen();
 	return (

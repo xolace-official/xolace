@@ -9,7 +9,6 @@ import { PATH_H, type TwigView } from "./kindling-model";
  */
 const HIT = 44;
 
-/** What VoiceOver says a step is. */
 function stepState(
 	state: TwigView["state"] | undefined,
 	current: boolean
@@ -32,11 +31,6 @@ type Props = {
 	onPeek: (i: number) => void;
 };
 
-/**
- * The path's steps for touch and VoiceOver, over the drawn nodes: each named for its step,
- * with its state. Tapping one peeks at it in the NEXT row, and VoiceOver says what it shows;
- * the current step is already there, so it's text, not a button.
- */
 export function StepTargets({
 	nodes,
 	twigs,

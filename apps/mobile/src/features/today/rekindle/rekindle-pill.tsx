@@ -8,15 +8,9 @@ import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { useToday } from "../today-data";
 
-/** Where the pill sits under the greeting: 14 below it, 36 tall (`PILL_SLOT`). */
 const TOP = 14;
 const FLAME = 14;
 
-/**
- * Production's rekindle chip and sheet (#437), in the slot under the greeting: while a
- * saver can bring back yesterday's streak, a pill asks once; the dialog spends it. The
- * handoff gives revive no home, so it sits on Today's streak surface.
- */
 export function RekindlePill({ height }: { height: number }) {
 	const { state, actions } = useToday();
 	const emberInk = useTokenColor("ember-ink");

@@ -19,14 +19,9 @@ import { useTokenColors } from "@/lib/use-token-color";
 
 const CHECK_GLYPH = 15;
 
-/**
- * "Keep my sessions" (board `.rad`): a checked list, the accent check only on the chosen row.
- * A shorter period that would delete sessions asks first; Cancel keeps the previous choice.
- */
 export function KeepSessions() {
 	const { state, actions } = usePrivacyScreen();
 	const [accent] = useTokenColors(["accent"]);
-	// No check until the saved choice is known.
 	const chosen = state.loading
 		? null
 		: shownRetention(state.retention, state.pending);

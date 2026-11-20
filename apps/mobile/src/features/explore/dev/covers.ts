@@ -1,8 +1,3 @@
-/**
- * Stand-ins for production's cover art in the dev states: the board's two-colour art, a gradient
- * at 160°, drawn as an SVG data URI that `CoverImage` loads like any other cover. Fixed printed
- * colours, dev only.
- */
 const SIZE = 400;
 
 export function art(a: string, b: string) {

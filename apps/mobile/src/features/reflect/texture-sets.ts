@@ -7,7 +7,6 @@ export const TEXTURE_SET_IDS: readonly TextureSetId[] = [
 	"charged",
 ];
 
-/** How many words one answer can hold; the card can't hold more. */
 export const MAX_TEXTURES = 4;
 
 export const TEXTURE_SETS: Record<TextureSetId, readonly string[]> = {

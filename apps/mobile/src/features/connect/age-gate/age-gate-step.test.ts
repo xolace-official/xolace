@@ -38,7 +38,6 @@ describe("stepForError", () => {
 
 describe("calendarDate", () => {
 	it("is the picked day on the device's calendar, zero-padded", () => {
-		// Local midnight: a UTC conversion would roll this back a day east of UTC.
 		expect(calendarDate(new Date(1990, 0, 5))).toBe("1990-01-05");
 		expect(calendarDate(new Date(2008, 10, 25, 23, 59))).toBe("2008-11-25");
 	});

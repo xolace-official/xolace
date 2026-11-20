@@ -1,6 +1,3 @@
-/** The talk screen's fixture adapter: the real `TalkScreen` under a provider filled from a
- * scripted talk. Nothing reaches Convex, ElevenLabs or the microphone's audio; the first
- * talk's mic ask is the system's own alert, and the voice samples are the bundled clips. */
 import type {
 	TalkLook,
 	TalkPace,
@@ -24,7 +21,6 @@ import { TalkScreen as Screen } from "../talk-screen";
 import { CLOCK_FROM_S, FIXTURE_NAME, WEEK } from "./fixtures";
 import { type Seed, useScriptedTalk } from "./use-scripted-talk";
 
-/** A step a state plays once it has opened, as the prototype's jumps did. */
 type Step = "sample" | "begin" | "leave";
 const STEP_AT_MS = 600;
 
@@ -119,7 +115,6 @@ export function FixtureTalk(p: FixtureTalkProps) {
 		},
 	};
 
-	// The state's one step, once it has opened (as the prototype's Review jumps did).
 	const playStep = useEffectEvent(() => {
 		const steps: Record<Step, () => void> = {
 			begin: value.actions.begin,

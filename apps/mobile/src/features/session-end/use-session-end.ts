@@ -20,34 +20,25 @@ import {
 	pitchDismissed,
 	ratingsSignalsOf,
 	type SavedMood,
+	type SessionExit,
 	type SessionPath,
+	sessionCompletedEvent,
 	wordsToShare,
 } from "./session-end-model";
 import { useNextStep } from "./use-next-step";
 
-/** Past this, the arrival starts with whatever is in (offline: no words, no day chip). */
 const READY_WAIT_MS = 4000;
 
-/** The insights upsell's paywall source and analytics surface (production's). */
 const UPSELL_SURFACE = "compounding_upsell";
 
-/** The pitch's offer events: its own slot (kindling's or the insights upsell's), not one of the
- * session close's moments. */
 const pitchEvent = (key: NextKey | null) => ({
 	moment: null,
 	surface: key === "upsell" ? UPSELL_SURFACE : "kindling",
 	variant: "default",
 });
 
-/** What this visit saved, for `session_completed` on the way out. */
 type Saved = { mood: SavedMood | null; contributed: boolean | null };
 
-/**
- * The session end on Convex: the completed session (read by id: `getActive` is
- * null by now), the streak, the next step, and the saves. Saving is
- * best-effort enrichment, never awaited before moving on: the session is
- * already complete, so a failed save loses only the answer.
- */
 export function useSessionEndData({
 	path,
 	sessionId,
@@ -82,7 +73,6 @@ export function useSessionEndData({
 	const saved = useRef<Saved>({ contributed: null, mood: null });
 	const left = useRef(false);
 
-	// No session, or one that isn't this user's: nothing to end here.
 	const missing = sessionId === null || session === null;
 	useEffect(() => {
 		if (missing && !left.current) {
@@ -91,10 +81,6 @@ export function useSessionEndData({
 		}
 	}, [missing, router]);
 
-	// An unlock that earned an area badge is marked seen as the session end opens (`whenBadged`):
-	// Badges' arrival announces it, so tomorrow's "you missed it" push would repeat it. Any other
-	// unlock stays unseen until the slot shows its card (`nextShown`); if the slot shows something
-	// else, the push is how the person hears of it. The slot holds the unlock it first read.
 	const unseenUnlock =
 		session?.domainUnlock !== undefined &&
 		session.domainUnlock.seenAt === undefined;
@@ -115,31 +101,23 @@ export function useSessionEndData({
 	};
 
 	const completed = useRef(false);
-	/** `session_completed`, once, with what this visit saved and how it went on. */
-	const complete = (exit: Record<string, string | boolean>) => {
+	const complete = (exit: SessionExit) => {
 		if (completed.current) {
 			return;
 		}
 		completed.current = true;
-		posthog.capture("session_completed", {
-			...exit,
-			contributed_reflection: saved.current.contributed,
-			mood_position: saved.current.mood?.moodPosition ?? null,
-			post_session_mood: saved.current.mood?.postSessionMood ?? null,
-		});
+		posthog.capture(
+			"session_completed",
+			sessionCompletedEvent(exit, saved.current.mood, saved.current.contributed)
+		);
 	};
 
-	/** The next step shown, and whether it was taken (a pitch left untaken is a "no"). */
 	const shown = useRef<{ key: NextKey | null; taken: boolean }>({
 		key: null,
 		taken: false,
 	});
 
-	/** Leaves the screen once; `navigate` goes on from there. */
-	const leave = (
-		exit: Record<string, string | boolean>,
-		navigate: () => void
-	) => {
+	const leave = (exit: SessionExit, navigate: () => void) => {
 		if (left.current) {
 			return;
 		}
@@ -156,24 +134,20 @@ export function useSessionEndData({
 		navigate();
 	};
 
-	// Structural only: a user's themes must not be reconstructable from analytics.
 	const variant = path === "exit" ? "exit" : "activity";
 
 	const nextShown = (key: NextKey) => {
 		shown.current = { key, taken: false };
 		if (isPitch(key)) {
-			// The pitch spends this session's offer: the next session won't show one.
 			recordPlusOfferShown(sessionId);
 			posthog.capture("plus_offer_shown", pitchEvent(key));
 		}
 		if (key === "kfree") {
 			posthog.capture("plus_upsell_shown", { surface: "kindling" });
 		} else if (key === "upsell" && next.upsell) {
-			// Shown means seen: the stretch is spent, here as on Steadiness.
 			markUpsellShown(next.upsell).catch(() => undefined);
 			posthog.capture("plus_upsell_shown", { surface: UPSELL_SURFACE });
 		} else if (key === "unlock" && sessionId) {
-			// Seen: tomorrow's "you missed it" push stands down.
 			markUnlockSeen({ sessionId }).catch(() => undefined);
 		} else if (key === "listener") {
 			posthog.capture("xolacer_suggestion_shown", { variant });
@@ -254,7 +228,6 @@ export function useSessionEndData({
 				unlock: next.unlock,
 				upsell: next.upsell?.domain ?? null,
 			},
-			// Whether today had counted before this session isn't served yet: no roll.
 			day: summary ? dayOf(summary.currentStreak, null) : null,
 			from: fromOf(path),
 			late: isNight,

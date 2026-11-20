@@ -3,10 +3,6 @@ import { type StyleProp, View, type ViewStyle } from "react-native";
 import { cn } from "@/lib/cn";
 import { useOSReduceTransparency } from "@/lib/os-reduce-transparency";
 
-/**
- * The board's `.gls` card: the glass tint with a hairline edge. Under Reduce Transparency it's
- * the solid card colour.
- */
 export function Surface({
 	radius = 24,
 	className,

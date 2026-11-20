@@ -6,7 +6,6 @@ import { ROW } from "./chat-row";
 import type { PairRowView } from "./chats-model";
 import { type RowActions, rowA11yActions } from "./row-actions";
 
-/** The prototype's hold (450 ms). */
 const HOLD_MS = 450;
 const A11Y_LABELS = {
 	archive: COPY.menu.archive,
@@ -15,10 +14,6 @@ const A11Y_LABELS = {
 	unarchive: COPY.menu.unarchive,
 };
 
-/**
- * A chat row's press where the system context menu isn't (Android): tap opens the thread, a hold
- * opens a native dialog with the same actions as iOS's menu.
- */
 export function RowPress({
 	row,
 	actions,

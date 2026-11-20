@@ -21,25 +21,16 @@ const SHIFT = [{ translateX: PAD }, { translateY: PAD }];
 type Props = {
 	geo: PathGeometry;
 	width: number;
-	/** Per node: its twig is tended (the stretch after it is lit). */
 	done: readonly boolean[];
-	/** The violet node: the first waiting twig. */
 	current: number;
 	justDone: number;
 	beat: SharedValue<number>;
 	clock: SharedValue<number>;
 	dash: string;
 	colours: NodeColours;
-	/** Quality gate failed: no blurred glows. */
 	low: boolean;
 };
 
-/**
- * The path, in one canvas: dashed future stretches (route-progress-card), lit
- * stretches that trim on (roadmap-path-stepper) with a glow under them and a
- * highlight that runs them now and then, the nodes, and the wisp with its tail
- * (quest-map-unroll) riding the flattened path.
- */
 export function KindlingPath({
 	geo,
 	width,
@@ -78,7 +69,6 @@ export function KindlingPath({
 					</Path>
 				))}
 				{geo.paths.map((p, j) => (
-					// Keyed by role: a remount computes the derived values in the same frame as the change.
 					<Stretch
 						beat={beat}
 						clock={clock}

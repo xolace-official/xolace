@@ -9,7 +9,6 @@ import { useCanvasKick } from "../stage";
 import { drawGlow, glowPose } from "./glow";
 import { ageB, ageSeat, ageT, type SEng, seatOpen } from "./story-scene";
 
-/** Board `.sfire`: the fire glow behind Flux, 400 × 330 at (−30, 270), breathing. */
 const SFIRE = { cx: 170, cy: 435, rx: 200, ry: 165 };
 
 const SEAT_FIRE = [
@@ -18,10 +17,6 @@ const SEAT_FIRE = [
 	"first-run-seat-fire-3",
 ] as const;
 
-/**
- * The ground and its glow (no video): two gradients in one Skia canvas. It changes colour per beat
- * over 800 ms with an 80 pt surge, swells with the vent, and gathers to the fire for the seat.
- */
 export function StoryGlow({
 	eng,
 	stage,
@@ -38,7 +33,6 @@ export function StoryGlow({
 		const rec = Skia.PictureRecorder();
 		const c = rec.beginRecording(Skia.XYWHRect(0, 0, stage.W, stage.H));
 		seedPicture(c);
-		// Over the promise's hand-off, clear until the swap: then the same first frame the promise drew.
 		if (gate && gate.get() === 0) {
 			return rec.finishRecordingAsPicture();
 		}

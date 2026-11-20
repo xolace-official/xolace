@@ -1,7 +1,3 @@
-/**
- * The mark's geometry and its arrival, as pure worklets of the one arrival value
- * (`arrival-time.ts`): each card's line, star and bloom read the same `a`.
- */
 import { Skia, type SkPath } from "@shopify/react-native-skia";
 import { REDUCED_FADE_MS } from "@/design/springs";
 import { cardStart, clamp01 } from "../arrival/arrival-time";
@@ -15,7 +11,6 @@ const STARS = 4;
 export type Point = { x: number; y: number };
 export type Line = { path: SkPath; length: number; lookup: Point[] };
 
-/** A point on the quadratic from you through `c` to `to`, at parameter u. */
 function quad(u: number, c: readonly number[], to: readonly number[]): Point {
 	const v = 1 - u;
 	return {
@@ -24,7 +19,6 @@ function quad(u: number, c: readonly number[], to: readonly number[]): Point {
 	};
 }
 
-/** Board `M195 122 Q… …`: a quadratic from you to star k, with an even-speed table for the point of light. */
 function makeLine(k: number): Line {
 	const c = CTRL[k];
 	const to = STAR[k];
@@ -64,7 +58,6 @@ export const LINES: readonly Line[] = Array.from({ length: STARS }, (_, k) =>
 	makeLine(k)
 );
 
-/** The point `u` of the way along a line's even-speed table. */
 export function pointAt(lookup: readonly Point[], u: number): Point {
 	"worklet";
 	const f = clamp01(u) * (lookup.length - 1);
@@ -75,31 +68,23 @@ export function pointAt(lookup: readonly Point[], u: number): Point {
 	return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
 }
 
-/** Card that lights star k (the inverse of `CARD_STAR`). */
 export const CARD_OF: readonly number[] = Array.from(
 	{ length: STARS },
 	(_, k) => (CARD_STAR as readonly number[]).indexOf(k)
 );
 
 export type StarPose = {
-	/** 0 before its card, then the line's draw-on (0 → 1). */
 	draw: number;
-	/** The line's fade (`.lg`, `.lk` opacity .45 s). */
 	lineA: number;
 	x: number;
 	y: number;
-	/** Ring → filled core (`.co` .4 s). */
 	morph: number;
-	/** Halo opacity factor (`.hl` .5 s for the tile's stars). */
 	halo: number;
-	/** `.in`: bloom scale and opacity. */
 	scale: number;
 	inA: number;
-	/** The tile's ring (r 9) still showing. */
 	ring: number;
 };
 
-/** A star with no card: the tile's ring where it has one (fading for None yet), else nothing. */
 function unlit(a: number, k: number, none: boolean): StarPose {
 	"worklet";
 	const mark = MARK_AT[k];
@@ -120,11 +105,6 @@ function unlit(a: number, k: number, none: boolean): StarPose {
 	};
 }
 
-/**
- * Star k at arrival time `a` (board `phoneVals` + `.st`, `.mk`, `.mv`, `.in`). The
- * tile's two upper circles (s1, s2) start as rings at the tile's positions, move
- * .7 s to their place and fill; the outer two bloom .42 s after their line starts.
- */
 export function starAt(
 	a: number,
 	k: number,
@@ -186,7 +166,6 @@ export function starAt(
 	};
 }
 
-/** `.bk`: α 0 → .95 at 25% → 0, scale .6 → 1.25 → 1.6, each leg on bezier(.2, .8, .2, 1). */
 export function blinkAt(ms: number): { a: number; s: number } {
 	"worklet";
 	const u = ms / TIMING.blink;
@@ -201,7 +180,6 @@ export function blinkAt(ms: number): { a: number; s: number } {
 	return { a: 0.95 * (1 - e), s: 1.25 + 0.35 * e };
 }
 
-/** `.pl`: opacity in over the first 12%, out over the last 15% (`plA`). */
 export function pointAlpha(u: number): number {
 	"worklet";
 	if (u <= 0 || u >= 1) {
@@ -216,13 +194,11 @@ export function pointAlpha(u: number): number {
 	return 1;
 }
 
-/** The blink wave's delay at star k from star j (board `tap`): .6 s + distance / 240 pt/s. */
 export function waveDelay(j: number, k: number): number {
 	const d = Math.hypot(STAR[k][0] - STAR[j][0], STAR[k][1] - STAR[j][1]);
 	return TIMING.blinkLead + (d / TIMING.wave) * 1000;
 }
 
-/** `ldb`: .35 ↔ 1 over 1.5 s, ease-in-out each half, from `delay` (board `--ld`). */
 export function loadBreath(ms: number, delay: number): number {
 	"worklet";
 	const u =

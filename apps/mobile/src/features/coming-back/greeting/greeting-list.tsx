@@ -18,14 +18,9 @@ import { WELCOME_BACK } from "../copy";
 import { useWelcomeBack } from "../welcome-back-data";
 import { GreetingRow, type RowLook } from "./greeting-row";
 
-/**
- * Board `.pgl` 30 / 20 / 20 (26 top in "Still here."), gap 14; `.gt` 30 / 1.08 (26), tracking
- * −.03em; `.gb` 15.5 / 1.42; `.cta` 56.
- */
 const TITLE = { greet: 30, leading: 1.08, left: 26, tracking: -0.03 } as const;
 const BODY = { fontSize: 15.5, lineHeight: 22 } as const;
 const CTA = { fontSize: 17 } as const;
-/** VoiceOver moves to the row once the check-in has gone (or the tick has landed). */
 const FOCUS_AFTER_MS = 500;
 
 type RowRef = RefObject<ComponentRef<typeof View> | null>;
@@ -37,7 +32,6 @@ const focusLater = (ref: RowRef) =>
 		}
 	}, FOCUS_AFTER_MS);
 
-/** Each row's glyph and its circle's wash and ink. The prompt's rose has a dark twin. */
 const lookOf = (id: RowId, dark: boolean): RowLook => {
 	if (id === "fz") {
 		return {
@@ -60,7 +54,6 @@ const lookOf = (id: RowId, dark: boolean): RowLook => {
 	};
 };
 
-/** The list page (handoff §2): the tier's hello, what happened while you were away, one button. */
 export function GreetingList() {
 	const { state, actions } = useWelcomeBack();
 	const close = useSheetClose();
@@ -72,7 +65,6 @@ export function GreetingList() {
 	const ckRef = useRef<ComponentRef<typeof View>>(null);
 	const pmRef = useRef<ComponentRef<typeof View>>(null);
 
-	// VoiceOver returns to the row you opened: after a tick, or when the check-in closes unanswered.
 	useEffect(() => {
 		if (!just || tickKey === 0) {
 			return;

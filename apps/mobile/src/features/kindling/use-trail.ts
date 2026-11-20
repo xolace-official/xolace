@@ -46,16 +46,9 @@ const sameStates = (a: readonly TwigState[], b: readonly TwigState[]) =>
 type Args = {
 	trail: Trail;
 	reduced: boolean;
-	/** The screen is in front, the app active, and Reduce Motion off. */
 	live: boolean;
 };
 
-/**
- * The kindling screen's own state (handoff §1, §3, §4, §7, §8): what the stops show (`shown`,
- * which trails the server while a tend plays), the open card, the undo window, the stop held dim
- * until the spark lands, and the fire. A twig tended since the stops last showed it plays once,
- * 450 ms after focus, 300 ms apart (§7).
- */
 export function useTrail(
 	view: TrailView,
 	k: Kindling["actions"],
@@ -67,9 +60,7 @@ export function useTrail(
 	const [forId, setForId] = useState(view.id);
 	const [shown, setShown] = useState(now);
 	const [open, setOpen] = useState(() => restingCard(now));
-	// The stop held dim until a spark lands, and a spark on its way into the fire (not caught yet).
 	const [held, setHeld] = useState(NOT_HELD);
-	// A new kindling (a fresh session replaced this one): start over, playing nothing.
 	if (forId === view.id) {
 		const followed = followStates(shown, now);
 		if (!sameStates(followed, shown)) {
@@ -94,7 +85,6 @@ export function useTrail(
 	useEffect(() => {
 		latest.current = { now, shown, view };
 	});
-	// The latest local states for callbacks and timers (state lags a render behind).
 	const localRef = useRef<LocalStates>(NO_LOCAL);
 	const undoTimer = useRef<Timer | null>(null);
 	const stopUndoTimer = () => {
@@ -111,10 +101,8 @@ export function useTrail(
 	const playRef = useRef<
 		(i: number, last: boolean, landed: () => void) => void
 	>(() => undefined);
-	// Move-ons, and tends played after the press or on return (`trail-schedule.ts`).
 	const [schedule] = useState(() =>
 		trailSchedule({
-			// Called as plain functions: the browser's timers throw when called as a method.
 			clearTimeout: (id) => clearTimeout(id),
 			moveCard: () => setOpen(restingCard(latest.current.now)),
 			play: (i, last, landed) => playRef.current(i, last, landed),
@@ -122,22 +110,13 @@ export function useTrail(
 			setTimeout: (fn, ms) => setTimeout(fn, ms),
 		})
 	);
-	// A new kindling: the old one's undo window closes without sending (its twig is gone), and
-	// nothing still pending for it (a move-on, a tend's light, a burn on its way to the fire) runs.
 	useEffect(() => {
 		stopUndoTimer();
 		schedule.newKindling();
 		localRef.current = NO_LOCAL;
 	}, [view.id]);
 
-	/**
-	 * Light twig i on the trail: its stop and the count at once, then the spark runs its leg to
-	 * the next stop (held dim until it lands) or, the `last` of a batch with nothing left
-	 * waiting, on into the fire (§4, §5). `landed` once it lands.
-	 */
 	const play = (i: number, last: boolean, landed: () => void) => {
-		// "I did this" plays it itself, and the return effect may find it too; a tend the server
-		// refused before it played has gone back to waiting.
 		if (!tendPlays(latest.current.shown, latest.current.now, i)) {
 			return;
 		}
@@ -156,14 +135,12 @@ export function useTrail(
 		playRef.current = play;
 		tendRef.current = tend;
 	});
-	/** The server refused twig i's tend: its burn stops where it is, and it lands nothing. */
 	const refuse = (i: number, id: string) => {
 		apply(tendFailed(localRef.current, id));
 		tend.cancel(i);
 		setHeld((h) => letGo(h, i));
 	};
 
-	// Coming back (or the server catching up): what was tended elsewhere plays, in trail order.
 	const key = `${view.id}:${now.join()}`;
 	useEffect(() => {
 		if (!focused) {
@@ -176,7 +153,6 @@ export function useTrail(
 		// The plays read the latest through refs; re-run when the states or focus change.
 	}, [focused, key]);
 
-	/** Send a skip; a refusal puts the twig back. */
 	const sendSkip = (id: string | undefined) => {
 		if (!id) {
 			return;
@@ -187,10 +163,6 @@ export function useTrail(
 			}
 		});
 	};
-	/**
-	 * Close the undo window (§8): the skip is sent; the card moves on unless they chose one. If
-	 * it was the last waiting twig, the fire catches where it is (§5), unless they're leaving.
-	 */
 	const commit = (cause: CommitCause) => {
 		stopUndoTimer();
 		const step = commitStep(localRef.current, cause);
@@ -210,8 +182,6 @@ export function useTrail(
 	useEffect(() => {
 		commitRef.current = commit;
 	});
-	// Leaving sends a skip still in its window: blur and unmount, and the app going to the
-	// background, where JS timers pause and the OS may end the app before the window would.
 	useFocusEffect(useCallback(() => () => commitRef.current("left"), []));
 	useEffect(() => {
 		const sub = AppState.addEventListener("change", (next) => {
@@ -238,8 +208,6 @@ export function useTrail(
 					k.open(twig.id, false);
 					return;
 				}
-				// "I did this" is sent at once (a quick Back can't drop it, a second tap sends
-				// nothing); it lights after the press, and goes back if the server refuses.
 				const step = tendStep(
 					localRef.current,
 					twig.id,
@@ -276,7 +244,6 @@ export function useTrail(
 				}
 			},
 			openStop: (i: number) => {
-				// They chose this card: the skip is sent, and nothing moves the card off it.
 				schedule.choose();
 				commit("chose");
 				if (i !== open) {
@@ -307,15 +274,9 @@ export function useTrail(
 				apply(undoStep(localRef.current));
 			},
 		},
-		/** The fire is due (the scroll brings it up), and has caught (the spark has landed). */
 		bound: caught(shown),
 		caught: caught(shown) && held.heading === NO_HOLD,
 		hold: held.hold,
-		/**
-		 * The ⋯ menu's Put it out (§11.1). While its alert asks, the Undo window waits: nothing
-		 * completes the kindling behind it. Confirmed, the pending skip is dropped (the kindling is
-		 * going); cancelled, it's sent and the card moves on, as the window closing would.
-		 */
 		menu: {
 			asking: stopUndoTimer,
 			cancelled: () => commit("closed"),

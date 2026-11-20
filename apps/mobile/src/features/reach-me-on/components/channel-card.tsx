@@ -21,20 +21,13 @@ const CHANNEL_ICON: Record<Channel, IconName> = {
 type Props = {
 	channel: Channel;
 	statusLine?: string;
-	/** From `orderMark`: the First tag and accent border, or a Try this first pill. */
 	mark: OrderMark;
 	onTryFirst: () => void;
-	/** Telegram off Plus: the Xolace+ tag. */
 	plusTag?: boolean;
 	children: ReactNode;
 	disabled?: boolean;
 };
 
-/**
- * One channel on "Reach me on…" (P/src/features/reach/reach-parts.tsx `ChannelCard`): a 22 pt
- * card with a 36 pt tile (Telegram's own blue on its tile only), name and status, the First or
- * Xolace+ tag, then its body. The First card carries an accent border.
- */
 export const ChannelCard = ({
 	channel,
 	statusLine,

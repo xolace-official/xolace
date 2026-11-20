@@ -11,17 +11,9 @@ import type { RowActions } from "./row-actions";
 import { RowPress } from "./row-press";
 import { SwipeArchive } from "./swipe-archive";
 
-/** Archiving or restoring a chat slides the rows below it into place over 240 ms. */
 const REFLOW_MS = 240;
-/** A two-line row: avatar 48 plus its padding and hairline. */
 const ROW_ESTIMATE = 74;
 
-/**
- * The chats, virtualized (`myConversations` returns up to 200): the page's one scroll view, so
- * the large title folds over it. The screen's own pieces ride along as header and footer.
- * Not recycled: a row holds its swipe and measured width, which mustn't pass to another chat.
- * A tap opens, a hold opens the menu, a trailing swipe archives.
- */
 export function ChatsList({
 	rows,
 	actions,
@@ -33,12 +25,10 @@ export function ChatsList({
 	actions: RowActions;
 	header: ReactElement;
 	footer?: ReactElement | null;
-	/** Room under the last row, above the tab bar or the home indicator. */
 	bottom: number;
 }) {
 	const reduced = useEffectiveReducedMotion();
 	const background = useTokenColor("background");
-	// Clears the floating mini player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();
 	return (
 		<AnimatedLegendList

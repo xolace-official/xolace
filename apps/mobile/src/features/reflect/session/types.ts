@@ -14,7 +14,6 @@ export type EntryType = "typed" | "scaffold" | "hybrid" | "voice";
 
 export type FeedbackType = "not_quite" | "say_more";
 
-/** The chip picked in the "What didn't land?" sheet. */
 export type MissReason =
 	| "wrong_emotion"
 	| "too_surface_level"
@@ -42,7 +41,6 @@ export type ReflectionAction =
 	| { type: "SESSION_RESUMED"; screen: ReflectionStateName }
 	| { type: "VOICE_START" }
 	| { type: "VOICE_TRANSCRIPT"; text: string }
-	/** Plus dictation: a finished take, appended after whatever is written now. */
 	| { type: "VOICE_APPEND"; text: string }
 	| { type: "BACK_TO_MIRROR" }
 	| { type: "CLEAR_TEXTURES" };

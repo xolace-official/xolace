@@ -18,7 +18,6 @@ import {
 const ROOT = join(import.meta.dirname, "../../..");
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
 
-/** The splash options, after checking app.config.ts passes them to the plugin as they are. */
 function splash() {
 	expect(read("app.config.ts")).toMatch(
 		/"expo-splash-screen",\s*NATIVE_SPLASH\]/
@@ -26,13 +25,11 @@ function splash() {
 	return NATIVE_SPLASH;
 }
 
-/** `--color-launch-<scheme>` in global.css. */
 const launchToken = (scheme: string) =>
 	read("src/global.css")
 		.match(new RegExp(`--color-launch-${scheme}:\\s*(#[0-9a-f]{6})`, "i"))?.[1]
 		?.toUpperCase();
 
-/** `--background` of the Default theme's light and dark variants, the first two in the file. */
 const defaultBackgrounds = () =>
 	[
 		...read("src/themes/themes.generated.css").matchAll(

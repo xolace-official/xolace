@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { nextCollapse } from "@/features/you/home/header/header-collapse";
 
-/** The device's xxxLarge case: docked at a 475 pt range, then the header grows by 68 pt. */
 const OLD_RANGE = 475;
 const NEW_RANGE = 543;
-/** Insights scrolled to This week. */
 const DEEP = 1111;
 
 describe("nextCollapse", () => {

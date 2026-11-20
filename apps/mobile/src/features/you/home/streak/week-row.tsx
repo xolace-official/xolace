@@ -21,7 +21,6 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { useTokenColor } from "@/lib/use-token-color";
 
 const DISC = 30;
-/** Today's ring: a page-coloured gap, then 1.5 pt of ember, round the lit disc. */
 const RING_BOX = DISC + 7;
 const RING_STROKE = 1.5;
 const RING_R = RING_BOX / 2 - RING_STROKE / 2;
@@ -29,13 +28,11 @@ const RING_C = 2 * Math.PI * RING_R;
 const RING_MS = 900;
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-/** The week: seven discs, Monday first. A tap goes to Your days with this week ringed. */
 export function WeekRow() {
 	const { state } = useYouHome();
 	const { tapWeek } = useYouUi();
 	const week = state.week;
 	if (!week) {
-		// Holds the row's height while the history loads.
 		return <View className="mt-3.5 h-[52px]" />;
 	}
 	const shown = week.filter((d) => d.state === "lit").length;
@@ -56,11 +53,9 @@ export function WeekRow() {
 	);
 }
 
-/** One day: lit (ember, a small flame), frozen (frost, dashed), quiet, or ahead. */
 function Day({ day }: { day: WeekDay }) {
 	const background = useTokenColor("background");
 	const lit = day.state === "lit";
-	// size-7.5 is DISC (30).
 	const disc = "size-7.5 items-center justify-center rounded-full";
 	let face = (
 		<View
@@ -115,7 +110,6 @@ function Day({ day }: { day: WeekDay }) {
 	);
 }
 
-/** Today, once lit: an ember ring that draws itself round over 900 ms. */
 function TodayRing() {
 	const ember = useTokenColor("ember");
 	const reduced = useEffectiveReducedMotion();

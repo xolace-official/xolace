@@ -1,14 +1,7 @@
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-/**
- * Reflect's layout, in the board's points (design/boards/ReflectAlive.dc.html, style block).
- * The board's phone is 390 × 844 with a 47 pt status bar; on a taller phone, values anchored to
- * the top keep their distance under the status bar, and values anchored to the bottom keep
- * theirs above the home indicator.
- */
 const BOARD_STATUS = 47;
 
-/** Board y (from the top of the board's phone) → this phone's y. */
 export function useBoardY(): (y: number) => number {
 	const { top } = useSafeAreaInsets();
 	return (y) => top - BOARD_STATUS + y;
@@ -20,7 +13,6 @@ export const LAYOUT = {
 	bar: { gap: 10, height: 56, mic: 56, side: 16 },
 	care: { bottom: 30, side: 16 },
 	enso: { face: 64, size: 200, top: 300 },
-	/** The bottom glow: 24 in, 56 below the screen, 150 tall. */
 	glow: { below: 56, blur: 26, height: 150, side: 24 },
 	header: { button: 44, height: 44, side: 16, top: 54 },
 	heard: { enso: 150, face: 56, top: 220 },
@@ -55,5 +47,4 @@ export const LAYOUT = {
 	},
 } as const;
 
-/** While writing, the caret stays this far above the bar's top (handoff §4.6). */
 export const CARET_CLEAR = 16;

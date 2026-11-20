@@ -1,5 +1,3 @@
-/** Talk's two sheets on fixtures. A dev state always opens pushed, so the sheet is drawn
- * as the form sheet presents it: on the surface, rounded, at the bottom of a dim page. */
 import type { TalkPace } from "@xolace/backend/convex/lib/voices";
 import { type ReactNode, useState } from "react";
 import { View } from "react-native";

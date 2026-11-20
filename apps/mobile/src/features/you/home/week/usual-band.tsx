@@ -12,7 +12,6 @@ import { COPY } from "@/features/you/copy";
 import { levelY, type Usual } from "@/features/you/home/week/week-model";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** The board's `.band`: it reaches 4 pt past the bars each side, radius 6, 7 pt hatching. */
 const OVERHANG = 4;
 const RADIUS = 6;
 const HATCH = 7;
@@ -20,14 +19,8 @@ const HATCH_LINE = 2;
 const HATCH_ALPHA = 0.07;
 const WASH_ALPHA = 0.04;
 const DASH = [4, 3];
-/** "your usual" sits just above the line, at its left end. */
 const LABEL_LIFT = 2;
 
-/**
- * Your usual, behind the bars: a faint hatched band over the last four weeks' middle half, and
- * a 1 pt dashed line at their median labelled "your usual" (you.md §6). `base` is the bars'
- * baseline from the bottom of the plot.
- */
 export function UsualBand({
 	usual,
 	width,
@@ -62,8 +55,6 @@ export function UsualBand({
 						patternUnits="userSpaceOnUse"
 						width={HATCH}
 					>
-						{/* The classic diagonal hatch: one stroke per tile plus its two corners, so
-						    the lines run unbroken across tiles. */}
 						<Path
 							d={`M-1,1 l2,-2 M0,${HATCH} l${HATCH},-${HATCH} M${HATCH - 1},${HATCH + 1} l2,-2`}
 							stroke={ink}
@@ -106,7 +97,6 @@ export function UsualBand({
 	);
 }
 
-/** "your usual", just above the line at its left end; drawn after the bars, over them. */
 export function UsualLabel({ usual, base }: { usual: Usual; base: number }) {
 	return (
 		<View

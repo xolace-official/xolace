@@ -1,7 +1,3 @@
-// In-app purchases via RevenueCat: SDK init, entitlement status, purchase and restore.
-// Inert while `appConfig.features.payments` is false (`devIsPlus` is the switch).
-// RC appUserId is `emotionalProfileId` from api.premium.getEntitlement, as the server checks.
-
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
@@ -72,7 +68,6 @@ export function RevenueCatProvider({
 }) {
 	const posthog = usePostHog();
 	const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
-	// Waits for the account too: before `getOrCreate` lands it throws `user_not_found`.
 	const accountPending = useAppStore((s) => s.accountPending);
 	const entitlement = useQuery(
 		api.premium.getEntitlement,
@@ -82,7 +77,6 @@ export function RevenueCatProvider({
 
 	const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
 	const [offerings, setOfferings] = useState<PurchasesOfferings | null>(null);
-	// Loading only when the SDK will be configured (payments on and a key for this build).
 	const [isLoading, setIsLoading] = useState(
 		appConfig.features.payments && getApiKey() !== ""
 	);
@@ -149,7 +143,6 @@ export function RevenueCatProvider({
 			.catch((error) => console.error("[RevenueCat] logIn failed:", error));
 	}, [configured, appUserId]);
 
-	// On sign-out, detach the SDK so cached entitlements cannot leak to the next sign-in.
 	useEffect(() => {
 		if (!configured || isAuthLoading || isAuthenticated) {
 			return;
@@ -173,7 +166,6 @@ export function RevenueCatProvider({
 		};
 	}, [configured, isAuthLoading, isAuthenticated]);
 
-	// useCallback keeps the memoized Provider value stable (context exception).
 	const purchase = useCallback(
 		async (pkg: PurchasesPackage, rawSurface?: string): Promise<boolean> => {
 			const surface = rawSurface ?? null;
@@ -207,7 +199,6 @@ export function RevenueCatProvider({
 					surface,
 				});
 				console.error("[RevenueCat] purchase failed:", error);
-				// The danger toast plays the error notice.
 				toast("Purchase didn't go through", {
 					description: "Please try again.",
 					variant: "danger",

@@ -1,6 +1,3 @@
-/** "Something else?" on fixtures. A dev state always opens pushed, so the sheet is drawn
- * as the form sheet presents it: on the surface, rounded, at the bottom of a dim page.
- * A pick or Keep going goes back. */
 import { router } from "expo-router";
 import { View } from "react-native";
 import { ScopedTheme } from "uniwind";
@@ -22,9 +19,7 @@ export function FixtureSwapSheet({
 }: {
 	current?: string;
 	swaps?: number;
-	/** Default's light or dark, whatever the app's theme is. */
 	theme?: ThemeMode;
-	/** The options not in yet. */
 	loading?: boolean;
 }) {
 	const value: SwapSheet = {

@@ -26,15 +26,9 @@ import {
 } from "@/features/explore/home/parts/shelves";
 import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 
-/** The doors sit this far under the search field (the board's 18, less the bar's own). */
 const DOORS_TOP = 8;
 const BOTTOM = 40;
 
-/**
- * Explore, before you type (handoff `explore.md`, the owner's cut): the four doors, then the
- * shelves. Pick up where you left off and Because you named… show only when there's something
- * of yours; the rest wait in their own shape. One page, no dots, no greeting.
- */
 export function HomeScreen() {
 	const { state, actions } = useHome();
 	const playerInset = useMiniPlayerInset();

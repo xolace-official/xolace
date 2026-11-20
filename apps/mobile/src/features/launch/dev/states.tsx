@@ -1,4 +1,3 @@
-/** The launch cover on each launch path, without a cold start: `xolace://dev/launch/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { LaunchHold } from "@/features/launch/launch-hold";
 import { LAUNCH_TIMING } from "@/features/launch/launch-model";
@@ -6,9 +5,7 @@ import type { LaunchReplay } from "./replay";
 import { ReplayScreen } from "./replay-screen";
 
 const NO_HEADER = { headerShown: false };
-/** Long enough for the logo's breath to show. */
 const SLOW_MS = 3000;
-/** Two bootstrap retries (`RETRY_DELAY_MS`) and the remount. */
 const RETRY_MS = 2500;
 
 const TODAY = { dismissTo: "/today" } as const;

@@ -16,15 +16,11 @@ import {
 import { requestPushToken } from "@/lib/push-token";
 import { useAppStore } from "@/store/store";
 
-// Foreground-only handler. The focused thread handles its own events, but chat
-// arrivals for other threads still need the OS banner, list entry and sound.
 Notifications.setNotificationHandler({
 	handleNotification: async (notification) => {
 		const show = !suppressedInForeground(notification.request.content.data);
 		return {
 			shouldPlaySound: show,
-			// Only a chat push carries `badge` (Stream's unread total); the rest
-			// leave the icon alone whatever this says.
 			shouldSetBadge: show,
 			shouldShowBanner: show,
 			shouldShowList: show,
@@ -32,8 +28,6 @@ Notifications.setNotificationHandler({
 	},
 });
 
-/** Push permissions, token registration and tap handling. Must render inside an authenticated
- * Convex context. */
 export function useNotifications() {
 	const { isSignedIn } = useAuth();
 	const registerToken = useMutation(api.notifications.registerToken);
@@ -55,9 +49,6 @@ export function useNotifications() {
 		let cancelled = false;
 
 		async function register() {
-			// Token refresh for someone already opted in, never an opt-in. Without the switch
-			// check the OS grant re-registers on relaunch and `registerToken` flips every
-			// preference back on.
 			if (notificationsEnabled !== true) {
 				return;
 			}
@@ -72,15 +63,12 @@ export function useNotifications() {
 				setExpoPushToken(token);
 				await registerToken({ pushToken: token });
 
-				// Sync the device's IANA timezone so the server can compute Quiet Window gates.
 				try {
 					const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 					if (timezone) {
 						await updatePreferences({ notificationTimezone: timezone });
 					}
-				} catch {
-					// Non-blocking; timezone is best-effort
-				}
+				} catch {}
 			}
 		}
 
@@ -91,16 +79,12 @@ export function useNotifications() {
 		};
 	}, [isSignedIn, notificationsEnabled, registerToken, updatePreferences]);
 
-	// The screen up when a tap comes, read by the tap handler without resubscribing.
 	const pathname = usePathname();
 	const where = useRef(pathname);
 	useEffect(() => {
 		where.current = pathname;
 	}, [pathname]);
 
-	// Own effect: not torn down per preference resolve, not gated on `notificationsEnabled` (a
-	// tap means the notification was delivered). `subscribeToNotificationTaps` covers cold
-	// starts.
 	useEffect(() => {
 		if (!isSignedIn) {
 			return;

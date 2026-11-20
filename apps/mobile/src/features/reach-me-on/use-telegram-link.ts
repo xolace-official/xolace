@@ -23,7 +23,6 @@ import { convexErrorCode } from "@/lib/convex-error-code";
 type LinkSource = "settings" | "offer_card";
 type Minted = { url: string; at: number };
 
-/** How long the "Linked" confirmation stays before the card returns. */
 const CONFIRMATION_MS = 4000;
 
 function mintFailure(error: unknown): string {
@@ -37,10 +36,8 @@ function mintFailure(error: unknown): string {
 	}
 }
 
-/** The three-step Telegram link inside its card (#733). */
 export function useTelegramLink(
 	telegram: ChannelEntry | undefined,
-	/** Where the link starts: the sheet, or the one-time offer (#777). */
 	source: LinkSource = "settings"
 ) {
 	const createLink = useAction(api.outreach.telegram.link.createLink);
@@ -49,11 +46,8 @@ export function useTelegramLink(
 	const [step, dispatch] = useReducer(linkFlow, "idle");
 	const [minting, setMinting] = useState(false);
 	const minted = useRef<Minted | null>(null);
-	/** The mint under way: a second tap joins it instead of retiring its link. */
 	const inFlight = useRef<Promise<Minted | null>>(null);
-	/** When the link last opened or copied was minted; its expiry ends the wait. */
 	const [handedOffAt, setHandedOffAt] = useState<number | null>(null);
-	/** Bumped by Cancel: a link minted for an earlier try isn't opened or copied. */
 	const attempt = useRef(0);
 	const stepRef = useRef<LinkStep>(step);
 	useEffect(() => {
@@ -61,7 +55,6 @@ export function useTelegramLink(
 	}, [step]);
 
 	const linked = telegram?.linked ?? false;
-	// The card advances live when the bot redeems the link.
 	useEffect(() => {
 		dispatch({ linked, type: "channel_changed" });
 	}, [linked]);
@@ -78,7 +71,6 @@ export function useTelegramLink(
 		return () => clearTimeout(timer);
 	}, [step]);
 
-	// The bot can't redeem the link past its lifetime: say so instead of waiting.
 	useEffect(() => {
 		if (step !== "waiting" || handedOffAt === null) {
 			return;
@@ -90,7 +82,6 @@ export function useTelegramLink(
 		return () => clearTimeout(timer);
 	}, [step, handedOffAt]);
 
-	// Closing the sheet mid-flow abandons it.
 	useEffect(
 		() => () => {
 			const left = stepRef.current;

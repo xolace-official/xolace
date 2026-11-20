@@ -14,14 +14,11 @@ import { continueStep, momentGate, savedMood } from "./session-end-model";
 import { T1 } from "./session-look";
 import type { SessionClocks } from "./use-session-clocks";
 
-/** A follow-up row closes the sheet; moment 2 follows (board `answer`). */
 const AFTER_SHEET_MS = 380;
-/** "I'm done for now" waits for the face's hop. */
 const LEAVE_MS = 350;
 
 export type Answer = {
 	moment: 1 | 2;
-	/** null until answered. */
 	step: number | null;
 	unsure: boolean;
 };
@@ -36,12 +33,6 @@ type Args = {
 	session: SessionEnd;
 };
 
-/**
- * The moments' flow: the arrival (the face comes down in its crescent eyes,
- * the day ticks over), Continue (the follow-up sheet from step −3 down, else
- * moment 2), Not sure, the move to moment 2, and leaving. The answer is screen
- * state; what it saves goes through the provider.
- */
 export function useMomentFlow({
 	face,
 	clocks,
@@ -56,7 +47,6 @@ export function useMomentFlow({
 		step: null,
 		unsure: false,
 	});
-	/** Where the thumb was let go: what Continue saves beside the word. */
 	const position = useSharedValue(SAME);
 	const asked = useRef(false);
 	const current = useRef(answer);
@@ -75,7 +65,6 @@ export function useMomentFlow({
 		[]
 	);
 
-	/** `turn: false` keeps the arrival's crescent eyes (a dev state's frozen frame). */
 	const arrive = (turn = true) => {
 		touched.set(0);
 		driving.set(0);
@@ -103,7 +92,6 @@ export function useMomentFlow({
 		});
 	};
 
-	/** Synchronous, unlike the moment in state, which lands a render later. */
 	const [gate] = useState(momentGate);
 
 	const toMoment2 = (from = 0) => {

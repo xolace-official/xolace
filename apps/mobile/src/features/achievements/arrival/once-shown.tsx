@@ -8,7 +8,6 @@ import { createContext, Fragment, type ReactNode, use } from "react";
  */
 export const ShownContext = createContext(0);
 
-/** Its children, mounted fresh once the arrival is shown. */
 export function OnceShown({ children }: { children: ReactNode }) {
 	const shown = use(ShownContext);
 	return shown > 0 ? <Fragment key={shown}>{children}</Fragment> : null;

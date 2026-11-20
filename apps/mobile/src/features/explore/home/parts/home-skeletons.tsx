@@ -3,10 +3,6 @@ import { Bone } from "@/components/shared/skeleton";
 import { EXS, HOME_S } from "@/features/explore/explore-style";
 import { RowsSkeleton } from "@/features/explore/rows/rows-skeleton";
 
-/**
- * Explore home's loading shapes, in the shared look (the section breathes them, `home-section`): blocks the size of what they stand in for, so the swap to
- * content doesn't move the page. The section's header stays real; only the content waits.
- */
 const SHELF_TILES = 3;
 
 function Shelf({ children }: { children: React.ReactNode }) {

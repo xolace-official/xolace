@@ -6,7 +6,6 @@ import { SETUP } from "./copy";
 
 export const BIO_MAX_LENGTH = 160;
 export const NAME_MAX_LENGTH = 40;
-/** The bio's count turns ember with this many characters left. */
 export const BIO_WARN_AT = 20;
 export { MAX_SPECIALTIES };
 
@@ -26,7 +25,6 @@ type Step = {
 	missing: string;
 };
 
-/** Production's steps (`steps.ts`), in order. */
 export const SETUP_STEPS: readonly Step[] = [
 	{
 		description: "A face makes it easier for someone to reach out.",
@@ -62,7 +60,6 @@ export const SETUP_STEPS: readonly Step[] = [
 
 export const LAST_STEP = SETUP_STEPS.length - 1;
 
-/** Mirrors the server's `publishProfile` gate exactly. Review always counts as done. */
 export function isStepComplete(id: StepId, draft: SetupDraft): boolean {
 	switch (id) {
 		case "photo":
@@ -78,12 +75,10 @@ export function isStepComplete(id: StepId, draft: SetupDraft): boolean {
 	}
 }
 
-/** The first step between the draft and publishing, or null once it can publish. */
 export function blockingStep(draft: SetupDraft): Step | null {
 	return SETUP_STEPS.find((s) => !isStepComplete(s.id, draft)) ?? null;
 }
 
-/** The line under the progress: what's missing, or ready. Production's count includes Review. */
 export function progressLine(draft: SetupDraft): {
 	text: string;
 	ready: boolean;
@@ -99,13 +94,11 @@ export function progressLine(draft: SetupDraft): {
 	};
 }
 
-/** Where setup opens: the first unfinished step, or Review when nothing is. */
 export function resumeStep(draft: SetupDraft): number {
 	const blocking = blockingStep(draft);
 	return blocking ? SETUP_STEPS.indexOf(blocking) : LAST_STEP;
 }
 
-/** Picks or unpicks one; past the cap a new pick is ignored (the server holds the same cap). */
 export function toggleSpecialty(
 	picked: readonly string[],
 	slug: string
@@ -116,12 +109,10 @@ export function toggleSpecialty(
 	return picked.length >= MAX_SPECIALTIES ? picked : [...picked, slug];
 }
 
-/** The short chip label people see on the roster, for a slug. */
 export function chipLabel(slug: string): string {
 	return SPECIALTIES.find((s) => s.slug === slug)?.label ?? slug;
 }
 
-/** The bio's count, and whether it's close enough to the limit to warn. */
 export function bioCount(bio: string): { text: string; warn: boolean } {
 	const n = bio.length;
 	return {

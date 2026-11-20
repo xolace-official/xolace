@@ -22,12 +22,6 @@ import { wordLine } from "./word/word-model";
 
 type CampfireStats = FunctionReturnType<typeof api.intake.campfireStats>;
 
-/**
- * The v2 intake's campfire count, read once per mount and only when asked: it scans recent
- * sessions app-wide, so a live subscription would re-run on every user's session (as
- * production's Discovery read it). A failed read shows nothing. `settled` once it answered
- * or failed, so the launch cover can wait for it.
- */
 function useCampfireStatsOnce(wanted: boolean): {
 	stats: CampfireStats | null;
 	settled: boolean;
@@ -61,19 +55,12 @@ function useCampfireStatsOnce(wanted: boolean): {
 	return read;
 }
 
-/**
- * Your kindling (`withRead`/`withTry`: this client draws every kind of step), what the card
- * shows without one, and the campfire.
- */
 export function useModules() {
 	const active = useQuery(api.paths.getActive, {
 		withRead: true,
 		withTry: true,
 	});
 	const { isPlus, isLoading } = usePlusEntitlement();
-	// Only Xolace+ can have one set up (the server answers null for free anyway). It's null
-	// whenever `getActive` has one, and the server clears a stuck mark itself (B13): the card
-	// shows setting up only while this says so.
 	const settingUp = useQuery(api.paths.settingUp.get, isPlus ? {} : "skip");
 	const empty = kindlingEmptyMode({ isLoading, isPlus, settingUp });
 	const [lastEmpty, setLastEmpty] = useState(empty);
@@ -81,14 +68,11 @@ export function useModules() {
 		setLastEmpty(empty);
 	}
 	const cohort = useQuery(api.cohort.getWeeklyCohortCard);
-	// v2 cut the intake's campfire count; it stands in for the cohort until there's a
-	// weekly number of their own (#712), as on production's Discovery.
 	const context = useFullContext();
 	const v2Intake = context?.intake?.intakeVersion === INTAKE_V2_VERSION;
 	const { stats, settled } = useCampfireStatsOnce(
 		cohort?.status === "hidden" && v2Intake
 	);
-	// A tended kindling's last step still celebrates once the server closes it.
 	const kindling = useKeptKindling(
 		active === undefined ? undefined : kindlingView(active)
 	);
@@ -111,10 +95,6 @@ const utcClock = () => {
 	return { day: Math.floor(hour / HOURS_IN_DAY), hour };
 };
 
-/**
- * UTC days and hours since epoch, the New shelf's rotation args, re-read on every return to
- * the foreground (a backgrounded app can live for days). As production's `useUtcDay`.
- */
 function useUtcClock() {
 	const [clock, setClock] = useState(utcClock);
 	useEffect(() => {
@@ -128,13 +108,9 @@ function useUtcClock() {
 	return clock;
 }
 
-/** The moments carousel shows the first page only: the free tier's window applies. */
 const MOMENT_COUNT = 4;
 
-/** The rail, what's playing, your moments and today's word. */
 export function useLowerModules() {
-	// The rotation's args change with the hour on foreground: hold the last shelf meanwhile,
-	// so the rail doesn't drop out and back.
 	const shelf = useStableQuery(api.browse.hub.getNewShelf, useUtcClock());
 	const nowPlaying = useNowPlaying();
 	const isPlaying = useNowPlayingIsPlaying();
@@ -146,7 +122,6 @@ export function useLowerModules() {
 	const quote = useQuery(api.dailyQuotes.getToday);
 	const { isPlus, isLoading } = usePlusEntitlement();
 	return {
-		// As every catalogue surface: locked only once the entitlement is known to be free.
 		listenLocked: !(isLoading || isPlus),
 		moments:
 			timeline.status === "LoadingFirstPage"

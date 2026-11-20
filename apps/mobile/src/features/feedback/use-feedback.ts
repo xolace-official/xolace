@@ -18,14 +18,12 @@ import {
 } from "./feedback-model";
 import { useFeedbackContext } from "./use-feedback-context";
 
-/** The sheet's data: which step is up, the form's draft and its send, What's New's seen mark. */
 export function useFeedback(
 	start: FeedbackStart,
 	from: string | undefined
 ): FeedbackScreen {
 	const posthog = usePostHog();
 	const context = useFeedbackContext(from);
-	// What's New's own seen list (ratings), so the dot clears wherever it was read.
 	const whatsNewSeen = useAppStore(
 		(s) => s.ratings.seen?.includes(LATEST_RELEASE.id) ?? false
 	);
@@ -39,8 +37,6 @@ export function useFeedback(
 	const subject = start.step === "report" ? start.subject : undefined;
 
 	const submit = useMutation(api.productFeedback.submit);
-	// Stable: a plain `useQuery` returns `undefined` while the new budget loads, which would drop
-	// the notice and re-enable Send mid-tap.
 	const canSubmit = useStableQuery(
 		api.productFeedback.canSubmit,
 		step === "report" ? { kind } : "skip"

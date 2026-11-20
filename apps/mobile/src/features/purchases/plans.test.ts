@@ -25,7 +25,6 @@ const yearlyWithWeek = pkg({
 });
 const yearlyPlain = pkg({ price: 49.99, priceString: "$49.99" });
 const monthlyPlain = pkg({ price: 9.99, priceString: "$9.99" });
-// A holiday or loyalty offer arrives as the current offering's intro price.
 const monthlyDiscounted = pkg({
 	introPrice: { cycles: 3, period: "P1M", price: 5.99, priceString: "$5.99" },
 	price: 9.99,

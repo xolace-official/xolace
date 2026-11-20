@@ -7,11 +7,6 @@ import { LETTERS } from "../copy";
 import { openWrite } from "../letters-routes";
 import { useLettersHubScreen } from "./hub-data";
 
-/**
- * The top of the Letters screen (handoff §1): one line and Write a letter. When Write is off
- * (today's letter written, or three waiting) the line says why and the button dims; it still opens
- * the writing screen, which says the same, as the board does.
- */
 export function WriteEntry() {
 	const limit = useLettersHubScreen().state.status.writeLimit;
 	return (

@@ -24,14 +24,10 @@ import { KindlingPath } from "./kindling-path";
 import { StepTargets } from "./step-targets";
 import { useTend } from "./use-tend";
 
-/** The path's pulse, wisp and node breath are slow: 30 frames a second is plenty. */
 const PATH_FPS = 30;
-/** The count's line: 13 pt footnote, 18 tall, as the "of n" beside it. */
 const COUNT_LINE = 18;
-/** The warm wash sits at (-30, 10) in the card; the body starts inside the card's padding (18, 16). */
 const WASH = { x: -48, y: -6 } as const;
 const washWidth = (lit: number) => 40 + lit * 70;
-/** The warm wash: the lit stroke's ember at 17%, fading out. */
 const WASH_ALPHA = 0.17;
 const washOf = (ember: string) =>
 	`radial-gradient(closest-side, ${clearOf(ember, WASH_ALPHA)}, ${clearOf(ember)})`;
@@ -52,7 +48,6 @@ type Props = {
 	onScreen: SharedValue<boolean>;
 };
 
-/** The steps from your last session, as a path you tend (handoff `today.md` §4.5). */
 export function KindlingLive({ kindling, width, onScreen }: Props) {
 	const [surface, well, subtle, violet, ember, accentInk, check] =
 		useTokenColors(TOKENS);
@@ -64,7 +59,6 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 	const total = kindling.twigs.length;
 	const geo = pathGeometry(width, total);
 
-	// The warm wash behind the tended part widens over 1.4 s.
 	const lit = kin.shown.filter((s) => s === "done").length;
 	const wash = useSharedValue(washWidth(lit));
 	useEffect(() => {
@@ -79,9 +73,6 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 	const washStyle = useAnimatedStyle(() => ({ width: wash.get() }));
 
 	const { eyebrow, title } = nextRow(kindling.twigs, kin.shown, kin.peek);
-	// Peeks blur in at once. Right after a tend the next step blurs in as the light arrives;
-	// once a peek has come and gone, the row comes back at once (P replayed the late blur-in
-	// there, leaving the row blank for 1.35 s).
 	const tended = kin.peek < 0 && kin.fresh;
 	const textKey =
 		kin.peek >= 0 ? `p${kin.peekN}` : `t${kin.tendN}-${kin.peekN}`;

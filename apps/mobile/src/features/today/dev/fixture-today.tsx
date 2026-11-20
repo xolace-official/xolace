@@ -1,4 +1,3 @@
-/** Today on fixtures, from `fixtures.ts`; Help and the streak open their routes, the card a Reflect dev state. */
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScopedTheme } from "uniwind";
@@ -22,15 +21,11 @@ import {
 	reflectState,
 } from "./fixtures";
 
-/** A slow network: the word arrives while the first open is still playing. */
 const WORD_AFTER_MS = 1200;
-/** Let the screen land before the streak grows, as coming back to Today does. */
 const IGNITE_AFTER_MS = 600;
-/** Long enough for each swap to finish and rest (the night front takes 1.6 s). */
 const CYCLE_MS = 4000;
 const PHASES: readonly TodayPhase[] = ["dawn", "day", "evening", "late"];
 
-/** The phase, or the next one every few seconds when cycling. */
 function usePhase(start: TodayPhase, cycle: boolean): TodayPhase {
 	const [index, setIndex] = useState(() => PHASES.indexOf(start));
 	useEffect(() => {
@@ -48,30 +43,18 @@ function usePhase(start: TodayPhase, cycle: boolean): TodayPhase {
 
 export type FixtureProps = FixtureKindling & {
 	phase: TodayPhase;
-	/** Default's light or dark; late is always night mode's theme. */
 	theme?: ThemeMode;
-	/** The first open of the day: the words, the rise. */
 	intro?: boolean;
-	/** Offline or still loading: no name, no streak. */
 	offline?: boolean;
-	/** The streak grows by one just after the screen opens, and the flame ignites. */
 	ignite?: boolean;
-	/** Yesterday's streak went quiet: the rekindle pill asks under the greeting. */
 	rekindle?: boolean;
-	/** Step through the four phases, to watch the sky change hour (and night fall). */
 	cycle?: boolean;
-	/** This month's prompt rides on the card. */
 	monthPrompt?: boolean;
-	/** Your words with the mirror, or the mirror back: the card's face (and the state it zooms to). */
 	reflect?: CardMode;
 	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
-	/** A free member: the rail's tracks show the lock and open Xolace+. */
 	free?: boolean;
-	/** Today's word loads a moment after the screen opens, as on a slow network. */
 	lateWord?: boolean;
-	/** The intake's day-3 card in Today's slot under the campfire. */
 	finding?: boolean;
-	/** The rail, your moments and the word: the board's, none at all, or still loading. */
 	modules?: FixtureModules;
 };
 
@@ -139,7 +122,6 @@ function FixtureToday({
 		streak: offline
 			? null
 			: {
-					// A broken streak counts from nothing until it's rekindled.
 					count: rekindle ? 0 : FIXTURE_STREAK + (grown ? 1 : 0),
 					igniteKey: grown ? 1 : 0,
 				},
@@ -155,8 +137,6 @@ function FixtureToday({
 	);
 }
 
-/** A dev state's options and screen, spread into its entry next to its `id` and `title`. The real
- * route draws its own chrome: no header. */
 export const today = (props: FixtureProps) => ({
 	options: { headerShown: false },
 	Screen: () => <FixtureToday {...props} />,

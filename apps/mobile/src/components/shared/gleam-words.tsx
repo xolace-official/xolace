@@ -9,7 +9,6 @@ import { gleamRows } from "@/components/shared/gleam-rows";
 import { REDUCED_FADE_MS } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** Board `glA`: .7 s a word; the gleam ≤ .3 at 42%, the 5 px blur as a soft copy. */
 const WORD_MS = 700;
 const GLEAM = { at: 0.42, max: 0.3, r: 8, width: 0.2 } as const;
 const SOFT_R = 5;
@@ -17,7 +16,6 @@ const SOFT_INK = 0.25;
 /** iOS draws a text shadow only with an offset set. */
 const NO_OFFSET = { height: 0, width: 0 } as const;
 const RISE = 7;
-/** `glA`'s ease (the words' write-in). */
 const WRITE = Easing.bezierFn(0.33, 1, 0.68, 1);
 
 const clamp01 = (x: number) => {
@@ -31,14 +29,11 @@ const smoothstep = (a: number, b: number, x: number) => {
 	return u * u * (3 - 2 * u);
 };
 
-/** The faces a gleam writes in: a display title, or the mirror's Newsreader italic. */
 export type GleamFace = "font-display" | "font-mirror";
 
 type Props = {
-	/** Each row is a line of its own (the board's `<br>`); words wrap inside a row. */
 	rows: readonly string[];
 	clock: SharedValue<number>;
-	/** When word 0 starts, and the gap between words. */
 	at: number;
 	step: number;
 	size: number;
@@ -46,16 +41,9 @@ type Props = {
 	tracking: number;
 	reduced: boolean;
 	face: GleamFace;
-	/** The space after each word, in em. */
 	gap: number;
 };
 
-/**
- * The gleam's words (board `glA`), the core GleamTitle and GleamLine share:
- * each word on the caller's clock (ms), opacity smoothstep(0, .6), a 7 pt rise,
- * a soft copy standing in for the blur, a gleam ≤ .3. Reduce Motion: each word
- * fades over 200 ms. Rows only: the caller wraps them for VoiceOver.
- */
 export function GleamWords({
 	rows,
 	clock,
@@ -75,7 +63,6 @@ export function GleamWords({
 		letterSpacing: tracking,
 		lineHeight: line,
 	} as const;
-	// Keyed by position: a user's own line can repeat a word.
 	return gleamRows(rows, at, step).map((words, r) => (
 		<View className="flex-row flex-wrap justify-center" key={r}>
 			{words.map((w, j) => (

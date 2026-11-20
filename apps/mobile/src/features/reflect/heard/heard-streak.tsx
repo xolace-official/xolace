@@ -14,15 +14,9 @@ import { useClock } from "@/lib/motion/clock";
 import { COPY } from "../copy";
 import { HEARD_MOTION } from "../motion";
 
-/** The flame's ignite (flame.tsx): 0 → 1 over .9 s. */
 const IGNITE_MS = 900;
-/** The count's line: 15 pt callout, 20 tall. */
 const COUNT_LINE = 20;
 
-/**
- * The streak chip under Heard: a lit flame and the day count, which the server has already
- * counted for this session. The flame ignites as the chip arrives.
- */
 export function HeardStreak({
 	streak,
 	live,
@@ -57,7 +51,6 @@ export function HeardStreak({
 			className="h-[38px] flex-row items-center gap-[5px] rounded-full bg-ember-wash pr-3 pl-[9px]"
 		>
 			<Flame clock={clock} ignite={ignite} reduced={reduced} running={live} />
-			{/* Plain views: the chip rises in, and a SwiftUI-hosted number is left behind by it. */}
 			<RollDigits
 				className="text-ember-ink tabular-nums"
 				durationMs={QUICK_ROLL_MS}

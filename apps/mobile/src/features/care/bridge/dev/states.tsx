@@ -1,4 +1,3 @@
-/** Trusted Bridge on fixtures: `xolace://dev/care/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { COPY } from "@/features/care/bridge/copy";
 import { FixtureBridge } from "@/features/care/bridge/dev/fixture-bridge";
@@ -11,7 +10,6 @@ import {
 	PLUS_SPARE,
 } from "@/features/care/bridge/dev/fixtures";
 
-/** The route draws its own top. */
 const OWN_TOP = { headerShown: false };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

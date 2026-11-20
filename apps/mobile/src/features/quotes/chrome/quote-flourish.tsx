@@ -17,7 +17,6 @@ import { type InkPalette, textShadow, useQuoteInk } from "./quote-ink";
 
 const BURST = 150;
 const BURST_Y = 0.43;
-/** The board's `pop`: (t, opacity, scale) stops, each segment on the stage ease. */
 const POP = [
 	[0, 0, 0.3],
 	[0.22, 1, 1.12],
@@ -26,14 +25,12 @@ const POP = [
 	[1, 0, 1.25],
 ] as const;
 const LINEAR = { easing: Easing.linear, ...PLAY_AS_CHOSEN };
-/** The toast: in over 10%, held to 82%, out. */
 const TOAST_IN = 0.1;
 const TOAST_HOLD = 0.82;
 const TOAST_RISE = 10;
 const TOAST_LIFT = 6;
 const HINT = { delay: 300, ms: 400 } as const;
 
-/** The heart's burst: a 150 pt heart at 43% height, 0 → 1.12 → .96 → 1 → out at 1.25, 950 ms. */
 export function HeartBurst({
 	burstKey,
 	reduced,
@@ -91,7 +88,6 @@ export function HeartBurst({
 	);
 }
 
-/** The board's toast: a glass pill 56 pt under the top bar, 2.4 s. */
 export function QuoteToast({
 	toast,
 	ink,
@@ -154,7 +150,6 @@ export function QuoteToast({
 	);
 }
 
-/** Clear view's hint at the bottom, fading in after .3 s. */
 export function ClearHint({
 	ink,
 	text,

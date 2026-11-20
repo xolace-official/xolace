@@ -17,11 +17,6 @@ import { useCheckIn } from "../check-in-data";
 import { CHECK_IN } from "../copy";
 import { AnswerChip, CHIP_GAP } from "./answer-chip";
 
-/**
- * Board `.cih` (20 / 20 / 16), `.prg` 32 × 4, `.cix` 44; `.cfx` Flux whisper 78 wide at (22, 84),
- * to .72 on an answer; `.chd` 24 / 1.17 from x 112 (90 answered), top 92; `.achip` at top 230,
- * 36 tall. The grabber sits 7 from the top.
- */
 const H = {
 	chipY: 230,
 	fluxH: 153,
@@ -31,7 +26,6 @@ const H = {
 	headY: 92,
 } as const;
 const EASE = Easing.bezier(0.2, 0.85, 0.25, 1);
-/** `.cfx` .4 s to .72 (+8); `.chd` fade .28 s, move .35 s, the new one from .15 s. */
 const T = {
 	fade: 280,
 	flux: 400,
@@ -50,7 +44,6 @@ const HEADLINE = {
 const EYEBROW = { fontSize: 13.5 } as const;
 const GLYPH = { close: 15 } as const;
 
-/** The top of the check-in: eyebrow and progress, close, Flux whispering, the question, then your answer. */
 export function CheckInHead() {
 	const { state, actions } = useCheckIn();
 	const { reduced } = state;
@@ -143,7 +136,6 @@ export function CheckInHead() {
 			>
 				<Flux breathe height={H.fluxH} pose="whisper" width={H.fluxW} />
 			</Animated.View>
-			{/* In flow, so large Dynamic Type pushes the chip down instead of under the words. */}
 			<View
 				className="mr-5.5"
 				style={{

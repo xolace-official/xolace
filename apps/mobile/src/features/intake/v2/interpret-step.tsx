@@ -1,5 +1,3 @@
-// `interpret`: Flux listening back while the answer is read (#708). Their own first words,
-// echoed, so the wait reads as attention rather than loading.
 import { View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";

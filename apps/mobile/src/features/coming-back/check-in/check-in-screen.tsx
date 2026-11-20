@@ -27,15 +27,9 @@ import { PANEL_MAX, usePanelRise } from "./panel-rise";
 import { PlacesStep } from "./places-step";
 import { ReflectiveStep } from "./reflective-step";
 
-/**
- * Board `.sp` 22 / 20 / 26, gap 12, radius 34 top. When the headline, the chip and the step
- * don't fit one above the other (large Dynamic Type), the step joins the page's flow under the
- * chip and the page scrolls.
- */
 const PANEL_BOTTOM = 26;
 const SHEET = "rounded-t-[34px] border-continuous bg-surface";
 const PAD = "gap-3 px-5 pt-5.5";
-/** An upward shadow (iOS props: no `shadow-*` token matches). */
 const SHEET_SHADOW = {
 	shadowOffset: { height: -10, width: 0 },
 	shadowOpacity: 0.3,
@@ -43,15 +37,9 @@ const SHEET_SHADOW = {
 } as const;
 
 type Props = {
-	/** The Telegram offer for an answer, composed by the route (it's `reach-me-on`'s). */
 	offer?: (answer: CheckInPick, card: WaitingCard) => ReactNode;
 };
 
-/**
- * The check-in (handoff §6): a page sheet over the greeting. The stacked answers, then
- * production's next step for each answer. The answer is saved at the tap; leaving any way
- * returns to the same greeting, where the row ticks. Closing before answering saves nothing.
- */
 export function CheckInScreen({ offer }: Props) {
 	const { state, actions } = useCheckIn();
 	const { reduced, picked } = state;
@@ -65,7 +53,6 @@ export function CheckInScreen({ offer }: Props) {
 	const [headH, setHeadH] = useState(0);
 	const [stepH, setStepH] = useState<number | null>(null);
 
-	// Opened without a card (a restored route): nothing to answer.
 	const missing = state.card === null;
 	useEffect(() => {
 		if (missing) {
@@ -73,7 +60,6 @@ export function CheckInScreen({ offer }: Props) {
 		}
 	}, [missing]);
 
-	// A swipe down (or any other way out) counts as leaving, from the moment it starts.
 	const leaving = useRef(actions.leaving);
 	leaving.current = actions.leaving;
 	useEffect(() => {
@@ -103,7 +89,6 @@ export function CheckInScreen({ offer }: Props) {
 
 	// KeyboardAvoidingView measures from its parent: it's told where the page sheet starts.
 	const sheetY = pageH > 0 ? Math.max(0, height - pageH) : 0;
-	// Decided on the step's first measure, so typing never moves it between the two layouts.
 	const flow =
 		step !== null && stepH !== null && pageH > 0 && headH + stepH > pageH;
 	const card = state.card;
@@ -130,7 +115,6 @@ export function CheckInScreen({ offer }: Props) {
 			keyboardVerticalOffset={sheetY}
 			onLayout={(e: LayoutChangeEvent) => setPageH(e.nativeEvent.layout.height)}
 		>
-			{/* The cards sit at the bottom; under large Dynamic Type the whole page scrolls. */}
 			<ScrollView
 				bounces={false}
 				contentContainerClassName="grow"
@@ -147,7 +131,6 @@ export function CheckInScreen({ offer }: Props) {
 					<CheckInHead />
 				</View>
 				<View className="flex-1" />
-				{/* Once the step is in the flow, the dropping cards stop taking room under it. */}
 				<View className={cn(flow && "absolute inset-x-0 bottom-0")}>
 					<CheckInCards />
 				</View>

@@ -14,14 +14,11 @@ import { useTokenColors } from "@/lib/use-token-color";
 
 const MED = 36;
 const OVERLAP = 9;
-/** The ring that cuts each medallion out of the one under it, in the card's colour. */
 const RING = 2.5;
 const STAGGER_MS = 40;
 const FAN_FROM = 0.8;
 const FAN_SPRING = { damping: 18, stiffness: 320 };
 
-/** The badges row: the first three medallions stacked, pinned first; one badge is a star tile.
- * Opens Achievements. */
 export function BadgesRow() {
 	const { state, actions } = useYouHome();
 	const [ember = "", subtle = ""] = useTokenColors(["ember", "subtle"]);
@@ -89,7 +86,6 @@ export function BadgesRow() {
 	);
 }
 
-/** One 36 pt medallion in its ring, fanning in 40 ms after the one before. */
 function Medallion({
 	medal,
 	index,
@@ -115,11 +111,9 @@ function Medallion({
 			}
 			style={{
 				height: MED + RING * 2,
-				// 27 pt between centres: 36 pt discs overlapping by 9.
 				marginLeft: index === 0 ? 0 : -(OVERLAP + RING * 2),
 				padding: RING,
 				width: MED + RING * 2,
-				// The first on top (positive: a negative one slips under the glass card).
 				zIndex: stack - index,
 			}}
 		>

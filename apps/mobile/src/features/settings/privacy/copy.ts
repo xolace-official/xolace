@@ -1,11 +1,5 @@
 import type { IconName } from "@/components/shared/icon";
 
-/**
- * Settings › Privacy & Data and its delete sheet (P/design/handoff/settings-sections.md §1,
- * P/src/fixtures/settings-sections.ts), word for word. Production's own strings are kept where
- * production says more: the Telegram line on deleting an account (production's `useConfirmAction`) and
- * the failure toast.
- */
 export const PRIVACY_COPY = {
 	a11y: (line: string, memory: boolean, share: boolean) =>
 		[
@@ -21,7 +15,6 @@ export const PRIVACY_COPY = {
 	alert: {
 		body: (count: string) =>
 			`${count} of your sessions are older than that. They’ll be deleted within a day and can’t be brought back.`,
-		/** More sessions than the backend counts (`MAX_COUNTED`). */
 		capped: (count: number) => `More than ${count}`,
 		ok: "Delete them",
 		title: (ago: string) => `Delete sessions older than ${ago}?`,
@@ -38,7 +31,6 @@ export const PRIVACY_COPY = {
 	keepNote:
 		"Older sessions are deleted by themselves within a day. Keeping longer starts from now; what’s gone doesn’t come back.",
 	kicker: "What Xolace keeps",
-	/** Letters (S20): the opt-in, also answered by the offer on Connect and the Letters screen. */
 	letters: "Letters",
 	lettersNote:
 		"Strangers write short, unsigned letters of encouragement. On: Xolace can place one with you, picked by how your recent sessions felt. The sender never learns who you are.",
@@ -64,13 +56,11 @@ export const PRIVACY_COPY = {
 
 export type Retention = "indefinite" | "1_year" | "6_months";
 
-/** Production's `dataRetentionPreference` values, in the board's order, with its words. */
 export const RETENTION: readonly {
 	id: Retention;
 	label: string;
 	sub: string;
 	line: string;
-	/** For the alert's title: "older than {ago}". */
 	ago: string;
 }[] = [
 	{
@@ -109,12 +99,9 @@ export type DeleteSheetCopy = {
 };
 
 export const DELETE_COPY = {
-	/** Spoken on the red button: there's no undo once it's pressed. */
 	confirmHint: "Can't be undone.",
-	/** Production's failure toast (production's `useConfirmAction`). */
 	failed: { description: "Please try again.", title: "Something went wrong" },
 	goes: "Goes",
-	/** On Xolace+: who holds the billing, which deleting the account doesn't end. */
 	plusBilling: {
 		android:
 			"Xolace+ billing, which is Google Play’s: cancel it in Google Play",
@@ -134,7 +121,6 @@ export const DELETE_COPY = {
 			lead: "You’re signed out now, and everything goes within a few hours. Sign back in before then and nothing is deleted.",
 			stays: [
 				"If a session ever raised a safety concern, an anonymous record of it: none of your words, no name",
-				// Production's sentence (production's `useConfirmAction`, #773).
 				"If you linked Telegram, Xolace deletes the messages it still can, but Telegram keeps the rest of that chat’s history.",
 			],
 			title: "Delete your account?",
@@ -158,7 +144,6 @@ export const DELETE_COPY = {
 			title: "Delete all my data?",
 		},
 	} satisfies Record<SheetKind, DeleteSheetCopy>,
-	/** The account is deleted but signing out failed: all that's left is to sign out. */
 	signOutLeft: {
 		confirm: "Sign out",
 		lead: "Your account is being deleted. Sign out to finish.",
@@ -167,7 +152,6 @@ export const DELETE_COPY = {
 	working: "Deleting…",
 } as const;
 
-/** The card's and rows' icons, with their Android twins. */
 export const PRIVACY_ICONS = {
 	check: { android: "check", ios: "checkmark" },
 	copy: { android: "mail", ios: "envelope" },

@@ -35,7 +35,6 @@ describe("graphRange", () => {
 		const { start, end } = graphRange("2026-11-12", "2026-11-12");
 		expect(start.getDay()).toBe(4);
 		expect(end.getDay()).toBe(0);
-		// The join week's Monday, 9 Nov, plus 16 weeks less a day: Sunday 28 February.
 		expect(end).toEqual(new Date(2027, 1, 28));
 	});
 

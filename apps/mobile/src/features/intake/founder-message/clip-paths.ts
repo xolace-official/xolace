@@ -1,8 +1,5 @@
 import { Skia, type SkPath } from "@shopify/react-native-skia";
 
-// Card silhouettes for the founder-message marquee (#264, direction #236). No shape may
-// eat the photo (no pointed ovals, no crescents); one card per shape, no duplicates.
-
 export type FounderCardShape =
 	| "circle"
 	| "roundedRect"
@@ -11,16 +8,14 @@ export type FounderCardShape =
 	| "flower";
 
 const IMAGE_CORNER_RADIUS = 20;
-const FLOWER_LOBE_STEPS = 108; // 12×9 — even point density per lobe
+const FLOWER_LOBE_STEPS = 108;
 
-/** Inscribed circle filling the inner rect. */
 const circlePath = (w: number, h: number): SkPath => {
 	const p = Skia.PathBuilder.Make();
 	p.addCircle(w / 2, h / 2, Math.min(w, h) / 2);
 	return p.build();
 };
 
-/** Soft rounded rectangle. */
 const roundedRectPath = (w: number, h: number): SkPath => {
 	const p = Skia.PathBuilder.Make();
 	const r = Math.min(IMAGE_CORNER_RADIUS, w / 2, h / 2);
@@ -28,7 +23,6 @@ const roundedRectPath = (w: number, h: number): SkPath => {
 	return p.build();
 };
 
-/** Doorway / portal: rounded arch on top, straight jambs, softly rounded base. */
 const portalPath = (w: number, h: number): SkPath => {
 	const p = Skia.PathBuilder.Make();
 	const arch = Math.min(w / 2, h * 0.5);
@@ -45,7 +39,6 @@ const portalPath = (w: number, h: number): SkPath => {
 	return p.build();
 };
 
-/** Organic squircle: a slightly lopsided soft blob, no two corners alike. */
 const blobPath = (w: number, h: number): SkPath => {
 	const p = Skia.PathBuilder.Make();
 	p.moveTo(w * 0.5, h * 0.02);
@@ -57,7 +50,6 @@ const blobPath = (w: number, h: number): SkPath => {
 	return p.build();
 };
 
-/** Scalloped rose: nine lobes, kept shallow so the photo stays readable. */
 const flowerPath = (w: number, h: number): SkPath => {
 	const p = Skia.PathBuilder.Make();
 	const cx = w / 2;

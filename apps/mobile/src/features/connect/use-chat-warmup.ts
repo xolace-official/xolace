@@ -11,8 +11,6 @@ import type { ConversationRow } from "./list/chats-model";
  * so their unread badge stays blank. Accepted ceiling. */
 const MAX_PREFETCH = 30;
 
-/** Opens the connection and fills `client.activeChannels` (offline db first, then
- * `queryChannels`) while the list is read, so a tapped thread paints on its first frame. */
 export function useChatWarmup(
 	conversations: readonly ConversationRow[] | undefined,
 	enabled: boolean
@@ -39,8 +37,6 @@ export function useChatWarmup(
 				return;
 			}
 			inFlight = true;
-			// `queryChannels` writes into the offline db, so it waits for any reset
-			// and is skipped if one starts meanwhile. See `chatLocalDataSettled`.
 			chatLocalDataSettled()
 				.then(async (generation) => {
 					await hydrateChannelsFromCache(client, ids).catch((error) =>
@@ -69,9 +65,6 @@ export function useChatWarmup(
 				});
 		};
 		warm();
-		// Again whenever the socket comes back: the SDK reopens on foreground as a
-		// fresh connect, so `connection.recovered` never fires and nothing re-watches;
-		// without this, rows and threads keep the state from before backgrounding.
 		const { unsubscribe } = client.on("connection.changed", (event) => {
 			if (event.online) {
 				warm();

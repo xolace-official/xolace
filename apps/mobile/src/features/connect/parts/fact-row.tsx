@@ -7,7 +7,6 @@ const styles = StyleSheet.create({
 	icon: { marginTop: 2 },
 });
 
-/** One icon-and-sentence line, shared by the profile's expectation blocks and the primer sheet. */
 export function Fact({
 	icon,
 	children,

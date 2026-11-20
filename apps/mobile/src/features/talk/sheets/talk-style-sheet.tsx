@@ -20,10 +20,6 @@ function Label({ children }: { children: string }) {
 	);
 }
 
-/**
- * How {name} talks (handoff §2.4): a form sheet with one detent, pace and directness as the
- * platform's segmented controls, each saved the moment it changes.
- */
 export function TalkStyleSheet() {
 	const { state, actions } = useTalkSheets();
 	const { start, style } = TALK_COPY;

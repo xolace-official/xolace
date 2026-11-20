@@ -6,13 +6,8 @@ import { useFade } from "@/features/vent/chrome/use-fade";
 import { VENT_COPY } from "@/features/vent/copy";
 import { useVentScreen } from "@/features/vent/vent-data";
 
-/** v2: the message sits where the hint was (the board: 548 against the hint's 574). */
 const ABOVE_HINT = 26;
 
-/**
- * v2, the mic turned off (§4): a tap says why nothing happened and offers Settings, where the
- * hint was. Production only buzzed. Coming back with the mic allowed clears it.
- */
 export function MicOff({ hintTop }: { hintTop: number }) {
 	const { state, actions } = useVentScreen();
 	const fade = useFade(state.micOff, { inMs: 400, outMs: 400 });

@@ -7,7 +7,6 @@ import { HOME_S } from "@/features/explore/explore-style";
 import { useHome } from "@/features/explore/home/home-data";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** Production's tints (`bg-browse-*`); Lantern shares Topics', as it did on the old hub. */
 const TINT: Record<DoorId, { bg: string; fg: number }> = {
 	lantern: { bg: "bg-browse-topics", fg: 2 },
 	music: { bg: "bg-browse-music", fg: 1 },
@@ -17,10 +16,6 @@ const TINT: Record<DoorId, { bg: string; fg: number }> = {
 
 const D = HOME_S.door;
 
-/**
- * The four doors (handoff §4), kept from production: 58 pt squircles in their tints, each opening
- * its own screen (the two lists, Lantern, Topics).
- */
 export function Doors() {
 	const { actions } = useHome();
 	const fg = useTokenColors([

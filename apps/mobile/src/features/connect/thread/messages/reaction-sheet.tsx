@@ -13,8 +13,6 @@ import { AppText } from "@/components/shared/app-text";
 
 type Reaction = NonNullable<MessageUserReactionsProps["reactions"]>[number];
 
-/** Stream's `MessageUserReactions` rebuilt without its "more emojis" button, a second way past
- * the curated seven (#345) that no theme key or prop hides. */
 export function ConversationReactionSheet({
 	message,
 	reactions: propReactions,
@@ -57,8 +55,6 @@ export function ConversationReactionSheet({
 			<AppText className="py-2 text-center font-semibold">
 				{total} {total === 1 ? "Reaction" : "Reactions"}
 			</AppText>
-			{/* Row wrapper keeps the horizontal list at its own height; bare in a
-        column it takes the sheet's flex and drops the chips to the bottom. */}
 			<View className="flex-row">
 				<FlatList
 					contentContainerClassName="flex-grow gap-2 px-4 py-3"

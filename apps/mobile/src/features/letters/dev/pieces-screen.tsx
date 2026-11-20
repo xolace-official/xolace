@@ -1,4 +1,3 @@
-/** The shared letter pieces on one page, for the eye: paper, sheets, folds, seal, marks. */
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { ScopedTheme, type ThemeName } from "uniwind";
@@ -19,7 +18,6 @@ const THEME: Record<Light, ThemeName> = {
 	night: NIGHT_VARIANT,
 };
 
-/** The pieces under one light: Default's light (day), its dark (dusk), or Night. */
 export function PiecesScreen({ light }: { light: Light }) {
 	return (
 		<ScopedTheme theme={THEME[light]}>

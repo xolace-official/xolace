@@ -17,23 +17,16 @@ import { HelpResource } from "./help-resource";
 const FADE_MS = 300;
 const IN = FadeIn.duration(FADE_MS).reduceMotion(PLAY_AS_CHOSEN.reduceMotion);
 const OUT = FadeOut.duration(FADE_MS).reduceMotion(PLAY_AS_CHOSEN.reduceMotion);
-/** The crisis card keeps this much air above the composer. */
 const CARD_GAP = 12;
 
 type Props = {
 	help: NonNullable<Help>;
 	geo: TalkGeometry;
-	/** How far the keyboard lifts the composer: help rides with it. */
 	lift: SharedValue<number>;
 	onOpen: () => void;
 	onResource: TalkScreen["actions"]["openResource"];
 };
 
-/**
- * Help on the talk (#599): "Get help now" centred above the composer at elevated, and the
- * people who can help pinned there at crisis. The level is the server's; the companion's
- * crisis line says help is on screen, and this makes that true.
- */
 export function TalkHelp({ help, geo, lift, onOpen, onResource }: Props) {
 	const ride = useAnimatedStyle(() => ({
 		transform: [{ translateY: -lift.get() }],

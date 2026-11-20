@@ -1,4 +1,3 @@
-/** Moments and a moment on fixtures: `xolace://dev/you/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import {
 	BARE_SESSION,
@@ -65,7 +64,6 @@ function FixtureMoment({
 	session?: MomentSession;
 	audio?: { ready: boolean; playing: boolean };
 	talk?: boolean;
-	/** Still loading, or the id led nowhere, instead. */
 	missing?: "loading" | "gone";
 }) {
 	const moment = momentOf(session, MO_NOW);
@@ -87,7 +85,6 @@ function FixtureMoment({
 	);
 }
 
-/** The list sets its own large title; a moment draws its own top. */
 const LIST = { headerShown: true, title: "" };
 const OWN_TOP = { headerShown: false };
 

@@ -1,4 +1,3 @@
-/** The welcome's data hook: once held, it's seen (on this device), counted, and closed. */
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { playAffirmativePress } from "@/lib/haptics";

@@ -9,10 +9,6 @@ import {
 	type SetupDraft,
 } from "./setup-model";
 
-/**
- * Five segments: done in the accent, the current step a quiet ink, the rest the well. The line
- * under them names the first thing between you and publishing. VoiceOver reads it as one.
- */
 export function SetupProgress({
 	draft,
 	step,

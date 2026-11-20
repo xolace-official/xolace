@@ -19,18 +19,11 @@ import { isSheetView, useQuoteUi } from "./quote-ui";
 
 export type QuoteHandlers = ReturnType<typeof quoteHandlers>;
 
-/**
- * Everything a tap does on Quotes: the provider's actions joined to the screen's own UI store.
- * Made once per open and reads the latest value through `live`, so the compiler keeps the parts
- * whose props didn't change.
- */
 function quoteHandlers(live: { current: QuotesScreenValue }) {
 	const ui = () => useQuoteUi.getState();
 	const now = () => live.current.state;
 	const act = () => live.current.actions;
 
-	/** The first resonate, keep or share on a device that never offered the daily quote raises
-	 * it once, unless another sheet is up by then. */
 	const maybeOffer = (trigger: OfferTrigger) => {
 		const after = offerRisesAfter(trigger, now().offerDailyQuote);
 		if (after === null) {
@@ -137,7 +130,6 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 			playAffirmativePress();
 			return;
 		}
-		// The sheet has closed by now (sent or not: neither platform says reliably).
 		maybeOffer("share");
 	};
 
@@ -230,7 +222,6 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 	};
 }
 
-/** The screen's handlers, made once per open over the latest provider value. */
 export function useQuoteHandlers(value: QuotesScreenValue): QuoteHandlers {
 	const live = useRef(value);
 	useLayoutEffect(() => {

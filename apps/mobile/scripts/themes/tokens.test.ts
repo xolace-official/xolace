@@ -5,11 +5,9 @@ import { REQUIRED } from "./build";
 import { declared, heroStyles, read, sourceFiles } from "./test-files";
 
 const COLOR_LITERAL = /["'`](--color-[a-z0-9-]*[a-z0-9])["'`]/g;
-/** A colour utility (`bg-accent-lip`, `border-b-default-lip/50`, `dark:text-muted`) and its token. */
 const COLOR_UTILITY =
 	/(?<![\w-])(?:bg|text|border(?:-[trblxyse])?|ring|fill|stroke|from|via|to|outline|divide|decoration|caret|placeholder|shadow)-([a-z][a-z0-9-]*[a-z0-9])(?:\/\d+)?(?![\w-])/g;
 
-/** Class-name tokens production declared before the generator (global.css, playful.css) that screens still use. */
 const PRODUCTION_COLOR_TOKENS = [
 	"browse-audio",
 	"browse-audio-foreground",
@@ -68,7 +66,6 @@ describe("production token names the screens use", () => {
 	});
 
 	it("declares every --color-* name the source reads by string", () => {
-		// The heatmap's default ramp token predates the generator and is always overridden.
 		const known = new Set(["--color-chart-1", "--color-chart-3"]);
 		const missing = new Set<string>();
 		for (const source of sources) {

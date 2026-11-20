@@ -18,39 +18,20 @@ import { EMBERS_S } from "./burn-art";
 import type { Trail } from "./trail-geometry";
 
 const NO_LEG = -1;
-/** Drop a finished burn a beat after its last particle. */
 const DROP_S = 0.1;
-/** Flux lifts as the fire catches: 1 → 1.06 → 1 over 700 ms. */
 const LIFT = { ms: 700, rise: 0.4, spring: 0.6, to: 1.06 } as const;
-/**
- * While only the dashes march, the clock runs at 30 fps: the canvas and its blurred paths
- * needn't redraw at 120 Hz. A spark in flight or rising embers get every frame.
- */
 const MARCH_FPS = 30;
 
 type Args = {
 	trail: Trail;
-	/** The screen is in front, the app active, and Reduce Motion off. */
 	live: boolean;
 	reduced: boolean;
-	/** Something still waits: the dashes march. */
 	waiting: boolean;
 };
 
-/**
- * The trail's UI-thread state (handoff §4, §5): one clock, which runs only while the dashes march,
- * a spark burns or embers rise; the burns in flight; Reduce Motion's gold fade; Flux's lift as
- * the fire catches. JS only schedules; every frame is drawn from these values.
- *
- * What a tend does later (the spark landing, the burn dropping, the embers going out) is an alarm
- * on that clock, not a JS timer: away from the screen the clock stops, so it waits and plays on
- * return. `fxTime` follows the clock only while something burns, so the sparks layer and the gold
- * do no work on frames where only the dashes march.
- */
 export function useTend({ trail, live, reduced, waiting }: Args) {
 	const burns = useSharedValue<Burn[]>([]);
 	const listRef = useRef<Burn[]>([]);
-	/** The trail clock when the embers began rising (−1: none). */
 	const embersAt = useSharedValue(-1);
 	const lift = useSharedValue(1);
 	const fade = { leg: useSharedValue(NO_LEG), t: useSharedValue(1) };
@@ -64,7 +45,6 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 	);
 	const fxTime = useSharedValue(0);
 	const motion = live && !reduced;
-	// A haptic plays only while the screen is in front (Reduce Motion's fade runs on JS timers).
 	const front = useLive(false);
 	const frontRef = useRef(front);
 	useEffect(() => {
@@ -102,7 +82,6 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 			}
 		}
 	);
-	// Reduce Motion's gold fade has no clock: a JS timer per tended stop.
 	const fades = useRef(new Map<number, ReturnType<typeof setTimeout>>());
 	useEffect(
 		() => () => {
@@ -158,7 +137,6 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 		});
 	};
 
-	/** Light stop i's leg (§4): the flare, the burn and the arrival; Reduce Motion fades the gold. */
 	const tend = (i: number, toFire: boolean, onArrive: () => void) => {
 		if (!motion) {
 			fade.leg.set(i);
@@ -195,10 +173,6 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 		});
 	};
 
-	/**
-	 * The server refused stop i's tend: its burn goes, with its landing (and so any catch) and its
-	 * drop, and Reduce Motion's gold goes back.
-	 */
 	const cancel = (i: number) => {
 		setBurns(withoutLeg(listRef.current, i));
 		setAlarms(withoutLeg(alarms.current, i));
@@ -213,10 +187,6 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 		}
 	};
 
-	/**
-	 * A new kindling replaced this one: every burn, its landing and drop, the embers and the gold
-	 * go, so nothing of the old trail lights the new one or catches its fire.
-	 */
 	const reset = () => {
 		setBurns([]);
 		setAlarms([]);
@@ -230,7 +200,6 @@ export function useTend({ trail, live, reduced, waiting }: Args) {
 		setEmbering(false);
 	};
 
-	/** The last waiting twig was passed: the fire catches where it is, with no run (§5). */
 	const catchInPlace = () => {
 		if (motion) {
 			push(planCatch(time.get()));

@@ -10,26 +10,17 @@ import Animated, {
 import { EASE_OUT, PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { KMOTION } from "../kindling-motion";
 
-/** Three fixed layers, used round-robin, so a layer still fading out is never reused mid-fade. */
 const LAYERS = 3;
 const NONE = -1;
 
 type Props = {
-	/** The card on show: a twig's index, or the "all" card's. */
 	open: number;
 	reduced: boolean;
 	bottom: number;
-	/** Draws the card for an index (each layer draws its own). */
 	render: (id: number) => ReactNode;
 	onHeight: (h: number) => void;
 };
 
-/**
- * The floating card, which must never flash (§6). The container mounts once; a new card hands
- * over between absolute layers: the outgoing one fades and rises out (160 ms, ease-in) from
- * wherever it is, the incoming one rises in over 300 ms from 100 ms, and the card's height eases
- * to the incoming layer's over 340 ms, growing upwards. Reduced: a 200 ms fade, the height snaps.
- */
 export function TwigCard({ open, reduced, bottom, render, onHeight }: Props) {
 	const [layers, setLayers] = useState({ front: 0, ids: [open, NONE, NONE] });
 	if (layers.ids[layers.front] !== open) {
@@ -60,7 +51,6 @@ export function TwigCard({ open, reduced, bottom, render, onHeight }: Props) {
 		}
 	};
 
-	// only a new front starts a hand-over; the shared values are stable.
 	useEffect(() => {
 		if (first.current) {
 			first.current = false;
@@ -101,7 +91,6 @@ export function TwigCard({ open, reduced, bottom, render, onHeight }: Props) {
 					);
 				}
 			} else {
-				// From its current opacity: nothing snaps on quick taps.
 				o.set(withTiming(0, reduced ? fade : out));
 				y?.set(reduced ? 0 : withTiming(KMOTION.outRise, out));
 			}
@@ -124,7 +113,6 @@ export function TwigCard({ open, reduced, bottom, render, onHeight }: Props) {
 				id === NONE ? null : (
 					<Layer
 						front={k === layers.front}
-						// The three layers are fixed slots.
 						key={k}
 						onMeasure={(h) => {
 							measured.current[k] = h;

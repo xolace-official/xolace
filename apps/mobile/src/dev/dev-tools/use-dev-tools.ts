@@ -1,8 +1,3 @@
-/**
- * What Account › Dev tools does: production's dev rows, moved here from
- * `features/settings` so the ported Settings imports no other feature (S19b).
- * Every Convex call is honoured only on a deployment with DEV_TOOLS_ENABLED.
- */
 import { useAuth } from "@clerk/expo";
 import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/api";
@@ -29,7 +24,6 @@ export function useDevTools() {
 	const seedBadgeUnlock = useMutation(api.devTools.seedBadgeUnlock);
 	const [busy, setBusy] = useState(false);
 
-	/** One server call at a time, as production's section did. */
 	const once = (run: () => Promise<unknown>) => {
 		if (busy) {
 			return;
@@ -53,7 +47,6 @@ export function useDevTools() {
 		replayDeferred: () =>
 			clearDeferredAnswers()
 				.then(() => {
-					// The once-only marks kept on this device, so each ask can show again here.
 					useAppStore.setState({ shakeHintSeen: false });
 					if (userId) {
 						useAppStore
@@ -66,7 +59,6 @@ export function useDevTools() {
 					});
 				})
 				.catch(failed("Deferred questions replay failed")),
-		// No navigation: `onboardingComplete` is the root guard and swaps the group.
 		replayIntake: () =>
 			once(() => resetIntake().catch(failed("Intake reset failed"))),
 		resetAwareness: () => {

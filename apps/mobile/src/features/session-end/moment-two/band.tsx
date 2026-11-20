@@ -6,34 +6,23 @@ import { LINES, STAR, YOU } from "./band-geo";
 import { BandLine, BandSlot } from "./band-lines";
 import { BandStar, YouStar } from "./band-stars";
 
-/** Room around the band's drawing for the glows. */
 const PAD = 24;
 const BAND_H = 90;
 
 type Props = {
-	/** Board → device: x + ox; the band's top on the device. */
 	ox: number;
 	top: number;
 	W: number;
 	colors: SessionColors;
 	ink3: string;
 	reduced: boolean;
-	/** ms into moment 2; ms since the send (< 0 before). */
 	c2: SharedValue<number>;
 	cs: SharedValue<number>;
-	/** The empty place: warm (held or sending) 0 → 1, gone (landed or kept) 0 → 1. */
 	warm: SharedValue<number>;
 	gone: SharedValue<number>;
 	breath: SharedValue<number>;
 };
 
-/**
- * The band (board `.cst2`): four faint stars and an empty place for yours. When your words land, your
- * star pops in, the lines draw out to the others, each brightens and blinks once, in a wave from you.
- * The lines and the empty place are one small canvas that redraws only while they move; every star is
- * a view (a static drawing whose transform and opacity move), so at rest nothing redraws but your
- * star's breath, which is a view's opacity. Hidden from VoiceOver.
- */
 export function Band({
 	ox,
 	top,

@@ -1,9 +1,3 @@
-/**
- * The screen's fixture adapter: the same `{ state, actions }` as `useBadges`,
- * from fixtures. Pins live for the visit, so the pin mark and the fourth-pin
- * refusal (its toast) show as they do live; Share and the freeze buy do nothing.
- * Never reaches the backend.
- */
 import { useState } from "react";
 import { toast } from "@/components/shared/toast";
 import type { Badges } from "@/features/achievements/badges/badges-data";

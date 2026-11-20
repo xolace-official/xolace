@@ -10,16 +10,8 @@ import {
 import { openLetter } from "../letters-routes";
 import { ReceivedMark } from "../received-mark";
 
-/**
- * Hidden rows' opening line is dimmed (board `.hrow .ln`). On a wrapper: LetterLine's own
- * opacity holds the line unseen until its face loads.
- */
 const HIDDEN_LINE_OPACITY = 0.6;
 
-/**
- * A letter you've opened, to reread: its opening line and whether you acknowledged it. Hidden
- * letters keep their line, dimmed, and say Hidden; they open in the same reader, with Unhide.
- */
 export function ReceivedRow({ letter }: { letter: ReceivedLetter }) {
 	const sub = receivedRowSub(letter);
 	const line = openingLine(letter.text);

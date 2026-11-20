@@ -7,41 +7,29 @@ import { visibleLength } from "@/components/settings-kit/settings-layout";
 import { AppText } from "@/components/shared/app-text";
 import { cn } from "@/lib/cn";
 
-/** The words a name dialog shows; each screen's `copy.ts` supplies them. */
 export type NameDialogCopy = {
 	title: string;
 	desc: string;
-	/** The label above the field. */
 	field: string;
 	cancel: string;
 	save: string;
-	/** The "Reset to Ember" link, when the name has a default to go back to. */
 	reset?: string;
 };
 
 type Props = {
 	open: boolean;
 	copy: NameDialogCopy;
-	/** The most characters, as a person counts them (shown in the field). */
 	max: number;
 	draft: string;
 	onDraft: (v: string) => void;
-	/** What's wrong with the draft (the backend's own validator), or "" when it can be saved. */
 	error: string;
-	/** False keeps Save off with nothing said yet (an empty first-time field). Default true. */
 	canSave?: boolean;
 	onCancel: () => void;
 	onSave: (trimmed: string) => void;
-	/** Shown with `copy.reset` when given. */
 	onReset?: () => void;
 	autoCapitalize?: "none" | "words";
 };
 
-/**
- * Name a thing (your name, your space): the count sits in the field, the
- * validator's own words say what's wrong, and Save waits until it's fine.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function NameDialog({
 	open,
 	copy,

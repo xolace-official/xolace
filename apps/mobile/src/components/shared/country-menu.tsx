@@ -9,11 +9,6 @@ import { Presets } from "react-native-pulsar";
 import { type ChoiceProps, labelOf } from "@/components/shared/choice-props";
 import { ThemedHost } from "@/components/shared/themed-host";
 
-/**
- * Android: the country chip as a Material 3 tonal button that opens a dropdown.
- * iOS draws a SwiftUI menu (`country-menu.ios.tsx`).
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function CountryMenu<T extends string>({
 	options,
 	value,

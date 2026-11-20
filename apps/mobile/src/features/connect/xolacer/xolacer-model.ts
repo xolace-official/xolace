@@ -1,5 +1,3 @@
-/** A Xolacer's profile: `xolacerProfile` in, what the page says and offers out. Production's
- * request rules (the CTA by conversation, cooldown and availability), the prototype's page. Pure. */
 import type { api } from "@xolace/backend/api";
 import {
 	isSpecialty,
@@ -21,7 +19,6 @@ export type Profile = NonNullable<
 	FunctionReturnType<typeof api.xolacerChat.xolacerProfile>
 >;
 
-/** The call to action: production's states, in order. */
 export type ProfileCta =
 	| { kind: "self"; note: string }
 	| { kind: "open"; label: string; note: string | null }
@@ -32,14 +29,11 @@ export type ProfileCta =
 export type ProfileView = {
 	name: string;
 	nameA11y: string;
-	/** "★ 4.9 · 32 conversations rated · here now", or "New Xolacer · replies within a day". */
 	ratedLine: string;
-	/** The same, spoken: "Rated 4.9 out of 5 across 32 conversations, here now". */
 	ratedA11y: string;
 	sinceLine: string;
 	quote: string;
 	tags: string[];
-	/** An accent note above the facts. */
 	note: { title: string; body: string } | null;
 	cta: ProfileCta;
 	rate:
@@ -48,7 +42,6 @@ export type ProfileView = {
 		| { kind: "rated"; stars: number };
 };
 
-/** "March", or "March 2025" once it isn't this year, in the device's locale. */
 export function monthYear(
 	timestamp: number,
 	now: number,
@@ -75,9 +68,6 @@ function ctaOf(p: Profile, now: number): ProfileCta {
 			note: requested ? PROFILE.requestNote(p.displayName) : null,
 		};
 	}
-	// Before availability: "not taking conversations" would be untrue about someone who
-	// declined. Compared with now, not merely present: a cached past timestamp would disable
-	// the button with nothing to refresh it.
 	const until = c?.retryAvailableAt;
 	if (declineCooldownActive(until, now)) {
 		return {
@@ -105,7 +95,6 @@ function noteOf(p: Profile, now: number): ProfileView["note"] {
 			title: PROFILE.talkedBefore,
 		};
 	}
-	// Not under a cooldown: the CTA already names it, and this beside it reads as a second no.
 	if (!(p.available || declineCooldownActive(c?.retryAvailableAt, now))) {
 		return {
 			body: PROFILE.notRightNow(p.displayName),
@@ -149,21 +138,16 @@ export function profileView(
 	};
 }
 
-/** What `useXolacer` and the dev states read: the profile (`undefined` while it loads, `null`
- * once it's gone), the clock and locale, the route's specialty, and the screen's own state. */
 export type XolacerInputs = {
 	profile: Profile | null | undefined;
 	now: number;
 	locale?: string;
-	/** The route's specialty param, as it came. */
 	specialty: string | undefined;
 	blocking: { open: boolean; pending: boolean };
 	primer: "gate" | "reference" | null;
 	sending: boolean;
 };
 
-/** The profile's screen state. The hook and the dev states both call it, so the rules (what the
- * block dialog says, the menu, "Others listen to …") are tested once. */
 export function xolacerState(input: XolacerInputs): XolacerState {
 	const p = input.profile;
 	if (p === undefined) {
@@ -174,7 +158,6 @@ export function xolacerState(input: XolacerInputs): XolacerState {
 	}
 	const c = p.conversation;
 	return {
-		// "Your messages stay" only when the two of you have spoken.
 		blocking: { ...input.blocking, history: c ? hasSpoken(c) : false },
 		id: p.xolacerProfileId,
 		isSelf: p.isSelf,

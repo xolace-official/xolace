@@ -1,4 +1,3 @@
-/** A Xolacer's profile on fixtures: `xolace://dev/connect/<id>`. Shares the thread's fixtures. */
 import type { DevState } from "@/dev/dev-state";
 import { NOW } from "../../dev/fixtures";
 import { FixtureXolacer } from "../../thread/dev/fixture-thread";

@@ -6,7 +6,6 @@ import { BODY_MAX_SCALE } from "@/design/type";
 import { charactersLeft } from "@/features/care/bridge/bridge-model";
 import { COPY } from "@/features/care/bridge/copy";
 
-/** A one-line field on a card, with the characters left once they're close to the cap. */
 export function Field({
 	value,
 	onChange,

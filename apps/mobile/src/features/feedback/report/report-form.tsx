@@ -14,10 +14,6 @@ const KINDS: readonly Choice<"bug" | "idea">[] = [
 	{ id: "idea", label: R.tabs.idea },
 ];
 
-/**
- * A bug, an idea or a concern: Settings' feedback dialog field (13 pt corners on the well, the
- * accent ring while you write, the count under it), Bug · Idea as a segment, Send at the foot.
- */
 export function ReportForm() {
 	const { state, actions } = useFeedbackScreen();
 	const concern = state.kind === "concern";

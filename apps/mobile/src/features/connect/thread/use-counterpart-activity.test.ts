@@ -6,8 +6,6 @@ import {
 } from "./use-counterpart-activity";
 
 describe("useCounterpartActivity", () => {
-	// Cold-start deep link, or a thread that isn't open: the title mounts with no channel and
-	// has to idle on it.
 	it("idles without a channel", () => {
 		let read: unknown;
 		mountHook(() => {

@@ -8,11 +8,7 @@ import { useTokenColors } from "@/lib/use-token-color";
 import { useCheckIn } from "../check-in-data";
 import { CHECK_IN } from "../copy";
 
-/*
- * Board `.sp textarea` 112, radius 20; `.bt2` 54 (Skip flex 1, Done 1.4).
- */
 const R = CHECK_IN.reflective;
-/** The share switch's track: the theme's mint (Default light: the board's #1E7A61). */
 const OK_TRACK = "accent-success-ink";
 const GLYPH = { flame: 15, seal: 16 } as const;
 const MILESTONE = { fontSize: 14 } as const;
@@ -20,17 +16,11 @@ const SHARE = { fontSize: 14.5 } as const;
 const NOD = { fontSize: 13.5 } as const;
 const BUTTON = { fontSize: 16 } as const;
 
-/**
- * Lighter or worked through (production's `ReflectiveStep`): what helped, the share toggle (not
- * on a careful card), the streak nod, Skip / Done. Done saves the words; an empty Done saves
- * the empty reflection, as production does.
- */
 export function ReflectiveStep({
 	answer,
 	offer,
 }: {
 	answer: "lighter" | "processed";
-	/** The one-time Telegram offer (production #777), above Skip / Done. */
 	offer?: ReactNode;
 }) {
 	const { state, actions } = useCheckIn();
@@ -120,7 +110,6 @@ export function ReflectiveStep({
 					haptic={Presets.System.selection}
 					onPress={actions.close}
 				>
-					{/* Large Dynamic Type shrinks it to fit beside Done rather than cutting it. */}
 					<AppText
 						adjustsFontSizeToFit
 						className="px-3"

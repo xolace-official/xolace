@@ -1,17 +1,7 @@
-import MaskedViewClass from "@react-native-masked-view/masked-view";
+import MaskedView from "@react-native-masked-view/masked-view";
 import { BlurView as ExpoBlurView } from "expo-blur";
-import {
-	type ComponentType,
-	type ReactElement,
-	useEffect,
-	useState,
-} from "react";
-import {
-	StyleSheet,
-	useWindowDimensions,
-	View,
-	type ViewProps,
-} from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
 	useAnimatedProps,
 	useAnimatedStyle,
@@ -26,21 +16,10 @@ import type { QuoteBackground as Background } from "../quotes-model";
 import { SCRIM_CLEAR, scrimOf } from "../quotes-palette";
 import { BackgroundLayer } from "./background-layer";
 
-// The package's class typings predate React 19's JSX types (as `today/band-blur.tsx`).
-const MaskedView = MaskedViewClass as unknown as ComponentType<
-	ViewProps & { maskElement: ReactElement }
->;
-// expo-blur's own BlurView: its intensity is an animated prop, and it isn't the className-wrapped one.
 const AnimatedBlur = Animated.createAnimatedComponent(ExpoBlurView);
-/** The reveal grows from the sheet: (50%, 90%), to CSS's circle(150%). */
 const ORIGIN = { x: 0.5, y: 0.9 };
 const REACH = 1.5;
 
-/**
- * Everything behind the words. A new background is revealed by a circle growing from the sheet,
- * over the old one, which stays until the new one is ready (a loop: its first frame). The
- * background softens behind write back, share and Words you kept. All on the UI thread.
- */
 export function QuoteBackground({
 	background,
 	play,
@@ -55,7 +34,6 @@ export function QuoteBackground({
 	const [settling, setSettling] = useState(false);
 	const reveal = useSharedValue(1);
 
-	// A new pick: whatever was revealing becomes the base, and the new one grows over it.
 	if (background.key !== base.key && background.key !== top?.key) {
 		if (top) {
 			setBase(top);

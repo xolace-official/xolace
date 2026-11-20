@@ -19,22 +19,14 @@ import type { LockSample } from "@/features/settings/notifications/notifications
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/**
- * The lock-screen sample (board `.lock`): a reminder in the chosen voice at 9:30 pm, faded back
- * and held when quiet hours cover it. A printed object, the same in light and dark. The line
- * rises in (6 pt, 300 ms) when the voice changes; nothing animates in on open.
- */
 const C = NOTIFY_COPY.sample;
-/** The board's height; a reminder at larger text grows the card past it. */
 const HEIGHT = 250;
-/** The pictured lock screen (date, clock, kicker) stays at its size; the reminder grows. */
 const PICTURE_SCALE = 1;
 const GHOST = 0.28;
 const RISE_MS = 300;
 const RISE_PT = 6;
 const RISE_EASE = Easing.bezier(0.2, 0.7, 0.2, 1);
 const RISE = { duration: RISE_MS, easing: RISE_EASE, ...PLAY_AS_CHOSEN };
-/** CSS 135deg-ish, as the board draws the app mark. */
 const MARK_FROM = { x: 0.18, y: 0.12 };
 const MARK_TO = { x: 0.82, y: 0.88 };
 
@@ -151,8 +143,6 @@ export function LockCard({ sample }: { sample: LockSample }) {
 				>
 					{C.kicker}
 				</AppText>
-				{/* The reminder sits in the flow at the bottom (14 pt up, 12 pt in), so larger text
-				 * grows the card instead of covering the clock; the held pill floats just above it. */}
 				{sample.show ? (
 					<View className="mt-auto w-full px-3 pt-3 pb-3.5">
 						<Bubble held={sample.held} line={sample.line} />

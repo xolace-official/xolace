@@ -2,44 +2,22 @@ import type { ThemeName } from "uniwind";
 import { DEFAULT_FONT_PAIR, type FontPairId } from "./font-pairs";
 import { PRODUCTION_PALETTES } from "./theme-values";
 
-/**
- * The theme registry: the one place a theme is defined.
- *
- * Everything else is built from it: the theme CSS and the Metro theme list
- * (`bun run themes`, scripts/gen-themes.ts), the Uniwind variant names, the
- * Plus gate, night mode and `isDark`. To add a theme, add an entry here and run
- * the script (apps/mobile/AGENTS.md, "Themes").
- *
- * Token names follow HeroUI (`background`, `surface`, `foreground`, `accent` …)
- * plus production's extras (`ember`, `tone-*` …) and the redesign's (`subtle`,
- * `accent-ink`, `accent-wash` …). A theme sets only what it changes; the
- * generator fills in the shared values and derives the redesign's extras.
- */
-
 export type ThemeMode = "light" | "dark";
 export type ThemeTier = "free" | "premium";
 
-/** CSS variable name (no leading `--`) → value. */
 export type Palette = Record<string, string>;
 export type ThemePalettes = { light: Palette; dark: Palette };
 
 export type ThemeEntry = {
-	/** Saved in `preferences.colorTheme` and the store's `colorThemeId`: never rename one. */
 	id: string;
 	name: string;
 	tier: ThemeTier;
-	/** Heading + body faces (src/design/font-pairs.ts). */
 	fonts: FontPairId;
 	light?: Palette;
 	dark?: Palette;
-	/** Not offered in the picker (Night is chosen by the clock). */
 	hiddenFromPicker?: boolean;
 };
 
-/**
- * Default is the redesign's own palette ("Lit from within"), the colours the
- * boards are drawn in. The launch cover depends on these two backgrounds.
- */
 const DEFAULT: ThemePalettes = {
 	dark: {
 		accent: "#b7a3ff",
@@ -211,8 +189,6 @@ export const THEMES: readonly ThemeEntry[] = [
 		tier: "premium",
 		...P.playful,
 	},
-	// Night is the redesign's Dusk: Default's dark room, later. SessionModeProvider
-	// applies it from 22:00 to 04:00; its light side is production's moonlit one.
 	{
 		dark: DEFAULT.dark,
 		fonts: "warm",
@@ -233,26 +209,20 @@ export const FREE_THEMES = THEMES.filter(
 export const PREMIUM_THEMES = THEMES.filter((t) => t.tier === "premium");
 
 export type ThemeVariant = {
-	/** Uniwind's theme name. Saved in the store's `previousTheme`: never rename one. */
 	name: ThemeName;
 	themeId: string;
-	/** The native light/dark the variant is drawn for. */
 	base: ThemeMode;
 };
 
 const MODES = ["light", "dark"] as const;
 
-/** Uniwind's name for a theme in a mode. Default keeps Uniwind's own `light` / `dark`. */
 function variantName(id: string, mode: ThemeMode): string {
 	return id === "default" ? mode : `${id}-${mode}`;
 }
 
-/** Every Uniwind theme the generated CSS defines. */
 export const VARIANTS: readonly ThemeVariant[] = THEMES.flatMap((t) =>
 	MODES.filter((mode) => t[mode]).map((mode) => ({
 		base: mode,
-		// The one cast: Uniwind's ThemeName union is generated from these same
-		// names (theme-names.generated.json → uniwind-types.d.ts); a test keeps them equal.
 		name: variantName(t.id, mode) as ThemeName,
 		themeId: t.id,
 	}))
@@ -261,16 +231,10 @@ export const VARIANTS: readonly ThemeVariant[] = THEMES.flatMap((t) =>
 const VARIANT_BY_NAME: Readonly<Record<string, ThemeVariant>> =
 	Object.fromEntries(VARIANTS.map((v) => [v.name, v]));
 
-/** The registry's entry for a Uniwind theme name, or undefined for anything else ("system"). */
 export function findVariant(name: string | null): ThemeVariant | undefined {
 	return name ? VARIANT_BY_NAME[name] : undefined;
 }
 
-/**
- * The Uniwind theme for a saved theme id and mode. An id this build doesn't
- * know (or a theme without that mode) falls back to Default, so a stale
- * preference never hands Uniwind a name it can't draw.
- */
 export function themeVariant(id: string, mode: ThemeMode): ThemeName {
 	return (
 		findVariant(variantName(id, mode)) ??
@@ -278,7 +242,6 @@ export function themeVariant(id: string, mode: ThemeMode): ThemeName {
 	).name;
 }
 
-/** The same theme in the other mode (light ↔ dark), or the name unchanged if it has none. */
 export function oppositeVariant(name: ThemeName): ThemeName {
 	const variant = findVariant(name);
 	if (!variant) {
@@ -290,14 +253,12 @@ export function oppositeVariant(name: ThemeName): ThemeName {
 	return other?.name ?? name;
 }
 
-/** What night mode applies. */
 export const NIGHT_VARIANT: ThemeName = themeVariant("nightly", "dark");
 
 export function isPremiumTheme(id: string): boolean {
 	return THEME_BY_ID[id]?.tier === "premium";
 }
 
-/** The font pair a Uniwind theme draws in; Default's for anything else ("system"). */
 export function variantFonts(name: string | null): FontPairId {
 	const variant = findVariant(name);
 	return variant

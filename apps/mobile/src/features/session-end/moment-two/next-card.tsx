@@ -29,25 +29,16 @@ const LABEL_MAX = 1.4;
 
 type Props = {
 	k: NextKey;
-	/** The listener, the part in focus, the heavier part. */
 	cards: NextCards;
-	/** Connect's and Steadiness's pieces, composed in by the route. */
 	parts: NextParts;
-	/** Letters' tile, for its two cards. */
 	letterTile: ReactNode;
 	c2: SharedValue<number>;
 	colors: SessionColors;
 	reduced: boolean;
-	/** Nothing to share: the label sits a little lower (board `.nxl` 30). */
 	noneTop: boolean;
 	onPress: () => void;
 };
 
-/**
- * One next step (board `.nxl`, `.nxc`): "Next, if you want it", then one 76 pt
- * card. With nothing to offer, the label and the slot fade away (.35 s, 6 pt
- * down) and the pinned buttons don't move. VoiceOver: one button, title then sub.
- */
 export function NextCard({
 	k,
 	cards,

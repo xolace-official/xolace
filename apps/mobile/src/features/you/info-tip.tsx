@@ -7,7 +7,6 @@ import { playSoftPress } from "@/lib/haptics";
 const IN_MS = 220;
 const OUT_MS = 150;
 
-/** The board's ⓘ: an 18 pt ring with an i. */
 export function InfoButton({
 	label,
 	onPress,
@@ -36,7 +35,6 @@ export function InfoButton({
 	);
 }
 
-/** An ⓘ's explanation, in place over the card (the board's `.tipb`). Tap it to close. */
 export function InfoTip({
 	title,
 	body,

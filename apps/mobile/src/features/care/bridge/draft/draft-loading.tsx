@@ -9,7 +9,6 @@ import { ShimmerText } from "@/features/care/bridge/draft/shimmer-text";
 
 const FLUX_SIZE = 132;
 
-/** While the draft is written: Flux thinking, and the words being found for them. */
 export function DraftLoading() {
 	const { state } = useBridgeScreen();
 	const title = COPY.loading.title(recipientOf(state.recipient.name));

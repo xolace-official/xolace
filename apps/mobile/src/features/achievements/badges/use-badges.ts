@@ -1,7 +1,3 @@
-/**
- * The Achievements screen's data hook: the overview, the freeze shelf, pins,
- * Share and the freeze buy. The one file here that calls Convex or the toast.
- */
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { useRef, useState } from "react";
@@ -25,13 +21,11 @@ import {
 } from "@/lib/haptics";
 import { freezeRefusal } from "@/lib/streak-freeze";
 
-/** The refusal's warning lands just after the press's soft tap, not on top of it. */
 const WARN_AFTER_MS = 120;
 
 export function useBadges(): Badges {
 	const overview = useQuery(api.achievements.display.overview);
 	const shelf = useQuery(api.achievements.display.shelf);
-	// The pin mark moves as it's pressed; a refusal puts it back.
 	const setPinned = useMutation(
 		api.achievements.pins.setPinned
 	).withOptimisticUpdate((store, { achievementId, pinned }) => {
@@ -55,7 +49,6 @@ export function useBadges(): Badges {
 	});
 	const buyFreeze = useMutation(api.achievements.sparks.buyFreeze);
 	const [buying, setBuying] = useState(false);
-	// Two quick taps land before `buying` re-renders: the ref stops the second purchase.
 	const inFlight = useRef(false);
 	const view = overview ? badgesView(overview) : undefined;
 
@@ -112,7 +105,6 @@ export function useBadges(): Badges {
 		}
 	};
 
-	// A link to a badge the screen doesn't list (an old one, or a typo).
 	const missing = () => toast(COPY.badge.gone);
 
 	return {

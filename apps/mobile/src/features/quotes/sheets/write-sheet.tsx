@@ -12,12 +12,10 @@ const SAID = "text-[17px] leading-[24.5px]";
 
 type Props = {
 	ink: InkPalette;
-	/** The ink is the light one: the keyboard matches. */
 	dark: boolean;
 	step: "writing" | "sent" | "flagged";
 	draft: string;
 	sending: boolean;
-	/** Tomorrow's words will take the reply into account (Xolace+ with a recent session). */
 	reaches: boolean;
 	onDraft: (s: string) => void;
 	onSend: () => void;
@@ -27,7 +25,6 @@ type Props = {
 	onClose: () => void;
 };
 
-/** Write back, then Kept safe (or the calm support card) in the same sheet. Closing keeps the draft. */
 export function WriteSheet(p: Props) {
 	const { ink } = p;
 	const said = { color: ink.sheetText } as const;

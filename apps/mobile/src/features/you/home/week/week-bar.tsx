@@ -11,7 +11,6 @@ import { AppText } from "@/components/shared/app-text";
 import { EaseView } from "@/design/ease";
 import { barHeight, PLOT_H } from "@/features/you/home/week/week-model";
 
-/** The held bar's column widens ×1.36 on this spring (NC's mood-stack-columns `WIDEN`). */
 const WIDEN = 1.36;
 const FOCUS_SPRING = {
 	damping: 18,
@@ -23,15 +22,8 @@ const HELD_MAX_W = 40;
 const DIM = 0.4;
 const REST = 0.65;
 const DIM_MS = 150;
-/** Production's grow-in. */
 const GROW = { damping: 20, stiffness: 180, type: "spring" } as const;
 
-/**
- * One day's column: production's bar (height and colour from intensity, accent low to ember
- * high; today and the peak full, the rest .65; a native scaleY grow-in that still lands at full
- * height if the spring misses, so it stays on Ease), the day's letter 6 pt under it. While a day
- * is held, its column widens and the others dim to .4, all on the UI thread.
- */
 export function WeekBar({
 	index,
 	intensity,
@@ -47,7 +39,6 @@ export function WeekBar({
 	intensity: number | null;
 	letter: string;
 	today: boolean;
-	/** Today or the week's peak. */
 	full: boolean;
 	held: SharedValue<number>;
 	accent: string;

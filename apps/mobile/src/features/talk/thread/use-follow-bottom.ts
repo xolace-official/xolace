@@ -9,28 +9,17 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 
-/** Let go within this far of the end and the thread follows again (the sample's reattach distance). */
 const REATTACH_PT = 40;
-/** The glide's time constant and top speed (the sample's `followGlideMs` / `followMaxSpeed`). */
 const GLIDE_MS = 200;
 const MAX_SPEED = 2000;
-/** The glide keeps running this long after a line ends, so its last words are fully in view. */
 const TAIL_MS = 600;
 
 type Options = {
-	/** A line is streaming and the thread is in front: only then does the frame loop run. */
 	live: boolean;
 	reduced: boolean;
-	/** The keyboard's share of the bottom inset (the chat view's content inset). */
 	inset: DerivedValue<number>;
 };
 
-/**
- * Follow the newest words (after the streaming-text sample's `useFollowBottom`): while a line is
- * live the thread glides to its end on the UI thread; a drag lets go, and settling within 40 pt
- * of the end follows again. The frame loop runs only while `live` (plus a short tail). Between
- * lines, a new turn scrolls into view once, if the thread is following.
- */
 export function useFollowBottom({ live, reduced, inset }: Options) {
 	const scrollRef = useAnimatedRef<Animated.ScrollView>();
 	const offset = useScrollOffset(scrollRef);
@@ -102,7 +91,6 @@ export function useFollowBottom({ live, reduced, inset }: Options) {
 	return {
 		onContentSizeChange: (_w: number, h: number) => {
 			content.set(h);
-			// Between lines (a typed line, a seeded thread): one scroll to the end, if following.
 			if (!live && following.get() && !dragging.get()) {
 				scrollRef.current?.scrollToEnd({ animated: !reduced });
 			}

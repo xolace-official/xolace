@@ -6,8 +6,6 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 
 const TIMING = { duration: LT.barTitleMs, ...PLAY_AS_CHOSEN };
 
-/** The hub's name in the bar: in over 220 ms, rising 4 pt, once the title is under the bar.
- * Reduce Motion: the fade alone. */
 export function BarTitle({ text, on }: { text: string; on: boolean }) {
 	const reduced = useEffectiveReducedMotion();
 	const style = useAnimatedStyle(() => ({

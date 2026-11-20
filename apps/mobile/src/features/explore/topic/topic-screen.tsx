@@ -31,17 +31,10 @@ import { useHeaderOptions } from "@/lib/header-options";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** The bar's height below the safe area: the cover and the pin measure from it. */
 const NAV_BAR = 44;
-/** iOS runs the cover under a see-through bar; Android's bar is opaque, the cover below it. */
 const UNDER_BAR = Platform.OS === "ios";
 const GONE_GAP = 48;
 
-/**
- * A topic, v2 (handoff `explore-doors.md` §4): the cover under a transparent bar with the name on
- * it, a sheet with Explore's chips when the topic holds both kinds, and the grouped list. At the
- * pin the chips stay under the bar, the page fills in behind it and the name moves up into it.
- */
 export function TopicScreen() {
 	const { state } = useTopicScreen();
 	const insets = useSafeAreaInsets();
@@ -53,7 +46,6 @@ export function TopicScreen() {
 	const [foreground, coverInk] = useTokenColors(["foreground", "cover-ink"]);
 	const topic = state.header;
 	const chips = topic ? hasBothKinds(topic) : false;
-	// null until someone picks: `?family=` decides once the header says there are chips.
 	const [picked, setPicked] = useState<TopicFilter | null>(null);
 	const filter = picked ?? initialFilter(state.family, chips);
 	const [pinned, setPinned] = useState(false);
@@ -83,7 +75,6 @@ export function TopicScreen() {
 			swap.run(() => setPicked(v));
 		}
 	};
-	// On the cover: white ink. Pinned, or with no cover to sit on, the page's.
 	const onCover = UNDER_BAR && topic != null && !pinned;
 
 	return (
@@ -91,7 +82,6 @@ export function TopicScreen() {
 			<Stack.Screen
 				options={{
 					...header,
-					// The cover runs under the bar with its own band: no soft edge, no blur.
 					headerBlurEffect: undefined,
 					headerTintColor: onCover ? coverInk : foreground,
 					headerTitle: () => <BarTitle on={pinned} text={topic?.title ?? ""} />,
@@ -103,7 +93,6 @@ export function TopicScreen() {
 			) : null}
 			<Animated.ScrollView
 				className="bg-background"
-				// iOS: the cover runs under the bar, so offset 0 is the top of the screen.
 				contentInsetAdjustmentBehavior="never"
 				onScroll={onScroll}
 				ref={scroll}
@@ -138,8 +127,6 @@ export function TopicScreen() {
 								borderTopLeftRadius: TOPIC.sheetR,
 								borderTopRightRadius: TOPIC.sheetR,
 								marginTop: -TOPIC.sheetOverlap,
-								// At least a screen below the bar, plus the bottom clearance, so even a
-								// short list can scroll past the pin.
 								minHeight: height - barBottom + TOPIC.bottom,
 								paddingBottom: TOPIC.bottom,
 							}}

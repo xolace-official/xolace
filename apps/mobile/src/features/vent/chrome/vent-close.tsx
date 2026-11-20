@@ -17,16 +17,10 @@ const SHOWN: readonly VentPhase[] = [
 	"ash",
 	"gone",
 ];
-/** v2: dimmed while it listens, so it's there but quiet. */
 const DIM = 0.55;
-/** v2: the intro brings it in with "I understand". */
 const INTRO_DELAY_MS = 1400;
 const ICON_STYLE = { opacity: 0.5 } as const;
 
-/**
- * Production's close: a 36 pt circle at white 5%, 64 from the top and 24 from the right.
- * v2: on the intro too, and dim while recording, where closing drops the take.
- */
 export function VentClose() {
 	const { state, actions } = useVentScreen();
 	const cream = useTokenColor("vent-cream");

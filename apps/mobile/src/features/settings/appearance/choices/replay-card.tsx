@@ -13,7 +13,6 @@ import {
 } from "@/features/settings/appearance/copy";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** Replay intro ›, and the alert it asks first (held open by the screen's state). */
 export function ReplayCard() {
 	const { state, actions } = useAppearanceScreen();
 	const subtle = useTokenColor("subtle");

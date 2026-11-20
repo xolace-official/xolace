@@ -19,21 +19,14 @@ import { useCounterpartActivity } from "../use-counterpart-activity";
 
 const IOS = process.env.EXPO_OS === "ios";
 const AVATAR = 38;
-/** Help and the menu. */
 const RIGHT_ITEMS = 2;
 
-/** Who the thread is with: avatar, name and where things stand. A seeker taps it for the
- * Xolacer's profile; a Xolacer looking at a seeker has nowhere to go. Props, not the provider:
- * the native header renders it outside the screen's tree. It reads typing and presence itself,
- * as production's header did: they change every second while someone types, and only this
- * line shows them, so the list and composer don't render again. */
 export function ThreadTitle({
 	conversation: c,
 	channel,
 	onOpenProfile,
 }: {
 	conversation: ThreadConversation;
-	/** The thread's channel once it has state; activity is read only while the thread is open. */
 	channel: Channel | null;
 	onOpenProfile: () => void;
 }) {
@@ -85,7 +78,6 @@ export function ThreadTitle({
 	);
 }
 
-/** iOS: the identity sits left, after the back button (see `HeaderIdentity`). */
 export function ThreadIdentity() {
 	const { state, actions } = useThreadScreen();
 	if (!IOS || state.phase !== "ready") {
@@ -102,9 +94,6 @@ export function ThreadIdentity() {
 	);
 }
 
-/** Right of the identity: help, always one tap away (the prototype's lifebuoy, production's crisis
- * resources), then Rate, Report and Block. Block is mounted only when it can act, never
- * `hidden`: a hidden item eats touches on Android. */
 export function ThreadToolbar() {
 	const { state, actions } = useThreadScreen();
 	const danger = useTokenColor("danger-ink");
@@ -152,7 +141,6 @@ export function ThreadToolbar() {
 	);
 }
 
-/** Block asks first: it can't be undone. */
 export function BlockDialog() {
 	const { state, actions } = useThreadScreen();
 	if (state.phase !== "ready") {

@@ -16,7 +16,6 @@ const NOTIFICATIONS_OPTIONS = { title: "Notifications" };
 const DATA_OPTIONS = { title: "Privacy & Data" };
 const ACCOUNT_OPTIONS = { title: "Account" };
 const FOLLOW_OPTIONS = { title: "Follow & Support" };
-/** Its own page sheet over Notifications, closed with Done (#733). */
 const REACH_OPTIONS = {
 	presentation: "pageSheet",
 	title: "Reach me on…",
@@ -33,8 +32,6 @@ export default function SettingsLayout() {
 		reducedMotion,
 		surface,
 	};
-	/** Privacy & Data's delete sheet (`?kind=data|account`): the redesign's form sheet, fitting
-	 * its content, no header. `presentation` is spelled out for `presented-routes.test.ts`. */
 	const deleteOptions = {
 		...fitSheet(sheetContext),
 		headerShown: false,

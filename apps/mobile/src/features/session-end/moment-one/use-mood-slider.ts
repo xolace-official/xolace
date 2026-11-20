@@ -15,7 +15,6 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { centreOf, SAME, snap, stepBy, stepOf } from "../mood-scale";
 import { EASE, SLIDER } from "../session-look";
 
-/** A tap's thumb glides there: 140 ms, cubic-bezier(.5, 1, .89, 1). */
 const GLIDE = {
 	duration: SLIDER.glideMs,
 	easing: EASE.glide,
@@ -24,22 +23,12 @@ const GLIDE = {
 const PLACE = { dampingRatio: 1, duration: 300, ...PLAY_AS_CHOSEN };
 
 export type SliderHandlers = {
-	/** The finger touched the track (Not sure clears). */
 	onTouch: () => void;
-	/** The position crossed into a new step (0 is the centre). */
 	onStep: (step: number) => void;
-	/** The thumb reached either end. */
 	onEdge: () => void;
-	/** The finger lifted (or VoiceOver adjusted): the position is the answer. */
 	onRelease: (position: number) => void;
 };
 
-/**
- * Production's old `use-mood-slider.ts`, on Gesture Handler 3's hooks: an exclusive pan + tap. The position lives
- * on the UI thread (`pos`, which the thumb, the face's follow, the float, the shadow and the light all
- * read); JS hears only a new step, an end and the release, never a frame. While held the rail swells
- * and the thumb grows (`grab`). A tap jumps to the point and releases at once; the thumb glides there.
- */
 const IGNORE: SliderHandlers = {
 	onEdge: () => undefined,
 	onRelease: () => undefined,
@@ -57,9 +46,7 @@ export function useMoodSlider(
 	const step = useSharedValue(0);
 	const edge = useSharedValue(0);
 	const grab = useSharedValue(0);
-	// Whoever listens (`listen`) is read through a ref, so the worklets never capture a stale callback.
 	const ref = useRef(IGNORE);
-	/** Who hears the slider: set from an effect, once per render. */
 	const listen = (h: SliderHandlers) => {
 		ref.current = h;
 	};
@@ -94,7 +81,6 @@ export function useMoodSlider(
 		},
 		onBegin: () => {
 			grab.set(1);
-			// The face follows from this frame on, and the thumb's nudge never plays again.
 			touched.set(1);
 			driving.set(1);
 			scheduleOnRN(fireTouch);
@@ -119,7 +105,6 @@ export function useMoodSlider(
 	});
 	const gesture = useExclusiveGestures(pan, tap);
 
-	/** VoiceOver's increment / decrement: one step, to that step's centre, answered at once. */
 	const adjust = (dir: 1 | -1, from: number | null) => {
 		const s = stepBy(from, dir);
 		const v = centreOf(s);
@@ -132,14 +117,12 @@ export function useMoodSlider(
 		ref.current.onRelease(v);
 	};
 
-	/** Back to the middle (Not sure, a new visit); `glide` as the board's .14 s. */
 	const reset = (glide: boolean) => {
 		pos.set(glide ? withTiming(SAME, GLIDE) : SAME);
 		step.set(0);
 		edge.set(0);
 	};
 
-	/** A dev state's answer: the thumb at `v`, as a finished drag. */
 	const place = (v: number) => {
 		touched.set(1);
 		driving.set(1);

@@ -4,7 +4,6 @@ import { EASING, EaseView, enter, FADE_IN, POP } from "@/design/ease";
 import { RATE_COPY } from "../copy";
 import { type Ember, SCENE_MOTION as M, STAR_PATH, STARS } from "./ember-scene";
 
-/** The sprig's leaves: [x, y, angle] (native-cook `lists/ember-day-review` Laurel, recoloured). */
 const LEAVES: readonly (readonly [number, number, number])[] = [
 	[13, 30, -38],
 	[10.5, 23, -22],
@@ -61,7 +60,6 @@ function Sprig({ flip, ember, reduced }: Lit & { flip?: boolean }) {
 	);
 }
 
-/** One star lights: up from .4, turned −40°, overshooting on the Pop spring, then still. */
 function Star({ i, ember, reduced }: Lit & { i: number }) {
 	const s = STARS[i];
 	if (!s) {
@@ -89,7 +87,6 @@ function Star({ i, ember, reduced }: Lit & { i: number }) {
 	);
 }
 
-/** Two mirrored sprigs around five stars in a rising arc. */
 export function LaurelStars(props: Lit) {
 	return (
 		<View

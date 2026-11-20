@@ -1,6 +1,3 @@
-/** Feature layering guard (migration plan Phase 5): no feature cycles, `purchases` imports no
- * feature, no runtime file cycles; and the feature-shape rules for ported folders
- * (`feature-shape.ts`). Each failure lists the imports to move. */
 import { describe, expect, it } from "vitest";
 import {
 	backendCallsOutsideDataHooks,
@@ -32,7 +29,6 @@ import {
 const ENTITLEMENTS_FEATURE = "purchases";
 const graph = buildGraph();
 
-/** `a -> b` feature pairs, each with the file imports that create it. */
 function featureEdges(importGraph: ImportGraph): Map<string, string[]> {
 	const pairs = new Map<string, string[]>();
 	for (const [file, imports] of importGraph) {
@@ -58,8 +54,6 @@ describe("import graph", () => {
 		...new Set([...graph.keys()].map(featureOf).filter((f) => f !== undefined)),
 	];
 
-	// The checks below pass trivially on an empty graph (drifted tsconfig
-	// `include`, moved `src/`); pin the inputs so a silent pass cannot hide.
 	it("sees the source tree it is checking", () => {
 		expect(graph.size).toBeGreaterThan(0);
 		expect(features).toContain(ENTITLEMENTS_FEATURE);
@@ -73,7 +67,6 @@ describe("import graph", () => {
 			[...pairs.keys()]
 				.filter((k) => k.startsWith(`${f} -> `))
 				.map((k) => k.slice(`${f} -> `.length));
-		// A failure names the file imports inside each cycle, not just the features.
 		const report = findCycles(features, next).map((cycle) => ({
 			cycle,
 			imports: [...pairs]
@@ -142,8 +135,6 @@ describe("feature shape (apps/mobile/AGENTS.md)", () => {
 			devCodeInReleaseGraph(graph),
 			'Open src/dev only from a dev route shim, or a fixture adapter seeding itself until its contract lands: `__DEV__ ? require("@/dev/…") : null`. A static import ships it'
 		).toEqual([]);
-		// The dev route shims are the guarded way in: without one, the check
-		// above would pass on a graph that never saw a guard.
 		const guarded = [...graph.values()]
 			.flat()
 			.filter((i) => i.devOnly)

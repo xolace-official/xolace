@@ -1,15 +1,8 @@
-/**
- * Reflect as pure functions: which stage production's session machine is on, the mirror cut
- * into lines, the phrases it borrowed from your words, its write-in timeline, the wait's line,
- * the question and the escalation list. No React, no Convex: the data hook and the dev states'
- * fixtures both feed these.
- */
 import type { Resource } from "@xolace/backend/convex/lib/crisisResources";
 import { COPY } from "./copy";
 import { isRateLimitMessage } from "./session/session-service";
 import type { ReflectionStateName } from "./session/types";
 
-/** The board's stages: write → wait → land → mirror → next → heard. */
 export type ReflectStage =
 	| "write"
 	| "wait"
@@ -19,11 +12,6 @@ export type ReflectStage =
 	| "heard";
 export type CareStep = "main" | "res" | "breath";
 
-/**
- * Whether a badge arrival waits while Reflect is on this stage. Every stage holds: writing (even
- * an empty field: someone came here to write), the session's stages, and Heard after the exit,
- * when the machine has reset to idle. A new stage has to decide here.
- */
 const HOLDS_ARRIVALS = {
 	heard: true,
 	land: true,
@@ -35,24 +23,16 @@ const HOLDS_ARRIVALS = {
 
 export const holdsArrivals = (stage: ReflectStage): boolean =>
 	HOLDS_ARRIVALS[stage];
-/** A run of text and the phrase pair it belongs to (−1: plain). */
 export type Seg = readonly [text: string, pair: number];
-/** The mirror, line by line, each a run of segments. */
 export type MirrorLines = readonly (readonly Seg[])[];
 
-/** Production's MAX_TURNS: two refinements, then "Leave it here". */
 export const MAX_TURNS = 2;
-/** The slow card shows after this long in the wait (handoff §5.4: 10 s, not the board's 9). */
 export const SLOW_MS = 10_000;
-/** A quick answer still waits this long, so the circle always plays its close (S25). */
 export const MIN_WAIT_MS = 1600;
-/** The circle closes (.42 s) and bleeds before the mirror takes the stage. */
 export const LAND_MS = 720;
-/** A Plus take shows its countdown for its last 30 s (production's dictation strip). */
 const COUNTDOWN_FROM_MS = 30_000;
 const SECOND_MS = 1000;
 
-/** "0:09" for a Plus take's last 30 s; null before then, or with no take. */
 export function takeCountdown(remainingMs: number | null): string | null {
 	if (remainingMs === null || remainingMs > COUNTDOWN_FROM_MS) {
 		return null;
@@ -60,7 +40,6 @@ export function takeCountdown(remainingMs: number | null): string | null {
 	return `0:${String(Math.ceil(remainingMs / SECOND_MS)).padStart(2, "0")}`;
 }
 
-/** Production's MAX_RAW_INPUT: the server refuses more. */
 export const MAX_CHARS = 5000;
 
 const WRITE_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
@@ -75,11 +54,6 @@ const MIRROR_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
 	"gave-up",
 ]);
 
-/**
- * The stage for the machine's screen. `heard` holds Heard after the exit completes (the machine
- * resets then); `landing` is the circle's close between the answer and the mirror; `refining`
- * keeps a refinement's processing on the mirror, which shimmers until the new one lands.
- */
 export function stageOf(
 	screen: ReflectionStateName,
 	{
@@ -106,7 +80,6 @@ export function stageOf(
 	return "wait";
 }
 
-/** The wait's line, from the server's `processingStage` (absent: still reading the input). */
 export function waitStageOf(
 	processingStage: "connecting" | "writing" | undefined
 ): number {
@@ -116,7 +89,6 @@ export function waitStageOf(
 	return processingStage === "connecting" ? 1 : 0;
 }
 
-/** Production's `removeEmDash`: the mirror never shows an em dash. */
 function withoutEmDash(text: string): string {
 	return text
 		.replace(/\s*—\s*/g, ", ")
@@ -126,7 +98,6 @@ function withoutEmDash(text: string): string {
 
 const SENTENCE = /[^.!?…]+(?:[.!?…]+["”’)]*|$)/g;
 
-/** The mirror, one sentence a line, as the board sets it. */
 export function mirrorSentences(text: string): string[] {
 	const clean = withoutEmDash(text);
 	return (clean.match(SENTENCE) ?? [])
@@ -134,9 +105,7 @@ export function mirrorSentences(text: string): string[] {
 		.filter((s) => s.length > 0);
 }
 
-/** A borrowed phrase is at least this many words in a row… */
 const MIN_RUN = 3;
-/** …with at least one that isn't small. */
 const MIN_CONTENT_CHARS = 4;
 const SMALL = new Set([
 	"about",
@@ -179,7 +148,6 @@ const hasContent = (run: Token[]) =>
 
 type Match = { pair: number; a: [number, number]; b: [number, number] };
 
-/** The longest run starting at mirror token `i` that your words also hold, unused so far. */
 function longestAt(
 	mine: Token[],
 	theirs: Token[],
@@ -204,10 +172,6 @@ function longestAt(
 	return best;
 }
 
-/**
- * Cut `text` into segments at the matched character ranges. The segments keep their spaces, so
- * joined they give back `text`.
- */
 function cut(
 	text: string,
 	ranges: { start: number; end: number; pair: number }[]
@@ -228,11 +192,6 @@ function cut(
 	return segs;
 }
 
-/**
- * The phrases the mirror borrowed from your words (S7, S8): runs of at least three words the
- * mirror repeats, each paired with where you said it. The backend doesn't say which phrase a
- * line borrowed, so only words it kept as you wrote them light; a paraphrase stays plain.
- */
 export function pairPhrases(
 	yourWords: string,
 	lines: readonly string[]
@@ -276,14 +235,11 @@ export function pairPhrases(
 	return { mirror, words };
 }
 
-/** Plain text as one unpaired run (Your words before a mirror, or one with nothing borrowed). */
 const plain = (text: string): Seg[] => (text ? [[text, -1]] : []);
 
-/** Mirror lines with nothing lit (a heavy mirror, a revised one). */
 export const plainLines = (lines: readonly string[]): Seg[][] =>
 	lines.map((l) => plain(l));
 
-/** S7 ember-glow-story on the board's numbers, in seconds from the landing. */
 export const WRITE_IN = {
 	base: 0.15,
 	flashOut: 0.5,
@@ -295,16 +251,11 @@ export const WRITE_IN = {
 	stagger: 0.06,
 	wordIn: 0.25,
 } as const;
-/** Board `actDelay`: the actions come after the lighting, or just after the writing. */
 const ACTIONS_AFTER = { lit: 1.2, plain: 0.2 } as const;
 
 export type MirrorWord = { text: string; order: number; pair: number };
 export type MirrorLine = { words: MirrorWord[]; pairs: number[] };
 
-/**
- * The mirror's words in write-in order, with the pairs each line lights. Text that follows a
- * phrase with no space ("said" then ".") stays on that phrase's last word.
- */
 const PUNCTUATION_ONLY = /^[^\p{L}\p{N}]+$/u;
 
 function mirrorWords(lines: MirrorLines): MirrorLine[] {
@@ -320,7 +271,6 @@ function mirrorWords(lines: MirrorLines): MirrorLine[] {
 					continue;
 				}
 				if (k === 0 && joined && last) {
-					// An opening quote before a borrowed phrase lights with it.
 					if (last.pair < 0 && pair >= 0 && PUNCTUATION_ONLY.test(last.text)) {
 						last.pair = pair;
 					}
@@ -336,11 +286,6 @@ function mirrorWords(lines: MirrorLines): MirrorLine[] {
 	});
 }
 
-/**
- * The mirror's timeline: word i shows at .15 + .06·i over .25 s; .15 s after the last word the
- * borrowed phrases light .3 s apart, in the order the mirror uses them. Heavy: .09 s apart,
- * .6 s each, nothing lights. The clock settles once the last halo has faded.
- */
 export function timeline(lines: MirrorLines, heavy: boolean) {
 	const words = mirrorWords(lines);
 	const total = words.reduce((n, l) => n + l.words.length, 0);
@@ -374,13 +319,8 @@ export function timeline(lines: MirrorLines, heavy: boolean) {
 
 export type Timeline = ReturnType<typeof timeline>;
 
-/** Production's `SEED_CHARS`: a quote-reply seed is clipped to this many characters. */
 const SEED_CHARS = 88;
 
-/**
- * What a reader counts as characters: grapheme clusters, so a cut never splits an emoji or an
- * accent from its letter. Code points where the engine has no `Intl.Segmenter`.
- */
 function graphemes(text: string): string[] {
 	if (typeof Intl.Segmenter !== "function") {
 		return Array.from(text);
@@ -396,11 +336,6 @@ function clip(text: string): string {
 		: text;
 }
 
-/**
- * The question over the field, in production's order (`resolve-card-content.ts`): a quote-reply
- * seed (#316), then the late question, then a month's prompt, then the evening question. The
- * seed only seeds the screen, never the words sent.
- */
 export function promptFor({
 	late,
 	replySeed,
@@ -421,17 +356,14 @@ export function promptFor({
 	return event || COPY.write.prompt.evening;
 }
 
-/** Let it out takes words or a picked feeling. */
 export const canSend = (text: string, picks: readonly string[]) =>
 	text.trim().length > 0 || picks.length > 0;
 
-/** One row of the escalation list, from the session's resources. */
 export type ResourceRow = {
 	key: string;
 	name: string;
 	sub: string;
 	kind: Resource["type"];
-	/** What opening it does (`tel:`, `mailto:`, a link); null for text you read. */
 	href: string | null;
 	a11y: string;
 };
@@ -449,7 +381,6 @@ function hrefOf(r: Resource): string | null {
 	}
 }
 
-/** The session's escalation resources, crisis lines first (lower priority shows first). */
 export function resourceRows(
 	resources: readonly (string | Resource)[] | null | undefined
 ): ResourceRow[] {
@@ -479,14 +410,8 @@ export function resourceRows(
 	return rows.sort((a, b) => a.p - b.p).map(({ p: _p, ...row }) => row);
 }
 
-/** The safeguard's rejection code (convex/ai/safeguard.ts). */
 const REJECTED_CODE = "content_policy_violation";
 
-/**
- * Why the send failed, as the wait's card tells it. `rejected`: the safeguard said no, so a
- * retry would only fail again and the card offers support. `limit`: a free account hit the
- * hourly cap, so the card opens Plus. `failed`: anything else, with production's message.
- */
 export type WaitError = { kind: "rejected" | "limit" | "failed"; body: string };
 
 export function waitError(message: string, isPlus: boolean): WaitError {

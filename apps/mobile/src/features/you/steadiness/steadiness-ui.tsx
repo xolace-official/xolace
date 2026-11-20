@@ -9,19 +9,14 @@ import { playSoftPress } from "@/lib/haptics";
 
 export type PartsView = "grid" | "list";
 
-/** Where a dev state opens the screen. */
 export type SteadinessStart = {
 	view?: PartsView;
-	/** Xolace+: the part in the detail card, or the list row open. */
 	picked?: Domain;
 	open?: Domain;
-	/** Free: the ring tapped, its locked detail showing. */
 	peek?: Domain;
-	/** Scrolled down to the parts. */
 	toParts?: boolean;
 };
 
-/** The screen's own state its parts share: which view, which part, which row is open. */
 type SteadinessUi = {
 	view: PartsView;
 	picked: Domain | null;
@@ -58,7 +53,6 @@ export function SteadinessUiProvider({
 			setViewState(next);
 			setOpen(null);
 		},
-		/** `current`: the part the detail card shows now, so picking it again does nothing. */
 		tap: (part, { plus, doors }, current) => {
 			switch (tapOf(part, plus, view, doors)) {
 				case "select":

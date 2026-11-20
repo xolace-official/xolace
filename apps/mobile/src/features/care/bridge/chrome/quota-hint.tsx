@@ -5,7 +5,6 @@ import { useBridgeScreen } from "@/features/care/bridge/bridge-data";
 
 const LINK_HIT_SLOP = 8;
 
-/** Drafts left today, and for a free user what Xolace+ gives (opens the paywall). */
 export function QuotaHint() {
 	const { state, actions } = useBridgeScreen();
 	const hint = state.quota;

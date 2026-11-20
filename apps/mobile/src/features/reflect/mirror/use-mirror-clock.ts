@@ -6,11 +6,6 @@ const MAX_STEP_MS = 50;
 const FRAME_MS = 16;
 const MS_PER_S = 1000;
 
-/**
- * Seconds since the mirror landed, on the UI thread (ember-glow-story's one clock). Restarts on
- * each landing (`landN`), stops itself at `cap` (the block's clock never settles), and pauses
- * while `running` is false. Under Reduce Motion it jumps straight to the end.
- */
 export function useMirrorClock(
 	landN: number,
 	cap: number,

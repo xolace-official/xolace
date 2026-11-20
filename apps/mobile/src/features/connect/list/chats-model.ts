@@ -1,5 +1,3 @@
-/** The Chats list: Convex's conversation rows plus what Stream holds for each channel, in, the
- * rows as the list draws them, out. Pure. */
 import type { api } from "@xolace/backend/api";
 import { CHAT_REQUEST_SUBTITLE } from "@xolace/backend/convex/lib/chatNotifications";
 import {
@@ -16,12 +14,10 @@ export type PairConversation = Extract<ConversationRow, { kind: "pair" }>;
 type BroadcastConversation = Extract<ConversationRow, { kind: "broadcast" }>;
 type Status = PairConversation["status"];
 
-/** What Stream's client holds for a watched channel, by channel id. Missing: not watched yet. */
 export type StreamSnapshot = Readonly<
 	Record<string, { unread: number; lastText?: string }>
 >;
 
-/** Colour only for what needs you (the prototype's chips); the rest stay neutral. */
 export type ChipTone = "talking" | "waiting" | "neutral";
 
 export type Badge = { label: string; a11y: string };
@@ -43,13 +39,10 @@ export type PairRowView = {
 	photoUrl?: string;
 	present: boolean;
 	chip: { label: string; tone: ChipTone } | null;
-	/** Line 2: the last message in an open chat, otherwise where the chat stands. */
 	line: string | null;
 	when: string;
 	unread: Badge | null;
-	/** A Xolacer's incoming request: a dot where the count would be. */
 	requestDot: boolean;
-	/** Closed: the avatar and name step back. */
 	muted: boolean;
 	a11y: string;
 	menu: { archived: boolean; canClose: boolean; canDelete: boolean };
@@ -57,13 +50,10 @@ export type PairRowView = {
 
 export type ChatRowView = ChannelRowView | PairRowView;
 
-/** Past this the badge shows `99+`. */
 const UNREAD_CAP = 99;
 const DAY_MS = 86_400_000;
-/** Within this many days a row says the weekday, past it the date. */
 const WEEKDAY_SPAN = 6;
 
-/** Only open and resting threads carry unread. */
 function canHoldUnread(status: Status): boolean {
 	return status === "open" || status === "resting";
 }
@@ -84,12 +74,8 @@ const startOfDay = (t: number) => {
 	return d.getTime();
 };
 
-/** The device's way of writing a time: its locale, and 12- or 24-hour as set on the phone.
- * Undefined fields fall back to the runtime's default. */
 export type Clock = { locale?: string; hour12?: boolean };
 
-/** The time today, the weekday this week, the date before that, with the year once it isn't
- * this one. Each in the device's own format ("9:41 PM", "21:41", "Tue", "28 Oct"). */
 export function whenLabel(
 	timestamp: number,
 	now: number,
@@ -130,7 +116,6 @@ function closedLine(c: PairConversation): string {
 	return COPY.line.stillHere;
 }
 
-/** The chip and line 2 for one lifecycle state (production's rules, the prototype's words). */
 function statusOf(
 	c: PairConversation,
 	lastText: string | undefined
@@ -150,8 +135,6 @@ function statusOf(
 					label: xolacer ? COPY.chip.newRequest : COPY.chip.waiting,
 					tone: "waiting",
 				},
-				// A request has no channel yet, so no last message: the push's own words, shared
-				// with it so the two can't drift apart.
 				line: xolacer
 					? c.origin === "suggestion"
 						? COPY.line.afterSession
@@ -161,7 +144,6 @@ function statusOf(
 				requestDot: xolacer,
 			};
 		case "resting": {
-			// An absent reason predates the field and reads as quiet.
 			const manual = c.restingReason === "manual";
 			return {
 				chip: {
@@ -241,7 +223,6 @@ export function pairRow(
 	};
 }
 
-/** Connect's list: the channel pinned first, then the active chats in the server's order. */
 export function chatRows(
 	conversations: readonly ConversationRow[],
 	stream: StreamSnapshot,
@@ -260,7 +241,6 @@ export function chatRows(
 	];
 }
 
-/** The Archived screen's rows (never the channel, which can't be archived). */
 export function archivedRows(
 	conversations: readonly ConversationRow[],
 	stream: StreamSnapshot,
@@ -275,7 +255,6 @@ export function archivedRows(
 export const archivedCount = (conversations: readonly ConversationRow[]) =>
 	conversations.filter((c) => c.kind === "pair" && c.archived).length;
 
-/** Which empty state Chats shows when no pair chat is active: none yet, or all archived. */
 export function chatsEmpty(
 	conversations: readonly ConversationRow[]
 ): "none" | "archived" | null {
@@ -288,8 +267,6 @@ export function chatsEmpty(
 
 export type Segment = "chats" | "xolacers";
 
-/** The segment Connect lands on: what the route or the person picked, else Chats once the list
- * has any row (archived ones and the channel count, as in production), else the roster. */
 export function landingSegment(
 	picked: Segment | null,
 	conversations: readonly ConversationRow[]

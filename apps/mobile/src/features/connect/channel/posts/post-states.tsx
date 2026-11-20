@@ -8,8 +8,6 @@ import { CHANNEL } from "../copy";
 const WARNING = { android: "error", ios: "exclamationmark.circle" } as const;
 const CARD_RADIUS = 24;
 
-/** Where the broadcaster removed a post: one quiet line in the card's place, with nothing to hold
- * or react to. Stream keeps a removed message in the list, so this replaces the card. */
 export function RemovedPost({ a11y, when }: { a11y: string; when: string }) {
 	return (
 		<View className="px-3.5 pb-3">
@@ -30,8 +28,6 @@ export function RemovedPost({ a11y, when }: { a11y: string; when: string }) {
 	);
 }
 
-/** In place of the reactions on a broadcast of yours that didn't send: what happened, and Stream's
- * resend. The hold overlay offers the same, with Delete. */
 export function NotSent({ onResend }: { onResend: () => void }) {
 	const danger = useTokenColor("danger-ink");
 	return (

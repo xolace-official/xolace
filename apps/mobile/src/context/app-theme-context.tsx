@@ -16,7 +16,6 @@ const AppThemeContext = createContext<AppThemeContextType | undefined>(
 	undefined
 );
 
-/** Theme state and switching for the app, wrapping Uniwind with isLight/isDark/toggleTheme. */
 export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
@@ -29,7 +28,6 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 			setThemeWithFonts(newTheme);
 		};
 
-		/** Toggles between light and dark within the current colour theme. */
 		const toggleTheme = () => {
 			setThemeWithFonts(oppositeVariant(theme));
 		};
@@ -50,7 +48,6 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 	);
 };
 
-/** Access theme state anywhere in the app. Must be used within AppThemeProvider. */
 export const useAppTheme = () => {
 	const context = useContext(AppThemeContext);
 	if (!context) {

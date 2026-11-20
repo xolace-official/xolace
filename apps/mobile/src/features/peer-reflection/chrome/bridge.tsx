@@ -11,7 +11,6 @@ import { EASE } from "../peers-ease";
 import { LAYOUT, T } from "../peers-look";
 
 const B = LAYOUT.bridge;
-/** `.nx` fades .6 s. */
 const FADE_MS = 600;
 
 type Props = {
@@ -22,11 +21,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * The bridge to leaving yours (board `.nx`): an 8 pt ember dot with its glow,
- * 10 above the line. It fades in with Done. Shown only when session end will
- * offer "Leave it for someone".
- */
 export function Bridge({ text, none, colors, arrive, reduced }: Props) {
 	const [c0, c1, c2] = colors.ember;
 	const style = useAnimatedStyle(() => {
@@ -40,8 +34,6 @@ export function Bridge({ text, none, colors, arrive, reduced }: Props) {
 		return { opacity };
 	});
 	return (
-		// The last card's 12 pt margin collapses into the line's 22 on the board (CSS
-		// margins collapse), so after a card it adds only the difference.
 		<Animated.View
 			className="items-center"
 			style={[

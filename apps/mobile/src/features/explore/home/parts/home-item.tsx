@@ -18,18 +18,12 @@ const ROW_SCALE = 0.98;
 type RowProps = {
 	it: HomeItem;
 	from: HomeFrom;
-	/** The section this row sits in, for the one preview heard at a time. */
 	slot: string;
-	/** For the hour: an audio cover can be held to hear. */
 	hold?: boolean;
 	padH?: number;
 	padV?: number;
 };
 
-/**
- * A row (handoff §14): 52 pt art, title over meta. Presses to .98 whole; in a hold section the
- * cover settles to .97 instead, and only audio covers preview.
- */
 export function ItemRow({
 	it,
 	from,
@@ -90,7 +84,6 @@ export function ItemRow({
 	);
 }
 
-/** A tile (handoff §14): 148 pt art, the title on two lines, the short meta. Audio can be held. */
 export function ItemTile({
 	it,
 	from,

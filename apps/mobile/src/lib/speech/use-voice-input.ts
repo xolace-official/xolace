@@ -10,7 +10,6 @@ import { AppState, Platform } from "react-native";
 import { yieldAudioFocus } from "@/lib/audio/session";
 import { joinDictation } from "@/lib/speech/dictation-transcript";
 
-/** How a mic tap went: listening, or why not. `left`: the screen lost focus during the prompt. */
 export type VoiceStart = "started" | "denied" | "unavailable" | "left";
 
 export function useVoiceInput() {
@@ -23,11 +22,8 @@ export function useVoiceInput() {
 	});
 	const grantConsent = useMutation(api.consent.grant);
 
-	// Set as start() is called, not on the 'start' event, so a blur or background
-	// in between still aborts.
 	const isRecordingRef = useRef(false);
 	const isFocusedRef = useRef(false);
-	// Segments already finalised this recording; interim results cover only the next one.
 	const finalisedRef = useRef("");
 
 	useSpeechRecognitionEvent("start", () => {
@@ -40,8 +36,6 @@ export function useVoiceInput() {
 	useSpeechRecognitionEvent("end", () => {
 		setIsRecording(false);
 		isRecordingRef.current = false;
-		// The transcript is cleared on 'start', not here: stop()'s final result can
-		// land in the same render batch as 'end'.
 	});
 
 	useSpeechRecognitionEvent("result", (event) => {
@@ -65,7 +59,6 @@ export function useVoiceInput() {
 		isRecordingRef.current = false;
 	});
 
-	// Continuous recognition never ends on its own.
 	useFocusEffect(
 		useCallback(() => {
 			isFocusedRef.current = true;
@@ -106,12 +99,10 @@ export function useVoiceInput() {
 			}).catch(console.error);
 		}
 
-		// The person may have left while the permission prompt was up.
 		if (!isFocusedRef.current || AppState.currentState === "background") {
 			return "left";
 		}
 
-		// Recognition sets its own session, so it yields the Browse track itself.
 		yieldAudioFocus();
 		isRecordingRef.current = true;
 		ExpoSpeechRecognitionModule.start({

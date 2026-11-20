@@ -4,7 +4,6 @@ import {
 	reducer,
 } from "@/features/reflect/session/reflection-reducer";
 
-/** Draft retention (#258): only an explicit act throws the writing away. */
 describe("reducer — draft retention", () => {
 	const withDraft = {
 		...initialState,

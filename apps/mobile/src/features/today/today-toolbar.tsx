@@ -22,21 +22,16 @@ import { useToday } from "./today-data";
 import { useScrolledPast } from "./today-frame";
 import { clamp01, EASE_CSS, EASE_SWELL } from "./today-motion";
 
-/** The band shows past 100 pt, the Reflect pill past 430 pt (each with 8 pt of hysteresis, live-timer-tab). */
 const BAND_AT = 100;
 const PILL_AT = 430;
 const HYSTERESIS = 8;
 const BAND_MS = 250;
 const PILL_MS = 420;
-/** The band follows the scroll over the 20 pt before BAND_AT: on a fling up it's gone first. */
 const HAND_OVER = 20;
-/** The board's row sits 56 pt down a phone with a 60 pt safe area. */
 const ROW_OFFSET = -4;
 const BUTTON_H = 38;
-/** The blur is at full strength down to the buttons' bottom edge, then fades out over 18 pt. */
 const FADE_H = 18;
 const PILL_FROM = 0.4;
-/** The pill shows fully a little before its swell lands. */
 const PILL_OPACITY_GAIN = 2.1;
 const PENCIL = 15;
 const IOS = Platform.OS === "ios";
@@ -59,11 +54,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * Today, scrolled (collapsing-player-header): a page-tinted band with the
- * streak and "Today", and a Reflect pill (it zooms into Reflect, as the card does) that swells in once the card has
- * gone. Thresholds are read in a worklet; no React renders while scrolling.
- */
 export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 	const page = useTokenColor("background");
 	const { state, actions } = useToday();
@@ -73,7 +63,6 @@ export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 	const band = useSharedValue(0);
 	const pill = useSharedValue(0);
 	const touchable = useSharedValue(false);
-	// The band's chip flickers only while the band shows (it sits at opacity 0 otherwise).
 	const shown = useScrolledPast(scrollY, BAND_AT, HYSTERESIS);
 
 	useAnimatedReaction(
@@ -90,7 +79,6 @@ export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 					})
 				);
 			}
-			// The chip and pill take touches only while the band is really there.
 			const tap = b && y > BAND_AT - HAND_OVER / 2;
 			if (tap !== touchable.get()) {
 				touchable.set(tap);

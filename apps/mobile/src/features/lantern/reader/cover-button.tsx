@@ -8,10 +8,6 @@ const GLASS = isLiquidGlassAvailable();
 const SIZE = 40;
 const ROUND = { borderRadius: SIZE / 2, height: SIZE, width: SIZE } as const;
 
-/**
- * Production's `CoverGlass`: a 40 pt dark clear glass button on the cover photo, white icon. With
- * no Liquid Glass, a black 30% disc that dims on press. Fixed palette over the photo.
- */
 export function CoverButton({
 	icon,
 	label,

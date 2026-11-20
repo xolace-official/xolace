@@ -1,4 +1,3 @@
-/** Today's pill on fixtures, alone under a stand-in greeting; a tap does nothing. */
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
@@ -38,7 +37,6 @@ export function FixturePill({ ck, pm }: { ck: boolean; pm: boolean }) {
 	);
 }
 
-/** The "You were reached" banner over a plain page; it stays until tapped or 8 s pass. */
 export function FixtureBanner() {
 	return (
 		<View className="flex-1 bg-background">

@@ -4,27 +4,18 @@ import type { MomentView } from "@/features/you/moments/moments-model";
 
 export type TalkLine = { role: "person" | "companion"; text: string };
 
-/**
- * Everything a moment reads and does. Convex fills it in the app (`MomentData`), fixtures in its
- * dev states. Undefined state means still loading; null, the id led nowhere (no id here; a
- * deleted or someone else's session through `MomentGuard`).
- */
 export type MomentScreenData = {
 	state:
 		| {
 				moment: MomentView;
-				/** A talk's thread, as it was; empty until it loads, or for anything else. */
 				thread: TalkLine[];
-				/** The name the companion had then, else its name now. */
 				companion: string;
-				/** The mirror has a voice: the play button shows. */
 				audio: { ready: boolean; playing: boolean };
 		  }
 		| null
 		| undefined;
 	actions: {
 		toggleAudio: () => void;
-		/** Into Reflect to write again, its question seeded with your first sentence. */
 		again: () => void;
 		share: () => void;
 	};

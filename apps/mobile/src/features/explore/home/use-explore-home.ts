@@ -34,14 +34,9 @@ const DOOR_HREF = {
 	topics: "/explore/topics",
 } as const;
 
-/** The reader, as Lantern's `readerHref` (a feature Explore can't import). */
 const readerHref = (slug: string, from: ReaderFrom) =>
 	({ params: { from, slug }, pathname: "/library/[slug]" }) as const;
 
-/**
- * Explore home's data (B6, B7): the shelves, Today's phase for For the hour, and what a tap does.
- * The only file here that calls Convex, PostHog or the toast.
- */
 export function useExploreHome(): Home {
 	const posthog = usePostHog();
 	const pushOnce = usePushOnce();
@@ -74,8 +69,6 @@ export function useExploreHome(): Home {
 		}
 	});
 	const listen = useListen("explore-hour");
-	// The cover being heard. A ref too: a hold's end can come from a stale render (the cap's timer,
-	// an unmount), and only the hold that started the preview ends it.
 	const [hearing, setHearing] = useState<string | null>(null);
 	const heard = useRef<string | null>(null);
 	useEffect(
@@ -92,7 +85,6 @@ export function useExploreHome(): Home {
 		posthog.capture("browse_opened");
 	}, [posthog]);
 
-	/** Plays `t` here, whatever's loaded; false when it's the paywall's instead. */
 	const start = (t: Playable, from: HomeFrom, at?: number) => {
 		const p = nowPlayingPlayback();
 		const step = playStep({
@@ -130,7 +122,6 @@ export function useExploreHome(): Home {
 	};
 
 	const state: HomeState = {
-		// Xolace+ hears the full track's opening through the now-playing track; free has no preview.
 		canPreview: !listen.locked,
 		cont,
 		featured,
@@ -191,7 +182,6 @@ export function useExploreHome(): Home {
 					openEntry(c.entry.slug, "continue");
 					return;
 				}
-				// From the saved place, unless it's already the one loaded (the player just opens).
 				if (c.track.slug !== listen.nowPlaying && !listen.locked) {
 					setNowPlaying(
 						{ from: "explore-continue", slug: c.track.slug },

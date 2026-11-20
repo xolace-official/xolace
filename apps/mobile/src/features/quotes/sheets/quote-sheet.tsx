@@ -16,10 +16,8 @@ import { EASE, T, useQuoteMotion } from "../motion/quote-motion";
 const EDGE = 8;
 const RADIUS = 42;
 const KEYBOARD_GAP = 12;
-/** The sheet's 500 ms is the first 5/6 of the shared 600 ms clock. */
 const SHEET_SHARE = T.stage / T.sheet;
 const SHEET_BLUR = 30;
-/** Before its first layout, the sheet starts this far down. */
 const FIRST_HEIGHT = 600;
 const OVERSHOOT = 1.1;
 
@@ -33,11 +31,6 @@ type Props = {
 	children: ReactNode;
 };
 
-/**
- * The board's `.sh`: 8 pt from the sides and the bottom, radius 42, the ink's material, a grabber
- * and a header. Rises with the shared sheet clock; with Reduce Motion it fades. Over the keyboard
- * it sits 12 pt above it. Modal for VoiceOver.
- */
 export function QuoteSheet({
 	ink,
 	title,

@@ -1,14 +1,9 @@
-/**
- * The Steadiness board's fixtures (SteadinessAlive's DOMS and SCORES): overall 68, up 4, as You's
- * card. Dev only; the model tests read them too.
- */
 import type {
 	DomainItem,
 	Insight,
 	StView,
 } from "@/features/you/steadiness/steadiness-model";
 
-/** The board's "now": Thursday 12 Nov 2026. */
 export const ST_NOW = new Date(2026, 10, 12, 10);
 const at = (month: number, day: number) => new Date(2026, month, day).getTime();
 
@@ -122,7 +117,6 @@ const free = (d: DomainItem): DomainItem => ({
 	state: d.state,
 });
 
-/** Lit, as the board: Xolace+ sees every number; free sees the doors and Work's upsell. */
 export function fixtureSteadiness({
 	plus,
 	score = 68,
@@ -146,7 +140,6 @@ export function fixtureSteadiness({
 	};
 }
 
-/** Not lit: Work known, Self warming (render 09). */
 export function fixtureUnlit(): StView {
 	return {
 		domains: [

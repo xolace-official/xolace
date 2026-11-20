@@ -46,11 +46,6 @@ const FRESH_UI: ReflectUi = {
 	sel: -1,
 };
 
-/**
- * Reflect on production's session machine (`session/use-reflection-machine.ts`): Convex, the AI
- * round trip, escalation, refinements, the draft, dictation and the analytics stay there. This
- * maps it onto the screen's stages, and keeps the screen state the stages share.
- */
 export function useReflectData(): Reflect {
 	const m = useReflectionMachine();
 	const { state: s, dispatch } = m;
@@ -61,7 +56,6 @@ export function useReflectData(): Reflect {
 	const posthog = usePostHog();
 	const replySeed = useAppStore((st) => st.replySeed);
 	const pending = useAppStore((st) => st.pendingEventPrompt);
-	// A home sheet raises it while it's up over Write.
 	const sheetOpen = useAppStore((st) => st.homeSheetOpen);
 	const submitFeedback = useMutation(api.feedback.submit);
 	const audio = useMirrorAudio(m.sessionId);
@@ -72,7 +66,6 @@ export function useReflectData(): Reflect {
 	const [flash, setFlash] = useState({ line: -1, n: 0 });
 	const [liftN, setLiftN] = useState(0);
 	const [missTurn, setMissTurn] = useState(-1);
-	// Production's gave-up card: asked once, after Leave it here.
 	const [asked, setAsked] = useState<"asking" | "answered" | null>(null);
 
 	const next = useWhereNext(m);
@@ -93,7 +86,6 @@ export function useReflectData(): Reflect {
 		}
 	}
 
-	// Production's pause before the nudge: longer at night (compose-screen's NIGHT_NUDGE_DELAY_MS).
 	const typingPause = useTypingPause(
 		() => dispatch({ type: "PAUSE_TIMEOUT" }),
 		late ? NUDGE.nightMs : NUDGE.dayMs
@@ -171,7 +163,6 @@ export function useReflectData(): Reflect {
 			patch: (p) => setUi((u) => ({ ...u, ...p })),
 			pickReason: (reason) => {
 				dispatch({ reason, type: "MISS_REASON" });
-				// One miss per turn, as production's sheet recorded it.
 				if (!m.sessionId || missTurn === m.turnsCount) {
 					return;
 				}
@@ -190,7 +181,6 @@ export function useReflectData(): Reflect {
 			seePlus: () => openPaywall("rate_limit"),
 			send: () => {
 				const words = s.entryText.trim();
-				// A Plus take still being heard or written down would be lost to a send.
 				const taking = plus !== null && plus.phase !== "idle";
 				if (taking || !(words || s.selectedTextures.length > 0)) {
 					return false;

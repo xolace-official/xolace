@@ -1,7 +1,6 @@
 import type { IconName } from "@/components/shared/icon";
 import type { MirrorTone } from "@/features/settings/mirror/mirror-model";
 
-/** Settings › Mirror (P/design/handoff/settings.md §1 "Mirror"), word for word. */
 export const MIRROR_COPY = {
 	autoLine: (tone: string) => `Speaks in the voice made for ${tone}.`,
 	directness: "Directness",
@@ -25,7 +24,6 @@ export const MIRROR_COPY = {
 	voiceAside: "Reads your mirror and vents aloud",
 } as const;
 
-/** Each tone on the sample card: production's name and description, the handoff's line. */
 export const TONES: readonly {
 	id: MirrorTone;
 	label: string;

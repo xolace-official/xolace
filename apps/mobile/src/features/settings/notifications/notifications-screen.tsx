@@ -46,16 +46,9 @@ function Section({
 	);
 }
 
-/**
- * Settings › Notifications (board "Notifications v2", P/design/handoff/settings.md): a lock-screen
- * sample in the chosen voice, held when quiet hours would hold it; reach as three pills; quiet
- * hours as a day bar and two rows that open inline; a banner when the phone blocks notifications.
- * Nothing animates in.
- */
 export function NotificationsScreen({
 	initialOpen = null,
 }: {
-	/** Which quiet-hours row starts open (a dev state). */
 	initialOpen?: QuietEnd | null;
 }) {
 	const { state, actions } = useNotificationsScreen();
@@ -142,7 +135,6 @@ export function NotificationsScreen({
 					</SettingsCard>
 				</Section>
 			</ScrollView>
-			{/* The OS has stopped asking: the switch stays put and this points at Settings. */}
 			<ConfirmationDialog
 				confirmLabel={C.alert.ok}
 				description={C.alert.body}

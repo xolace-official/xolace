@@ -14,11 +14,6 @@ const openReview = () => {
 	Linking.openURL(reviewUrl(process.env.EXPO_OS)).catch(() => undefined);
 };
 
-/**
- * The rating screen on the real stores. Rate asks for the store's own prompt (`expo-store-review`;
- * neither store says whether it showed or what was rated), then the pill turns into Write a
- * review. A note sent from Tell us ends the ask: once the sheet has gone, so does this screen.
- */
 export function useRate(): Rate {
 	const { from } = useLocalSearchParams<Params>();
 	const posthog = usePostHog();

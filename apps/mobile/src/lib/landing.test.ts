@@ -32,8 +32,6 @@ describe("the landing", () => {
 		expect(index).toContain("<ReturnTo href={LANDING} />");
 	});
 
-	// From a tab, expo-router resolves `dismissTo` inside the tab navigator, which has no
-	// POP_TO: the `navigate` after it is what switches to Today there.
 	it("goes home by popping to Today, then switching to it", () => {
 		goHome();
 		expect(calls).toEqual(["dismissTo /today", "navigate /today"]);

@@ -39,8 +39,6 @@ export function playProcessingBreath(): void {
 	play(processingBreath);
 }
 
-/** Platform-parity counterpart to the Android composer hook; iOS's `processingBreath` already
- * has the envelope. */
 export function useProcessingBreathHaptic(): () => void {
 	return playProcessingBreath;
 }
@@ -101,13 +99,9 @@ export function playHomeEntrance(): void {
 	play(homeEntrance);
 }
 
-// The one iOS haptic backed by a Pulsar preset rather than a CoreHaptics
-// pattern — `bellToll` is used as-is on both platforms (#499).
 export function playFollowUpEntrance(): void {
 	Presets.bellToll();
 }
-
-// Called per PacedOrb phase transition; the continuous patterns breathe with the orb.
 
 /** @public Not wired yet: kept in step with haptics.ts for the PacedOrb runner. */
 export function playBreathPhase(phase: BreathPhase, durationMs: number): void {

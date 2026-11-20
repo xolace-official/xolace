@@ -19,7 +19,6 @@ import { SparkCount } from "@/features/achievements/arrival/badge/spark-count";
 import { COPY } from "@/features/achievements/copy";
 import { cn } from "@/lib/cn";
 
-/** The board's tops (844 pt phone); `geo.dy` shifts them by the status bar. */
 const TOP = {
 	eye: 150,
 	line: 510,
@@ -28,10 +27,8 @@ const TOP = {
 } as const;
 const RISE = 12;
 
-/** Each badge's title, for VoiceOver focus as it comes out. */
 export type TitleRef = (i: number) => (node: TextInstance | null) => void;
 
-/** Badge `i`'s words: the eyebrow, the title, the line, the sparks counting up. */
 export function BadgeWords({
 	eng,
 	i,
@@ -119,7 +116,6 @@ export function BadgeWords({
 	);
 }
 
-/** A word or line of badge `i`: fades over 380 ms rising 12 pt, from its time (§2). */
 function Reveal({
 	eng,
 	i,
@@ -133,7 +129,6 @@ function Reveal({
 	i: number;
 	at: number;
 	rise: number;
-	/** Its sides; `style` has the top, from the status bar. */
 	className: string;
 	style: StyleProp<ViewStyle>;
 	children: ReactNode;

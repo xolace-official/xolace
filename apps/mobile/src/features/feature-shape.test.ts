@@ -13,7 +13,6 @@ import { type Import, type ImportGraph, SRC } from "@/features/import-graph";
 
 const file = (rel: string) => path.join(SRC, rel);
 
-/** A local import of another `src/` file. */
 const local = (rel: string, typeOnly = false): Import => ({
 	devOnly: false,
 	names: [],
@@ -22,13 +21,11 @@ const local = (rel: string, typeOnly = false): Import => ({
 	typeOnly,
 });
 
-/** A `require()` of another `src/` file behind `__DEV__`. */
 const devRequire = (rel: string): Import => ({
 	...local(rel),
 	devOnly: true,
 });
 
-/** A package import, with its named value bindings. */
 const pkg = (specifier: string, names: string[] = []): Import => ({
 	devOnly: false,
 	names,

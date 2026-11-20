@@ -17,12 +17,6 @@ const DIM_LABEL = 0.45;
 const PASSED_LABEL = 0.6;
 const EMBER_HALO = 0.1;
 
-/**
- * A stop's motion on the UI thread (§2.4, §3, §4): the ring and badge light when tended (the
- * violet and ember rings crossfade over the rim: opacity only, no animated colour), the
- * open stop grows, passed greys at once, dimming and lifting ease. The violet halo's breath is an
- * Ease loop in the stop itself.
- */
 export function useStopMotion(
 	state: TwigState,
 	open: boolean,
@@ -59,7 +53,6 @@ export function useStopMotion(
 	}, [badge, done, lit, reduced]);
 
 	useEffect(() => {
-		// Passing greys at once; dimming and lifting ease (§3).
 		let ms: number = KMOTION.liftMs;
 		if (reduced) {
 			ms = REDUCED_FADE_MS;

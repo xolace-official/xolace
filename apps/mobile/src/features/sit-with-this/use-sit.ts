@@ -15,20 +15,6 @@ import type { Sit } from "./sit-data";
 import { isStandalone, sitFrom, sitResult, sitSource } from "./sit-model";
 import { useSwapOptions } from "./swap/use-swap-options";
 
-/**
- * Sit with this on Convex: production's data flow, unchanged. From a
- * reflection, the session's exercise (matched or swapped) and its slots; the
- * path starts on arrival and completes before the session end opens. A
- * kindling twig (`from=kindling`) replays a completed session's exercise:
- * nothing in the session moves, finishing tends the twig, and it goes back.
- * Today's Sit door (`from=today`) plays Three breaths on its own
- * (`exercises.getStandalone`): no session, no slots, no swap; finishing it counts the day
- * (`exercises.completeStandalone`), and it goes back. A letter's care sheet (`from=letter`,
- * Breathe with me first) plays the same Three breaths the same way: it's the same exercise as
- * from Today, so finishing it counts the day too, and `sit_opened` / `sit_finished` carry
- * `from: "letter"`.
- * Nothing written in a prompt is ever sent.
- */
 export function useSitData(): Sit {
 	const router = useRouter();
 	const params = useLocalSearchParams<{
@@ -65,17 +51,14 @@ export function useSitData(): Sit {
 	const leaving = useRef(false);
 	const opening = useRef(false);
 	const focused = useIsFocused();
-	// Warm the sheet's options while the exercise plays (none for a kindling replay).
 	useSwapOptions(standalone ? null : sessionId);
 
-	// Back in front: "Something different" may open the sheet again.
 	useEffect(() => {
 		if (focused) {
 			opening.current = false;
 		}
 	}, [focused]);
 
-	// Once per visit, wherever it was opened from: the first screen is up.
 	const exerciseTitle = result?.exercise.title;
 	useEffect(() => {
 		if (!exerciseTitle || announced.current) {
@@ -100,14 +83,11 @@ export function useSitData(): Sit {
 		}
 	}, [standalone, sessionId, session, startPath]);
 
-	// Complete the session before navigating, so it is terminal even if the app
-	// closes on the session end, which fetches by id, not `getActive`.
 	const finish = async (completed: boolean) => {
 		if (leaving.current) {
 			return;
 		}
 		leaving.current = true;
-		// Only a run that had an exercise to play (not the empty or loading "Go back").
 		if (exerciseTitle) {
 			posthog.capture("sit_finished", {
 				completed,
@@ -116,18 +96,14 @@ export function useSitData(): Sit {
 			});
 		}
 		if (standalone) {
-			// Finishing tends the kindling twig; leaving early leaves it untouched.
 			if (completed && stepId) {
 				await completeStep({ stepId }).catch(() => undefined);
 			}
-			// From Today, a run to its end counts as a day showed up (the same credit as a
-			// tended breathing twig). It never holds up the way back; a failure is reported.
 			if (completed && standaloneTitle) {
 				completeStandalone({ title: standaloneTitle }).catch((error) =>
 					Sentry.captureException(error)
 				);
 			}
-			// A deep link has no history to go back to: Reflect, the landing, instead.
 			if (router.canGoBack()) {
 				router.back();
 			} else {
@@ -139,8 +115,6 @@ export function useSitData(): Sit {
 		router.replace(afterPath("solo"));
 	};
 
-	// Android's back button leaves as the close does (swipe back is off): the path and the
-	// analytics see it, instead of the screen just popping.
 	useEffect(() => {
 		if (!focused) {
 			return;
@@ -171,7 +145,6 @@ export function useSitData(): Sit {
 				finish(completed);
 			},
 			openSwap: () => {
-				// One sheet, however fast the taps.
 				if (opening.current || !focused) {
 					return;
 				}

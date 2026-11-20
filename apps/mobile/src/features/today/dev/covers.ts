@@ -1,10 +1,5 @@
 import { useTokenColors } from "@/lib/use-token-color";
 
-/**
- * Stand-ins for production's track covers in the dev states: the board's rail art (`.a1`–
- * `.a3`, a soft highlight and a watercolour radial on a base), drawn from the theme's Flux
- * spectrum as an SVG data URI that `CoverImage` loads like any other cover. Dev only.
- */
 const SIZE = 200;
 
 type Blot = { color: string; x: number; y: number; r: number };
@@ -25,7 +20,6 @@ function art(base: string, a: Blot, b: Blot) {
 
 export type Covers = { a1: string; a2: string; a3: string };
 
-/** a1 peach / rose, a2 sky / lilac, a3 lilac / sky, each lit from the top left. */
 export function useFixtureCovers(): Covers {
 	const [peach, rose, lilac, sky, light] = useTokenColors([
 		"peach",

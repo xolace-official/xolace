@@ -31,16 +31,10 @@ type Props = {
 	entry: CardItem;
 	from: ReaderFrom;
 	actions: EntryActions;
-	/** A hub numbers its items: reads and listens share one count. */
 	index?: number;
 	hub?: string;
 };
 
-/**
- * Production's `EntryRow` (handoff §3.1): the photo, kicker, title, production's meta line (it may
- * wrap), and Save at the end. v2 moves the read mark onto the photo. The tapped Save holds until
- * the server answers: lists miss the reader's optimistic update (production's `useSaveToggle`).
- */
 export function EntryRow({ entry, from, actions, index, hub }: Props) {
 	const [accent, foreground] = useTokenColors(["accent", "foreground"]);
 	// Keyed by the entry: a recycled row (LegendList) never shows another entry's tap.
@@ -62,7 +56,6 @@ export function EntryRow({ entry, from, actions, index, hub }: Props) {
 	return (
 		<View className="flex-row items-center pr-1.5">
 			<Link asChild href={readerHref(entry.slug, from, hub)}>
-				{/* No zoom: the thumb is too small to grow from. */}
 				<Link.Trigger>
 					<DimPress
 						accessibilityLabel={rowLabel(entry)}

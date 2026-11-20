@@ -17,11 +17,6 @@ import { cn } from "@/lib/cn";
 import { useTokenColors } from "@/lib/use-token-color";
 import { useReturnPill } from "../return-pill-data";
 
-/**
- * Board `.tpill`: 36 tall, dots 24 (−7 overlap, 2 pt ring), label 13.5 / 600, chevron 14; 14
- * under the greeting. Large Dynamic Type grows the label to 1.3× and wraps it onto a second
- * line: the pill grows taller, its radius stays 18.
- */
 const PILL = {
 	dot: 24,
 	glyph: 12,
@@ -37,7 +32,6 @@ const PILL = {
 const SLOT = PILL.top + PILL.h;
 const LABEL = { fontSize: 13.5 } as const;
 const CHEVRON = 14;
-/** `pillIn .42s (.2,.85,.25,1)` from −8 pt and .96, 460 ms after the greeting closes. */
 const IN = {
 	delay: 460,
 	dy: -8,
@@ -46,7 +40,6 @@ const IN = {
 	scale: 0.96,
 } as const;
 const OUT_MS = 300;
-/** A soft downward shadow (iOS props: no `shadow-*` token matches the board's). */
 const SHADOW = {
 	shadowOffset: { height: 6, width: 0 },
 	shadowOpacity: 0.3,
@@ -76,11 +69,6 @@ const pillIn = (reduced: boolean) => {
 	};
 };
 
-/**
- * What the greeting left, waiting quietly under your name (handoff §8). No badge, no count,
- * never opens anything by itself. Tapping it reopens the same card as "Still here.". With
- * nothing waiting, the slot holds `fallback` (the rekindle pill).
- */
 export function ReturnPill({ fallback }: { fallback: ReactNode }) {
 	const { state, actions } = useReturnPill();
 	const dark = useScheme() === "dark";
@@ -156,7 +144,6 @@ export function ReturnPill({ fallback }: { fallback: ReactNode }) {
 	);
 }
 
-/** A dot with a surface ring outside it (the board's box-shadow), so the box is 28. */
 function Dot({
 	bg,
 	fg,

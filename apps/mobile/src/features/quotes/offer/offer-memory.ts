@@ -1,8 +1,3 @@
-/**
- * Whether this device has shown the daily quote offer: once shown it never shows again, even if
- * it was closed without an answer. An answer also goes to the server, which keeps other devices
- * from asking.
- */
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";

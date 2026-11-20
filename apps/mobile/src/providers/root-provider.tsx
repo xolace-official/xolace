@@ -13,7 +13,6 @@ import { RevenueCatProvider } from "@/features/purchases/revenuecat-context";
 import { PremiumThemeReconciler } from "@/features/settings/premium-theme/premium-theme-reconciler";
 import { ConvexClientProvider } from "./convex-provider";
 
-/** Composes every app-wide provider in order. */
 const FLEX_1 = { flex: 1 };
 const AUTO_CAPTURE = {
 	captureScreens: false,
@@ -50,11 +49,8 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
 						<PostHogProvider autocapture={AUTO_CAPTURE} client={posthog}>
 							<ConvexClientProvider>
 								<HeroUINativeProvider config={config}>
-									{/* Inside Convex (logIn needs the authed profile id) and
-                      inside HeroUI (purchase/restore toasts). */}
 									<RevenueCatProvider>
 										<PremiumThemeReconciler />
-										{/* Hands HeroUI's toast manager to the app's toast(). */}
 										<ToastBridge />
 										{children}
 									</RevenueCatProvider>

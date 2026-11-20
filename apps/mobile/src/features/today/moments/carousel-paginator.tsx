@@ -48,8 +48,6 @@ export function CarouselPaginator({
 
 	const containerAnimatedStyle = useAnimatedStyle(() => {
 		const { currentIndex } = visibleDotsIndices.get();
-		// Every dot carries a trailing marginRight at the same `dotSize`; the active
-		// dot's emphasis is a scale transform, not extra width.
 		const totalWidth = pagesAmount * (dotSize + spacing);
 		const centerOffset = totalWidth / 2;
 		const currentPosition = currentIndex * (dotSize + spacing) + dotSize / 2;
@@ -96,7 +94,6 @@ type AnimatedDotProps = {
 	dotColor: string;
 };
 
-/** The dots are the ink at 34% (production's `foreground` + `56`). */
 const DOT_ALPHA = 0.34;
 
 function AnimatedDot({
@@ -112,8 +109,6 @@ function AnimatedDot({
 			index < visibleDotsIndices.get().end
 	);
 
-	// Compare against the rounded currentIndex, not the fractional scroll value:
-	// exact equality against that flickered the active dot on every drag.
 	const visibility = useDerivedValue(() => {
 		const isActive = visibleDotsIndices.get().currentIndex === index;
 		const opacity = isActive ? 1 : isVisible.get() ? 0.75 : 0;

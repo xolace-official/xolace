@@ -1,5 +1,3 @@
-/** The update sheet: `xolace://dev/app-update/<id>`. The real sheet opens with
- * `xolace://update?mode=new-version` (or `ota-update`); these draw its frame in a pushed screen. */
 import { View } from "react-native";
 import type { DevState } from "@/dev/dev-state";
 import type { UpdateMode } from "../update-model";

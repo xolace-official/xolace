@@ -4,11 +4,9 @@ import { updateModeOf } from "@/features/app-update/update-model";
 import { UpdateSheet } from "@/features/app-update/update-sheet";
 import { STORE_URL } from "@/lib/constants/links";
 
-/** The update sheet, above every route group: it shows signed out, in intake and signed in. */
 export default function UpdateRoute() {
 	const router = useRouter();
 	const mode = updateModeOf(useLocalSearchParams().mode);
-	// A link that opened the app on the sheet left nothing under it: land on whichever group is open.
 	const close = () =>
 		router.canGoBack() ? router.back() : router.replace("/");
 	return (

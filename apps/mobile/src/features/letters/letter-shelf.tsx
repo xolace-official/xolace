@@ -6,11 +6,6 @@ import { LETTERS } from "./copy";
 import { FoldedLetter } from "./folded-letter";
 import { LetterPill } from "./letter-pill";
 
-/**
- * A letter waiting for you (handoff §1): the folded letter, "A letter for you", and Open. On the
- * Letters screen it only rests; Connect's card passes the arrival as `art` (it arrives once,
- * there). VoiceOver reads one button: "A letter for you. Open".
- */
 export function LetterShelf({
 	onOpen,
 	art,

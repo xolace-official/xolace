@@ -1,5 +1,3 @@
-// `name`: the camper name, already picked. Keep it, edit it, or roll the dice. No "Hey,
-// name" beat after it (#707).
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { useRef } from "react";
@@ -18,7 +16,6 @@ import { NAME_MAX_CHARS } from "@/features/intake/v2/machine";
 import { playSoftPress } from "@/lib/haptics";
 
 const FLUX_SIZE = 160;
-/** Flux steps back while the keyboard is up, so the field clears the button. */
 const FLUX_SIZE_TYPING = 96;
 
 type Props = {
@@ -26,7 +23,6 @@ type Props = {
 	name: string;
 	onChange: (name: string) => void;
 	onKeep: () => void;
-	/** "Got it." only follows an answer; after Skip there is nothing to have got. */
 	skipped: boolean;
 };
 
@@ -55,7 +51,6 @@ export function NameStep({ busy, name, onChange, onKeep, skipped }: Props) {
 				className="flex-1 overflow-hidden"
 				contentContainerClassName="items-center"
 				keyboardShouldPersistTaps="handled"
-				// A short screen still can't fit it all over the keyboard: keep the field in view.
 				onLayout={() => {
 					if (typing) {
 						scroll.current?.scrollToEnd({ animated: false });

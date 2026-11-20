@@ -21,9 +21,7 @@ const FOLD = Easing.bezier(...M.curves.fold);
 const ROLL = Easing.bezier(...M.curves.roll);
 const DRIFT = Easing.bezier(...M.curves.drift);
 const NEVER = PLAY_AS_CHOSEN.reduceMotion;
-/** The pan starts on 8 pt up, and gives way to a sideways swipe past 24 pt. */
 const PAN = { fail: 24, start: -8 };
-/** A third this far over lies flat on the middle one. */
 const FOLDED = 0.97;
 const t = (
 	to: number,
@@ -31,13 +29,6 @@ const t = (
 	easing: EasingFunction | EasingFunctionFactory = FOLD
 ) => withTiming(to, { duration, easing, ...PLAY_AS_CHOSEN });
 
-/**
- * The reader's letter on Reanimated (handoff §5 Open, Hide): sealed, dragging up opens it
- * (progress = up-distance / 320 pt; the seal splits at 7 %, the flap follows the finger over the
- * first third; past 42 % or a 900 pt/s flick it commits, otherwise it springs shut, 260/18).
- * Opening: the flap finishes (300 ms), the bottom third 300 ms after, then the creases fade once.
- * Hide drifts it aside (110 % of its width, 4°) and fades, 420 ms. Reduced: no drag, no drift.
- */
 export function useLetterOpen({
 	sealed,
 	hiding,
@@ -61,7 +52,6 @@ export function useLetterOpen({
 
 	useEffect(() => {
 		if (sealed) {
-			// Sealed, or sealed again after a failed open: whole, with its seal unbroken.
 			top.set(1);
 			bottom.set(1);
 			crease.set(1);
@@ -130,7 +120,6 @@ export function useLetterOpen({
 			],
 		};
 	});
-	// iOS draws no layer at exactly 180°: the paper's back covers the middle while a third is over.
 	const coverStyle = useAnimatedStyle(() => ({
 		opacity: top.get() > FOLDED || bottom.get() > FOLDED ? 1 : 0,
 	}));

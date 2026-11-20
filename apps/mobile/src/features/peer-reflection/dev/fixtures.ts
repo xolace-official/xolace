@@ -1,9 +1,3 @@
-/**
- * You're not alone's fixtures: the board's `SETS` (design/boards/PeersAlive.dc.html),
- * verbatim, as the rows `reflections.matchForSession` and `listRecent` return.
- * Counts are other people (the board's `n`), so a card you haven't felt yet
- * has `resonanceCount` = n.
- */
 import type { ReflectionRow } from "../peer-reflection-model";
 
 const row = (
@@ -54,7 +48,6 @@ export const RECENT: readonly ReflectionRow[] = [
 	),
 ];
 
-/** A quote long enough to meet the seven-line clamp and its "Read more". */
 export const LONG: readonly ReflectionRow[] = [
 	row(
 		"l1",

@@ -27,7 +27,6 @@ function LevelBar({
 	);
 }
 
-/** The composer's action while the field is empty: five bars that move with your voice. */
 export function LevelBars({
 	level,
 	muted,
@@ -47,12 +46,7 @@ export function LevelBars({
 			)}
 		>
 			{BAR_SHAPE.map((shape, i) => (
-				<LevelBar
-					// The five bars are fixed: a bar's place is its identity.
-					key={`${shape}-${i}`}
-					level={level}
-					shape={shape}
-				/>
+				<LevelBar key={`${shape}-${i}`} level={level} shape={shape} />
 			))}
 		</View>
 	);

@@ -21,39 +21,25 @@ import { STAMP_INSET, Stamp } from "./stamp";
 
 const O = LETTER_MOTION.open;
 const SEAL = 34;
-/** The words never reach the stamp: long or large, the paper grows past its corner instead. */
 const STAMP_ROOM = LETTER_MOTION.stamp.size + STAMP_INSET.bottom + 8;
-/** Under the sealed letter, the hint sits 40 pt below the folded edge (board top 470). */
 const HINT_GAP = 40;
 const PARAGRAPH_GAP = 10;
-const WORDS_AT = O.flapMs + O.bottomMs; // once both thirds have unfolded
+const WORDS_AT = O.flapMs + O.bottomMs;
 const FILL = { inset: 0, position: "absolute" } as const;
 
 type Props = {
 	text: string;
-	/** Folded with its seal. Turning false opens it (Open, or the drag's commit). */
 	sealed: boolean;
-	/** The drag passed 42 % or flicked up: the caller opens it. */
 	onCommit: () => void;
-	/** The ember stamp lands when this turns on, and fades when it turns off (Undo). */
 	stamped: boolean;
-	/** It drifts aside and fades (Hide); back when this turns off (Undo). */
 	hiding: boolean;
 	reduced: boolean;
-	/** The words, as one VoiceOver element, with the reader's actions on it. */
 	wordsRef: Ref<ComponentRef<typeof View>>;
 	actions: AccessibilityActionInfo[];
 	onAction: (e: AccessibilityActionEvent) => void;
-	/** Its frame in the reader's scroll view. */
 	onLayout: (e: LayoutChangeEvent) => void;
 };
 
-/**
- * The letter in the reader (handoff §5; renders 20–24): the reader sheet (17/26, 420 pt at least,
- * growing with Dynamic Type) cut in thirds. Sealed, the top third is turned down and the bottom
- * up over the middle, showing the paper's back with the ember seal on the fold. Open, the words
- * rise 16 pt, 80 ms apart. Reduced: no drag; folded and open crossfade, 200 ms.
- */
 export function ReadLetter(props: Props) {
 	const { text, sealed, stamped, hiding, reduced } = props;
 	const ink = useLetterInk();
@@ -159,7 +145,6 @@ export function ReadLetter(props: Props) {
 						{text.split("\n").map((para, i) => (
 							<Fade
 								delay={WORDS_AT + i * O.words.staggerMs}
-								// Paragraphs are positional: the text never reorders under them.
 								key={i}
 								ms={O.words.ms}
 								on={!sealed}

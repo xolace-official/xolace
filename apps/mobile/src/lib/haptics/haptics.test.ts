@@ -5,12 +5,6 @@ import * as ios from "./haptics.ios";
 import { type HapticName, hapticNames } from "./haptics.types";
 import * as patterns from "./haptics-patterns.ios";
 
-/**
- * Pins how each named haptic feels on each platform. The redesign plays these names (the
- * prototype dropped its own vocabulary to match production), so a ported screen inherits
- * production's feel only while this table holds.
- */
-
 const played: string[] = [];
 
 vi.mock("react-native-pulsar", () => {
@@ -38,7 +32,6 @@ vi.mock("@/modules/native-core-haptics", () => ({
 	},
 }));
 
-/** Android (and web): each name on a Pulsar preset. */
 const ANDROID: Record<HapticName, string> = {
 	affirmativePress: "strike",
 	compassionateHold: "pendulum",
@@ -75,7 +68,6 @@ describe("haptics", () => {
 
 		it(`${name}: its own CoreHaptics pattern on iOS`, () => {
 			ios.playHaptic(name);
-			// followUpEntrance is the one iOS haptic on a Pulsar preset (#499).
 			expect(played).toEqual([
 				name === "followUpEntrance"
 					? "Presets.bellToll"
@@ -104,7 +96,6 @@ describe("haptics", () => {
 	});
 });
 
-/** Vent's burn (vent.md §14): gather 600 ms, flash 140 ms, as `useBurnHaptic(600, 140)` plays it. */
 describe("the vent burn", () => {
 	const GATHER_MS = 600;
 	const FLASH_MS = 140;

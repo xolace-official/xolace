@@ -1,10 +1,6 @@
 import { useCSSVariable } from "uniwind";
 import type { CubicBezier } from "@/design/ease";
 
-/**
- * "Help someone find Xolace" is always the dark ember scene, in every theme: a printed object,
- * like the quote poster (`--color-rate-*` in global.css). Its sizes and timings from the canvas.
- */
 const NAMES = [
 	"rate-page",
 	"rate-ink",
@@ -31,7 +27,6 @@ const NAMES = [
 export type EmberColor = (typeof NAMES)[number];
 export type Ember = Record<EmberColor, string>;
 
-/** Every ember colour JS needs (SVG fills, shadows, the page), read from the fixed palette. */
 export function useEmber(): Ember {
 	const values = useCSSVariable(NAMES.map((n) => `--color-${n}`));
 	return Object.fromEntries(
@@ -39,7 +34,6 @@ export function useEmber(): Ember {
 	) as Ember;
 }
 
-/** The five stars in a rising arc, left to right. */
 export const STARS: readonly {
 	size: number;
 	y: number;
@@ -56,22 +50,16 @@ export const STARS: readonly {
 export const STAR_PATH =
 	"M12 2.6l2.9 6 6.5.8-4.8 4.5 1.2 6.5L12 17.3l-5.8 3.1 1.2-6.5L2.6 9.4l6.5-.8z";
 
-/** Canvas keyframes and delays (ms). */
 export const SCENE_MOTION = {
-	/** The notes drift one set's width in this long. */
 	driftMs: 70_000,
-	/** The thank-you line and the pill's label. */
 	fadeMs: 250,
-	/** The laurel: opacity 0 → 1, scale .85 → 1, ease-out. */
 	leaf: { delay: 100, from: 0.85, ms: 600 },
-	/** Title, body, reviews, bottom: up 14 pt over 500 ms. */
 	rise: {
 		curve: [0.2, 0.8, 0.2, 1] as CubicBezier,
 		delays: [900, 1000, 1150, 1300],
 		dy: 14,
 		ms: 500,
 	},
-	/** Each star lights from scale .4, turned −40°, and overshoots; 120 ms apart. */
 	star: {
 		delay: 350,
 		fadeMs: 300,
@@ -81,7 +69,6 @@ export const SCENE_MOTION = {
 	},
 } as const;
 
-/** The notes: 224 × 184 with 12 between, odd ones −1.6°, even ones +1.3° and 6 pt lower. */
 export const NOTE = {
 	dropEven: 6,
 	gap: 12,

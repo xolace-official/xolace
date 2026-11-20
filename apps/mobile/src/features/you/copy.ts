@@ -1,8 +1,3 @@
-/**
- * Every string the You tab and its avatar sheet show: the prototype's (`P/src/fixtures/you-v2.ts`,
- * the board's copy) where it drew one, production's (profile, contribution graph, follow-ups)
- * where it kept production's words.
- */
 const MONTHS = [
 	"January",
 	"February",
@@ -23,7 +18,6 @@ const plural = (n: number, one: string, many: string) =>
 
 export const COPY = {
 	avatar: {
-		/** The header's avatar, read as one button. */
 		button: (name: string | undefined) =>
 			name
 				? `Your avatar, ${name}. Change avatar`
@@ -44,7 +38,6 @@ export const COPY = {
 		title: (n: number) => plural(n, "badge", "badges"),
 	},
 	days: {
-		/** Production's per-day labels on Your days (contribution-graph.ts). */
 		actions: {
 			daily_mood: "Checked in",
 			library: "Read",
@@ -86,7 +79,6 @@ export const COPY = {
 		empty:
 			"After some reflections, Xolace checks back in a little later to see how it's sitting. Those check-ins land here.",
 		emptyTitle: "No follow-ups yet",
-		/** "From Thursday", the day the moment was. */
 		from: (weekday: string) => `From ${weekday}`,
 		noAnswer: "No answer",
 		openHint: "Opens the check-in, where you answer how it's sitting.",
@@ -97,7 +89,6 @@ export const COPY = {
 	},
 	hero: {
 		fresh: "This is your space. It fills in as you show up.",
-		/** Production's greeting by the hour (profile-hero.tsx). */
 		greeting: (hour: number, name: string) => {
 			if (hour >= 5 && hour < 12) {
 				return `Morning, ${name}`;
@@ -118,7 +109,6 @@ export const COPY = {
 	insights: {
 		bring: "What you bring most",
 		chip: (word: string) => word,
-		/** Production's mirror lines (mirror-lines.tsx), mood first, then rhythm. */
 		mood: {
 			heavier: "Some sessions surface things that feel heavier at close.",
 			lighter: "Most of your sessions end lighter.",
@@ -137,7 +127,6 @@ export const COPY = {
 		info: "Counted against everyone who has reflected at least once — not everyone who signed up. Appears after 5 moments.",
 		infoLabel: "About among the fires",
 		line: "of campers here reflect less than you.",
-		/** Production's foot lines (rank-card.tsx). */
 		moments: (n: number) =>
 			`${plural(n, "moment", "moments")} you didn't look away from.`,
 		pct: (n: number) => `${n}%`,
@@ -168,7 +157,6 @@ export const COPY = {
 		infoLabel: "About steadiness",
 		label: (score: number, trend: string | null) =>
 			`Steadiness, ${score} of 100${trend ? `, ${trend.toLowerCase()}` : ""}`,
-		/** What Xolace saw, Xolace+ only (production's COMPOUNDING_WORD): never a grade. */
 		lately: { compounding: "Heavier than your usual", easing: "Easing" },
 		lockedTrend: "Trend with Xolace+",
 		notLit: "Not lit yet",
@@ -179,7 +167,6 @@ export const COPY = {
 		outOf: "/100",
 		quiet: "Not recently",
 		seeAll: "See all",
-		/** How well Xolace knows a part (production's STAGE_WORD): never a grade. */
 		stage: {
 			settled: "Known well",
 			unlocked: "Getting to know it",
@@ -192,14 +179,12 @@ export const COPY = {
 				: `${delta > 0 ? "Up" : "Down"} ${Math.abs(delta)} since ${since}`,
 		trendBasis: "last week",
 	},
-	/** The Steadiness screen (steadiness.md), production's words where it kept them. */
 	steadinessScreen: {
 		caveat:
 			"This is what Xolace knows from how you've used Xolace. It may not reflect your whole life.",
 		chipLabel: (score: number) => `Steadiness ${score}. Scroll to top`,
 		dialLabel: (score: number, trend: string | null) =>
 			`Overall steadiness, ${score} out of 100.${trend ? ` ${trend.charAt(0).toUpperCase()}${trend.slice(1)}.` : ""}`,
-		/** What the Reflection Agent noticed (production's steadiness-insights.tsx). */
 		eyebrow: {
 			absence: "What never comes up",
 			crowding: "What it's pushed out",
@@ -238,7 +223,6 @@ export const COPY = {
 		now: "now",
 		parts: "Parts of your life",
 		partsAs: "Show parts as",
-		/** `heavierLately`: the part the upsell names, so its line speaks to the stretch. */
 		peek: (name: string, heavierLately: boolean) =>
 			heavierLately
 				? `Xolace+ shows how far ${name} has moved from your usual, which way it's heading, and what Xolace noticed about it.`
@@ -264,7 +248,6 @@ export const COPY = {
 		buy: (price: number) => `Buy one · ${price} sparks`,
 		daysInRow: (n: number) => (n === 1 ? "day in a row" : "days in a row"),
 		ended: "Your next streak starts today",
-		/** Production's freeze row (freeze-row.tsx). */
 		freeze: {
 			earn: (every: number) => `Earn one every ${every} days in a row.`,
 			hold: (n: number, lit: boolean) =>
@@ -286,7 +269,6 @@ export const COPY = {
 		noUsualDay: "No usual day yet",
 		spare: (sparks: number) => `You have ${plural(sparks, "spark", "sparks")}.`,
 		usualDay: "usual day",
-		/** `open`: Your days is shown, so the tap goes there. */
 		week: (shown: number, open: boolean) =>
 			`This week, ${plural(shown, "day", "days")} showed up.${open ? " See your days" : ""}`,
 		weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -299,10 +281,6 @@ export const COPY = {
 		ahead: "still ahead",
 		backBy: (day: string) => `Back inside it by ${day}.`,
 		chart: "Intensity by day",
-		/**
-		 * A held day's domain (B17), one word: Steadiness's names ("Love & Friendship") don't fit
-		 * the line beside a feeling and an ending on a 375 pt phone.
-		 */
 		domains: {
 			belonging: "Belonging",
 			family: "Family",
@@ -316,7 +294,6 @@ export const COPY = {
 		earlier: "Earlier weeks",
 		earlierLabel: "See earlier weeks",
 		empty: "No moments logged that week.",
-		/** How a held day ended, its last words (B17): "ended lighter". */
 		ended: {
 			heavier: "ended heavier",
 			lighter: "ended lighter",
@@ -333,7 +310,6 @@ export const COPY = {
 			"Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Use the arrows above to browse earlier weeks.",
 		level: (v: number) =>
 			`${v >= 7.5 ? "high" : v >= 5 ? "moderate" : v >= 2.5 ? "mild" : "minimal"} intensity`,
-		/** A held day's count, the first words of its second line. */
 		moments: (n: number) => plural(n, "moment", "moments"),
 		next: "Next week",
 		none: "no moments",

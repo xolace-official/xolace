@@ -27,19 +27,11 @@ const START_PRESS = 0.97;
 type Props = {
 	geo: TalkGeometry;
 	motion: TalkMotion;
-	/** Where the Start button sits on screen before the talk. */
 	startTop: SharedValue<number>;
-	/** How far the keyboard lifts the composer. */
 	lift: SharedValue<number>;
 	before: boolean;
 };
 
-/**
- * Start talking, which becomes the composer (handoff §2.6, §6): one element whose box moves
- * from the button's place to the composer's (left 16 → 68, height 56 → 44, radius 28 → 22,
- * ink → glass) on the start → talk timeline. Its label fades at once; the field and the
- * level bars fade in from 280 ms; the mute button scales in beside it from 300 ms.
- */
 export function StartComposer({ geo, motion, startTop, lift, before }: Props) {
 	const { state, actions } = useTalkScreen();
 	const scheme = useScheme();
@@ -90,7 +82,6 @@ export function StartComposer({ geo, motion, startTop, lift, before }: Props) {
 					style={morph.fill}
 				/>
 				{HAS_GLASS && !before ? (
-					// Mounted with the talk, at opacity 0: the native view installs its glass once it shows.
 					<Animated.View
 						className="absolute inset-0"
 						pointerEvents="none"

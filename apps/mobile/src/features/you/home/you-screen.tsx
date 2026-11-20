@@ -17,12 +17,6 @@ import { useHeaderOptions } from "@/lib/header-options";
 const INSIGHTS: YouTab = "insights";
 const FOLLOW_UPS: YouTab = "follow-ups";
 
-/**
- * The You tab (P/design/handoff/you.md): production's profile screen kept in its structure.
- * A see-through native header with the gear, a collapsing header, and the Insights /
- * Follow-ups tabs that dock under the bar. Both tabs mount up front: a list that mounts empty
- * on first swipe can't take the docked offset, so the header would spring open.
- */
 export function YouScreen() {
 	const header = useHeaderOptions("small");
 	const headerHeight = useHeaderHeight();
@@ -30,7 +24,6 @@ export function YouScreen() {
 	const { state, actions } = useYouHome();
 	const { tab } = useYouUi();
 
-	// The week's tap (or a dev state) picks a tab.
 	useEffect(() => {
 		if (tab) {
 			tabs.current?.jumpToTab(tab.name, false);

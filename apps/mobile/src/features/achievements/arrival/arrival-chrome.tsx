@@ -26,14 +26,12 @@ export const CTA_H = 52;
 const CLOSE_TOP = 56;
 const CTA_RISE = 40;
 const CTA_IN_MS = 450;
-/** The badge's CTA keeps the milestone's for this long after Next, fading as it hands over. */
 const HANDOFF_MS = 400;
 const CLOSE_FADE = { from: 200, to: 500 } as const;
 const REDUCED_FADE_MS = 200;
 const XMARK: IconName = { android: "close", ios: "xmark" };
 const XMARK_SIZE = 15;
 
-/** Next / Lovely at the foot, and the close top right (arrivals §2). */
 export function ArrivalChrome({
 	eng,
 	first,
@@ -47,7 +45,6 @@ export function ArrivalChrome({
 	first: Eng;
 	total: number;
 	dark: boolean;
-	/** The status bar's shift from the board. */
 	top: number;
 	onCta: () => void;
 	onClose: () => void;
@@ -125,7 +122,6 @@ export function ArrivalChrome({
 	);
 }
 
-/** "Next" while something follows, then "Lovely": a small render of the label only. */
 function CtaLabel({
 	eng,
 	total,

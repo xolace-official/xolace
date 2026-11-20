@@ -22,7 +22,6 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 const HOLD_SCALE = 0.97;
 const REDUCED_DIM = 0.72;
 
-/** This item's playing mark: it's the track in the mini player. */
 function useMark(it: HomeItem): CardMark {
 	const { state } = useHome();
 	if (it.kind !== "track" || state.nowPlaying !== it.track.slug) {
@@ -31,7 +30,6 @@ function useMark(it: HomeItem): CardMark {
 	return state.playing ? "playing" : "paused";
 }
 
-/** A cover from either kind: a track's art, an entry's cover. */
 export function ItemCover({
 	it,
 	size,
@@ -81,7 +79,6 @@ export function ItemCover({
 	);
 }
 
-/** 0 → 1 as a preview starts (400 ms), back over 600 ms when it ends. */
 function useHearingLabel(hearing: boolean) {
 	const v = useSharedValue(hearing ? 1 : 0);
 	useEffect(() => {
@@ -95,7 +92,6 @@ function useHearingLabel(hearing: boolean) {
 	return v;
 }
 
-/** The meta line, with "Hearing a preview" in violet cross-fading over it. */
 export function MetaLine({
 	meta,
 	hearing,

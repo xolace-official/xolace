@@ -2,23 +2,19 @@ import ExpoModulesCore
 import CoreHaptics
 
 public class NativeCoreHapticsModule: Module {
-  // Create a property to store the CHHapticEngine instance
     var hapticEngine: CHHapticEngine?
 
     public func definition() -> ModuleDefinition {
       Name("NativeCoreHaptics")
 
-      // Initialize haptic engine when module is created
       OnCreate {
         self.initializeHapticEngine()
       }
 
-      // Clean up haptic engine when module is destroyed
       OnDestroy {
         self.cleanupHapticEngine()
       }
 
-      // Handle app lifecycle events
       OnAppEntersForeground {
         self.restartHapticEngineIfNeeded()
       }
@@ -27,9 +23,6 @@ public class NativeCoreHapticsModule: Module {
         self.pauseHapticEngine()
       }
 
-      // MARK: - API Functions
-
-      // Function to play a transient haptic
       AsyncFunction("impact") { (sharpness: Double, intensity: Double) in
         guard let engine = self.hapticEngine else {
           print("Haptic engine not initialized")
@@ -54,7 +47,6 @@ public class NativeCoreHapticsModule: Module {
         }
       }.runOnQueue(.main)
 
-      // Function to play a full haptic pattern from JS
       AsyncFunction("playPattern") { (patternData: HapticPatternData) in
         guard let engine = self.hapticEngine else {
           print("Haptic engine not initialized")
@@ -71,8 +63,6 @@ public class NativeCoreHapticsModule: Module {
       }.runOnQueue(.main)
     }
 
-    // MARK: - Private Engine Management Methods
-
     private func initializeHapticEngine() {
       guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
         print("Haptic engine not supported on this device")
@@ -83,18 +73,16 @@ public class NativeCoreHapticsModule: Module {
         self.hapticEngine = try CHHapticEngine()
         try self.hapticEngine?.start()
 
-        // Set up reset handler for automatic recovery
         self.hapticEngine?.resetHandler = { [weak self] in
           print("Haptic engine reset - restarting automatically")
           self?.restartHapticEngineIfNeeded()
         }
 
-        // Set up stopped handler
         self.hapticEngine?.stoppedHandler = { [weak self] reason in
           print("Haptic engine stopped with reason: \(reason)")
           switch reason {
           case .audioSessionInterrupt, .applicationSuspended:
-            break // expected, will restart on foreground
+            break
           case .idleTimeout, .systemError, .notifyWhenFinished, .gameControllerDisconnect, .engineDestroyed:
             self?.restartHapticEngineIfNeeded()
           @unknown default:
@@ -135,8 +123,6 @@ public class NativeCoreHapticsModule: Module {
       print("App entering background - haptic engine will idle")
     }
 }
-
-// MARK: - Record structures to represent CHHapticPattern dictionary from JavaScript
 
 struct HapticEventParameter: Record {
   @Field
@@ -186,8 +172,6 @@ struct HapticPatternData: Record {
   @Field
   var parameterCurves: [HapticParameterCurve] = []
 }
-
-// MARK: - Extensions for cleaner conversion
 
 extension HapticParameterCurve {
   func toCHHapticParameterCurve() -> CHHapticParameterCurve {
@@ -243,8 +227,6 @@ extension HapticEvent {
   }
 }
 
-// MARK: - CHHaptic Conversion Helpers
-
 extension CHHapticEvent.EventType {
   init(from string: String) throws {
     switch string {
@@ -273,7 +255,7 @@ extension CHHapticEvent.ParameterID {
     case "audioPitch": self = .audioPitch
     case "audioPan": self = .audioPan
     case "audioBrightness": self = .audioBrightness
-    default: self = .hapticIntensity // Safe fallback
+    default: self = .hapticIntensity
     }
   }
 }
@@ -287,7 +269,7 @@ extension CHHapticDynamicParameter.ID {
     case "audioPanControl": self = .audioPanControl
     case "audioBrightnessControl": self = .audioBrightnessControl
     case "audioPitchControl": self = .audioPitchControl
-    default: self = .hapticIntensityControl // Safe fallback
+    default: self = .hapticIntensityControl
     }
   }
 }

@@ -7,11 +7,9 @@ import { FOR, LETTERS, STARTERS } from "../copy";
 import { withStarter } from "../letters-model";
 import { useWriteScreen } from "./write-data";
 
-/** A row of chips is this tall. */
 const ROW_HEIGHT = 30;
 const CHIP_MAX_SCALE = 1.4;
 
-/** For: Anyone by default. */
 export function ForChips() {
 	const { state, actions } = useWriteScreen();
 	return (
@@ -28,7 +26,6 @@ export function ForChips() {
 	);
 }
 
-/** Start with: a starter goes on the end of the words, and the field takes focus. */
 export function StarterChips({
 	input,
 }: {
@@ -51,7 +48,6 @@ export function StarterChips({
 	);
 }
 
-/** "For" and "Start with": a label, then chips that scroll sideways (board `.fors`, `.starts`). */
 function ChipRow({ label, children }: { label: string; children: ReactNode }) {
 	return (
 		<ScrollView

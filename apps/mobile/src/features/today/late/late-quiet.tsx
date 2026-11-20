@@ -12,7 +12,6 @@ import { useToday } from "../today-data";
 const ART = 52;
 const PLAY = 16;
 
-/** Something for the quiet (board's late `.qrow`): the rail's music, one tap into the player. */
 export function LateQuiet({ tile }: { tile: RailTile }) {
 	const accentInk = useTokenColor("accent-ink");
 	const { state, actions } = useToday();

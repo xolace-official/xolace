@@ -4,7 +4,6 @@ import { cardStart } from "../arrival/arrival-time";
 import { MARK_AT, STAR, T, TIMING } from "../peers-look";
 import { blinkAt, pointAlpha, starAt, waveDelay } from "./mark-geo";
 
-// Linear curves: these tests pin when each part moves, not the board's curves.
 vi.mock("react-native-reanimated", async () => ({
 	...(await import("@/design/testing/reanimated-stub")),
 	Easing: {
@@ -21,7 +20,6 @@ vi.mock("@shopify/react-native-skia", () => {
 	return { Skia: { PathBuilder: { Make: () => builder } } };
 });
 
-/** Star 1 (a tile circle) is card 0's; star 3 (an outer one) card 3's. */
 const TILE = 1;
 const OUTER = 3;
 

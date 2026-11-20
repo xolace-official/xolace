@@ -81,7 +81,6 @@ describe("settleSnapshot", () => {
 	it("holds the order while the roster is up, and sorts afresh after a visit to Chats", () => {
 		const first = settleSnapshot(null, DIRECTORY);
 		expect([...(first ?? [])]).toEqual([PEOPLE.maya]);
-		// Esi comes online while the roster is up: the order holds, Esi stays last.
 		const esiHere = DIRECTORY.map((x) =>
 			x.xolacerProfileId === PEOPLE.esi ? { ...x, present: true } : x
 		);
@@ -92,9 +91,7 @@ describe("settleSnapshot", () => {
 			"Kojo",
 			"Esi",
 		]);
-		// On Chats the directory isn't read; the order lets go.
 		expect(settleSnapshot(first, undefined)).toBeNull();
-		// Back on Xolacers, Esi sorts with the people here now.
 		const back = settleSnapshot(null, esiHere);
 		expect(rosterCards(esiHere, [], null, back).map((c) => c.name)).toEqual([
 			"Maya",

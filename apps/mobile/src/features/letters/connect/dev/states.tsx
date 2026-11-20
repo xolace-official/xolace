@@ -1,9 +1,7 @@
-/** Connect's Letters card on fixtures: `xolace://dev/letters/card-<state>`. */
 import type { DevState } from "@/dev/dev-state";
 import type { LettersStatus } from "../../letters-model";
 import { CardFixtureScreen } from "./card-fixture";
 
-/** As Connect shows it: the stack's large title. */
 const OPTIONS = { headerLargeTitle: true, title: "Connect" };
 const card = (status: Partial<LettersStatus>) => () => (
 	<CardFixtureScreen status={status} />

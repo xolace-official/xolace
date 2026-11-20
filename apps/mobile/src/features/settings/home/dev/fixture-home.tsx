@@ -1,4 +1,3 @@
-/** The main screen's fixture adapter: the real screen under a provider filled from fixtures. */
 import { HOME_ACTIONS } from "@/features/settings/home/dev/fixtures";
 import {
 	type SettingsHome,

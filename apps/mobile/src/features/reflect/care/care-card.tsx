@@ -27,27 +27,18 @@ const C = LAYOUT.care;
 const S_MS = 1000;
 const TIDE_EASE = Easing.bezier(0.37, 0, 0.63, 1);
 const CARD_EASE = Easing.bezier(0.2, 0.8, 0.2, 1);
-/** The card shows a touch ahead of its rise (board: opacity leads the lift). */
 const OPACITY_LEAD = 1.2;
-/** Board `.care h3`: Bricolage 24/720, −.02em. */
 const TITLE = {
 	fontFamily: FONTS.displayBold,
 	fontSize: 24,
 	letterSpacing: -0.48,
 	lineHeight: 28,
 } as const;
-/** The frame grows round its new content on chip-morph-menu's spring (S11: 247/23.4). */
 const GROW = LinearTransition.springify()
 	.stiffness(MORPH.spring.stiffness)
 	.damping(MORPH.spring.damping)
 	.mass(MORPH.spring.mass);
 
-/**
- * When it's heavy (board card 07, renders 10–12): nothing celebrates. A warm tide rises from the
- * bottom (1.2 s to 380), and once the mirror has written in, the care card rises (.7 s) with one
- * `peal`. Show me who I can talk to grows the list out of the card in place; Breathe with me first
- * is offered, never required. Help stays in the corner, and nothing is sold here.
- */
 export function CareCard() {
 	const { state, actions } = useReflect();
 	const { reduced, light } = useReflectDraw();
@@ -88,7 +79,6 @@ export function CareCard() {
 				})
 			);
 		};
-		// Each new mirror (landN) raises the card again.
 	}, [landN, light.tide, rise, after, reduced]);
 
 	const style = useAnimatedStyle(() => ({

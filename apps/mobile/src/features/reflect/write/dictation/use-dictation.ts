@@ -4,19 +4,13 @@ import { useDictationUpsell } from "@/features/reflect/write/dictation/use-dicta
 import { usePlusDictation } from "@/features/reflect/write/dictation/use-plus-dictation";
 import { useVoiceInput } from "@/lib/speech/use-voice-input";
 
-/**
- * Dictation on Plus (Scribe, one transcript) or on-device (live); Plus falls back on device (#558).
- */
 export function useDictation(onPlusTranscript: (text: string) => void) {
 	const { isPlus } = usePlusEntitlement();
 	const onDevice = useVoiceInput();
 	const plus = usePlusDictation(onPlusTranscript);
-	// Whether the last mic tap fell back to on-device dictation.
 	const [fellBack, setFellBack] = useState(false);
-	// A take in progress keeps its engine even if the entitlement flips mid-way.
 	const usingPlus = (isPlus && !fellBack) || plus.view.phase !== "idle";
 
-	// `openComposer` runs first, so the card is on screen before the take starts.
 	const start = async (openComposer?: () => void) => {
 		openComposer?.();
 		const plusTake = isPlus && (await plus.start());
@@ -35,9 +29,7 @@ export function useDictation(onPlusTranscript: (text: string) => void) {
 		dictationUpsell,
 		isRecording: usingPlus ? plus.isListening : onDevice.isRecording,
 		partialTranscript: onDevice.partialTranscript,
-		/** Null for a free person; a Plus person's strip also carries the fallback note. */
 		plusDictation: isPlus || usingPlus ? plus.view : null,
-		/** `openComposer` opens the card; deferred past the upsell, which shows alone. */
 		startRecording: async (openComposer?: () => void) => {
 			if (!intercept(openComposer)) {
 				await start(openComposer);

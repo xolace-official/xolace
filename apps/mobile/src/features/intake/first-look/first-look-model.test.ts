@@ -94,7 +94,6 @@ describe("rows", () => {
 	});
 
 	it("scrolls to the end the content will have once both rows move", () => {
-		// Talk (112) closes, Support (168) opens: 56 taller.
 		expect(
 			scrollTargetFor({
 				contentH: 700,

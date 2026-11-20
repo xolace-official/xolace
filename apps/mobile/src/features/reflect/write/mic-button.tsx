@@ -20,7 +20,6 @@ import { useReflectDraw } from "../reflect-draw";
 import { MicGlow, MicRing } from "./mic-glow";
 import { HELD, POWER } from "./mic-motion";
 
-/** S2 hold-to-speak: under .18 s is a tap; past −40 pt cancel arms, back above −28 it disarms. */
 const HOLD_MS = 180;
 const ARM_AT = -40;
 const DISARM_AT = -28;
@@ -30,15 +29,9 @@ const MIC_ICON = { android: "mic", ios: "mic" } as const;
 
 type Props = {
 	onTap: () => void;
-	/** The finger has slid far enough up that letting go cancels. */
 	onArmed: (armed: boolean) => void;
 };
 
-/**
- * The hold mic (board `.hmic`): a 56 pt circle with the spectrum ring. Hold and talk; the warm
- * glow gathers under the finger and springs after it (ω 12, ζ .9); slide up to cancel. A tap
- * focuses the field. The gesture runs on the UI thread.
- */
 export function MicButton({ onTap, onArmed }: Props) {
 	const { state, actions } = useReflect();
 	const { reduced } = useReflectDraw();
@@ -52,7 +45,6 @@ export function MicButton({ onTap, onArmed }: Props) {
 	const power = useSharedValue(0);
 	const glowX = useSharedValue(0);
 
-	// Listening (from the hold, or set elsewhere) keeps the glow and the lift in step with it.
 	useEffect(() => {
 		power.set(withTiming(listening ? 1 : 0, POWER));
 		held.set(withTiming(listening && !reduced ? 1 : 0, HELD));

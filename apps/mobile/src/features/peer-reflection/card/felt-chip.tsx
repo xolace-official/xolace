@@ -18,22 +18,14 @@ const L = LAYOUT.chip;
 
 type Props = {
 	on: boolean;
-	/** Bumped on every turn-on, so the ember beats once per press. */
 	presses: number;
 	others: number;
 	reduced: boolean;
 	colors: PeersColors;
-	/** The chip's row fades in after the words (board `.row`). */
 	rowOpacity: SharedValue<number>;
 	onPress: () => void;
 };
 
-/**
- * "I've felt this too" (board `.chip`): a small round ember instead of
- * production's heart. On, the chip warms (.45 s), the ember fills and beats, and
- * the label rises to "You and 12 others". One button for VoiceOver, its state
- * selected and its value the count.
- */
 export function FeltChip({
 	on,
 	presses,

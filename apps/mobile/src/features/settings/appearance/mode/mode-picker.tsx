@@ -13,7 +13,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 const RADIO = 22;
 
-/** Mode as three pictures in one card (board `.modes`), a radio group. */
 export function ModePicker() {
 	const { state, actions } = useAppearanceScreen();
 	const onAccent = useTokenColor("accent-foreground");

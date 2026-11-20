@@ -11,36 +11,23 @@ import { EASE, T2, TS } from "../session-look";
 import { clamp01 } from "../timeline";
 import { QUOTE } from "./quote-style";
 
-/** `.landed .q`: ink → ink 2. On both themes ink 2 sits about 30% of the way from ink to the card. */
 const DIM_TO = 0.7;
-/** Each line gleams in thirds, left to right, so the glow travels across as the board's words do. */
 const SLICES = 3;
-/** Room around a slice for the glow (r 10). */
 const PAD = 12;
-/** `gl2`'s glow radius. */
 const GLEAM_R = 10;
 
 type Line = { x: number; y: number; width: number; height: number };
 
 type Props = {
 	text: string;
-	/** ms into moment 2, and since the send (< 0 before). */
 	c2: SharedValue<number>;
 	cs: SharedValue<number>;
-	/** The quote's lines and its last line's reach, for the caption's timing. */
 	lineCount: SharedValue<number>;
 	lastFrac: SharedValue<number>;
-	/** The words' warm glow as they leave. */
 	gleam: string;
 	reduced: boolean;
 };
 
-/**
- * The quote (board `.q`): Peers' write-on (`write-on.tsx`), starting 820 ms into moment 2 with the
- * same timing (`wordsOf`: 160 in, lines 260 apart, a 420 ms sweep). When it's sent the words gleam once,
- * line by line (`gl2`: a warm text glow peaking at 40% of .55 s), and once your star lands the quote
- * turns ink 2 (.8 s after .3 s), here as a fade toward the card. VoiceOver reads the one quote.
- */
 export function ShareQuote({
 	text,
 	c2,
@@ -135,10 +122,6 @@ type SliceProps = {
 	glow: string;
 };
 
-/**
- * A third of one line's words, gleaming once (`gl2`) at its own delay: `g` = line · 120 + column · 9,
- * the column being the slice's middle (36 columns across the widest line, as `wordsOf` counts).
- */
 function GleamSlice({
 	index,
 	slice,

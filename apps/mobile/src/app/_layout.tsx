@@ -1,4 +1,3 @@
-/** Root layout: providers (RootProvider, then NavThemeProvider) around the route groups. */
 import "@/lib/clerk-online-polyfill";
 import "@/global.css";
 import "@/lib/theme-bootstrap";
@@ -35,20 +34,16 @@ Sentry.init({
 
 	enableLogs: true,
 
-	// Label events so dev traffic never mixes with production in the dashboard.
 	environment: __DEV__ ? "development" : "production",
 	integrations: __DEV__ ? [] : [Sentry.mobileReplayIntegration()],
 	replaysOnErrorSampleRate: __DEV__ ? 0 : 1,
 
-	// Session Replay in production only.
 	replaysSessionSampleRate: __DEV__ ? 0 : 0.1,
 
-	// No auto-collected PII; only the userId for the auth-guard breadcrumbs via Sentry.setUser.
 	sendDefaultPii: false,
 });
 
 // Must run at module scope before any screen mounts; toggling after mount throws.
-// Keeps search queries and letter ids out of exported navigation metrics (screen-name.ts).
 Observe.configure({
 	integrations: {
 		"expo-router": { filteredParams: [...OBSERVE_FILTERED_PARAMS] },
@@ -56,27 +51,26 @@ Observe.configure({
 });
 
 SplashScreen.preventAutoHideAsync();
-// The launch cover's first frame is the native splash's last, so the native one hides with no fade.
 SplashScreen.setOptions({ fade: false });
 
 Settings.enableSound(false);
 Settings.preloadPresets([
-	"Herald", // mirrorArrival, must be instant
-	"Bloom", // sessionComplete
-	"Feather", // gentlePresence, onboarding transitions
-	"Propel", // form submit
-	"Strike", // affirmativePress
-	"Cascade", // onboardingEntrance
-	"BellToll", // followUpEntrance, plays on mount
-	"Wobble", // errorNotice, clarifyState mount
-	"Peal", // escalationState mount
-	"Flick", // carousel advance, textureSelect
-	"Thud", // menu open, homeEntrance
-	"Chirp", // resonanceToggle, lighter mood
-	"Murmur", // peerReflections mount, unsure mood
-	"Breath", // processingBreath fallback
-	"Swell", // insights overall dial fill, plays on mount
-	"Dewdrop", // contributed confirmation; the redesign's twig landing and words going out
+	"Herald",
+	"Bloom",
+	"Feather",
+	"Propel",
+	"Strike",
+	"Cascade",
+	"BellToll",
+	"Wobble",
+	"Peal",
+	"Flick",
+	"Thud",
+	"Chirp",
+	"Murmur",
+	"Breath",
+	"Swell",
+	"Dewdrop",
 ]);
 
 // Expo Router's boundary swallows render crashes, so RouteError reports to
@@ -84,13 +78,8 @@ Settings.preloadPresets([
 export { RouteError as ErrorBoundary } from "@/components/shared/route-error";
 
 const NO_HEADER = { headerShown: false };
-// The root stack only swaps route groups, and on a cold start Stack.Protected
-// replaces the first group matching `/` with the right one; animating that
-// replacement reads as a push into home, so group swaps cut instead.
 const ROOT_SCREEN_OPTIONS = { animation: "none", headerShown: false } as const;
 
-/** The update notice, the root's own sheet, on the redesign's form sheet. It is a root route
- * because it opens signed out too. It slides up as sheets do: the root's `animation: "none"` is for group swaps only. */
 function useRootSheet() {
 	const surface = useThemeColor("surface");
 	return {
@@ -112,13 +101,8 @@ const AppContent = () => {
 	const { isSignedIn, isLoaded: isClerkLoaded, userId } = useAuth();
 	const posthog = usePostHog();
 
-	// The intake gate (T6, #263), hoisted so the root is the single subscriber
-	// and Convex dedupes every downstream read.
-	// Skipped until the account exists too: before `getOrCreate` lands it throws `user_not_found`.
 	const context = useFullContext(!isAuthenticated || accountPending);
 	usePostHogIdentity();
-	// `undefined` only while the query is in flight (the gate waits on it once signed
-	// in); an answered query with no flag on the profile is "not done", as before.
 	const onboardingComplete =
 		context === undefined
 			? undefined
@@ -139,8 +123,6 @@ const AppContent = () => {
 	});
 	const rootSheet = useRootSheet();
 
-	// Breadcrumb the route-group guard's inputs: a wrong (first-run) landing on a cold
-	// start is either a Clerk cache miss or a Clerk/Convex desync.
 	useEffect(() => {
 		Sentry.setUser(userId ? { id: userId } : null);
 		Sentry.addBreadcrumb({
@@ -175,7 +157,6 @@ const AppContent = () => {
 	const previousPathname = useRef<string | undefined>(undefined);
 
 	useEffect(() => {
-		// Reported by name: a route with an id in its path (a letter's) reports its pattern.
 		const screen = screenName(pathname);
 		if (previousPathname.current !== screen) {
 			posthog.screen(screen, {
@@ -186,14 +167,11 @@ const AppContent = () => {
 		}
 	}, [pathname, params, posthog]);
 
-	// Render no routes while the gate is finding out, rather than bouncing someone out of
-	// (protected) a frame later: at launch the cover stays up; after it, a quiet loading state.
 	if (gate === "loading") {
 		return <LaunchHold reason="gate" />;
 	}
 	return (
 		<>
-			{/* Above every route group so it outlives (protected); see the component. */}
 			<ChatLocalDataGuard />
 			<ReflectDraftGuard />
 			<Stack screenOptions={ROOT_SCREEN_OPTIONS}>
@@ -212,11 +190,7 @@ const AppContent = () => {
 	);
 };
 
-/** `NavThemeProvider` must sit inside `RootProvider`, which owns the theme context it reads. */
 function RootLayout() {
-	// The theme's font pair, Default's and the fixed faces (src/design/fonts.ts). The launch
-	// cover (src/features/launch) stays up until they're in; if they hang past it, the hold shows
-	// its quiet spinner rather than an empty window.
 	const fontsReady = useLaunchFonts();
 
 	return (

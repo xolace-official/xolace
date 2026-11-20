@@ -10,11 +10,6 @@ type Props = {
 	width?: number;
 };
 
-/**
- * A one-item system context menu around RN content (@expo/ui `ContextMenu`, as Peers' card
- * menu), so the lift, blur and haptic are the system's: "Remove from here", "Don't use my
- * sessions here".
- */
 export function HomeMenu({ label, icon, onPress, children, width }: Props) {
 	return (
 		<ThemedHost

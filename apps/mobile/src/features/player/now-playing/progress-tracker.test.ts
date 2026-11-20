@@ -18,7 +18,6 @@ const tick = (over: Partial<ProgressTick>): ProgressTick => ({
 	...over,
 });
 
-/** Runs ticks in order and returns every write. */
 function run(ticks: Partial<ProgressTick>[], from = startProgress()) {
 	let tracker: ProgressTracker = from;
 	const writes: unknown[] = [];

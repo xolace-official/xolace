@@ -1,12 +1,8 @@
-// What Xolace+ sells and how each plan is worded (#713), read off RevenueCat's current
-// offering and nothing else: a seasonal or loyalty discount arrives as that offering's intro
-// price, like any other. Intake's first look says it this way.
 import type { PurchasesPackage } from "react-native-purchases";
 import { introOfferOf } from "@/features/purchases/intro-offer";
 import { hasFreeTrial } from "@/features/purchases/screens/paywall-cta-label";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 
-/** A store plan and whether this user can still take its intro offer. */
 type PlanOffer = { eligible: boolean; pkg: PurchasesPackage | null };
 
 export type Plans = Record<PlanId, PlanOffer>;
@@ -18,12 +14,9 @@ const CANCEL = "Renews automatically. Cancel any time.";
 const introOf = ({ eligible, pkg }: PlanOffer) =>
 	introOfferOf(pkg?.product, eligible);
 
-/** Yearly and its free week, unless the store sells only monthly. */
 export const defaultPlan = (plans: Plans): PlanId =>
 	!plans.annual.pkg && plans.monthly.pkg ? "monthly" : "annual";
 
-/** The week only on yearly (#221 §6), the discount only on monthly, as the paywall does.
- * Also what `intake_plus_trial_started` hangs on. */
 export const startsTrial = (plan: PlanId, plans: Plans) =>
 	plan === "annual" && hasFreeTrial(plans.annual.pkg, plans.annual.eligible);
 
@@ -58,8 +51,6 @@ export function planPriceLine(plan: PlanId, plans: Plans): string | null {
 	return `${pkg.product.priceString} a ${per}. ${CANCEL}`;
 }
 
-/** A plan's price on its card, always per period: yearly also per month when the store works
- * it out, a monthly discount per month for its term. */
 export function planPrice(plan: PlanId, plans: Plans): string | null {
 	const product = plans[plan].pkg?.product;
 	if (!product) {
@@ -77,7 +68,6 @@ export function planPrice(plan: PlanId, plans: Plans): string | null {
 		: `${product.priceString}/yr`;
 }
 
-/** The small mark on a plan's option: its free week or its discount. */
 export function planTag(plan: PlanId, plans: Plans): string | null {
 	if (startsTrial(plan, plans)) {
 		return "7 days free";

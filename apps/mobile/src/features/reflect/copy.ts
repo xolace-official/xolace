@@ -1,9 +1,3 @@
-/**
- * Reflect's words, verbatim from the live board (prototype `src/fixtures/reflect.ts`, board
- * constants 782–833) and production where the board borrowed them. The wait's line follows the
- * server's `processingStage`; the escalation list's rows come from the session, only their verbs
- * and readouts are here.
- */
 export const COPY = {
 	care: {
 		a11y: {
@@ -12,8 +6,6 @@ export const COPY = {
 			text: (name: string, value: string) => `${name}, ${value}`,
 			url: (name: string) => `Open ${name}.`,
 		},
-		/** The verb on a resource row, by how it opens; rows come from the session. The
-		 * readouts are written for VoiceOver (the board's spelled the number out by hand). */
 		act: { email: "Email", phone: "Call", text: "", url: "Open" },
 		back: "Back",
 		body: "What you're carrying sounds heavier than a regular hard day. You don't have to hold it alone. There are people trained for moments like this.",
@@ -31,7 +23,6 @@ export const COPY = {
 	},
 	chrome: {
 		close: "Close, your draft is kept",
-		/** Heard: the session has ended, so ✕ goes on to its end. */
 		closeHeard: "Close",
 		closeWaiting: "Step away, it keeps going",
 		help: "Get help now",
@@ -45,7 +36,6 @@ export const COPY = {
 		},
 	},
 	dictation: {
-		/** Production's first-mic-tap upsell (#559), verbatim. */
 		upsell: {
 			body: "Your phone can already write down what you say. Xolace+ catches it more closely: the pauses, the names, the way you actually talk. Either way, it's yours to edit before you send it.",
 			notNow: "Not now",
@@ -73,7 +63,6 @@ export const COPY = {
 		readAloud: "Read it aloud",
 		revised: "Revised",
 		sayMore: "Say more",
-		/** Production's hint when the mirror named a gap (#360). */
 		sayMoreHelps:
 			"Recommended: add more so the mirror has something to work with",
 		takenFrom: "Taken from your words above",
@@ -99,7 +88,6 @@ export const COPY = {
 				title: "I just needed to say it",
 			},
 		],
-		/** Production's space-name prompt, asked once on Where next (kit `NameDialog`). */
 		spaceName: {
 			cancel: "Not now",
 			desc: "A soft label, just for you. You can change it anytime in settings.",
@@ -109,7 +97,6 @@ export const COPY = {
 		},
 		sub: "Pick whichever feels right.",
 		title: "Where to from here?",
-		/** Production's gave-up card (`feedback.submit`, `gave_up`), after Leave it here. */
 		whatHappened: {
 			options: [
 				{ id: "mirror_kept_missing", label: "The mirror kept missing" },
@@ -124,7 +111,6 @@ export const COPY = {
 		closer: "What’s closer?",
 		missing: "What’s missing?",
 		placeholder: "Help me understand better…",
-		/** Production's four reasons (`MissReason`), in the board's words. */
 		reasons: [
 			{
 				id: "wrong_emotion",
@@ -152,7 +138,6 @@ export const COPY = {
 	},
 	wait: {
 		backOnline: "I’m back online",
-		/** Production's error state (#283, #377): the fallback, the safeguard's no and the hourly cap. */
 		failed: "Something went wrong.",
 		keepsGoing: "It keeps going. Today will show when it’s ready.",
 		keepWaiting: "Keep waiting",
@@ -161,12 +146,10 @@ export const COPY = {
 			"You’re offline. Your words are kept here, and they’ll go when you’re back.",
 		offlineCard:
 			"Nothing is lost. You can close Reflect; your words wait on the Today card.",
-		// Copy pending safety review: never name the category or imply fault.
 		rejected:
 			"This is something I can't reflect back here. If it's weighing on you, talking to someone can help.",
 		seePlus: "See Xolace+",
 		slow: "This is taking longer than usual. I’m still with it. You can step away and I’ll keep it on Today.",
-		/** Production's `processingStage`: still reading, connecting, writing. */
 		stages: [
 			"Taking this in…",
 			"Holding this next to what you’ve shared before…",
@@ -182,7 +165,6 @@ export const COPY = {
 	write: {
 		cancelled: "Cancelled. Nothing was kept.",
 		draftKept: "Draft kept on the card",
-		/** Production's bridge toasts (#462, #707). */
 		draftStillHere: "Your draft is still here",
 		fourIsPlenty: "Four is plenty",
 		letGoCancel: "Let go to cancel",
@@ -207,16 +189,13 @@ export const COPY = {
 			evening: "What’s sitting with you right now?",
 			late: "What’s carrying over?",
 		},
-		/** Production's quote-reply seed (#316) takes the question's place. */
 		replySeed: (seed: string) => `You wrote: “${seed}”`,
 		send: "Let it out",
 		slideCancel: "Slide up to cancel",
-		/** For VoiceOver and TalkBack, where a double tap starts and stops a take. */
 		speakHint: "Hold and talk. Slide up to cancel.",
 		speakLabel: "Hold to speak",
 		tapClose: "Or just tap what feels close",
 		wordsStay: "The words stay, the audio doesn’t",
-		/** A Plus take being written down after the mic lets go (production's strip). */
 		writingDown: "Writing it down…",
 	},
 } as const;

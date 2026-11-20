@@ -10,7 +10,6 @@ import { LAYOUT, T1 } from "../session-look";
 import { appear, riseIn } from "../timeline";
 
 const L = LAYOUT;
-/** The small labels grow with Dynamic Type, capped as the titles are. */
 const LABEL_MAX = 1.25;
 
 type Props = {
@@ -18,15 +17,9 @@ type Props = {
 	clock: SharedValue<number>;
 	late: boolean;
 	reduced: boolean;
-	/** Where the heading ends, for the face's fit under large Dynamic Type. */
 	onTop: (bottom: number) => void;
 };
 
-/**
- * Moment 1's heading (board `.t1`, `.q1`, `.pv`): the acknowledgement as the
- * title, then "How do you feel now?" and "Only you see this." Late, the night
- * line instead of the question.
- */
 export function MomentOneHeading({ y, clock, late, reduced, onTop }: Props) {
 	const question = useAnimatedStyle(() =>
 		riseIn(

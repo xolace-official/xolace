@@ -5,22 +5,15 @@ import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useAppStore } from "@/store/store";
 
-/** The one-time Plus dictation upsell's modal (#559). */
 export type DictationUpsell = {
 	isOpen: boolean;
-	/** Closes it and dictates on device, so the tap that opened it isn't wasted. */
 	onNotNow: () => void;
 	onUpgrade: () => void;
-	/** Closed without choosing: nothing starts. */
 	onDismiss: () => void;
 };
 
-// The upsell's paywall round trip: opened, then this screen blurs, then it's focused again.
 type PaywallTrip = "none" | "opened" | "left";
 
-/**
- * A free first mic tap gets the Plus upsell (#559); `start` runs on "Not now" or on return as Plus.
- */
 export function useDictationUpsell(
 	start: (openComposer?: () => void) => Promise<void>
 ) {
@@ -34,8 +27,6 @@ export function useDictationUpsell(
 	const openComposerRef = useRef<(() => void) | undefined>(undefined);
 	const isFocused = useIsFocused();
 
-	// Back from the paywall: Plus means a purchase, so the take starts; still
-	// free means they cancelled, so nothing starts.
 	const returnFromPaywall = useEffectEvent(() => {
 		if (isPlus) {
 			void start(openComposerRef.current);
@@ -54,8 +45,6 @@ export function useDictationUpsell(
 	}, [isFocused]);
 
 	const intercept = (openComposer?: () => void) => {
-		// Only on a settled "free": a subscriber whose entitlement is still
-		// loading must never see an upsell. Seen once it shows, however it closes.
 		if (!isResolved || isPlus || seen) {
 			return false;
 		}

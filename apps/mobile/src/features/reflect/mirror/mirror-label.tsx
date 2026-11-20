@@ -16,11 +16,6 @@ const M = LAYOUT.mirror;
 const LABEL = { fontSize: 11.5, letterSpacing: 1.38 } as const;
 const VERSIONS = [1, 2] as const;
 
-/**
- * The label row (board `.mlab`): the face (30), THE MIRROR, the First / Revised pills once the
- * mirror has been refined, and read aloud in its reserved slot. Under it, a talk's mirror says
- * who the talk was with (production's `TalkWith`); a typed one stays unsigned.
- */
 export function MirrorLabel({ face }: { face: FaceHandle }) {
 	const { state, actions } = useReflect();
 	const { late } = useReflectDraw();

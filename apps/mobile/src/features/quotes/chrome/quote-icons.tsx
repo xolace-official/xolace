@@ -1,6 +1,5 @@
 import Svg, { Circle, Path, Rect } from "react-native-svg";
 
-/** The Quotes board's own icons (its inline SVGs), so strokes and sizes match it exactly. */
 export type QuoteIconName =
 	| "close"
 	| "pause"

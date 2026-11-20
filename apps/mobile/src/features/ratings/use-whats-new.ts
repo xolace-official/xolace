@@ -8,11 +8,6 @@ import type { WhatsNew } from "./whats-new-data";
 
 type Params = { next?: "rate" | "close" };
 
-/**
- * What's New for the latest release alone. A plain open passes `?next=rate` when the rating screen
- * is due after it; from Settings or the shake menu it just closes. Opening it counts as seeing it,
- * from anywhere.
- */
 export function useWhatsNew(): WhatsNew {
 	const { next } = useLocalSearchParams<Params>();
 	const posthog = usePostHog();

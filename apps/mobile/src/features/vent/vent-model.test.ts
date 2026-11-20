@@ -89,7 +89,6 @@ describe("replyPace", () => {
 
 	it("follows the voice: each word when the voice reaches it, by its length", () => {
 		const pace = replyPace(["a", "bbb"], 600);
-		// "a " is 2 of 6 characters, so "bbb" starts a third of the way in.
 		expect(pace.starts).toEqual([0, 200]);
 	});
 

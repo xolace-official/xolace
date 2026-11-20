@@ -7,16 +7,11 @@ import { cn } from "@/lib/cn";
 
 const AnimatedInput = Animated.createAnimatedComponent(TextInput);
 
-/**
- * Text the UI thread writes (the scrub time, elapsed and time left), so a scrub never renders
- * React. A read-only TextInput, hidden from VoiceOver: the scrubber reads its own value.
- */
 export function LiveText({
 	text,
 	className,
 }: {
 	text: SharedValue<string>;
-	/** Size, face, colour, width and alignment. */
 	className?: string;
 }) {
 	const props = useAnimatedProps(

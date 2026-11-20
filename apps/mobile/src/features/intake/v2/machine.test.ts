@@ -288,7 +288,6 @@ describe("plus", () => {
 		).toMatchObject({ plusOutcome: "entitled", step: "done" });
 	});
 
-	// A fallback isn't a safety verdict: only the safety route takes Xolace+ away.
 	it("is still offered after a read that failed", () => {
 		expect(
 			run(
@@ -589,7 +588,6 @@ describe("safety", () => {
 	});
 });
 
-// Support was on screen inside the demo, so the exit goes straight on to the save.
 describe("the talk demo's safety exit", () => {
 	const atPlus = () =>
 		run(start(), { type: "SKIP" }, { entitled: false, type: "KEEP_NAME" });
@@ -617,7 +615,6 @@ describe("the talk demo's safety exit", () => {
 		).toBe("done");
 	});
 
-	// Xolace+ was on screen, so this is a dismissal, the same as a late verdict leaving it.
 	it("counts as a dismissal, since Xolace+ was offered", () => {
 		expect(run(atPlus(), exit).plusOutcome).toBe("dismissed");
 	});
@@ -657,7 +654,6 @@ describe("the talk demo's safety exit", () => {
 	});
 });
 
-// A read that outlived the client's wait: the pick-list stood in, then the verdict landed.
 describe("a late safety verdict", () => {
 	const RESOURCES: SafetyResource[] = [
 		{
@@ -797,7 +793,6 @@ describe("a late safety verdict", () => {
 	});
 });
 
-// The Mirror's "Pick up where you left off" quotes this back, unprompted.
 describe("the first answer the Mirror offers back", () => {
 	const said = (text: string) =>
 		run(

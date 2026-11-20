@@ -18,16 +18,12 @@ import { scrimOf } from "../quotes-palette";
 import { POSTER_MEDIUM } from "../stage/quote-type";
 
 export const CARD = { h: 430, radius: 30, w: 300 } as const;
-/** The card sits 16 pt into the stack. */
 export const CARD_IN_STACK = 16;
-/** Behind the front card: up 14 and −.06 scale per step (two show). */
 const STEP = { scale: 0.06, y: 14 } as const;
-/** Gone: −125% x, −8°, faded. */
 const GONE = { rotate: -8, x: -1.25 } as const;
 const BEHIND_SHOWN = 2;
 const CARD_DROP = 0.55;
 
-/** One kept quote, on the background it was kept with. */
 export function KeptCard({
 	card,
 	background,
@@ -37,7 +33,6 @@ export function KeptCard({
 }: {
 	card: Card;
 	background: QuoteBackground;
-	/** Its place from the front card: 0 the front, 1.. behind, -1 gone. */
 	d: number;
 	left: number;
 	reduced: boolean;

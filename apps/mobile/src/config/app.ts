@@ -1,7 +1,5 @@
 import Constants from "expo-constants";
 
-/** App-level feature configuration. `features.payments` is the RevenueCat master switch; while
- * false, `devIsPlus` is the local free/plus switch. */
 const extra = Constants.expoConfig?.extra as
 	| {
 			revenueCat?: {
@@ -14,13 +12,11 @@ const extra = Constants.expoConfig?.extra as
 	| undefined;
 
 export const appConfig = {
-	/** Local free/plus switch while payments=false (client gates only). */
 	devIsPlus: false,
 	features: {
 		payments: true,
 	},
 	monetization: {
-		/** User is Plus if ANY of these entitlements is active. */
 		entitlements: ["xolace-plus"],
 		revenueCatApiKey: {
 			android: extra?.revenueCat?.androidKey ?? "",

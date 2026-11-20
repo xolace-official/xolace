@@ -1,6 +1,3 @@
-/** The feature-shape rules (`AGENTS.md`, "Feature shape"), as checks over the import
- * graph. Each returns the offending imports as `from -> to`; empty means it holds.
- * Run on the real graph by `import-cycles.test.ts`. Node-only. */
 import path from "node:path";
 import {
 	featureOf,
@@ -9,53 +6,29 @@ import {
 	relative,
 } from "@/features/import-graph";
 
-/**
- * Old folders whose screens the redesign replaces. A screen PR takes a folder off
- * this list when it replaces it in place (rewritten under the same name, in the
- * shape) or deletes it.
- */
 const REPLACED_FEATURES = ["browse", "intake", "reach-me-on", "xolacer-chat"];
 
-/**
- * Old folders the redesign keeps: the sweep (C1) restyles them and brings them
- * into the shape, then takes them off this list.
- */
 const RESTYLED_FEATURES = ["purchases"];
 
-/**
- * The old feature folders, which predate the shape. Every other folder is
- * ported, held to the shape from its first commit. Both lists only shrink, and a
- * name with no folder fails the test.
- */
 const LEGACY_FEATURES: ReadonlySet<string> = new Set([
 	...REPLACED_FEATURES,
 	...RESTYLED_FEATURES,
 ]);
 
-/** Folders under `features/` that compose every feature rather than being one:
- * `navigation` spreads each feature's `screens.ts` into the stack. */
 const HUBS: ReadonlySet<string> = new Set(["navigation"]);
 
-/**
- * Features new code may import: lower-layer modules other features build
- * on, each with why. Anything else two features share moves down to
- * `src/lib`, `src/components/shared` or a kit in `src/components/<kit>`.
- */
 const SHARED_FEATURES: Readonly<Record<string, string>> = {
 	purchases: "the entitlements module: usePlusEntitlement, usePaywall",
 };
 
-/** An old folder: it predates the shape (and the motion rules in `motion-imports.ts`). */
 export const isLegacyFeature = (feature: string) =>
 	LEGACY_FEATURES.has(feature);
 
-/** A ported folder: written in the shape, or rewritten into it by its screen PR. */
 const isPortedFeature = (feature: string) =>
 	!(isLegacyFeature(feature) || HUBS.has(feature));
 
 const FEATURE_FOLDER = /^features\/([^/]+)\//;
 
-/** Folders outside `features/` that hold new code: the redesign's lower layers. */
 const NEW_LAYERS = [
 	"design/",
 	"components/shared/",
@@ -65,8 +38,6 @@ const NEW_LAYERS = [
 	"lib/stream-chat/",
 ];
 
-/** New code: a ported feature folder or one of the redesign's lower layers
- * (`src/`-relative path). */
 export function isNewCode(file: string): boolean {
 	const feature = file.match(FEATURE_FOLDER)?.[1];
 	return feature
@@ -74,44 +45,30 @@ export function isNewCode(file: string): boolean {
 		: NEW_LAYERS.some((layer) => file.startsWith(layer));
 }
 
-/** Listed legacy folders and hubs that no longer exist: drop them from the lists. */
 export const staleListings = (features: readonly string[]): string[] =>
 	[...LEGACY_FEATURES, ...HUBS].filter((f) => !features.includes(f));
 
-/** Packages only a data hook may import (as values): Convex, PostHog, the API. */
 const BACKEND_PACKAGES = [
 	/^convex\/react$/,
 	/^convex-helpers\/react(\/|$)/,
 	/^posthog-react-native$/,
 	/^@xolace\/backend\/(convex\/_generated\/)?api$/,
 ];
-/**
- * App-wide reads a part may use directly, though they reach Convex inside, each
- * with why. Any other file outside `features/` that reaches Convex or PostHog
- * counts as calling the backend.
- */
 const APP_WIDE_READS: Readonly<Record<string, string>> = {
 	"lib/motion/use-effective-reduced-motion.ts":
 		"the user's reduced-motion setting, read by every animated part",
 };
-/** The toast is a side effect of an action, so it lives in the data hook too: the
- * app's `toast()` (new code) and heroui's `useToast` (the old screens). */
 const TOAST = { name: "useToast", specifier: "heroui-native" };
 const TOAST_ENTRY = "components/shared/toast.tsx";
 const DATA_HOOK = /^use-[^/]+\.ts$/;
-/** The nearest `dev/` inside a feature, at any depth (`letters/write/dev/`). */
 const DEV_FOLDER = /^(features\/[^/]+\/(?:[^/]+\/)*?dev)\//;
-/** `src/dev/`: the dev-states registry, the one place outside a feature that
- * may import its `dev/` folder. */
 const DEV_REGISTRY = "dev/";
 
-/** Dev-build code: `src/dev/` and every feature's `dev/` (`src/`-relative path). */
 const isDevCode = (file: string) =>
 	file.startsWith(DEV_REGISTRY) || DEV_FOLDER.test(file);
 
 type Edge = { file: string; imp: Import; target?: string };
 
-/** Every import as an edge; one per in-repo target, or one with no target. */
 function* edges(graph: ImportGraph): Generator<Edge> {
 	for (const [file, imports] of graph) {
 		for (const imp of imports) {
@@ -130,12 +87,6 @@ const show = ({ file, imp, target }: Edge) =>
 
 const unique = (lines: string[]) => [...new Set(lines)];
 
-/**
- * 1. New code never imports old code: a ported folder or a lower layer imports
- * no folder still on `LEGACY_FEATURES` (bar the shared modules below). A screen
- * PR deletes the old code it replaces, or replaces the folder in place; a piece
- * new code needs from an old folder moves down a layer.
- */
 export function oldFolderImportsFromNewCode(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
@@ -153,9 +104,6 @@ export function oldFolderImportsFromNewCode(graph: ImportGraph): string[] {
 	return unique(found);
 }
 
-/** 2. A feature's `dev/` folders are imported only by its own `dev/` folders (a
- * big feature's `write/dev/states.tsx` may use its root `dev/` fixtures) and
- * `src/dev/`, so fixtures never ship inside a screen. */
 export function devImportsFromOutside(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
@@ -178,7 +126,6 @@ const importsBackendPackage = (imp: Import) =>
 		(imp.specifier === TOAST.specifier &&
 			(imp.names.includes(TOAST.name) || imp.names.includes("*"))));
 
-/** Files outside `features/` that reach the backend, directly or through each other. */
 function backendWrappers(graph: ImportGraph): Set<string> {
 	const outside = [...graph.keys()].filter(
 		(file) =>
@@ -210,8 +157,6 @@ function backendWrappers(graph: ImportGraph): Set<string> {
 	return wrappers;
 }
 
-/** 3. In a ported folder, only `use-*.ts` data hooks call Convex, PostHog or the toast,
- * directly or through an app wrapper (`lib/convex/*`, `lib/speech/use-voice-input`…). */
 export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
 	const wrappers = backendWrappers(graph);
 	const callsBackend = ({ imp, target }: Edge) =>
@@ -232,15 +177,8 @@ export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
 	return unique(found);
 }
 
-/**
- * `src/dev/` files a ported feature's dev states may reach another ported feature through: a dev
- * state has no route to compose features in. Named one by one, so relaying past check 4 can't
- * become a pattern; each goes when its contract lands.
- */
 const DEV_BRIDGES = new Set([
-	// The session end's letter cards draw letters' real tile (a dev state has no route).
 	"dev/letters-slots.ts",
-	// The session end's next cards draw Connect's avatar and Steadiness's part icon and name.
 	"dev/session-end-slots.tsx",
 ]);
 
@@ -250,9 +188,6 @@ const isPortedTarget = (from: string, to: string | null | undefined) =>
 	!isLegacyFeature(to as string) &&
 	!Object.hasOwn(SHARED_FEATURES, to as string);
 
-/** 4. A ported folder imports no other ported feature, except the shared modules
- * above: features meet in routes. (An old folder it imports is check 1.) Nor does it
- * reach one through a `src/dev/` file, bar the named `DEV_BRIDGES`. */
 export function crossFeatureImportsFromPorted(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	const devReaches = new Map<string, Set<string>>();
@@ -284,12 +219,6 @@ export function crossFeatureImportsFromPorted(graph: ImportGraph): string[] {
 	return unique(found);
 }
 
-/**
- * 5. Old code never imports a ported folder: an old folder imports nothing a
- * screen PR has rewritten (bar the shared modules and the hub). So a folder
- * replaced in place while other old screens still used parts of it had those
- * parts moved down a layer first, and nothing imports a half-replaced folder.
- */
 export function portedFolderImportsFromOldCode(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
@@ -309,13 +238,6 @@ export function portedFolderImportsFromOldCode(graph: ImportGraph): string[] {
 	return unique(found);
 }
 
-/**
- * 6. Dev states never reach a release build: code outside `src/dev/` and the
- * features' `dev/` folders reaches them only through a `require()` behind
- * `__DEV__` (the dev route shims, and a fixture adapter seeding itself until
- * its contract lands), which a release build folds away
- * before Metro collects its dependencies. A static import would ship them.
- */
 export function devCodeInReleaseGraph(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {

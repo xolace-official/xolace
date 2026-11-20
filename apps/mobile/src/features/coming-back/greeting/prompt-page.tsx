@@ -14,10 +14,6 @@ import { WELCOME_BACK } from "../copy";
 import { useWelcomeBack } from "../welcome-back-data";
 
 const P = WELCOME_BACK.page;
-/**
- * Board `.pgp` 14 / 16 / 18; `.pbar` 44 (buttons 44); `.pban` 150, radius 26, 160° gradient,
- * Flux campfire 98 wide; the prompt box's radius 22; Write 56, Let it pass 44.
- */
 const FLUX = { height: 149, sink: -2, width: 98 } as const;
 const BANNER = {
 	end: { x: 0.67, y: 1 },
@@ -37,11 +33,6 @@ const PROMPT = {
 const WRITE = { fontSize: 17 } as const;
 const PASS = { fontSize: 15 } as const;
 
-/**
- * This month's prompt, inside the greeting (handoff §7), in the event's own words. Back reads
- * it; Let it pass lets it go; Write about it carries it to Reflect. Without a prompt line
- * (an event with only an article) there is nothing to carry: no box, no Write.
- */
 export function PromptPage() {
 	const { state, actions } = useWelcomeBack();
 	const event = state.items.event;

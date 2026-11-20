@@ -1,17 +1,14 @@
-/** A colour's clear (or faint) twin, from any colour string the themes and tokens write (hex, rgb, oklch). Pure. */
 const HEX = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i;
 const RGB = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i;
 const OKLCH = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+)/i;
 const PERCENT = 100;
 const CHANNEL = 255;
 
-/** sRGB gamma on one linear channel, 0–255. */
 const encode = (c: number) => {
 	const v = c <= 0.003_130_8 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055;
 	return Math.round(Math.min(1, Math.max(0, v)) * CHANNEL);
 };
 
-/** OKLCH (the themes' generated values) → sRGB channels. */
 function oklchToRgb(
 	l: number,
 	c: number,
@@ -30,10 +27,6 @@ function oklchToRgb(
 	];
 }
 
-/**
- * The same colour, fully clear: a gradient fades into it instead of into grey. With
- * `alpha`, the same colour at that opacity (a soft copy's faint ink, a halo).
- */
 export function clearOf(color: string, alpha = 0): string {
 	const hex = color.match(HEX);
 	if (hex) {

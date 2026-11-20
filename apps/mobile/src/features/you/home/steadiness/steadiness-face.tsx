@@ -4,15 +4,8 @@ import { PRESETS, poseForSteadiness } from "@/components/xolace-face/pose";
 import { useFace } from "@/components/xolace-face/use-face";
 import { XolaceFace } from "@/components/xolace-face/xolace-face";
 
-/** It settles into its steadiness pose about when the ticks finish filling. */
 const SETTLE_MS = 900;
 
-/**
- * The Xolace face in the fan, as production's `steadiness-face.tsx` draws it: it waits with
- * soft eyes, then about 900 ms after the score is known takes `poseForSteadiness`. Steadiness
- * shows as calm or restless motion only; the expression never changes with the score
- * (steadiness isn't happiness). Its clock stops off screen.
- */
 export function SteadinessFace({
 	score,
 	size,

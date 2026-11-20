@@ -7,11 +7,8 @@ import {
 
 type Params = { slug?: string; specialty?: string } | null;
 
-/** The entry or track a twig points at, if it points at one. */
 export const twigSlug = (twig: ServerTwig) => (twig.params as Params)?.slug;
 
-/** "Browse more like this" (paths-v1 §9.6): the bound twig's topic in Browse. One-off
- * listening: no `stepId`, so plays can't tend the twig, and the binding is untouched. */
 export function twigBrowseHref(twig: ServerTwig): Href | null {
 	const match = BROWSABLE.exec(twig.actionType);
 	if (!match) {
@@ -27,8 +24,6 @@ export function twigBrowseHref(twig: ServerTwig): Href | null {
 	};
 }
 
-/** Where the primary action goes: every twig hands off to its own screen. `stepId` rides
- * along so a natural finish tends the twig; a Browse play carries none (§9.6). */
 export function twigHref(
 	twig: ServerTwig,
 	sessionId: ActiveKindling["sessionId"]
@@ -61,10 +56,7 @@ export function twigHref(
 				pathname: "/trusted-bridge",
 			};
 		case "xolacer": {
-			// Only the ranker's specialty is stored, never a person (privacy, see
-			// `ai/xolacers/suggest.sessionSuggestion`); the filtered roster is the fallback.
 			const specialty = (twig.params as Params)?.specialty;
-			// `t` makes a repeat tap re-apply the filter even when nothing else changed.
 			return {
 				params: {
 					stepId: twig._id,

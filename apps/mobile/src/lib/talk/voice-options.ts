@@ -1,8 +1,6 @@
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
 import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 
-/** Client mirror of the custom-voice catalog (convex/lib/voices.ts,
- * docs/voice-naming.md). "auto" is the free default; every named voice is Plus-only. */
 export type VoiceValue = VoiceSlug | "auto";
 
 export type VoiceOption = {
@@ -64,7 +62,6 @@ export const VOICE_OPTIONS: VoiceOption[] = [
 	},
 ];
 
-/** The cast a talk's companion speaks with: every named voice, no "Auto". */
 export const TALK_CAST = VOICE_OPTIONS.filter(
 	(o): o is VoiceOption & { value: VoiceSlug } => o.value !== "auto"
 );

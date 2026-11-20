@@ -25,7 +25,6 @@ describe("AppText faces", () => {
 		expect(resolveFace("body", "medium", true, undefined).roleClass).toBe(
 			"font-italic-medium"
 		);
-		// tab is already semibold: no class on top.
 		expect(resolveFace("tab", "semibold", false, undefined).roleClass).toBe(
 			undefined
 		);

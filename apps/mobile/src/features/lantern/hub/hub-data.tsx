@@ -12,29 +12,17 @@ export type HubTrack = Extract<
 	{ kind: "audio" }
 >["track"];
 
-/**
- * A listen inside a hub plays through the app's one now-playing track, which Lantern doesn't
- * own: the route hands it in (`HubData`'s `listen`), so Lantern never imports the player.
- */
 export type HubListen = {
-	/** A free listener: Xolace+ tracks are locked. */
 	locked: boolean;
-	/** The slug loaded in the mini player, if any. */
 	nowPlaying: string | null;
 	playing: boolean;
-	/** Plays a track here, no navigation: resumes it if it's loaded, loads it if not; locked,
-	 * the paywall. */
 	play: (track: HubTrack) => void;
-	/** Pauses what's playing. */
 	toggle: () => void;
-	/** The card itself: plays it if it isn't playing, then the full player; locked, the paywall. */
 	open: (track: HubTrack) => void;
 };
 
-/** A hub: its cover, title, intro and items. Convex in the app, fixtures in its dev states. */
 export type Hub = {
 	state: {
-		/** undefined while it loads, null once it's been put away. */
 		hub: HubView | null | undefined;
 		listen: Omit<HubListen, "play" | "toggle" | "open">;
 	};
@@ -53,7 +41,6 @@ export function HubProvider({
 	return <HubContext value={value}>{children}</HubContext>;
 }
 
-/** The app's adapter: `getHub`, the save and share actions, and the route's player. */
 export function HubData({
 	slug,
 	listen,

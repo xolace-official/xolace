@@ -1,23 +1,17 @@
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
 
-/** One row of `sessions.listForTimeline`'s page. */
 type TimelineRow = FunctionReturnType<
 	typeof api.sessions.listForTimeline
 >["page"][number];
 
-/** A moment as Today's carousel draws it. */
 export type MomentView = {
 	id: string;
-	/** The mirror's line, with production's em dashes turned to commas. */
 	quote: string;
-	/** The finer label when there is one, else the session's primary emotion. */
 	emotion: string | null;
-	/** The mirror was spoken: a speaker badge. */
 	audio: boolean;
 };
 
-/** A timeline row as a moment (production's `toTimelineEntry` + `discovery-moment-card`). */
 export function momentView(row: TimelineRow): MomentView {
 	return {
 		audio: row.hasMirrorAudio,
@@ -30,7 +24,6 @@ export function momentView(row: TimelineRow): MomentView {
 	};
 }
 
-/** The production emotion map, moved from Discovery's `timeline-entry.ts` (its last reader). */
 const EMOTION_EMOJI: Record<string, string> = {
 	ambivalence: "⚖️",
 	anger: "😤",
@@ -81,7 +74,6 @@ const EMOTION_EMOJI: Record<string, string> = {
 	uncertainty: "❓",
 };
 
-/** Emoji for an emotion name (case-insensitive); '💭' when null or unknown. */
 export function getEmotionEmoji(emotion: string | null): string {
 	if (!emotion) {
 		return "💭";
@@ -89,7 +81,6 @@ export function getEmotionEmoji(emotion: string | null): string {
 	return EMOTION_EMOJI[emotion.toLowerCase()] ?? "💭";
 }
 
-/** Human-facing label for an emotion; 'Reflection' when null or empty. */
 export function getEmotionLabel(emotion: string | null): string {
 	if (!emotion) {
 		return "Reflection";

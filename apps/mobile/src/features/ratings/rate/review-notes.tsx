@@ -15,12 +15,10 @@ import { useFixedFaces } from "@/design/fonts";
 import { RATE_COPY, REVIEWS } from "../copy";
 import { type Ember, NOTE, SCENE_MOTION } from "./ember-scene";
 
-/** One set of notes, gap included: drifting this far shows the second set where the first was. */
 const SET_W = REVIEWS.length * (NOTE.w + NOTE.gap);
 const LINES = 5;
 const NOTE_RADIUS = 6;
 const ROW_PAD = { paddingBottom: 18, paddingLeft: 24, paddingTop: 10 };
-/** The drift has already chosen to run (`running` is off under Reduce Motion). */
 const DRIFT = { easing: Easing.linear, reduceMotion: ReduceMotion.Never };
 
 function Note({
@@ -36,7 +34,6 @@ function Note({
 	ember: Ember;
 	faces: boolean;
 }) {
-	// nth-child(odd) counts from 1; counted per set, so the second set lines up with the first.
 	const odd = (i % REVIEWS.length) % 2 === 0;
 	const copy = i >= REVIEWS.length;
 	const letter = faces ? "font-letter" : "";
@@ -62,7 +59,6 @@ function Note({
 				width: NOTE.w,
 			}}
 		>
-			{/* The canvas's 40 pt mark in a 22 pt row: the glyph overflows the row, as on the canvas. */}
 			<View aria-hidden className="h-[22px] overflow-visible">
 				<AppText
 					className={`absolute -top-1 text-[40px] leading-[48px] ${letter}`}
@@ -89,11 +85,6 @@ function Note({
 	);
 }
 
-/**
- * "What people have written": real App Store excerpts on cream paper notes, drifting left. The
- * drift is one UI-thread timing that pauses in place while `running` is off (the screen out of
- * focus, the app in the background, Reduce Motion) and picks up where it stopped.
- */
 export function ReviewNotes({
 	running,
 	ember,

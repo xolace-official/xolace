@@ -1,6 +1,3 @@
-/** The board's tracks (`design/boards/PlayerAlive.dc.html` `TRACKS`), shaped as
- * `paths.getBoundAudioTrack` returns them. Peaks are the board's `makePeaks(seed)`, so the
- * renders match: seed 11 for "Setting the day down", 29 for the heavy track. */
 import type { BoundTrackFields } from "../player-model";
 
 const BARS = 60;
@@ -12,7 +9,6 @@ const HEAD = [0.3, 0.6];
 const TAIL = [0.75, 0.5, 0.28];
 const DECIMALS = 100;
 
-/** The board's seeded, speech-like peaks: phrases with short breaths, tapered at both ends. */
 function makePeaks(seed: number): number[] {
 	let x = seed * SEED_MUL + 1;
 	const r = () => {
@@ -38,11 +34,9 @@ function makePeaks(seed: number): number[] {
 		const j = BARS - TAIL.length + i;
 		out[j] = (out[j] ?? 0) * k;
 	});
-	// Two decimals, as B4 stores them.
 	return out.map((v) => Math.round(v * DECIMALS) / DECIMALS);
 }
 
-/** A cover stand-in: the board's two colours with a soft light top right, as an SVG. */
 const cover = (a: string, b: string) =>
 	`data:image/svg+xml;utf8,${encodeURIComponent(
 		`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient><radialGradient id="l" cx=".72" cy=".22" r=".52"><stop offset="0" stop-color="#fff" stop-opacity=".34"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="100" height="100" fill="url(#g)"/><rect width="100" height="100" fill="url(#l)"/></svg>`
@@ -77,8 +71,6 @@ export const HEAVY: BoundTrackFields = {
 	title: "When it feels like too much",
 };
 
-/** A spoken track B4 hasn't measured yet: the line. */
 export const NO_PEAKS: BoundTrackFields = { ...SPOKEN, peaks: undefined };
 
-/** The board's times: 3:06 spoken, 1:22 music, 1:04 heavy. */
 export const AT = { heavy: 64, music: 82, spoken: 186 } as const;

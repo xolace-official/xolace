@@ -1,8 +1,3 @@
-/**
- * Coming back on fixtures: `xolace://dev/coming-back/<id>`, one per render in the prototype's
- * `design/return-v2/` (01–20, numbered in the titles), plus each away tier. The greeting and the
- * check-in open pushed, drawing their own scrim and paper.
- */
 import type { ComponentProps } from "react";
 import type { DevState } from "@/dev/dev-state";
 import { NO_OUTCOMES } from "../coming-back-model";

@@ -8,23 +8,13 @@ import { COPY } from "@/features/lantern/copy";
 import { HoldToBegin } from "@/features/lantern/welcome/hold-to-begin";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/**
- * Production's welcome art, hosted in Convex storage. Dev and preview builds talk to the dev
- * deployment, whose storage bucket differs from prod's.
- */
 const HERO_IMAGE = __DEV__
 	? "https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/5cac4b6b-7e73-4018-8c2d-0c4aa3c0539b"
 	: "https://energetic-guineapig-283.convex.cloud/api/storage/9c662010-379d-411a-90fe-6f429fcfac47";
 
-/** The hero: 64% of the screen, its bottom 22% fading into the page. */
 const HERO = { fade: 0.22, share: 0.64 } as const;
 const ART_FADE_MS = 200;
 
-/**
- * Production's Lantern welcome (handoff §7), once, before the home on a first visit: the hero,
- * "Welcome to the Lantern", the line (rewritten: Lantern never calls itself a library) and Hold to
- * begin. No swipe away, and Android's back does nothing: the hold is the only way on.
- */
 export function WelcomeScreen({ onBegin }: { onBegin: () => void }) {
 	const { height } = useWindowDimensions();
 	const heroH = Math.round(height * HERO.share);
@@ -49,7 +39,6 @@ export function WelcomeScreen({ onBegin }: { onBegin: () => void }) {
 					height: heroH,
 				}}
 			>
-				{/* Production's art, over the gradient that shows while it loads. */}
 				<Image
 					accessibilityElementsHidden
 					className="absolute inset-0"

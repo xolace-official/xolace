@@ -1,9 +1,3 @@
-/**
- * The held badge's motion (badges §3), ported from the board's `poseAt`, `closeAt`
- * and `tick` (native-cook badge-vault-grid's vault-hero and vault-motion). Pure
- * worklets: one frame callback steps the engine and writes one pose; the
- * gestures only change the engine.
- */
 import type { NamePt, Pose, Pt } from "@/features/achievements/coin/pose";
 import { REST_POSE, RV } from "@/features/achievements/coin/pose";
 import {
@@ -24,11 +18,9 @@ const SWAY_PERIOD_MS = 5500;
 const SWAY = 0.09;
 const FLIGHT_TILT = 0.25;
 const FLIGHT_TILT_MS = 600;
-/** The x, y and size springs (ω, ζ): size lands slightly big. */
 const FLY_X = [9.5, 0.86] as const;
 const FLY_Y = [6.8, 0.8] as const;
 const FLY_R = [6.2, 0.64] as const;
-/** The launch turn: once round, overshooting about 20° and swinging back. */
 const TURN = [5.2, 0.68] as const;
 const CLOSE = [8.7, 0.87] as const;
 const SPRING_BACK = [14, 0.8] as const;
@@ -41,9 +33,7 @@ const RATTLE_MS = 420;
 const RATTLE = { amp: 0.12, decay: 110, period: 24 } as const;
 export const CLOSE_MS = 560;
 export const FADE_MS = 200;
-/** Idle while held: the clock (and the sway) stops this long after the last touch. */
 export const IDLE_MS = 10_000;
-/** Reveal times by `RV`: line, date/progress, sparks, hint, Share, back and Pin. */
 const REVEAL_AT = [520, 640, 700, 900, 960, 520] as const;
 const REVEAL_FADE_MS = 240;
 const REVEAL_RISE_MS = 420;
@@ -52,9 +42,7 @@ const RECEDE_MS = 500;
 const SPREAD = { from: 60, over: 700 } as const;
 const BLOOM_MS = 400;
 const BAND_MS = 500;
-/** The scrim over the list: page-coloured, .62 for an earned badge, .94 locked. */
 const DIM = { earned: 0.62, locked: 0.94 } as const;
-/** Pulled down: the badge shrinks by up to 30%, words fade by 150 pt, colour thins by 260. */
 const PULL = { colour: 260, name: 200, over: 300, shrink: 0.3, words: 150 };
 const NAME_FADE = 0.45;
 const POWER_FADE = 0.7;
@@ -63,7 +51,6 @@ const CLOSE_TILT = 0.3;
 const CLOSE_WORDS_MS = 140;
 const CLOSE_BACK_MS = 420;
 const CLOSE_BLOOM_MS = 300;
-/** The coin dips 4% as it seats, over its last 60 ms. */
 const SEAT_DIP = { by: 0.04, from: 500, over: 60 } as const;
 
 export type Mode = "launch" | "rest" | "drag" | "free" | "snap" | "slow";
@@ -72,9 +59,7 @@ type Phase = "closed" | "open" | "closing";
 export type Engine = {
 	phase: Phase;
 	mode: Mode;
-	/** ms since the badge lifted, summed from frame deltas (pauses while the clock sleeps). */
 	now: number;
-	/** age = now − t0; a still state starts 5 s in. */
 	t0: number;
 	o: Pt;
 	no: NamePt;
@@ -100,7 +85,6 @@ export type Engine = {
 	cp: Pose | null;
 };
 
-/** What a frame reports back to React (haptics, VoiceOver, seating). */
 export const EV = { faced: 2, idle: 4, landed: 1, none: 0, seated: 3 } as const;
 
 function rattle(e: Engine) {
@@ -114,7 +98,6 @@ function rattle(e: Engine) {
 		: 0;
 }
 
-/** The slow sway once it has landed: ±0.09 rad on X and Y, period 5.5 s, faded in. */
 function sway(age: number) {
 	"worklet";
 	const sw = Math.min(1, (age - SWAY_FROM_MS) / SWAY_IN_MS);
@@ -122,7 +105,6 @@ function sway(age: number) {
 	return { x: SWAY * Math.sin(ph) * sw, y: SWAY * Math.cos(ph) * sw };
 }
 
-/** One badge's pose `age` ms after it left its slot. */
 export function poseAt(e: Engine, age: number): Pose {
 	"worklet";
 	const s = age / 1000;
@@ -182,7 +164,6 @@ export function poseAt(e: Engine, age: number): Pose {
 	};
 }
 
-/** Flying home from wherever it was let go, `c` ms into the close. */
 function closeAt(cp: Pose, e: Engine, c: number): Pose {
 	"worklet";
 	const rm = e.reduced;
@@ -215,7 +196,6 @@ function closeAt(cp: Pose, e: Engine, c: number): Pose {
 		roll: 0,
 		rvA,
 		rvY,
-		// The nearest whole turn, so it seats face-up.
 		spin: lerp(cp.spin, Math.round(cp.spin / TAU) * TAU, p),
 		spread: cp.spread * back,
 		tiltX:
@@ -225,7 +205,6 @@ function closeAt(cp: Pose, e: Engine, c: number): Pose {
 	};
 }
 
-/** Spin under friction, then ease onto a face (a drag let go, a tap's slow turn). */
 function turnStep(e: Engine, dt: number): boolean {
 	"worklet";
 	if (e.mode === "free") {
@@ -252,7 +231,6 @@ function turnStep(e: Engine, dt: number): boolean {
 	return false;
 }
 
-/** Advance the engine by `dt` ms and return the pose plus at most one event. */
 export function step(e: Engine, dt: number): { pose: Pose; ev: number } {
 	"worklet";
 	e.now += dt;
@@ -308,7 +286,6 @@ export function step(e: Engine, dt: number): { pose: Pose; ev: number } {
 	return { ev, pose };
 }
 
-/** Begin the close from wherever the badge is. */
 export function beginClose(e: Engine) {
 	"worklet";
 	if (e.phase !== "open") {
@@ -324,7 +301,6 @@ export function beginClose(e: Engine) {
 	e.tc = e.now;
 }
 
-/** A tap on the badge: a slow turn to the other face, at once under Reduce Motion; locked rattles. */
 export function tapTurn(e: Engine): "rattle" | "faced" | "turning" | null {
 	"worklet";
 	if (e.phase !== "open") {

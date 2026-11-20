@@ -13,22 +13,15 @@ import { FONTS } from "@/design/type";
 import { COPY } from "../copy";
 import { LAYOUT } from "../sit-look";
 
-/** Clarity `intro-reveal.tsx`: 14 pt rise, 80 ms apart after 120 ms, 450 ms out-cubic. */
 const REVEAL = { baseMs: 120, dy: 14, ms: 450, staggerMs: 80 } as const;
-/** Board `.pre h2`: Bricolage 36/780, line height 1.02, −.032em (800 is the loaded cut). */
 const NAME = {
 	fontFamily: FONTS.display,
 	fontSize: 36,
 	letterSpacing: -1.15,
 	lineHeight: 36.72,
 } as const;
-/** Board `.pre p`: 15.5/22.5, ink2. */
 const LENGTH = { fontSize: 15.5, lineHeight: 22.5, marginTop: 2 } as const;
 
-/**
- * One item of the first screen rising into place. Transform only: iOS glass
- * renders empty under an ancestor whose opacity animates.
- */
 export function Rise({
 	order,
 	reduced,
@@ -61,7 +54,6 @@ export function Rise({
 	return <Animated.View style={style}>{children}</Animated.View>;
 }
 
-/** The first screen (board `.pre`): the exercise named, and how long it really takes. */
 export function PreRoll({
 	name,
 	length,

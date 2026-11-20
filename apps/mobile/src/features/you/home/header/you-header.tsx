@@ -15,22 +15,15 @@ import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** Scroll, in steps of this many points, that closes the freeze explanation. */
 const SCROLL_STEP = 4;
 const WARM_DRIFT_MS = 14_000;
 const COOL_DRIFT_MS = 16_000;
 const COOL_DRIFT_X = -12;
 const AURA_TOKENS = ["you-aura-warm", "you-aura-cool"] as const;
 
-/**
- * The collapsing part of You: the aurora, the avatar, the greeting, the streak card and the
- * badges row, plus the top bar that fades in as they scroll away.
- */
 export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 	const { hero } = useYouHome().state;
 	const { tip, closeTip } = useYouUi();
-	// The tip's open state where the scroll worklet can read it, so a closed tip costs no
-	// hop to JS as the header collapses.
 	const tipOpen = useSharedValue(tip.open);
 	useEffect(() => {
 		tipOpen.set(tip.open);
@@ -39,7 +32,6 @@ export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 	useCollapseFollowsRange();
 	const [warm = "", cool = ""] = useTokenColors(AURA_TOKENS);
 
-	// The freeze explanation is drawn over the screen, not in the header: any scroll closes it.
 	useAnimatedReaction(
 		() => Math.round(collapse.get() / SCROLL_STEP),
 		(now, before) => {
@@ -109,7 +101,6 @@ export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 					) : null}
 				</>
 			) : (
-				// Holds the greeting's two lines while the summary loads.
 				<View className="h-[57px]" />
 			)}
 

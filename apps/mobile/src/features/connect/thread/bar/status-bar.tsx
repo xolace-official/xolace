@@ -7,7 +7,6 @@ import { THREAD } from "../copy";
 import { useThreadScreen } from "../thread-data";
 import type { StatusBar as Bar, Run } from "../thread-model";
 
-/** A sentence with its bold words, centred in the bar. */
 function Copy({ runs }: { runs: readonly Run[] }) {
 	return (
 		<AppText center color="muted" variant="footnote">
@@ -29,7 +28,6 @@ function Copy({ runs }: { runs: readonly Run[] }) {
 	);
 }
 
-/** The quiet second choice beside a CtaButton. */
 function SecondPill({
 	label,
 	onPress,
@@ -37,7 +35,6 @@ function SecondPill({
 }: {
 	label: string;
 	onPress: () => void;
-	/** Waiting on an answer already sent: dimmed, not pressable, and said so. */
 	busy?: boolean;
 }) {
 	return (
@@ -58,7 +55,6 @@ function SecondPill({
 	);
 }
 
-/** "How was this conversation?": a quiet link; the profile's rate card is the loud one. */
 function RateLink({ label }: { label: string }) {
 	const { actions } = useThreadScreen();
 	return (
@@ -74,11 +70,6 @@ function RateLink({ label }: { label: string }) {
 	);
 }
 
-/**
- * Takes the composer's place when a conversation can't take a message, and says what tapping
- * will do: accept or decline a request, wait on one, pick a resting chat back up, or find
- * someone else once it's closed.
- */
 export function StatusBar({ bar }: { bar: Bar }) {
 	const { state, actions } = useThreadScreen();
 	const answering = state.phase === "ready" && state.answering;

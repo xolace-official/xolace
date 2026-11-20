@@ -2,10 +2,6 @@ import { StyleSheet, useWindowDimensions } from "react-native";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 import type { Ember } from "./ember-scene";
 
-/**
- * The hearth glow behind the laurel (canvas: radial-gradient(78% 30% at 50% 19%, …)), drawn once.
- * It sits high, behind the stars, not at the bottom.
- */
 const AT_Y = 0.19;
 const RX = 0.78;
 const RY = 0.3;

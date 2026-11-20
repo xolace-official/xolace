@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { instrumentedTokenCache } from "./instrumented-token-cache";
 
-/** Stands in for expo-secure-store; tests can drop a key to simulate a loss. */
 const store = new Map<string, string>();
 
 vi.mock("@clerk/expo/token-cache", () => ({
@@ -22,11 +21,8 @@ vi.mock("@sentry/react-native", () => ({
 
 const cache = instrumentedTokenCache!;
 const KEY = "__clerk_client_jwt";
-// The marker write is fire-and-forget; let it land before the next read.
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-/** The alert exists for one case: a stored token gone on a later read. Warning on every miss
- * buried it under fresh installs. */
 describe("instrumentedTokenCache miss warning", () => {
 	beforeEach(() => {
 		store.clear();
@@ -42,7 +38,7 @@ describe("instrumentedTokenCache miss warning", () => {
 		await cache.saveToken(KEY, "jwt");
 		await settle();
 
-		store.delete(KEY); // keychain wiped / item destroyed under us
+		store.delete(KEY);
 		await expect(cache.getToken(KEY)).resolves.toBe(null);
 		expect(captureMessage).toHaveBeenCalledTimes(1);
 	});

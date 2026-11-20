@@ -19,7 +19,6 @@ import type { Door as DoorId } from "../today-model";
 import { riseFn } from "../today-motion";
 import { BURST, burstFromX } from "./hero-model";
 
-/** Each door's look: its tile and icon ink are `--color-door-*` (global.css). */
 const LOOK: Record<DoorId, { icon: IconName; tile: string; ink: string }> = {
 	sit: {
 		icon: { android: "waves", ios: "water.waves" },
@@ -38,9 +37,7 @@ const LOOK: Record<DoorId, { icon: IconName; tile: string; ink: string }> = {
 	},
 };
 const ICON = 19;
-/** Three doors share a narrow card: a long label shrinks to fit (down to 75%) rather than cut off. */
 const FIT = 0.75;
-/** burst keyframes: travel 1 → 0 by 74%, opaque by 55%, scale .2 → 1.05 at 74% → 1. */
 const TRAVEL = [
 	[0, 1],
 	[BURST.peakAt, 0],
@@ -56,7 +53,6 @@ const SCALE = [
 	[1, 1],
 ] as const;
 
-/** A door bursts out of the hint line (bubble-media-burst), overshooting to 1.05 at 74%. */
 export function Door({
 	id,
 	index,
@@ -76,7 +72,6 @@ export function Door({
 		"door-sub",
 	]);
 	const copy = COPY.doors[id];
-	// Reduced: the doors are simply there (the card's body has faded out under them).
 	const p = useSharedValue(reduced ? 1 : 0);
 	useEffect(() => {
 		if (reduced) {

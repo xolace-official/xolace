@@ -12,9 +12,7 @@ import type { SparkColours } from "./kindling-colours";
 import type { Trail } from "./trail-geometry";
 import { RADIUS } from "./trail-points";
 
-/** A flash fades as e^(−5a): .8 on the tended disc and the fire, .5 on the next disc. */
 export const FLASH = { decay: 5, landed: 0.5, lit: 0.8 } as const;
-/** The spark: a 20 pt glow that grows by 34 pt as the match flares, and a 2.6 pt core. */
 const SPARK = { coreR: 2.6, flareR: 34, glowR: 20, stops: [0, 0.18, 0.5, 1] };
 
 type FlashProps = {
@@ -26,7 +24,6 @@ type FlashProps = {
 	c: SparkColours;
 };
 
-/** A white-hot flash over a disc: the tended one as it lights, the next as the spark lands. */
 export function StopFlash({ s, x, y, burns, time, c }: FlashProps) {
 	const opacity = useDerivedValue(() => {
 		let o = 0;
@@ -57,7 +54,6 @@ type GlowProps = {
 	c: SparkColours;
 };
 
-/** The spark: a glow that flares as the match is struck, and its white core. */
 export function SparkGlow({ k, trail, burns, time, blend, c }: GlowProps) {
 	const pose = useDerivedValue(() => {
 		const b = burns.get()[k];

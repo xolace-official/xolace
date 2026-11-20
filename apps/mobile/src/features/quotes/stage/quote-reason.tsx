@@ -2,7 +2,6 @@ import { Pressable, type StyleProp, type TextStyle } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import type { Reason } from "../quotes-model";
 
-/** The line under the quote. A free account's "Yours is waiting →" opens Xolace+. */
 export function QuoteReason({
 	reason,
 	style,

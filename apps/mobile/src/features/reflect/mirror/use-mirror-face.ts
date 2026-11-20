@@ -7,15 +7,8 @@ import { useReflect } from "../reflect-data";
 import type { Timeline } from "../reflect-model";
 
 const MS_PER_S = 1000;
-/** The glance starts .1 s before the first phrase lights. */
 const GLANCE_LEAD_S = 0.1;
 
-/**
- * The mirror's face (30 pt by THE MIRROR): it arrives still thinking, then nods into `nod` at
- * 450 ms (heavy: `concern` at 1 s). While your phrases light it glances up at your words, from
- * the first lighting to .7 s after the last. Not quite has it look down at the chosen line;
- * while a refinement is with the server it thinks, and the new landing nods again.
- */
 export function useMirrorFace(tl: Timeline, running: boolean) {
 	const { state } = useReflect();
 	const { heavy, landN, nq, pickMode, sayMore, rewriting } = state;
@@ -47,7 +40,6 @@ export function useMirrorFace(tl: Timeline, running: boolean) {
 		return timers;
 	});
 
-	// Each landing replays the arrival.
 	useEffect(() => {
 		const timers = arrive();
 		return () => {
@@ -57,7 +49,6 @@ export function useMirrorFace(tl: Timeline, running: boolean) {
 		};
 	}, [landN, heavy]);
 
-	// Not quite or Say more: look at the line; picking: look down the lines; refining: think.
 	useEffect(() => {
 		if (rewriting) {
 			face.to(PRESETS.thinking);
@@ -72,7 +63,6 @@ export function useMirrorFace(tl: Timeline, running: boolean) {
 
 	useEffect(() => () => clearTimeout(glanceTimer.current), []);
 
-	/** Tapping a borrowed line: it glances up at where you said it, for 1.1 s. */
 	const glance = () => {
 		clearTimeout(glanceTimer.current);
 		face.to(FACE.glance);

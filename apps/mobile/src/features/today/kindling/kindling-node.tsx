@@ -20,7 +20,6 @@ const POP = [
 const TAU = Math.PI * 2;
 const WAIT = NODE.waitAlpha;
 
-/** The nodes' colours: the card, the well, the waiting ring, the current violet, the lit ember and the check. */
 export type NodeColours = {
 	surface: string;
 	well: string;
@@ -34,20 +33,13 @@ type Props = {
 	x: number;
 	y: number;
 	state: "done" | "current" | "waiting";
-	/** This node was just tended: pop, check, ripple, sparks. */
 	popping: boolean;
-	/** The light is on its way here: turn over, take the current colours, two pings. */
 	arriving: boolean;
 	beat: SharedValue<number>;
 	clock: SharedValue<number>;
 	c: NodeColours;
 };
 
-/**
- * One step on the path (milestone-stepper's node, transit-route-progress's breathing ring and
- * pings). Everything derives from `beat` (ms since the step was tended) and the breathing
- * clock; radii carry the breath, so the loop allocates nothing.
- */
 export function KindlingNode({
 	x,
 	y,
@@ -77,7 +69,6 @@ export function KindlingNode({
 		return [{ translateX: x }, { translateY: y }, { scale: s }];
 	});
 
-	// An arriving node starts with the waiting look and takes the current colours over 0.3 s.
 	const turn = useDerivedValue(() =>
 		arriving
 			? easeCssFn(seg(beat.get(), BEAT.arriveAt, BEAT.arriveAt + BEAT.colourIn))

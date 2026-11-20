@@ -17,7 +17,6 @@ import { READ_ALOUD_AFTER_MS } from "../motion";
 import { useReflect } from "../reflect-data";
 import { useReflectDraw } from "../reflect-draw";
 
-/** Board `.spk.on`: .3 s fade, .4 s scale from .6 on cubic-bezier(.3,1.3,.5,1). */
 const IN = {
 	ease: Easing.bezier(0.3, 1.3, 0.5, 1),
 	fadeMs: 300,
@@ -29,11 +28,6 @@ const PAUSE: IconName = { android: "pause", ios: "pause.fill" };
 const SPEAKER_SIZE = 16;
 const PAUSE_SIZE = 12;
 
-/**
- * Read it aloud, in the label row's slot (S19g): it appears 3.6 s after the landing, only once
- * the server has audio for this mirror, and never on a heavy one. It never autoplays; playing,
- * it shows pause and the level bars.
- */
 export function ReadAloud({ landN }: { landN: number }) {
 	const { state, actions } = useReflect();
 	const { audio, heavy } = state;
@@ -49,7 +43,6 @@ export function ReadAloud({ landN }: { landN: number }) {
 		if (!on) {
 			return;
 		}
-		// Reduce Motion: there at once, no pop; the fade stays.
 		const delay = reduced ? 0 : READ_ALOUD_AFTER_MS;
 		shown.set(
 			withDelay(

@@ -18,11 +18,6 @@ const LABEL = { fontSize: L.label, lineHeight: L.labelLine } as const;
 
 type Props = { on: boolean; others: number; reduced: boolean };
 
-/**
- * The chip's label (board `.lab`): "I've felt this too" leaves up 6 pt as "You
- * and 12 others" arrives from 6 pt below, .3 s, the number rolling in. A grid,
- * so the chip is as wide as the wider of the two. Reduce Motion: a cross-fade.
- */
 export function FeltLabel({ on, others, reduced }: Props) {
 	const lab = useSharedValue(on ? 1 : 0);
 	useEffect(() => {
@@ -68,7 +63,6 @@ export function FeltLabel({ on, others, reduced }: Props) {
 	);
 }
 
-/** "You and {n} others", the number rolling in as the label arrives. */
 function OnLabel({
 	on,
 	others,

@@ -29,11 +29,8 @@ import { QuoteState } from "./quote-state";
 import { POSTER_SEMI } from "./quote-type";
 import { QuoteWords } from "./quote-words";
 
-/** The stage: 30 pt sides, centred between 120 pt from the top and 220 pt from the bottom. */
 const STAGE = { bottom: 220, gap: 18, side: 30, top: 120 } as const;
-/** With the keyboard up: a further 62 pt up and .24 smaller. */
 const TYPING = { shrink: 0.24, y: 62 } as const;
-/** The title's 0.2 em tracking at 12 pt. */
 const TITLE_TRACKING = 2.4;
 
 type Props = {
@@ -52,7 +49,6 @@ type Props = {
 	onRetry: () => void;
 };
 
-/** The title, the quote and the reason: everything that moves up for a sheet. */
 export function QuoteStage(p: Props) {
 	const m = useQuoteMotion();
 	const { width } = useWindowDimensions();
@@ -61,7 +57,6 @@ export function QuoteStage(p: Props) {
 	const { progress: kb } = useReanimatedKeyboardAnimation();
 	const stage = useAnimatedStyle(() => {
 		const t = EASE.stage(Math.min(1, m.sheet.get()));
-		// Typing: the sheet rides the keyboard, so the quote rises and shrinks further.
 		const k = kb.get();
 		return {
 			opacity: m.stage.get(),

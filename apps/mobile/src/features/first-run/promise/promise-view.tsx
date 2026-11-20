@@ -34,7 +34,6 @@ import { PromiseWords } from "./promise-words";
 import { WORDS_BOX } from "./promise-words-layout";
 import { type PromiseScene, usePromiseScene } from "./use-promise-scene";
 
-/** The story's figures and Flux's campfire loop, fetched while the promise is on screen. */
 const PREFETCH = [
 	require("@/assets/images/flux/flux-campfire.png"),
 	require("@/assets/images/flux/mirror-v2-bg.png"),
@@ -50,12 +49,9 @@ type Props = {
 	day: boolean;
 	reduced: boolean;
 	faces: FirstRunFaces;
-	/** Opens the story's clock at the swap. */
 	gate: SharedValue<number>;
 	scene?: PromiseScene;
-	/** Let go of the button (`toSeat` from the account link): the story mounts under it. */
 	onBegin: (toSeat: boolean) => void;
-	/** The hand-off is over: the promise can go. */
 	onSwap: () => void;
 };
 
@@ -65,10 +61,6 @@ const DRIFT_TOKENS = [
 	"first-run-drift-3",
 ] as const;
 
-/**
- * The promise: the mood marquee, the words and the button on one engine. Letting go turns the
- * button into a coal that drops into the fire and opens the story's glow from it.
- */
 export function PromiseView({
 	stage,
 	day,
@@ -139,7 +131,6 @@ export function PromiseView({
 			return e;
 		});
 	};
-	// A tap on the words while they arrive brings everything in at once.
 	const settle = () =>
 		eng.modify((e) => {
 			"worklet";

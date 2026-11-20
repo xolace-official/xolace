@@ -23,7 +23,6 @@ const C = 2 * Math.PI * R;
 const GLYPH = 13;
 const RING_EASE = Easing.bezier(...HOME_CURVES.ring);
 
-/** native-cook's rail ring: a 2.5 pt arc in violet over a hairline track, play or pause inside. */
 export function ProgressRing({
 	share,
 	playing,

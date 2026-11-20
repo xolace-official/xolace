@@ -1,5 +1,3 @@
-/** Connect's screen state from what Convex and Stream returned, and the routed params' rules.
- * Pure: the data hook and the dev states both call it, so the rules are tested once. */
 import type { api } from "@xolace/backend/api";
 import { isSpecialty } from "@xolace/backend/convex/lib/specialties";
 import type { FunctionReturnType } from "convex/server";
@@ -22,7 +20,6 @@ import {
 
 export type ChatStatus = FunctionReturnType<typeof api.xolacerChat.status>;
 
-/** The segment a route asks for: a specialty means the roster. */
 export function routedSegment(route: ConnectRoute): Segment | null {
 	if (isSpecialty(route.specialty)) {
 		return "xolacers";
@@ -32,9 +29,6 @@ export function routedSegment(route: ConnectRoute): Segment | null {
 		: null;
 }
 
-/** What a new set of route params does to the filter: a specialty sets it; Xolacers without
- * one (a decline sends there) clears it, so a leftover filter can't answer with a narrowed,
- * maybe empty list; anything else keeps it. */
 export function routedFilter(
 	route: ConnectRoute,
 	current: string | null
@@ -45,11 +39,9 @@ export function routedFilter(
 	return routedSegment(route) === "xolacers" ? null : current;
 }
 
-/** Changes whenever a tap routes here, even to the same params (`navToken`). */
 export const routeKey = (route: ConnectRoute) =>
 	`${route.specialty ?? ""}|${route.view ?? ""}|${route.navToken ?? ""}`;
 
-/** The directory is read only while chat is on and the roster is the segment. */
 export function readsDirectory(
 	status: ChatStatus | undefined,
 	segment: Segment
@@ -81,7 +73,6 @@ export function connectState(i: ConnectInputs): ConnectState {
 	return {
 		archivedCount: archivedCount(conversations),
 		empty: chatsEmpty(conversations),
-		// A paused Xolacer still gets the way to their profile, with the moon.
 		myProfile: published ? { paused: !status.xolacerActive } : null,
 		phase: "ready",
 		roster: {

@@ -8,12 +8,7 @@ import Animated, {
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** The views cross-fade over 180 ms (steadiness.md §3). */
 const FADE_MS = 180;
-/**
- * The hidden view stays drawn but out of the flow, invisible and untouchable: Skia canvases
- * don't repaint after `display: none`. It sits at the page's gutter so its meters keep width.
- */
 const PAGE_GUTTER = 20;
 const HIDDEN = {
 	left: PAGE_GUTTER,
@@ -22,7 +17,6 @@ const HIDDEN = {
 	top: 0,
 } as const;
 
-/** Grid and list both stay mounted; switching fades the shown one in and never remounts. */
 export function ViewFade({
 	active,
 	children,

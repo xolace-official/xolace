@@ -12,11 +12,9 @@ type ListProps = RowProps & {
 	parts: PartView[];
 	active: boolean;
 };
-/** Production's list: a row and a tick meter per part. v2 opens a Xolace+ row in place. */
 export function PartsList({ parts, active, ...row }: ListProps) {
 	const reduced = useEffectiveReducedMotion();
 	const total = meterTotalMs(parts.length);
-	// One clock for every meter, restarted each time the list shows.
 	const clock = useSharedValue(reduced ? total : 0);
 	useEffect(() => {
 		if (!active) {

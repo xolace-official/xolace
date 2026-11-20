@@ -5,18 +5,7 @@ import { NamesSection } from "@/features/settings/account/names/names-section";
 import { PlusSection } from "@/features/settings/account/plus/plus-section";
 import { SignInCard } from "@/features/settings/account/sign-in/sign-in-card";
 
-/**
- * Settings › Account (board "Account v2", P/design/handoff/settings-sections.md): how you signed
- * in, the two names, Xolace+, and Log out on its own. Deleting the account lives in Privacy &
- * Data. Nothing animates in.
- */
-export function AccountScreen({
-	devTools,
-}: {
-	/** Dev builds: production's Dev tools section, which brings its own title. The route passes
-	 * it in, so this screen never imports dev code. */
-	devTools?: ReactNode;
-}) {
+export function AccountScreen({ devTools }: { devTools?: ReactNode }) {
 	return (
 		<ScrollView
 			className="bg-background"

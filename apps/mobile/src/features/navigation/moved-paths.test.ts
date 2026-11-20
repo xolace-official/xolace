@@ -9,7 +9,6 @@ const PROTECTED = path.resolve(import.meta.dirname, "../../app/(protected)");
 const exists = (route: string) =>
 	existsSync(path.join(PROTECTED, `${route}.tsx`));
 
-/** The route file a path opens: a root screen, or a tab under `(tabs)/`. */
 const isRoute = (pathname: string) => {
 	const route = pathname.slice(1);
 	return [
@@ -20,7 +19,6 @@ const isRoute = (pathname: string) => {
 	].some(exists);
 };
 
-/** The shim routes a moved root keeps: the path itself, and a catch-all for its subpaths. */
 const shimsOf = (root: string) =>
 	[root, `${root}/index`, `${root}/[...rest]`].filter(exists);
 

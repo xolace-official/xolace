@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 
-/** React Native's own setter: what reaches the window. */
 const onWindow = vi.hoisted(() => vi.fn());
 
 vi.mock("react-native", () => ({
@@ -25,15 +24,12 @@ vi.mock("uniwind", async () => {
 	};
 });
 
-/** The module's state on the JS global, which outlives a module reload by design. */
 const appGlobal = globalThis as { __xolaceNativeAppearance?: unknown };
 
-/** A fresh launch: the module and its mocks loaded anew, nothing written yet. */
 async function launch() {
 	vi.resetModules();
 	onWindow.mockClear();
 	appGlobal.__xolaceNativeAppearance = undefined;
-	// The mocked module object outlives resetModules: give it React Native's setter back.
 	const { Appearance } = await import("react-native");
 	Appearance.setColorScheme = onWindow;
 	const { Uniwind } = await import("uniwind");
@@ -116,7 +112,6 @@ describe("native appearance", () => {
 			releaseNativeAppearance,
 			Uniwind,
 		} = await launch();
-		// Default dark, then the night theme: NavThemeProvider's "dark" doesn't run again.
 		applyTheme("dark");
 		setNativeAppearance("dark");
 		applyTheme("night-dark" as never);

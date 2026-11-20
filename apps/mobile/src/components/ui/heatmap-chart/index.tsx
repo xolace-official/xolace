@@ -1,7 +1,3 @@
-// HeatmapChart: a contribution grid, one column per period and one row per bin, composed from
-// parts (Header, XAxis, YAxis, Cells, Tooltip, Legend) that take real layout room. Only cells
-// are SVG; labels are RN views. The ramp is `--color-chart-1` at five opacities, or `levelColors`.
-
 import { HeatmapXAxis, HeatmapYAxis } from "./axes";
 import { HeatmapCells, HeatmapSeparator } from "./cells";
 import { HeatmapHeader } from "./header";

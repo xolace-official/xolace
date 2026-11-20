@@ -1,4 +1,3 @@
-/** The reader's appearance, per device in the app store: the mode, the text size, the fire. */
 import { Presets } from "react-native-pulsar";
 import {
 	type ReadingModeKey,
@@ -28,7 +27,6 @@ export function useReadingPrefs(): {
 	const setMode = useAppStore((s) => s.setReadingMode);
 	const setSize = useAppStore((s) => s.setReaderTextSize);
 	const setFire = useAppStore((s) => s.setReadByFire);
-	// Every change ticks (handoff §6).
 	const tick = Presets.System.selection;
 	return {
 		actions: {

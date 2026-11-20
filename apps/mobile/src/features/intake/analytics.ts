@@ -1,7 +1,3 @@
-// Intake funnel instrumentation (T7, issue #267), all client-side. The step taxonomy
-// is T7 §2.3 verbatim and the single source of `step_key` and `step_index`.
-// `username` records only whether the suggested handle was kept, never the handle.
-
 import type { PostHog } from "posthog-react-native";
 import { SERIES_BRANCH_VALUE } from "@/features/intake/questions";
 import type { FollowUp, Reading } from "@/features/intake/v2/heard";
@@ -27,7 +23,6 @@ import type { IntakeAnswers } from "@/store/intake-slice";
 type StepType = "founder" | "question" | "interstitial" | "paywall";
 type Section = "you" | "how_you_carry_it" | "finding_us" | null;
 
-/** T7 §2.3, the canonical ordered flow. Position in here is `step_index`. */
 const STEPS = [
 	{ key: "founder", section: null, type: "founder" },
 	{ key: "username", section: "you", type: "question" },
@@ -70,18 +65,12 @@ function stepViewedProps(stepKey: IntakeStepKey) {
 	};
 }
 
-/** Carried from `intake_started` onto `intake_completed`; only the first event sees the session
- * count. */
 let returningUser = false;
 
-// Intake ends once: a purchase and the first look's teardown could otherwise each emit
-// `intake_completed`.
 let completedFired = false;
 
 export function trackIntakeStarted(posthog: PostHog, sessionCount: number) {
 	startIntakeClock();
-	// Every intake is v2 since S18 retired the experiment; events keep the prop so the
-	// funnel's numbers carry on from it.
 	setIntakeArm("v2");
 	returningUser = sessionCount > 0;
 	completedFired = false;
@@ -103,7 +92,6 @@ export type IntakeOutcome =
 	| "purchased"
 	| "dismissed_paywall"
 	| "skipped_paywall"
-	/** v2 on the safety path: nothing was offered. */
 	| "no_offer";
 
 export function trackIntakeCompleted(
@@ -124,7 +112,6 @@ export function trackIntakeCompleted(
 	});
 }
 
-/** v2's one answer: how it came in and how long, never the words. */
 export function trackAnswerGiven(
 	posthog: PostHog,
 	mode: AnswerMode,
@@ -137,10 +124,6 @@ export function trackAnswerGiven(
 	});
 }
 
-/**
- * "That's me" on v2's chips: counts against what the answer was read as, and how many of
- * the suggested chips were tapped on.
- */
 export function trackHeardConfirmed(
 	posthog: PostHog,
 	read: HeardSource,
@@ -158,7 +141,6 @@ export function trackHeardConfirmed(
 	});
 }
 
-/** Flux asked its one follow-up (#708): which field it was for, never the words. */
 export function trackFollowUpShown(posthog: PostHog, field: FollowUp["field"]) {
 	posthog.capture("intake_follow_up_shown", {
 		field,
@@ -166,7 +148,6 @@ export function trackFollowUpShown(posthog: PostHog, field: FollowUp["field"]) {
 	});
 }
 
-/** The safeguard sent the answer to crisis support instead of chips (#708). */
 export function trackSafetyRouted(
 	posthog: PostHog,
 	level: Reading["safeguardLevel"]
@@ -177,10 +158,6 @@ export function trackSafetyRouted(
 	});
 }
 
-/**
- * A safety verdict that landed after the pick-list stood in, and where the person had got
- * to. `done` means support may never have been seen: the save was already on its way out.
- */
 export function trackSafetyLate(
 	posthog: PostHog,
 	level: Reading["safeguardLevel"],
@@ -193,7 +170,6 @@ export function trackSafetyLate(
 	});
 }
 
-/** Why the answer couldn't be read; the pick-list stands in (#708). */
 export type ReadFallbackReason = "error" | "timeout";
 
 export function trackReadFallback(
@@ -206,8 +182,6 @@ export function trackReadFallback(
 	});
 }
 
-/** A question v2 deferred, answered where it's needed (#712). The answer also lands as the
- * same person property the intake would have set. */
 export function trackDeferredAnswered(
 	posthog: PostHog,
 	question: "coping_style" | "support_frequency",
@@ -221,8 +195,6 @@ export function trackDeferredAnswered(
 	});
 }
 
-/** "How did you find Xolace?", answered on Discovery's day-3 card (#711), set as the intake
- * sets it. */
 export function trackAcquisitionAnswered(
 	posthog: PostHog,
 	answer: Pick<
@@ -243,13 +215,9 @@ const OUTCOME_OF_PLUS = {
 	purchased: "purchased",
 } as const satisfies Record<PlusOutcome, IntakeOutcome>;
 
-/** How a v2 intake ended, for `intake_completed`: nothing offered when there was no Xolace+
- * step (the safety path). */
 export const intakeOutcomeOf = (state: IntakeV2State): IntakeOutcome =>
 	state.plusOutcome === null ? "no_offer" : OUTCOME_OF_PLUS[state.plusOutcome];
 
-/** Intake's Xolace+ step as the paywall surfaces know it. The id is the first version's
- * ("Same week, two ways", #713), kept so its numbers carry on into the first look's. */
 export const INTAKE_PLUS_SURFACE =
 	"intake_same_week" as const satisfies PaywallSurface;
 
@@ -259,8 +227,6 @@ const plusProps = (props: Record<string, unknown>) => ({
 	surface: INTAKE_PLUS_SURFACE,
 });
 
-/** v2's Xolace+ step on screen, once; the paywall's own `paywall_opened` rides along, so the
- * surface counts beside every other paywall. Session 0, as intake always is. */
 export function trackPlusShown(posthog: PostHog) {
 	posthog.capture("intake_plus_shown", plusProps({}));
 	posthog.capture("paywall_opened", {
@@ -269,7 +235,6 @@ export function trackPlusShown(posthog: PostHog) {
 	});
 }
 
-/** A Plus row opened on the first look, to its preview. */
 export function trackPlusRowOpened(posthog: PostHog, row: string) {
 	posthog.capture("intake_plus_row_opened", plusProps({ row }));
 }
@@ -278,7 +243,6 @@ export function trackPlusPlanPicked(posthog: PostHog, plan: PlanId) {
 	posthog.capture("intake_plus_plan_picked", plusProps({ plan }));
 }
 
-/** A purchase from the step; `intake_plus_trial_started` when it began the free week. */
 export function trackPlusPurchased(
 	posthog: PostHog,
 	plan: PlanId,
@@ -290,9 +254,6 @@ export function trackPlusPurchased(
 	);
 }
 
-/** "Continue free" (or "Continue", for someone who has Xolace+). `offered`: the step was
- * counted as shown, so its `paywall_opened` gets the `paywall_dismissed` that closes it, as
- * the paywall's close button sends it. */
 export function trackPlusContinuedFree(posthog: PostHog, offered: boolean) {
 	posthog.capture("intake_plus_continued_free", plusProps({}));
 	if (offered) {
@@ -303,13 +264,10 @@ export function trackPlusContinuedFree(posthog: PostHog, offered: boolean) {
 	}
 }
 
-/** "Try it" on the Talk card opened the Talk demo (#714). */
 export function trackTalkDemoOpened(posthog: PostHog) {
 	posthog.capture("intake_talk_demo_opened", plusProps({}));
 }
 
-/** The demo's one turn ended: Flux's question was said, or the safeguard ended it on support.
- * `mode`: how the line was given. Never the words. */
 export function trackTalkDemoFinished(
 	posthog: PostHog,
 	props: {

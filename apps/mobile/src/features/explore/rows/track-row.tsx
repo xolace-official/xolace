@@ -10,7 +10,6 @@ import {
 import { EXS } from "@/features/explore/explore-style";
 import { type PlayingMark, TrackCover } from "./track-cover";
 
-/** Whether this track is the one in the mini player, and if it plays. */
 export function playingMark(listen: Listen, slug: string): PlayingMark {
 	if (listen.nowPlaying !== slug) {
 		return null;
@@ -18,10 +17,6 @@ export function playingMark(listen: Listen, slug: string): PlayingMark {
 	return listen.playing ? "playing" : "paused";
 }
 
-/**
- * Explore's row: 52 pt cover, the title over the meta, and on a topic production's kind icon at
- * the end. The whole row presses to .98; a tap plays, or opens Xolace+ for a free listener.
- */
 export function TrackRow({
 	track,
 	meta,
@@ -34,9 +29,7 @@ export function TrackRow({
 	meta: string;
 	listen: Listen;
 	end?: ReactNode;
-	/** A topic row: VoiceOver hears ", spoken" or ", music". */
 	kind?: boolean;
-	/** A hairline above it, from the text to 16 from the right. */
 	rule?: boolean;
 }) {
 	const R = EXS.row;
@@ -87,7 +80,6 @@ export function TrackRow({
 	);
 }
 
-/** A 1 pt rule in `separator`, inset on both sides. */
 export function Hairline({ left, right }: { left: number; right: number }) {
 	return (
 		<View

@@ -25,11 +25,9 @@ import {
 const same = (a: NameDraft, b: NameDraft | null) =>
 	b !== null && a.kind === b.kind && a.draft === b.draft && a.error === b.error;
 
-/** Names: what Xolace calls you and your space's name, each edited in production's dialog. */
 export function NamesSection() {
 	const { state, actions } = useAccountScreen();
 	const { space, companion, dialog } = state;
-	// The dialog keeps its last words while it fades out.
 	const [held, setHeld] = useState<NameDraft | null>(null);
 	if (dialog && !same(dialog, held)) {
 		setHeld(dialog);

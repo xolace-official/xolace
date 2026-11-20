@@ -14,23 +14,15 @@ import {
 	useLetterInk,
 } from "./letter-paper";
 
-/** Space between a letter's paragraphs. */
 const PARAGRAPH_GAP = 8;
 
 type SheetProps = {
-	/** `write`: 330 pt, 18/27. `read`: 420 pt at least, 17/26. */
 	size: "write" | "read";
-	/** A letter to show, paragraphs split on "\n". Or pass children (the write screen's field). */
 	text?: string;
 	children?: ReactNode;
 	style?: StyleProp<ViewStyle>;
 };
 
-/**
- * The letter sheet: plain cream paper, 5 pt corners, one soft warm shadow, no lines. It fills
- * the width with a 24 pt margin each side (342 pt on the board's phone). The reader's grows with
- * its words, so large text never runs past the paper.
- */
 export function LetterSheet({ size, text, children, style }: SheetProps) {
 	const ink = useLetterInk();
 	const s = SHEET[size];
@@ -55,7 +47,6 @@ export function LetterSheet({ size, text, children, style }: SheetProps) {
 	);
 }
 
-/** A letter's words in the letter's own type, one line of text per paragraph. */
 function LetterText({
 	size,
 	text,
@@ -67,22 +58,19 @@ function LetterText({
 	className?: string;
 	numberOfLines?: number;
 }) {
-	return text.split("\n").map((para, i) => (
-		<LetterLine
-			className={className}
-			// Paragraphs are positional: the text never reorders under them.
-			key={i}
-			numberOfLines={numberOfLines}
-			size={size}
-			text={para}
-		/>
-	));
+	return text
+		.split("\n")
+		.map((para, i) => (
+			<LetterLine
+				className={className}
+				key={i}
+				numberOfLines={numberOfLines}
+				size={size}
+				text={para}
+			/>
+		));
 }
 
-/**
- * One run of the letter's type: upright Newsreader in the letter's ink. The face loads where
- * it's drawn; until it's in, the words keep their place unseen rather than swap faces.
- */
 export function LetterLine({
 	size,
 	text,

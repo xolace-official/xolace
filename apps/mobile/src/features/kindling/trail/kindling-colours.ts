@@ -2,8 +2,6 @@ import { useScheme } from "@/design/scheme";
 import { useTokenColors } from "@/lib/use-token-color";
 import type { TintKey } from "../copy";
 
-/** The board's own colours where the theme has none (handoff §2.3, §2.4): `--color-kindling-*`
- * in global.css, Daylight and a `-dark` Dusk twin. The rest are the theme's. */
 const FIXED = [
 	"kindling-road",
 	"kindling-mark",
@@ -43,7 +41,6 @@ export type KindlingColours = {
 	onViolet: string;
 };
 
-/** The tend's light (§4): `--color-kindling-fx-*`, the same in both schemes but the smoke. */
 const FX = [
 	"kindling-fx-glow",
 	"kindling-fx-glow-warm",

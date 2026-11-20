@@ -1,9 +1,3 @@
-/**
- * Account › Dev tools (dev builds only): production's rows on the settings kit. The Account
- * route reaches this file only through `__DEV__ ? require(...) : null`, so release builds
- * drop it. Rows marked "Delete with features/<name>" open an old feature's piece: the screen
- * PR that deletes that folder deletes the row with it.
- */
 import { View } from "react-native";
 import { SectionTitle, SettingsCard } from "@/components/settings-kit/parts";
 import { TileRow } from "@/components/settings-kit/tile-row";
@@ -75,7 +69,6 @@ export function DevToolsSection() {
 					label="Replay deferred questions"
 					onPress={dev.replayDeferred}
 				/>
-				{/* Delete with features/xolacer-chat. */}
 				<TileRow
 					icon={I.age}
 					label="Clear date of birth"

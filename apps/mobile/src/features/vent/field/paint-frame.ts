@@ -29,12 +29,6 @@ import {
 import { thresholdAt, WORD_BURN_MS } from "@/features/vent/words/burn-shader";
 import type { WordLayer } from "@/features/vent/words/word-layer";
 
-/**
- * One frame of the field, recorded into the Picture: the sparse drift, the field, the burn and
- * the sparks while it waits, or the words burning and their ash. Every spark goes into one
- * atlas, flushed last.
- */
-/** v2: the reply's image, cut by the burning front (`words/burn-shader.ts`). */
 function drawWords(
 	canvas: SkCanvas,
 	L: WordLayer,
@@ -104,7 +98,6 @@ export function paintFrame(
 				w0: s.w0,
 			});
 		}
-		// v2: the afterglow overlaps the end of the scatter instead of waiting out the silence.
 		const ag = rm ? RM_FADE_MS : explodeAt(s.skip) + SCATTER_MS - AFTER_LEAD_MS;
 		if (bt > ag) {
 			drawAfter(b, st, bt - ag);

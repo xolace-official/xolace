@@ -12,18 +12,12 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
 import { HEARD_MOTION } from "../motion";
 
-/** Board `.hword`: the display face at 46/50, −.035em. */
 const WORD_CLASS = "text-[46px] leading-[50px] tracking-[-1.61px]";
 const WORD_EASE = Easing.bezier(0.2, 0.8, 0.2, 1);
-/** The word is fully in by 55% of its write-in; the halo peaks there and is gone by the end. */
 const IN_BY = 0.55;
 const RISE = 8;
 const HALO_R = 14;
 
-/**
- * "Heard." writes in like a mirror word (board `mwA`, .9 s): it rises 8 pt and fades in, a warm
- * halo swelling and going as it lands. Reduce Motion shows it at once.
- */
 export function HeardTitle({
 	title,
 	reduced,

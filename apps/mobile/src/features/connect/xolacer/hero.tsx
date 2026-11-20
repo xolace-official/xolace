@@ -11,7 +11,6 @@ const AVATAR = 116;
 const AURA = { height: 360, left: -60, top: -140, width: 520 };
 const AURA_OPACITY = 0.4;
 
-/** The light behind the page (the prototype's lilac glow, held still). */
 export function ProfileAura() {
 	const lilac = useTokenColor("lilac");
 	return (
@@ -28,8 +27,6 @@ export function ProfileAura() {
 	);
 }
 
-/** Who they are, in front of you before you ask: the photo (tap to see it whole), the name, the
- * rating and presence, their own words and what they listen to. */
 export function ProfileHero() {
 	const { state } = useXolacerScreen();
 	if (state.phase !== "ready") {

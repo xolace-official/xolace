@@ -39,15 +39,9 @@ function Section({
 	);
 }
 
-/**
- * Settings › Privacy & Data (board "Privacy & Data v2", P/design/handoff/settings-sections.md):
- * what Xolace keeps, said plainly, then the switches and choices that change it, a copy and the
- * policy, and the two deletes, each asking first in a sheet. Nothing animates in.
- */
 export function PrivacyScreen({
 	scrolledToEnd = false,
 }: {
-	/** Opens scrolled to the bottom (a dev state). */
 	scrolledToEnd?: boolean;
 }) {
 	const { state, actions } = usePrivacyScreen();
@@ -138,7 +132,6 @@ export function PrivacyScreen({
 					</SettingsCard>
 				</Section>
 			</ScrollView>
-			{/* Production's legal sheet, the policy in full with a link to the web copy. */}
 			<LegalBottomSheet
 				document={state.policyOpen ? PRIVACY_POLICY : null}
 				onClose={actions.closePolicy}

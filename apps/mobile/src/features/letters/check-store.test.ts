@@ -10,7 +10,6 @@ const FIXABLE: SendAnswer = {
 };
 const RISE: SendAnswer = { next: "rise" };
 
-/** A check that answers when the test says so. */
 const pending = () => {
 	let answer: (a: SendAnswer | null) => void = () => undefined;
 	const ask = vi.fn(

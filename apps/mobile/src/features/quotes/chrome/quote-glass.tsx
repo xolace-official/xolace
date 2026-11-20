@@ -4,10 +4,8 @@ import { BlurView } from "@/components/shared/styled";
 import { cn } from "@/lib/cn";
 import type { InkPalette } from "./quote-ink";
 
-/** The board's `.pl` glass: ~20 blur, its ink's tint, a 0.5 pt hairline. */
 const GLASS_BLUR = 20;
 
-/** Size, radius and layout come from the caller's `className`; the ink's colours stay JS. */
 export function QuoteGlass({
 	ink,
 	className,

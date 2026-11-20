@@ -22,14 +22,6 @@ type Props = {
 	clock: SitClock;
 };
 
-/**
- * Production's two arcs, lit like the Today card (handoff §4), in one canvas.
- * Drawing order: edge light → seam → top arc → top wash → bottom arc → floor
- * light → rim (blurred copy, then crisp). The blurred lights are drawn once
- * into textures (the edge pill, the seam's three layers at their relative
- * alphas) and per frame only move, stretch and fade; the arcs' paths come from
- * the clock.
- */
 export function ArcsCanvas({ W, H, colors, surface, line, clock }: Props) {
 	const { topPath, botPath, g } = clock;
 	const { edgeTex, seamTex, seamH } = useArcTextures(W, H, colors);

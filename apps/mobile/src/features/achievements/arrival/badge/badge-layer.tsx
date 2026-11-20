@@ -23,16 +23,8 @@ import {
 } from "@/features/achievements/arrival/badge/step-gates";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** The colour reaches past the farthest corner from the badge by this much. */
 const REACH_PAD = 8;
 
-/**
- * The badge layer (arrivals §2): the family colour pouring from behind it, the
- * glow, the confetti behind, the badge (the badge page's coin), the rim
- * sparkles, the confetti in front, then the words. Every badge is mounted from
- * the start and shows by the engine's step, so Next renders only the few small
- * parts that say which badge is out (§6).
- */
 export function BadgeLayer({
 	eng,
 	fa,

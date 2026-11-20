@@ -3,30 +3,20 @@ import type { FunctionReturnType } from "convex/server";
 import { COPY, type Family, type TopicFilter } from "@/features/explore/copy";
 import type { BrowseFrom } from "@/lib/now-playing/now-playing-store";
 
-/** A catalogue track, as `getTopic` and `listByFamily` serve it. */
 export type ExploreTrack = FunctionReturnType<
 	typeof api.browse.topics.getTopic
 >[number];
-/** A Topics tile, as `getTopics` serves it. */
 export type TopicTile = FunctionReturnType<
 	typeof api.browse.topics.getTopics
 >[number];
-/** A topic's cover: `getTopicHeader`, `null` for an unknown or unpublished slug. */
 export type TopicHeader = NonNullable<
 	FunctionReturnType<typeof api.browse.topics.getTopicHeader>
 >;
 
-/**
- * Playing a track from a row: the app's one now-playing track and the Xolace+ gate. The same
- * for every door's screen; Convex, PostHog and the paywall in the app, nothing in a dev state.
- */
 export type Listen = {
-	/** A free listener: every track opens Xolace+ (production's gate). */
 	locked: boolean;
-	/** The slug in the mini player, if any. */
 	nowPlaying: string | null;
 	playing: boolean;
-	/** `from` overrides the screen's own, for a screen with several shelves (Explore home). */
 	open: (
 		track: Pick<ExploreTrack, "family" | "slug">,
 		from?: BrowseFrom
@@ -35,11 +25,9 @@ export type Listen = {
 
 const SECONDS = 60;
 
-/** Whole minutes, never 0: a 40 s track reads "1 min". */
 export const minutesOf = (sec: number) =>
 	Math.max(1, Math.round(sec / SECONDS));
 
-/** Production's `countLine`: "12 spoken · 8 music", "9 spoken", "8 music". */
 export function countLine(t: {
 	supportCount: number;
 	musicCount: number;
@@ -54,15 +42,9 @@ export function countLine(t: {
 	return parts.join(" · ");
 }
 
-/** Topics, alphabetical by slug (production's order, whatever the query returns). */
 export const topicsInOrder = (topics: readonly TopicTile[]) =>
 	[...topics].sort((a, b) => a.slug.localeCompare(b.slug));
 
-/**
- * A list's second line: "Wind down · Episode 2 · 9 min" for an episode, else "Sleep · 7 min".
- * Music runs its length too: production doesn't loop it unless the listener turns on Repeat.
- * Without a `topicTitle` (an older backend), the length alone.
- */
 export function listMeta(t: ExploreTrack): string {
 	const min = minutesOf(t.durationSec);
 	if (t.episodeNumber !== undefined && t.seriesTitle) {
@@ -73,15 +55,12 @@ export function listMeta(t: ExploreTrack): string {
 		: COPY.minutes(min);
 }
 
-/** On a topic the heading already says the topic and the kind: the length alone. */
 export const topicMeta = (t: ExploreTrack) =>
 	COPY.minutes(minutesOf(t.durationSec));
 
-/** The chips show only when a topic holds both kinds. */
 export const hasBothKinds = (h: { supportCount: number; musicCount: number }) =>
 	h.supportCount > 0 && h.musicCount > 0;
 
-/** `?family=` preselects a chip, when there are chips to select. */
 export function initialFilter(
 	param: string | undefined,
 	chips: boolean
@@ -89,7 +68,6 @@ export function initialFilter(
 	return chips && (param === "support" || param === "music") ? param : "all";
 }
 
-/** `?family=` on a list: music, else Support audio. */
 export const familyOf = (param: string | undefined): Family =>
 	param === "music" ? "music" : "support";
 
@@ -100,11 +78,6 @@ export type TopicSection =
 const byEpisode = (a: ExploreTrack, b: ExploreTrack) =>
 	(a.episodeNumber ?? 0) - (b.episodeNumber ?? 0);
 
-/**
- * A topic's grouped list (handoff §4.3). All: each series, Support audio (singles), Music.
- * Support audio: each series, then the singles. Music: music. Series keep the order they first
- * appear in; episodes run by number.
- */
 export function topicSections(
 	tracks: readonly ExploreTrack[],
 	filter: TopicFilter
@@ -154,7 +127,6 @@ export function topicSections(
 	return out;
 }
 
-/** A topic row's VoiceOver label: "title, meta, spoken", plus the lock for a free listener. */
 export function rowLabel(
 	t: ExploreTrack,
 	meta: string,

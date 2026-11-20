@@ -1,8 +1,6 @@
-/** The avatar sheet on fixtures: `xolace://dev/you/<id>` (P/design/handoff/you.md §3). */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureAvatar } from "@/features/you/avatar/dev/fixture-avatar";
 
-/** The sheet draws its own scrim; nothing behind it in a dev state. */
 const OPTIONS = { headerShown: false };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

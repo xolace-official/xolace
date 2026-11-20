@@ -17,7 +17,6 @@ import { useThreadScreen } from "./thread-data";
 
 const IOS = process.env.EXPO_OS === "ios";
 
-/** A centred note in the thread's body. */
 function Note({ title, body }: { title?: string; body: string }) {
 	return (
 		<View className="flex-1 items-center justify-center gap-2 px-10">
@@ -33,11 +32,8 @@ function Note({ title, body }: { title?: string; body: string }) {
 	);
 }
 
-/** The conversation: the header carries who, how they are, help and the menu; the body is
- * Stream's list and composer, or the bar that stands in for the composer. */
 export function ThreadScreen() {
 	const { state, actions } = useThreadScreen();
-	// The long-press overlay owns the back swipe while it's up.
 	const { overlay } = useOverlayContext();
 
 	return (
@@ -45,7 +41,6 @@ export function ThreadScreen() {
 			<Stack.Screen
 				options={{
 					gestureEnabled: overlay === "none",
-					// The back button stays when iOS's left slot holds the identity.
 					headerBackVisible: true,
 					headerTitle:
 						state.phase === "ready" && !IOS
@@ -98,8 +93,6 @@ function ThreadBody() {
 			) : (
 				<ThreadSkeleton />
 			)}
-			{/* While Stream comes up an open thread keeps the composer's room; on the error path a
-			    composer would promise a send that can't happen. */}
 			{conversation.status === "open" ? (
 				body.kind === "unavailable" ? null : (
 					<ComposerRoom />

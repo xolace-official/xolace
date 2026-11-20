@@ -1,14 +1,3 @@
-// Ported from native-cook `brush-ink-splash/brushInkShader.ts` (S5).
-//
-// INK_SKSL paints a brush stroke. It is the paint of a Vertices strip whose texture coordinates
-// are stroke coordinates, not screen ones: x = distance along the paint clock (pt), y = the
-// position across the stroke in half-widths (−1.7 … 1.7) plus 4 × the stroke's index. So the
-// shader knows, for every pixel, how far behind the brush it is, how far from the stroke's
-// middle and how far along it: a rounded wet tip, ragged edges, dry bristle streaks toward the
-// end, pigment pooling at the rim, and bleeding into the paper's fibres.
-//
-// Recoloured for Xolace: the block's sumi black becomes the board's ember ink (`--eink`), passed
-// in as `inkColor`; every other line is the block's. PAPER_SKSL bakes the rice paper once.
 // RuntimeEffect output is read as Display P3 on iOS: colours go through toP3.
 
 const COMMON = `

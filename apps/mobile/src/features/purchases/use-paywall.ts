@@ -2,7 +2,6 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { router } from "expo-router";
 import { create } from "zustand";
 
-/** Which locked surface opened the paywall; carried into the paywall_opened / purchase_* events. */
 export type PaywallSurface =
 	| "insight_teaser"
 	| "week_intensity"
@@ -48,7 +47,6 @@ export type PaywallSurface =
 	// Get Xolace+ on Telegram's reply-cap line, through the bot's app link (#771).
 	| "telegram_cap";
 
-/** `sessionId` rides only with the `kindling` surface (`paths.requestKindling`). */
 type PaywallState = {
 	open: (
 		surface: PaywallSurface,
@@ -57,9 +55,6 @@ type PaywallState = {
 	close: () => void;
 };
 
-// Opens/closes the paywall route; analytics are captured in the screen. `close` cannot
-// assume a back stack (deep link `xolace:///upgrade` cold-starts on it). The route is
-// `(protected)/upgrade`, not its own group: expo-router >= 58 picks a sibling group for `/`.
 export const usePaywall = create<PaywallState>(() => ({
 	close: () =>
 		router.canGoBack() ? router.back() : router.replace("/(protected)"),

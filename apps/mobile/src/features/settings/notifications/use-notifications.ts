@@ -26,8 +26,6 @@ import { deviceTimezone, preparePushDelivery } from "@/lib/push-delivery";
 import { getGrantedPushToken, getPushPermissionState } from "@/lib/push-token";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
-/** Re-reads the OS permission on every foreground, so returning from Settings settles the
- * switches: it can be revoked there without any preference knowing. */
 function useOsBlocked() {
 	const [osBlocked, setOsBlocked] = useState(false);
 	useEffect(() => {
@@ -52,8 +50,6 @@ function useOsBlocked() {
 	return [osBlocked, setOsBlocked] as const;
 }
 
-/** Settings › Notifications on Convex, the push token and the OS permission (production's
- * `useNotificationSettings`, same calls in the same order). */
 export function useNotifications(
 	reachMeOn: ReachMeOn | null,
 	letters: ComposedSwitch
@@ -67,7 +63,6 @@ export function useNotifications(
 
 	const notifications = preferences?.notifications;
 
-	// A blocked OS makes every switch read off, so flipping one runs the enable path.
 	const gentleReminders = !osBlocked && gentleRemindersOn(notifications);
 	const chatNotifications =
 		!osBlocked && chatNotificationsAllowed(notifications);
@@ -82,14 +77,9 @@ export function useNotifications(
 		}
 		try {
 			await updatePreferences({ notificationTimezone: timezone });
-		} catch {
-			// Non-blocking
-		}
+		} catch {}
 	};
 
-	/** Turning a kind on from a non-delivering state consults the OS first. False: write nothing
-	 * (the phone blocks it, which opens the alert, or no token came). `autoEnable: false` registers
-	 * the device for the daily quote alone, without the server's first-grant switch-everything-on. */
 	const readyToDeliver = async (autoEnable = true) => {
 		const readiness = await preparePushDelivery(delivering, (pushToken) =>
 			registerToken(autoEnable ? { pushToken } : { autoEnable, pushToken })
@@ -106,37 +96,29 @@ export function useNotifications(
 		return readiness !== "unavailable";
 	};
 
-	/** Nothing wants delivery any more: drop this installation's token (another device's stays). */
 	const dropToken = async () => {
 		try {
 			const token = await getGrantedPushToken();
 			if (token) {
 				await removeToken({ pushToken: token });
 			}
-		} catch {
-			// Best-effort
-		}
+		} catch {}
 	};
 
-	/** Moves gentle reminders and chat at once; the daily quote keeps its stored choice. */
 	const applyToggles = async (next: { gentle: boolean; chat: boolean }) => {
 		const turningOn =
 			(next.gentle && !gentleReminders) || (next.chat && !chatNotifications);
 		if (turningOn && !(await readyToDeliver())) {
 			return;
 		}
-		// Lands after registerToken, whose first-grant auto-enable would otherwise
-		// switch on a family the user didn't ask for.
 		updatePreferences({
 			notifications: nextNotificationPrefs(next),
 		}).catch(saveFailed);
-		// The daily quote still needs this device's token.
 		if (!(next.gentle || next.chat || dailyQuoteChoice(notifications))) {
 			await dropToken();
 		}
 	};
 
-	/** The daily quote: its own switch, so it touches no other kind or the master. */
 	const applyDailyQuote = async (on: boolean) => {
 		if (on && !dailyQuoteOn && !(await readyToDeliver(false))) {
 			return;
@@ -150,8 +132,6 @@ export function useNotifications(
 	};
 
 	const window = notifications?.quietWindow ?? null;
-	// Until preferences load, a switch would write its default over the saved choice (Gentle
-	// reminders carrying `chat: true` over a saved chat-off), so taps wait. Production didn't.
 	const loading = preferences === undefined;
 
 	return {
@@ -166,8 +146,6 @@ export function useNotifications(
 				if (loading) {
 					return;
 				}
-				// Each setter carries the other family's stored choice, never its displayed
-				// value, which reads off whenever the master or the OS blocks delivery.
 				applyToggles({ chat: on, gentle: gentleChoice(notifications) }).catch(
 					() => undefined
 				);
@@ -187,8 +165,6 @@ export function useNotifications(
 				}).catch(saveFailed);
 			},
 			setLetters: (on) => {
-				// A blocked phone can't deliver it: the same alert as the other switches. It sets only
-				// letters' flag (`letters.settings.setPush`); the pushes still need notifications on.
 				if (loading || letters === null) {
 					return;
 				}

@@ -7,20 +7,12 @@ import { T1, T2, TS } from "./session-look";
 import type { MomentFlow } from "./use-moment-flow";
 import type { Clock, SessionClocks } from "./use-session-clocks";
 
-/**
- * Where a dev state opens the screen: an answer already given, moment 2, the
- * share in some state, or a clock held at one instant for a mid-motion frame.
- * The route never passes one; the screen then simply arrives.
- */
 export type Scene = {
-	/** The thumb let go here (0 heavier … 1 lighter). */
 	position?: number;
 	unsure?: boolean;
-	/** The finger still down on the track (the rail swollen, the thumb grown). */
 	grab?: true;
 	moment?: 2;
 	share?: "hold" | "sent" | "kept";
-	/** Hold this clock at this ms (and the earlier ones at their end). */
 	at?: { clock: Clock; ms: number };
 };
 
@@ -32,7 +24,6 @@ type Parts = {
 	face: SessionFace;
 };
 
-/** Puts the screen in `scene` straight after its arrival started. */
 export function applyScene(
 	scene: Scene,
 	{ flow, slider, clocks, send, face }: Parts
@@ -42,7 +33,6 @@ export function applyScene(
 		slider.place(position);
 		flow.position.set(position);
 		flow.setAnswer({ moment: 1, step: stepOf(snap(position)), unsure: false });
-		// Already at the centre, the thumb doesn't move, so the face wouldn't follow.
 		face.face.hold(checkInPose(position));
 	}
 	if (scene.grab) {
