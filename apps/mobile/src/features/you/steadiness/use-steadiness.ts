@@ -9,6 +9,7 @@ import {
 	dialOf,
 	partsOf,
 	type StView,
+	steadinessAccess,
 	type Upsell,
 } from "@/features/you/steadiness/steadiness-model";
 import { useInsightsView } from "@/features/you/use-insights-view";
@@ -24,9 +25,9 @@ function useHeldUpsell(live: Upsell | null | undefined, free: boolean) {
 }
 
 export function useSteadiness(): SteadinessScreenData {
-	const { view: live, plus, isPlus, isResolved, now } = useInsightsView();
-	const doors = !isPlus;
-	const upsell = useHeldUpsell(live?.upsell, doors && isResolved && !plus);
+	const { view: live, plus, status, now } = useInsightsView();
+	const { doors, upsell: mayUpsell } = steadinessAccess(status, plus);
+	const upsell = useHeldUpsell(live?.upsell, mayUpsell);
 	const markShown = useMutation(api.compounding.upsell.markShown);
 	const posthog = usePostHog();
 	const openPaywall = usePaywall((s) => s.open);

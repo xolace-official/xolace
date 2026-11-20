@@ -84,8 +84,8 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 
 	const pick = async (b: QuoteBackground) => {
 		const s = now();
-		const next = tileTap(b, s.background.key, s.isPlus);
-		if (next === "none") {
+		const next = tileTap(b, s.background.key, s.plus);
+		if (next === "none" || next === "wait") {
 			return;
 		}
 		Presets.System.selection();

@@ -73,7 +73,7 @@ describe("motionNote", () => {
 
 describe("themes", () => {
 	it("lists the registry's picker themes, free first, the divider before Plus", () => {
-		const cards = themeCards("default", true);
+		const cards = themeCards("default", "plus");
 		expect(cards.map((c) => c.id)).toEqual(PICKER_THEMES.map((t) => t.id));
 		expect(cards.filter((c) => c.firstPlus).map((c) => c.id)).toEqual([
 			PREMIUM_THEMES[0].id,
@@ -87,30 +87,43 @@ describe("themes", () => {
 	});
 
 	it("locks Plus themes on a free account, and says so", () => {
-		const noir = themeCards("default", false).find((c) => c.id === "noir");
+		const noir = themeCards("default", "free").find((c) => c.id === "noir");
 		expect(noir).toMatchObject({
 			a11y: "Noir theme, Xolace+, locked",
 			locked: true,
 		});
 		expect(
-			themeCards("default", true).find((c) => c.id === "noir")
+			themeCards("default", "plus").find((c) => c.id === "noir")
 		).toMatchObject({ a11y: "Noir theme, Xolace+", locked: false });
-		expect(themeTap("noir", false)).toBe("locked");
-		expect(themeTap("noir", true)).toBe("pick");
-		expect(themeTap("quiet", false)).toBe("pick");
+		expect(themeTap("noir", "free")).toBe("locked");
+		expect(themeTap("noir", "plus")).toBe("pick");
+		expect(themeTap("quiet", "free")).toBe("pick");
+	});
+
+	it("while Xolace+ loads: nothing locked, a Plus tap waits, the note stays neutral", () => {
+		const cards = themeCards("rose", "loading");
+		expect(cards.some((c) => c.locked)).toBe(false);
+		expect(cards.find((c) => c.id === "rose")).toMatchObject({
+			a11y: "Rosé theme, Xolace+",
+			active: true,
+			tap: "wait",
+		});
+		expect(themeTap("noir", "loading")).toBe("wait");
+		expect(themeTap("quiet", "loading")).toBe("pick");
+		expect(themeNote("rose", "loading")).toBe(themeNote("rose", "plus"));
 	});
 
 	it("notes the theme on Plus, the line when free", () => {
-		expect(themeNote("default", true)).toBe(
+		expect(themeNote("default", "plus")).toBe(
 			"Default. Four themes are free; Xolace+ adds six."
 		);
-		expect(themeNote("rose", true)).toBe(
+		expect(themeNote("rose", "plus")).toBe(
 			"Rosé, from Xolace+. Four themes are free; Xolace+ adds six."
 		);
-		expect(themeNote("rose", false)).toBe(
+		expect(themeNote("rose", "free")).toBe(
 			"Four themes are free. The six after the line come with Xolace+."
 		);
-		expect(themeNote("gone", true)).toMatch(/^Default\./);
+		expect(themeNote("gone", "plus")).toMatch(/^Default\./);
 	});
 
 	it("opens with the active card in view, past the divider for Plus themes", () => {

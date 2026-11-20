@@ -7,9 +7,9 @@ import {
 } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { MIRROR_ICONS, TONES } from "@/features/settings/mirror/copy";
 import {
-	type Entitlement,
 	type MirrorTone,
 	opensAtEnd,
 	toneA11y,
@@ -26,7 +26,7 @@ export function TonePills({
 }: {
 	shown: MirrorTone;
 	chosen: MirrorTone;
-	plus: Entitlement;
+	plus: PlusStatus;
 	onPick: (tone: MirrorTone) => void;
 }) {
 	const [background, foreground] = useTokenColors(["background", "foreground"]);

@@ -39,19 +39,28 @@ describe("row values", () => {
 
 describe("plusCard", () => {
 	it("free: one line and the button, and a tap opens the paywall", () => {
-		expect(plusCard(false, null)).toMatchObject({
+		expect(plusCard("free", null)).toMatchObject({
 			kind: "free",
 			opensPaywall: true,
 		});
 	});
 
+	it("while Xolace+ loads: neither the offer nor the minutes, and a tap does nothing", () => {
+		expect(plusCard("loading", undefined)).toEqual({
+			a11y: "Xolace+",
+			kind: "loading",
+			opensPaywall: false,
+		});
+		expect(plusCard("loading", { secondsLeft: 60 }).kind).toBe("loading");
+	});
+
 	it("Plus never opens the paywall, loaded or not", () => {
-		expect(plusCard(true, { secondsLeft: 60 }).opensPaywall).toBe(false);
-		expect(plusCard(true, undefined).opensPaywall).toBe(false);
+		expect(plusCard("plus", { secondsLeft: 60 }).opensPaywall).toBe(false);
+		expect(plusCard("plus", undefined).opensPaywall).toBe(false);
 	});
 
 	it("Plus: minutes left and the bar", () => {
-		const card = plusCard(true, { secondsLeft: 12 * 60 + 30 });
+		const card = plusCard("plus", { secondsLeft: 12 * 60 + 30 });
 		expect(card).toMatchObject({
 			fill: (12 * 60 + 30) / (15 * 60),
 			kind: "plus",
@@ -63,15 +72,20 @@ describe("plusCard", () => {
 	});
 
 	it("Plus while talk time loads: no line, no bar", () => {
-		expect(plusCard(true, undefined)).toMatchObject({ fill: null, line: null });
-		expect(plusCard(true, undefined).a11y).toBe(
+		expect(plusCard("plus", undefined)).toMatchObject({
+			fill: null,
+			line: null,
+		});
+		expect(plusCard("plus", undefined).a11y).toBe(
 			"Xolace+, active. Refills Monday."
 		);
 	});
 
 	it("clamps a top-up past the week and a negative balance", () => {
-		expect(plusCard(true, { secondsLeft: 20 * 60 })).toMatchObject({ fill: 1 });
-		expect(plusCard(true, { secondsLeft: -5 })).toMatchObject({
+		expect(plusCard("plus", { secondsLeft: 20 * 60 })).toMatchObject({
+			fill: 1,
+		});
+		expect(plusCard("plus", { secondsLeft: -5 })).toMatchObject({
 			fill: 0,
 			line: "0 min of talk left this week",
 		});

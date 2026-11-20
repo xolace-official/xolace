@@ -60,9 +60,9 @@ export function useModules() {
 		withRead: true,
 		withTry: true,
 	});
-	const { isPlus, isLoading } = usePlusEntitlement();
+	const { status, isPlus } = usePlusEntitlement();
 	const settingUp = useQuery(api.paths.settingUp.get, isPlus ? {} : "skip");
-	const empty = kindlingEmptyMode({ isLoading, isPlus, settingUp });
+	const empty = kindlingEmptyMode({ plus: status, settingUp });
 	const [lastEmpty, setLastEmpty] = useState(empty);
 	if (empty !== undefined && empty !== lastEmpty) {
 		setLastEmpty(empty);
@@ -120,9 +120,9 @@ export function useLowerModules() {
 		{ initialNumItems: MOMENT_COUNT }
 	);
 	const quote = useQuery(api.dailyQuotes.getToday);
-	const { isPlus, isLoading } = usePlusEntitlement();
+	const { status } = usePlusEntitlement();
 	return {
-		listenLocked: !(isLoading || isPlus),
+		listenLocked: status === "free",
 		moments:
 			timeline.status === "LoadingFirstPage"
 				? undefined

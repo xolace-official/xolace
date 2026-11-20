@@ -99,16 +99,16 @@ export function fixtureState(
 	key = "poster",
 	patch: Partial<QuotesState> = {}
 ): QuotesState {
-	const isPlus = patch.isPlus ?? true;
+	const plus = patch.plus ?? "plus";
 	return {
 		active: true,
-		background: shownBackground(key, BACKGROUNDS, isPlus),
+		background: shownBackground(key, BACKGROUNDS, plus),
 		backgrounds: BACKGROUNDS,
-		isPlus,
 		kept: KEPT,
 		keptCount: 14,
 		lowPower: false,
 		offerDailyQuote: false,
+		plus,
 		quote: QUOTES.medium,
 		reason: reasonLine({
 			hasSessionToday: true,
@@ -119,7 +119,7 @@ export function fixtureState(
 		replyReaches: true,
 		resonated: false,
 		saved: false,
-		saveLocked: !isPlus,
+		saveLocked: plus !== "plus",
 		sending: false,
 		soundOn: false,
 		status: "ready",

@@ -115,7 +115,7 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	).withOptimisticUpdate((store, a) =>
 		store.setQuery(api.preferences.quoteBackground.get, {}, a.background)
 	);
-	const { isPlus } = usePlusEntitlement();
+	const { status: plus } = usePlusEntitlement();
 	const openPaywall = usePaywall((s) => s.open);
 	const setReplySeed = useAppStore((s) => s.setReplySeed);
 	const soundOn = useSoundMemory((s) => s.soundOn);
@@ -187,7 +187,7 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	}, [today?.sessionLocked, posthog]);
 
 	const backgrounds = resolveBackgrounds(catalogue, STILLS);
-	const background = shownBackground(savedKey, backgrounds, isPlus);
+	const background = shownBackground(savedKey, backgrounds, plus);
 	let status: QuotesScreenValue["state"]["status"] = "loading";
 	if (raw) {
 		status = "ready";
@@ -199,11 +199,11 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 		active: rest.active,
 		background,
 		backgrounds,
-		isPlus,
 		kept: kept.results.map(keptCard),
 		keptCount: today?.savedCount ?? 0,
 		lowPower: rest.lowPower,
 		offerDailyQuote: offer.offerable,
+		plus,
 		quote: raw ? { text: plainQuote(raw.text), title: raw.title } : null,
 		reason: reasonLine({
 			hasSessionToday: today?.hasSessionToday ?? false,

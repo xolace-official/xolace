@@ -1,4 +1,5 @@
 import type { Resource } from "@xolace/backend/convex/lib/crisisResources";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { COPY } from "./copy";
 import { isRateLimitMessage } from "./session/session-service";
 import type { ReflectionStateName } from "./session/types";
@@ -414,12 +415,12 @@ const REJECTED_CODE = "content_policy_violation";
 
 export type WaitError = { kind: "rejected" | "limit" | "failed"; body: string };
 
-export function waitError(message: string, isPlus: boolean): WaitError {
+export function waitError(message: string, plus: PlusStatus): WaitError {
 	if (message === REJECTED_CODE) {
 		return { body: COPY.wait.rejected, kind: "rejected" };
 	}
 	const body = message || COPY.wait.failed;
-	if (!isPlus && isRateLimitMessage(message)) {
+	if (plus === "free" && isRateLimitMessage(message)) {
 		return { body: `${body} ${COPY.wait.limitMore}`, kind: "limit" };
 	}
 	return { body, kind: "failed" };

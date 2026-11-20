@@ -23,8 +23,8 @@ export function AvatarSheet() {
 function AvatarPicker() {
 	const { state, actions } = useAvatar();
 	const close = useSheetClose();
-	const { avatars, current, isPlus } = state;
-	const anyLocked = avatars?.some((a) => isLocked(a, isPlus)) ?? false;
+	const { avatars, current, plus } = state;
+	const anyLocked = avatars?.some((a) => isLocked(a, plus)) ?? false;
 	const pick = (avatar: AvatarOption) => {
 		if (actions.pick(avatar)) {
 			close();
@@ -64,7 +64,7 @@ function AvatarPicker() {
 					<Choice
 						avatar={a}
 						key={a.key}
-						locked={isLocked(a, isPlus)}
+						locked={isLocked(a, plus)}
 						on={a.key === current?.key}
 						onPress={() => pick(a)}
 					/>

@@ -70,7 +70,7 @@ export function useAppearance(): Appearance {
 	const scheme = useScheme();
 	const osDark = useColorScheme() === "dark";
 	const osReduce = useOSReducedMotion();
-	const { isPlus } = usePlusEntitlement();
+	const { status } = usePlusEntitlement();
 	const openPaywall = usePaywall((s) => s.open);
 	const cards = useProfileCards();
 	const [replayOpen, setReplayOpen] = useState(false);
@@ -83,8 +83,11 @@ export function useAppearance(): Appearance {
 	return {
 		actions: {
 			pickTheme: (id) => {
-				if (themeTap(id, isPlus) === "locked") {
+				const tap = themeTap(id, status);
+				if (tap === "locked") {
 					openPaywall("premium_theme");
+				}
+				if (tap !== "pick") {
 					return;
 				}
 				setThemeWithFonts(themeVariant(id, pickMode(mode, scheme)));
@@ -116,9 +119,9 @@ export function useAppearance(): Appearance {
 			previewScheme: scheme,
 			profileCards: cards.rows,
 			replayOpen,
-			themeNote: themeNote(colorThemeId, isPlus),
+			themeNote: themeNote(colorThemeId, status),
 			themeStart: stripStart(colorThemeId),
-			themes: themeCards(colorThemeId, isPlus),
+			themes: themeCards(colorThemeId, status),
 		},
 	};
 }

@@ -73,9 +73,10 @@ export function useReflectData(): Reflect {
 	const stage = useLanding(
 		stageOf(s.screen, { heard: next.heard !== null, refining })
 	);
-	const { isPlus } = usePlusEntitlement();
+	const { status: plusStatus } = usePlusEntitlement();
 	const openPaywall = usePaywall((p) => p.open);
-	const error = s.screen === "error" ? waitError(s.errorMessage, isPlus) : null;
+	const error =
+		s.screen === "error" ? waitError(s.errorMessage, plusStatus) : null;
 	const slow = useWaitClock(stage === "wait" && !error);
 
 	const [shown, setShown] = useState(stage);

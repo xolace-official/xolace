@@ -15,7 +15,7 @@ const TWELVE_MINUTES = 12 * 60;
 export const HOME_PLUS: SettingsHome["state"] = {
 	mode: "System",
 	notifications: "On",
-	plus: plusCard(true, { secondsLeft: TWELVE_MINUTES }),
+	plus: plusCard("plus", { secondsLeft: TWELVE_MINUTES }),
 	signIn: "Apple",
 	tone: "Gentle",
 	update: { label: "Check for updates", value: "" },
@@ -24,7 +24,7 @@ export const HOME_PLUS: SettingsHome["state"] = {
 
 export const HOME_FREE: SettingsHome["state"] = {
 	...HOME_PLUS,
-	plus: plusCard(false, null),
+	plus: plusCard("free", null),
 };
 
 export const HOME_UPDATED: SettingsHome["state"] = {
@@ -35,7 +35,12 @@ export const HOME_UPDATED: SettingsHome["state"] = {
 export const HOME_LOADING: SettingsHome["state"] = {
 	...HOME_PLUS,
 	notifications: undefined,
-	plus: plusCard(true, undefined),
+	plus: plusCard("plus", undefined),
 	signIn: undefined,
 	tone: undefined,
+};
+
+export const HOME_PLUS_LOADING: SettingsHome["state"] = {
+	...HOME_PLUS,
+	plus: plusCard("loading", undefined),
 };

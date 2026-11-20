@@ -6,6 +6,7 @@ import {
 import {
 	DELETE_ACCOUNT,
 	DELETE_ACCOUNT_PLUS,
+	DELETE_ACCOUNT_PLUS_LOADING,
 	DELETE_ACCOUNT_SIGN_OUT_LEFT,
 	DELETE_DATA,
 	DELETE_DATA_BUSY,
@@ -116,6 +117,12 @@ export const devStates: readonly DevState[] = [
 		options: ACCOUNT_SHEET,
 		Screen: () => <FixtureDeleteSheet state={DELETE_ACCOUNT_PLUS} />,
 		title: "Delete account sheet on Xolace+ (29)",
+	},
+	{
+		id: "delete-account-plus-loading",
+		options: ACCOUNT_SHEET,
+		Screen: () => <FixtureDeleteSheet state={DELETE_ACCOUNT_PLUS_LOADING} />,
+		title: "Delete account sheet while Xolace+ loads: the billing line stays",
 	},
 	{
 		id: "delete-account-sign-out-left",

@@ -63,7 +63,7 @@ export function useAccount(): Account {
 	const summary = useQuery(api.profile.getSummary);
 	const updatePreferences = usePreferenceMutation();
 	const updateDisplayName = useMutation(api.profile.updateDisplayName);
-	const { isPlus, isLoading: plusLoading } = usePlusEntitlement();
+	const { status: plusStatus } = usePlusEntitlement();
 	const { customerInfo, restorePurchases } = useRevenueCat();
 	const signOut = useSignOut();
 
@@ -178,7 +178,7 @@ export function useAccount(): Account {
 			},
 			logOutOpen,
 			name,
-			plus: plusLoading ? undefined : isPlus,
+			plus: plusStatus === "loading" ? undefined : plusStatus === "plus",
 			restoring: restoring.busy,
 			signIn: user
 				? signInOf(user.externalAccounts.map((a) => a.provider ?? ""))

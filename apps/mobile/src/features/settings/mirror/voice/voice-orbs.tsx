@@ -1,12 +1,12 @@
 import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import {
 	MIRROR_COPY as C,
 	MIRROR_ICONS,
 } from "@/features/settings/mirror/copy";
 import {
-	type Entitlement,
 	type MirrorTone,
 	orbA11y,
 	type VoiceSlug,
@@ -29,7 +29,7 @@ export function VoiceOrbs({
 	onTap,
 	onSeePlus,
 }: {
-	plus: Entitlement;
+	plus: PlusStatus;
 	voice: VoiceValue;
 	focus: VoiceValue;
 	playing: VoiceSlug | null;

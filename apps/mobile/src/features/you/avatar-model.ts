@@ -1,5 +1,6 @@
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 
 export type AvatarOption = FunctionReturnType<
 	typeof api.avatars.listAvatars
@@ -20,5 +21,14 @@ export function resolveAvatar(
 	);
 }
 
-export const isLocked = (avatar: AvatarOption, isPlus: boolean) =>
-	avatar.tier === "premium" && !isPlus;
+export type AvatarTap = "pick" | "locked" | "wait";
+
+export function avatarTap(avatar: AvatarOption, plus: PlusStatus): AvatarTap {
+	if (avatar.tier !== "premium" || plus === "plus") {
+		return "pick";
+	}
+	return plus === "free" ? "locked" : "wait";
+}
+
+export const isLocked = (avatar: AvatarOption, plus: PlusStatus) =>
+	avatarTap(avatar, plus) === "locked";

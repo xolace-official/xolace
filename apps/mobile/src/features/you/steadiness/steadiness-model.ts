@@ -1,5 +1,6 @@
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { COPY } from "@/features/you/copy";
 
 type FreeView = FunctionReturnType<typeof api.compounding.insights.freeView>;
@@ -240,6 +241,16 @@ export function openLine(part: PartView, now: Date): string | null {
 	const line = pieces.join(" · ");
 	return line ? line.charAt(0).toUpperCase() + line.slice(1) : null;
 }
+
+export const asksFreeView = (
+	status: PlusStatus,
+	plusView: object | null | undefined
+) => status === "free" || plusView === null;
+
+export const steadinessAccess = (status: PlusStatus, plusView: boolean) => ({
+	doors: status !== "plus",
+	upsell: status === "free" && !plusView,
+});
 
 export type PartTap = "none" | "select" | "toggle-open" | "toggle-peek";
 export function tapOf(

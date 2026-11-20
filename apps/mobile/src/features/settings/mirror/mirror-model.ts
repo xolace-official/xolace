@@ -1,4 +1,5 @@
 import type { Doc } from "@xolace/backend/dataModel";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { MIRROR_COPY as C, TONES } from "@/features/settings/mirror/copy";
 import {
 	type TALK_CAST,
@@ -9,22 +10,10 @@ import {
 export type MirrorTone = Doc<"preferences">["mirrorTone"];
 export type VoiceSlug = (typeof TALK_CAST)[number]["value"];
 
-export type Entitlement = "plus" | "free" | "loading";
-
-export function entitlementOf(
-	isPlus: boolean,
-	isLoading: boolean
-): Entitlement {
-	if (isPlus) {
-		return "plus";
-	}
-	return isLoading ? "loading" : "free";
-}
-
-export const shownTone = (saved: MirrorTone, plus: Entitlement): MirrorTone =>
+export const shownTone = (saved: MirrorTone, plus: PlusStatus): MirrorTone =>
 	saved === "witnessed" && plus === "free" ? "adaptive" : saved;
 
-export const shownVoice = (saved: VoiceValue, plus: Entitlement): VoiceValue =>
+export const shownVoice = (saved: VoiceValue, plus: PlusStatus): VoiceValue =>
 	plus === "free" ? "auto" : saved;
 
 export const toneById = (id: MirrorTone) =>
@@ -41,7 +30,7 @@ export const cardName = (id: MirrorTone) => {
 export function toneTap(
 	tone: MirrorTone,
 	saved: MirrorTone,
-	plus: Entitlement
+	plus: PlusStatus
 ): "choose" | "peek" | "wait" | "none" {
 	if (!toneById(tone).plus || plus === "plus") {
 		return tone === saved ? "none" : "choose";
@@ -61,7 +50,7 @@ export function orbTap(
 		voice: VoiceValue;
 		saved: { voice: VoiceValue };
 		playing: VoiceSlug | null;
-		plus: Entitlement;
+		plus: PlusStatus;
 	}
 ): OrbTap {
 	if (id === "auto") {
@@ -92,7 +81,7 @@ export const talkTap = (
 export function voiceLine(
 	focus: VoiceValue,
 	tone: MirrorTone,
-	plus: Entitlement
+	plus: PlusStatus
 ): { name: string; text: string; seePlus: boolean } {
 	const v = voiceById(focus);
 	if (focus === "auto") {
@@ -110,7 +99,7 @@ export function voiceLine(
 	};
 }
 
-export const toneA11y = (id: MirrorTone, plus: Entitlement) => {
+export const toneA11y = (id: MirrorTone, plus: PlusStatus) => {
 	const t = toneById(id);
 	return [
 		t.label,
@@ -121,7 +110,7 @@ export const toneA11y = (id: MirrorTone, plus: Entitlement) => {
 		.join(", ");
 };
 
-export const orbA11y = (id: VoiceValue, plus: Entitlement) =>
+export const orbA11y = (id: VoiceValue, plus: PlusStatus) =>
 	id !== "auto" && plus === "free"
 		? `${voiceById(id).label}, ${C.plusSpoken}`
 		: voiceById(id).label;

@@ -17,7 +17,7 @@ type PaywallTrip = "none" | "opened" | "left";
 export function useDictationUpsell(
 	start: (openComposer?: () => void) => Promise<void>
 ) {
-	const { isPlus, isResolved } = usePlusEntitlement();
+	const { status, isPlus } = usePlusEntitlement();
 	const seen = useAppStore((s) => s.dictationUpsellSeen);
 	const setSeen = useAppStore((s) => s.setDictationUpsellSeen);
 	const openPaywall = usePaywall((s) => s.open);
@@ -45,7 +45,7 @@ export function useDictationUpsell(
 	}, [isFocused]);
 
 	const intercept = (openComposer?: () => void) => {
-		if (!isResolved || isPlus || seen) {
+		if (status !== "free" || seen) {
 			return false;
 		}
 		setSeen(true);

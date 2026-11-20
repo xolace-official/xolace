@@ -16,8 +16,7 @@ export function useTodayActions(): Pick<
 > {
 	const posthog = usePostHog();
 	const pushOnce = usePushOnce();
-	const { isPlus, isLoading } = usePlusEntitlement();
-	const locked = !(isLoading || isPlus);
+	const locked = usePlusEntitlement().status === "free";
 
 	const openTrack = (tile: RailTile) => {
 		playSoftPress();

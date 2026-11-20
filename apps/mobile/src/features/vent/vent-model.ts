@@ -1,3 +1,5 @@
+import type { PlusStatus } from "@/features/purchases/plus-status";
+
 const FREE_CEILING_MS = 120_000;
 const PLUS_CEILING_MS = 150_000;
 export const SOON_MS = 10_000;
@@ -20,8 +22,8 @@ export type AfterBurn =
 	| { stage: "heard"; words: string; crisis: boolean; audioUrl: string | null }
 	| { stage: "gone"; capReached: boolean };
 
-export const ceilingMs = (isPlus: boolean) =>
-	isPlus ? PLUS_CEILING_MS : FREE_CEILING_MS;
+export const ceilingMs = (plus: PlusStatus) =>
+	plus === "free" ? FREE_CEILING_MS : PLUS_CEILING_MS;
 
 export function displayWords(words: string | null): string | null {
 	if (!words) {

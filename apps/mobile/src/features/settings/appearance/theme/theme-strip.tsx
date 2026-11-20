@@ -45,7 +45,7 @@ export function ThemeStrip() {
 							card={card}
 							key={fontsReady ? "fonts" : "no-fonts"}
 							onPress={() => {
-								if (card.locked) {
+								if (card.tap !== "pick") {
 									tap();
 								} else if (!card.active) {
 									playTextureSelect();

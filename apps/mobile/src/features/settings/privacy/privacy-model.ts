@@ -1,3 +1,4 @@
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import {
 	PRIVACY_COPY as C,
 	DELETE_COPY,
@@ -71,11 +72,11 @@ export const deletionAlreadyRequested = (code: string | undefined) =>
 
 export function deleteSheet(
 	kind: SheetKind,
-	plus: boolean,
+	plus: PlusStatus,
 	os: "ios" | "android"
 ): DeleteSheetCopy {
 	const sheet = DELETE_COPY.sheets[kind];
-	if (kind !== "account" || !plus) {
+	if (kind !== "account" || plus === "free") {
 		return sheet;
 	}
 	return { ...sheet, stays: [...sheet.stays, DELETE_COPY.plusBilling[os]] };

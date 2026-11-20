@@ -44,7 +44,7 @@ export function useFirstLook({
 	onStoreCall,
 }: FirstLookStepProps): FirstLookValue & { demo: Demo } {
 	const posthog = usePostHog();
-	const { isPlus, isResolved } = usePlusEntitlement();
+	const { status, isPlus } = usePlusEntitlement();
 	const { restorePurchases } = useRevenueCat();
 	const { isLoading, plans, purchase, refreshOfferings, unavailable } =
 		usePlans();
@@ -61,7 +61,7 @@ export function useFirstLook({
 	const shown = useRef(false);
 
 	useEffect(() => {
-		if (!isResolved) {
+		if (status === "loading") {
 			return;
 		}
 		if (isPlus && !settled.current && !demoOpen && !buying) {
@@ -73,7 +73,7 @@ export function useFirstLook({
 			shown.current = true;
 			trackPlusShown(posthog);
 		}
-	}, [buying, demoOpen, isPlus, isResolved, onExit, posthog]);
+	}, [buying, demoOpen, isPlus, status, onExit, posthog]);
 
 	const buy = async () => {
 		const pkg = plans[plan].pkg;

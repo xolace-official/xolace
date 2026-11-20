@@ -18,10 +18,7 @@ import {
 	versionLabel,
 } from "@/features/settings/home/home-model";
 import type { SettingsHome } from "@/features/settings/home/settings-home-data";
-import {
-	entitlementOf,
-	shownTone,
-} from "@/features/settings/mirror/mirror-model";
+import { shownTone } from "@/features/settings/mirror/mirror-model";
 import { useTalkTime } from "@/lib/talk/use-talk-time";
 import { useAppStore } from "@/store/store";
 
@@ -82,7 +79,7 @@ function useUpdateCheck() {
 export function useSettingsHome(): SettingsHome {
 	const preferences = useQuery(api.preferences.get);
 	const { user } = useUser();
-	const { isPlus, isLoading } = usePlusEntitlement();
+	const { status, isPlus } = usePlusEntitlement();
 	const time = useTalkTime(isPlus);
 	const openPaywall = usePaywall((s) => s.open);
 	const theme = useAppStore((s) => s.theme);
@@ -106,11 +103,10 @@ export function useSettingsHome(): SettingsHome {
 		state: {
 			mode: modeLabel(theme),
 			notifications: notificationsLabel(preferences?.notifications?.enabled),
-			plus: plusCard(isPlus, time),
+			plus: plusCard(status, time),
 			signIn,
 			tone: toneLabel(
-				preferences?.mirrorTone &&
-					shownTone(preferences.mirrorTone, entitlementOf(isPlus, isLoading))
+				preferences?.mirrorTone && shownTone(preferences.mirrorTone, status)
 			),
 			update: update.row,
 			version: update.version,

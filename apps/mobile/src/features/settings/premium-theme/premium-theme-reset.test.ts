@@ -4,19 +4,18 @@ import { planPremiumThemeReset } from "./premium-theme-reset";
 const LAPSE = {
 	colorThemeId: "velvet",
 	currentTheme: "velvet-dark",
-	isPlus: false,
-	isResolved: true,
+	plus: "free" as const,
 	previousTheme: null,
 	storedTheme: "dark",
 };
 
 describe("planPremiumThemeReset", () => {
 	it("never revokes before the entitlement resolves", () => {
-		expect(planPremiumThemeReset({ ...LAPSE, isResolved: false })).toBeNull();
+		expect(planPremiumThemeReset({ ...LAPSE, plus: "loading" })).toBeNull();
 	});
 
 	it("never revokes an active Plus user", () => {
-		expect(planPremiumThemeReset({ ...LAPSE, isPlus: true })).toBeNull();
+		expect(planPremiumThemeReset({ ...LAPSE, plus: "plus" })).toBeNull();
 	});
 
 	it("is a no-op on a free theme", () => {

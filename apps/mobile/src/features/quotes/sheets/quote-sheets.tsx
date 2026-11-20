@@ -54,12 +54,12 @@ export function QuoteSheets({
 					cat={ui.cat}
 					current={b.key}
 					ink={ink}
-					isPlus={state.isPlus}
 					lowPower={state.lowPower}
 					moving={moving}
 					onCat={(cat) => ui.set({ cat })}
 					onClose={h.toToday}
 					onPick={h.pick}
+					plus={state.plus}
 				/>
 			)}
 			{(shownSheet === "writing" ||

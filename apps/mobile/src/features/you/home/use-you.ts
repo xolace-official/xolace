@@ -38,7 +38,7 @@ export function useYou(): YouHome {
 	const rank = useQuery(api.profile.getReflectionRank);
 	const hidden = useHiddenCards();
 	const followUps = useYouFollowUps();
-	const { isPlus, isLoading: plusLoading } = usePlusEntitlement();
+	const { status: plus } = usePlusEntitlement();
 	const openPaywall = usePaywall((s) => s.open);
 	const buyFreeze = useMutation(api.achievements.sparks.buyFreeze);
 	const purchase = useSingleFlight();
@@ -118,7 +118,7 @@ export function useYou(): YouHome {
 			patterns: summary
 				? patternRows(summary.sessionCount, mood, summary.typicalUsagePattern)
 				: [],
-			plusRow: !(plusLoading || isPlus),
+			plusRow: plus === "free",
 			rank:
 				rankHidden === undefined || rank === undefined
 					? undefined

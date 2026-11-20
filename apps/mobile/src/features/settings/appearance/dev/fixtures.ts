@@ -1,3 +1,4 @@
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import type { Appearance } from "@/features/settings/appearance/appearance-data";
 import {
 	modeNote,
@@ -20,10 +21,10 @@ export const APPEARANCE_ACTIONS: Appearance["actions"] = {
 	showProfileCard: ignore,
 };
 
-const themeState = (id: string, isPlus: boolean) => ({
-	themeNote: themeNote(id, isPlus),
+const themeState = (id: string, plus: PlusStatus) => ({
+	themeNote: themeNote(id, plus),
 	themeStart: stripStart(id),
-	themes: themeCards(id, isPlus),
+	themes: themeCards(id, plus),
 });
 
 export const APPEARANCE_TOP: Appearance["state"] = {
@@ -35,12 +36,12 @@ export const APPEARANCE_TOP: Appearance["state"] = {
 	previewScheme: "light",
 	profileCards: profileRows([]),
 	replayOpen: false,
-	...themeState("default", true),
+	...themeState("default", "plus"),
 };
 
 export const APPEARANCE_FREE: Appearance["state"] = {
 	...APPEARANCE_TOP,
-	...themeState("default", false),
+	...themeState("default", "free"),
 	themeStart: stripStart("human"),
 };
 
@@ -49,7 +50,12 @@ export const APPEARANCE_DARK_ROSE: Appearance["state"] = {
 	mode: "dark",
 	modeNote: modeNote("dark", false),
 	previewScheme: "dark",
-	...themeState("rose", true),
+	...themeState("rose", "plus"),
+};
+
+export const APPEARANCE_PLUS_LOADING: Appearance["state"] = {
+	...APPEARANCE_TOP,
+	...themeState("rose", "loading"),
 };
 
 export const APPEARANCE_REPLAY: Appearance["state"] = {

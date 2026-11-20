@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { QuoteIcon } from "../chrome/quote-icons";
 import { type InkPalette, useQuoteInk } from "../chrome/quote-ink";
 import { QUOTE_COPY } from "../copy";
@@ -26,7 +27,7 @@ type Props = {
 	cat: "still" | "loop";
 	moving: boolean;
 	lowPower: boolean;
-	isPlus: boolean;
+	plus: PlusStatus;
 	onCat: (c: "still" | "loop") => void;
 	onPick: (b: QuoteBackground) => void;
 	onClose: () => void;
@@ -77,7 +78,7 @@ export function BackgroundSheet(p: Props) {
 						background={b}
 						ink={p.ink}
 						key={b.key}
-						locked={b.plus && !p.isPlus}
+						locked={b.plus && p.plus === "free"}
 						on={b.key === p.current}
 						onPress={() => {
 							Presets.System.selection();

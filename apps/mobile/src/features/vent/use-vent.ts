@@ -36,7 +36,7 @@ function deleteTake(uri: string) {
 export function useVent(): VentBackend {
 	const posthog = usePostHog();
 	const router = useRouter();
-	const { isPlus } = usePlusEntitlement();
+	const { status: plus } = usePlusEntitlement();
 	const introSeen = useAppStore((s) => s.ventIntroSeen);
 	const setIntroSeen = useAppStore((s) => s.setVentIntroSeen);
 	const { startRecording, stopRecording, metering, getDurationMs, getUri } =
@@ -231,7 +231,7 @@ export function useVent(): VentBackend {
 		state: {
 			capBefore: false,
 			capReached,
-			ceilingMs: ceilingMs(isPlus),
+			ceilingMs: ceilingMs(plus),
 			introSeen,
 			level: metering,
 			micOff,

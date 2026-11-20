@@ -4,11 +4,7 @@ import { usePostHog } from "posthog-react-native";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import type { MirrorSettings } from "@/features/settings/mirror/mirror-data";
-import {
-	entitlementOf,
-	shownTone,
-	shownVoice,
-} from "@/features/settings/mirror/mirror-model";
+import { shownTone, shownVoice } from "@/features/settings/mirror/mirror-model";
 import { saved } from "@/features/settings/use-save-failed";
 import { useCompanionName } from "@/lib/talk/use-companion-name";
 import { useTalkStyle } from "@/lib/talk/use-talk-style";
@@ -19,12 +15,11 @@ export function useMirrorSettings(): MirrorSettings {
 	const preferences = useQuery(api.preferences.get);
 	const update = usePreferenceMutation();
 	const posthog = usePostHog();
-	const { isPlus, isLoading } = usePlusEntitlement();
+	const { status: plus, isPlus } = usePlusEntitlement();
 	const talk = useTalkStyle();
 	const companion = useCompanionName();
 	const preview = useVoicePreview();
 	const openPaywall = usePaywall((s) => s.open);
-	const plus = entitlementOf(isPlus, isLoading);
 
 	return {
 		actions: {
