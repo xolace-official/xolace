@@ -1,3 +1,7 @@
+import {
+	XOLACER_BIO_MAX_CHARS,
+	XOLACER_NAME_MAX_CHARS,
+} from "@xolace/backend/shared";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { BackButton } from "@/components/shared/back-button";
@@ -11,11 +15,9 @@ import { PhotoStep } from "./photo-step";
 import { useSetupScreen } from "./setup-data";
 import { SetupField } from "./setup-field";
 import {
-	BIO_MAX_LENGTH,
 	BIO_WARN_AT,
 	blockingStep,
 	LAST_STEP,
-	NAME_MAX_LENGTH,
 	SETUP_STEPS,
 } from "./setup-model";
 import { SetupProgress } from "./setup-progress";
@@ -116,7 +118,7 @@ function StepBody() {
 				<SetupField
 					help={SETUP.name.help}
 					label={SETUP.name.label}
-					max={NAME_MAX_LENGTH}
+					max={XOLACER_NAME_MAX_CHARS}
 					onChange={actions.setName}
 					placeholder={SETUP.name.placeholder}
 					value={draft.displayName}
@@ -126,7 +128,7 @@ function StepBody() {
 			return (
 				<SetupField
 					label={SETUP.bio.label}
-					max={BIO_MAX_LENGTH}
+					max={XOLACER_BIO_MAX_CHARS}
 					multiline
 					onChange={actions.setBio}
 					placeholder={SETUP.bio.placeholder}

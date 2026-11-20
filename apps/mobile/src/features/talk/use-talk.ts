@@ -3,15 +3,16 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { stripAudioTags } from "@xolace/backend/convex/ai/talk/audioTags";
 import { TALK_CEILING_MS, wrapUpMs } from "@xolace/backend/convex/talk/clock";
+import { hasSpokenContent } from "@xolace/backend/shared";
 import { useAction, useMutation } from "convex/react";
-import { ConvexError } from "convex/values";
 import { AudioModule } from "expo-audio";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { endWithRetry } from "@/features/talk/end-with-retry";
 import { type ThreadLine, useThread } from "@/features/talk/use-thread";
-import { TALK_TIME_RESETS } from "@/lib/talk/talk-time";
+import { TALK_COPY } from "./copy";
+import { talkErrorMessage } from "./talk-model";
 
 export type Presence =
 	| "Connecting…"
@@ -22,18 +23,6 @@ export type Presence =
 	| "Mic off";
 
 const lift = (v: number) => Math.min(1, Math.sqrt(Math.max(0, v)));
-const CODE_MESSAGES: Record<string, string> = {
-	not_reopenable:
-		"This talk can't be picked up again right now. Its mirror is in Moments.",
-	talk_time_used: `There isn't enough talk time left this week. ${TALK_TIME_RESETS}.`,
-};
-const messageOf = (e: unknown) => {
-	const code = e instanceof ConvexError ? e.data?.code : undefined;
-	if (typeof code === "string" && Object.hasOwn(CODE_MESSAGES, code)) {
-		return CODE_MESSAGES[code];
-	}
-	return e instanceof Error ? e.message : String(e);
-};
 
 export function useTalk(reopen?: {
 	sessionId: Id<"sessions">;
@@ -93,7 +82,7 @@ export function useTalk(reopen?: {
 			}
 		} catch (e) {
 			setEnding(false);
-			setError(messageOf(e));
+			setError(talkErrorMessage(e, TALK_COPY.live.endFailed));
 		}
 	};
 
@@ -132,7 +121,7 @@ export function useTalk(reopen?: {
 				if (message === lastTyped.current) {
 					return void (lastTyped.current = null);
 				}
-				if (!/[\p{L}\p{N}]/u.test(message)) {
+				if (!hasSpokenContent(message)) {
 					return;
 				}
 				setThinking(true);
@@ -261,7 +250,7 @@ export function useTalk(reopen?: {
 				});
 			} catch (e) {
 				setStarted(false);
-				setError(messageOf(e));
+				setError(talkErrorMessage(e, TALK_COPY.start.couldNotStart));
 			}
 		},
 		started,

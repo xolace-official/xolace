@@ -1,11 +1,12 @@
+import { FEEDBACK_MAX_CHARS } from "@xolace/backend/shared";
 import type { IconName } from "@/components/shared/icon";
 
 export const FOLLOW_COPY = {
 	dialog: {
 		cancel: "Cancel",
-		count: (n: number) => `${n} / 1000`,
+		count: (n: number) => `${n} / ${FEEDBACK_MAX_CHARS}`,
 		desc: "What’s on your mind?",
-		hint: "Up to 1000 characters",
+		hint: `Up to ${FEEDBACK_MAX_CHARS} characters`,
 		limited: "You’ve sent feedback today. Come back tomorrow.",
 		placeholder: "Tell us what you think...",
 		send: "Send",

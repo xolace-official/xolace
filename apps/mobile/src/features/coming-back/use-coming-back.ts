@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/expo";
 import { api } from "@xolace/backend/convex/_generated/api";
+import { EVENT_PROMPT_CARRY_MS } from "@xolace/backend/shared";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { useIsFocused } from "expo-router/react-navigation";
@@ -26,7 +27,6 @@ import type { WelcomeBack } from "./welcome-back-data";
 
 const GREET_AFTER_MS = 700;
 const OPEN_AFTER_MS = 130;
-const CARRY_MS = 7 * 24 * 60 * 60 * 1000;
 
 const localDay = () => new Date().toLocaleDateString("en-CA");
 const timezone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -203,7 +203,7 @@ export function useWelcomeBack(): WelcomeBack {
 		posthog.capture("monthly_prompt_chosen", { choice, slug: event.slug });
 		if (event.sessionPrompt) {
 			setPending({
-				expiresAt: Date.now() + CARRY_MS,
+				expiresAt: Date.now() + EVENT_PROMPT_CARRY_MS,
 				label: event.title,
 				text: event.sessionPrompt,
 			});

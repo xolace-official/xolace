@@ -5,14 +5,16 @@ import { action, internalMutation, query } from "../_generated/server";
 import { transcribeAudio } from "../ai/transcribe";
 import { requireAuth } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
+import { DICTATION_BIT_RATE } from "../lib/shared";
 import { startOfTodayUTC } from "../lib/timeOfDay";
 
-// Plus dictation (#557). A take is capped at 3 minutes on the client and
-// recorded as mono 32kbps AAC (≈4KB/s → ~720KB); this leaves room for container
+// Plus dictation (#557). A take is capped at DICTATION_MAX_TAKE_MS on the client
+// and recorded as mono AAC at DICTATION_BIT_RATE; this leaves room for container
 // overhead while staying under Convex's 1MB v.bytes() ceiling.
 export const MAX_DICTATION_BYTES = 900_000;
-// Mono 32kbps AAC ≈ 4KB/s. Floors the charge so a client can't under-report.
-const AUDIO_BYTES_PER_SECOND = 4000;
+const BITS_PER_BYTE = 8;
+// Floors the charge so a client can't under-report.
+const AUDIO_BYTES_PER_SECOND = DICTATION_BIT_RATE / BITS_PER_BYTE;
 const DEFAULT_DAILY_CAP_MINUTES = 30;
 
 function dailyCapSeconds(): number {

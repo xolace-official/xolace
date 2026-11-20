@@ -1,9 +1,7 @@
 import type { api } from "@xolace/backend/convex/_generated/api";
-import {
-	isStreakMilestone,
-	streakMilestoneCopy,
-} from "@xolace/backend/convex/streaks/milestones";
+import { streakMilestoneCopy } from "@xolace/backend/convex/streaks/milestones";
 import type { Id } from "@xolace/backend/dataModel";
+import { isStreakMilestone } from "@xolace/backend/shared";
 import type { FunctionReturnType } from "convex/server";
 import { getStreakCopy } from "@/lib/streak-copy";
 import {

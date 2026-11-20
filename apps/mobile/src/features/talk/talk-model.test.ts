@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import {
 	CAST,
@@ -15,6 +16,7 @@ import {
 	resourceUrl,
 	streams,
 	type TalkStatus,
+	talkErrorMessage,
 	traitOf,
 	weekFact,
 } from "./talk-model";
@@ -203,5 +205,35 @@ describe("resourceUrl", () => {
 
 	it("only shows a text line", () => {
 		expect(resourceUrl({ ...resource, type: "text" })).toBeNull();
+	});
+});
+
+describe("talkErrorMessage", () => {
+	const FALLBACK = "The talk couldn't start. Try again in a moment.";
+
+	it("names the refusals the server codes", () => {
+		expect(
+			talkErrorMessage(new ConvexError({ code: "talk_time_used" }), FALLBACK)
+		).toMatch(/^There isn't enough talk time left this week\./);
+		expect(
+			talkErrorMessage(new ConvexError({ code: "not_reopenable" }), FALLBACK)
+		).toBe(
+			"This talk can't be picked up again right now. Its mirror is in Moments."
+		);
+	});
+
+	it("never shows production's scrubbed message", () => {
+		expect(
+			talkErrorMessage(
+				new Error(
+					"[CONVEX A(talk/live:start)] [Request ID: abc123] Server Error"
+				),
+				FALLBACK
+			)
+		).toBe(FALLBACK);
+		expect(
+			talkErrorMessage(new ConvexError({ code: "plus_required" }), FALLBACK)
+		).toBe(FALLBACK);
+		expect(talkErrorMessage("offline", FALLBACK)).toBe(FALLBACK);
 	});
 });

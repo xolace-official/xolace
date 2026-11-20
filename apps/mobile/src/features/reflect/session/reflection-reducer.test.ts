@@ -25,3 +25,33 @@ describe("reducer — draft retention", () => {
 		expect(reducer(withDraft, { type: "RESET" }).entryText).toBe("");
 	});
 });
+
+describe("reducer — session errors", () => {
+	it("keeps the error code beside the message", () => {
+		const next = reducer(initialState, {
+			code: "reflection_rate_limited",
+			message: "Slow down a little.",
+			type: "SESSION_ERROR",
+		});
+		expect(next.screen).toBe("error");
+		expect(next.errorCode).toBe("reflection_rate_limited");
+		expect(next.errorMessage).toBe("Slow down a little.");
+	});
+
+	it("has no code when an older session only carries a message", () => {
+		const next = reducer(
+			{ ...initialState, errorCode: "content_policy_violation" },
+			{ message: "Something went wrong.", type: "SESSION_ERROR" }
+		);
+		expect(next.errorCode).toBeNull();
+	});
+
+	it("forgets the code on RESET", () => {
+		const errored = reducer(initialState, {
+			code: "content_policy_violation",
+			message: "x",
+			type: "SESSION_ERROR",
+		});
+		expect(reducer(errored, { type: "RESET" }).errorCode).toBeNull();
+	});
+});

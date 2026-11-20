@@ -12,6 +12,7 @@ import {
 } from "../_generated/server";
 import { awardReadRungs } from "../achievements/ladders";
 import { requireAuth } from "../lib/auth";
+import { LIBRARY_HELPED_FLOOR } from "../lib/shared";
 import { recordActivity } from "../streaks/activityLog";
 import { listenMin } from "./audio";
 import { cardItemValidator } from "./cards";
@@ -24,7 +25,7 @@ import { toListItem } from "./entries";
  */
 
 /** "N found this helpful" stays hidden below this, so a small count can't point at anyone. */
-export const HELPED_FLOOR = 15;
+export const HELPED_FLOOR = LIBRARY_HELPED_FLOOR;
 // Unfinished reads walked to find Continue; past this many retracted/unstarted in a row, there's none.
 const CONTINUE_SCAN = 50;
 // Saved rows read per page, whatever the client asks for.

@@ -1,4 +1,5 @@
 import type { Resource } from "@xolace/backend/convex/lib/crisisResources";
+import { CRISIS_RESOURCES_KIND } from "@xolace/backend/shared";
 import { View } from "react-native";
 import { MessageSystem, type MessageSystemProps } from "stream-chat-expo";
 import { AppText } from "@/components/shared/app-text";
@@ -11,7 +12,6 @@ import { useThreadScreen } from "../thread-data";
 import { resourceRow } from "../thread-model";
 import { useConversationIdentity } from "./message-identity";
 
-const CRISIS_RESOURCES_KIND = "crisis_resources";
 const LIFEBUOY = { android: "support", ios: "lifepreserver" } as const;
 
 export function ConversationMessageSystem(props: MessageSystemProps) {

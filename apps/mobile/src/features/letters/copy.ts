@@ -1,5 +1,3 @@
-export const LETTER_MIN = 40;
-export const LETTER_MAX = 500;
 export const COUNT_FROM = 400;
 export const UNDO_SECONDS = 5;
 

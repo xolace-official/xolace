@@ -8,7 +8,7 @@ import { playAffirmativePress } from "@/lib/haptics";
 import { useSingleFlight } from "@/lib/use-single-flight";
 import { useAppStore } from "@/store/store";
 import { TELL_US_COPY as C } from "./copy";
-import { canSend } from "./ratings-model";
+import { canSend, sendRefusedAsLimited } from "./ratings-model";
 import type { TellUs } from "./tell-us-data";
 
 export function useTellUs(): TellUs {
@@ -37,8 +37,8 @@ export function useTellUs(): TellUs {
 				});
 				playAffirmativePress();
 				setSent(true);
-			} catch {
-				toast(canSubmit === false ? C.limited : C.failed, {
+			} catch (error) {
+				toast(sendRefusedAsLimited(error, canSubmit) ? C.limited : C.failed, {
 					variant: "danger",
 				});
 			}

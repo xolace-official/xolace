@@ -1,10 +1,7 @@
 import { usePresence } from "@convex-dev/presence/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
+import { PRESENCE_HEARTBEAT_MS, PRESENCE_ROOM } from "@xolace/backend/shared";
 import { useConvexAuth } from "convex/react";
-
-const PRESENCE_ROOM = "app";
-
-const HEARTBEAT_INTERVAL_MS = 30_000;
 
 export function AppPresence() {
 	const { isAuthenticated } = useConvexAuth();
@@ -12,6 +9,6 @@ export function AppPresence() {
 }
 
 function Heartbeat() {
-	usePresence(api.presence, PRESENCE_ROOM, "", HEARTBEAT_INTERVAL_MS);
+	usePresence(api.presence, PRESENCE_ROOM, "", PRESENCE_HEARTBEAT_MS);
 	return null;
 }

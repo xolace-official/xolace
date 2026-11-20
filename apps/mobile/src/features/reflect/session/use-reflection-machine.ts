@@ -1,4 +1,8 @@
 import { useAuth } from "@clerk/expo";
+import {
+	REFINEMENT_MAX_TURNS,
+	type SessionErrorCode,
+} from "@xolace/backend/shared";
 // AppMetrics, not Observe: on Android `Observe.logEvent` resolves to undefined
 // (the host object answers `'logEvent' in target` without exposing the method).
 import { AppMetrics } from "expo-observe";
@@ -22,7 +26,7 @@ import type {
 import { useSession } from "@/features/reflect/session/use-session";
 import { useDictation } from "@/features/reflect/write/dictation/use-dictation";
 import { trackFirstReflection } from "@/lib/intake-analytics";
-import { initialState, MAX_TURNS, reducer } from "./reflection-reducer";
+import { initialState, reducer } from "./reflection-reducer";
 
 const MIRROR_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
 	"mirror",
@@ -64,6 +68,7 @@ export function useReflectionMachine() {
 		session,
 		serverState,
 		mirrorText,
+		errorCode,
 		errorMessage,
 		turnsCount,
 		isLoading,
@@ -99,8 +104,8 @@ export function useReflectionMachine() {
 	}, []);
 
 	const dispatchError = useCallback(
-		(message: string) => {
-			dispatch({ message, type: "SESSION_ERROR" });
+		(message: string, code?: SessionErrorCode) => {
+			dispatch({ code, message, type: "SESSION_ERROR" });
 			posthog.capture("ai_error", { reason: message });
 		},
 		[posthog]
@@ -163,13 +168,17 @@ export function useReflectionMachine() {
 			!!session?.escalationTriggered
 		);
 		if (next === "error") {
-			dispatchError(errorMessage ?? "Something went wrong.");
+			dispatchError(
+				errorMessage ?? "Something went wrong.",
+				errorCode ?? undefined
+			);
 		} else if (next && next !== state.screen) {
 			dispatch({ screen: next, type: "SESSION_RESUMED" });
 		}
 	}, [
 		serverState,
 		mirrorText,
+		errorCode,
 		errorMessage,
 		state.screen,
 		session,
@@ -328,7 +337,7 @@ export function useReflectionMachine() {
 		if (state.screen !== "mirror") {
 			return;
 		}
-		if (turnsCount >= MAX_TURNS) {
+		if (turnsCount >= REFINEMENT_MAX_TURNS) {
 			dispatch({ screen: "gave-up", type: "SESSION_RESUMED" });
 		} else {
 			posthog.capture("mirror_not_quite", {
@@ -344,7 +353,7 @@ export function useReflectionMachine() {
 		if (state.screen !== "mirror") {
 			return;
 		}
-		if (turnsCount >= MAX_TURNS) {
+		if (turnsCount >= REFINEMENT_MAX_TURNS) {
 			dispatch({ screen: "gave-up", type: "SESSION_RESUMED" });
 		} else {
 			posthog.capture("mirror_say_more", {

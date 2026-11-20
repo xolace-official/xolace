@@ -1,7 +1,8 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import { ERROR_CODES, FEEDBACK_MAX_CHARS } from "./lib/shared";
 
 const THROTTLE_MS = 24 * 60 * 60 * 1000;
 
@@ -81,8 +82,8 @@ export const submit = mutation({
 			if (!args.text?.trim()) {
 				throw new Error("Text is required for general feedback");
 			}
-			if (args.text.length > 1000) {
-				throw new Error("Text exceeds 1000 character limit");
+			if (args.text.length > FEEDBACK_MAX_CHARS) {
+				throw new Error(`Text exceeds ${FEEDBACK_MAX_CHARS} character limit`);
 			}
 		}
 		if (args.type === "mirror_miss") {
@@ -153,7 +154,10 @@ export const submit = mutation({
 				key: profile._id,
 			});
 			if (!ok) {
-				throw new Error("Feedback rate limit reached");
+				throw new ConvexError({
+					code: ERROR_CODES.rateLimited,
+					message: "Feedback rate limit reached",
+				});
 			}
 		}
 

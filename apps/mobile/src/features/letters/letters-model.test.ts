@@ -1,5 +1,6 @@
+import { LETTER_MAX_CHARS, letterOpeningLine } from "@xolace/backend/shared";
 import { describe, expect, it, vi } from "vitest";
-import { LETTER_MAX, LETTERS } from "./copy";
+import { LETTERS } from "./copy";
 import { LETTER_MOTION } from "./letter-motion";
 import {
 	afterAnswer,
@@ -18,7 +19,6 @@ import {
 	heldAgain,
 	type LettersStatus,
 	lateMoves,
-	openingLine,
 	PHASE_OF,
 	type ReceivedLetter,
 	readerAcknowledged,
@@ -119,14 +119,14 @@ describe("cardStatus", () => {
 	});
 });
 
-describe("openingLine", () => {
+describe("letterOpeningLine", () => {
 	it("keeps a short first paragraph whole", () => {
-		expect(openingLine("You are not alone.\nSecond")).toBe(
+		expect(letterOpeningLine("You are not alone.\nSecond")).toBe(
 			"You are not alone."
 		);
 	});
 	it("cuts a long one at a word, with an ellipsis", () => {
-		const line = openingLine(
+		const line = letterOpeningLine(
 			"I don't know what you're carrying today, but I hope it gets lighter"
 		);
 		expect(line.endsWith("…")).toBe(true);
@@ -155,9 +155,9 @@ describe("countLine and canSend", () => {
 		expect(canSend(FORTY, "")).toBe(true);
 	});
 	it("keeps Send off past the limit", () => {
-		expect(canSend("x".repeat(LETTER_MAX), "")).toBe(true);
-		expect(canSend("x".repeat(LETTER_MAX + 1), "")).toBe(false);
-		expect(canSend(` ${"x".repeat(LETTER_MAX)} `, "")).toBe(true);
+		expect(canSend("x".repeat(LETTER_MAX_CHARS), "")).toBe(true);
+		expect(canSend("x".repeat(LETTER_MAX_CHARS + 1), "")).toBe(false);
+		expect(canSend(` ${"x".repeat(LETTER_MAX_CHARS)} `, "")).toBe(true);
 	});
 	it("keeps Send off for a held letter's words until they change", () => {
 		expect(canSend(FORTY, FORTY)).toBe(false);
@@ -175,8 +175,8 @@ describe("withStarter", () => {
 		);
 	});
 	it("never passes the limit", () => {
-		expect(withStarter("x".repeat(LETTER_MAX), "More")).toHaveLength(
-			LETTER_MAX
+		expect(withStarter("x".repeat(LETTER_MAX_CHARS), "More")).toHaveLength(
+			LETTER_MAX_CHARS
 		);
 	});
 });

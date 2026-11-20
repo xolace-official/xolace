@@ -1,9 +1,9 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
-import type { Doc } from "../_generated/dataModel";
 import { internalMutation, mutation, query } from "../_generated/server";
 import { purgeProfilePastCutoff } from "../jobs/dataRetention";
 import { requireAuth } from "../lib/auth";
+import { retentionShortens } from "../lib/shared";
 import { dataRetentionPreferenceValidator } from "../lib/validators";
 import { updatePreferences } from "../preferences";
 import { nextRunCutoff, sessionsBefore } from "./retentionCutoff";
@@ -21,17 +21,6 @@ import { nextRunCutoff, sessionsBefore } from "./retentionCutoff";
  * `preferences.update` still saves a retention preference without deleting
  * anything (shipped builds have no alert); the nightly job then catches up.
  */
-
-type RetentionPreference = Doc<"preferences">["dataRetentionPreference"];
-
-/** Longest last: a move down this list shortens retention. */
-const KEEPS_LONGER: readonly RetentionPreference[] = [
-	"6_months",
-	"1_year",
-	"indefinite",
-];
-const shortens = (from: RetentionPreference, to: RetentionPreference) =>
-	KEEPS_LONGER.indexOf(to) < KEEPS_LONGER.indexOf(from);
 
 /**
  * The most sessions the count reads; past it the answer is "more than
@@ -112,7 +101,7 @@ export const applyRetentionNow = mutation({
 		if (
 			args.preference === "indefinite" ||
 			!before ||
-			!shortens(before.dataRetentionPreference, args.preference)
+			!retentionShortens(before.dataRetentionPreference, args.preference)
 		) {
 			return { scheduled: false };
 		}

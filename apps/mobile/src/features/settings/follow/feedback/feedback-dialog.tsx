@@ -1,3 +1,4 @@
+import { FEEDBACK_MAX_CHARS } from "@xolace/backend/shared";
 import { useState } from "react";
 import { TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -5,10 +6,7 @@ import { SettingsDialog } from "@/components/settings-kit/settings-dialog";
 import { AppText } from "@/components/shared/app-text";
 import { FOLLOW_COPY } from "@/features/settings/follow/copy";
 import { useFollowScreen } from "@/features/settings/follow/follow-data";
-import {
-	FEEDBACK_MAX,
-	feedbackView,
-} from "@/features/settings/follow/follow-model";
+import { feedbackView } from "@/features/settings/follow/follow-model";
 import { cn } from "@/lib/cn";
 import { useKeyboardShown } from "@/lib/keyboard/use-keyboard-shown";
 
@@ -60,7 +58,7 @@ export function FeedbackDialog() {
 						f.draft ? "border-accent" : "border-transparent"
 					)}
 					editable={view.editable}
-					maxLength={FEEDBACK_MAX}
+					maxLength={FEEDBACK_MAX_CHARS}
 					multiline
 					onChangeText={actions.setDraft}
 					placeholder={D.placeholder}

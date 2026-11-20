@@ -16,8 +16,10 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 
 ## Boundaries
 
-- May import: `@xolace/backend/api`, `@xolace/backend/dataModel`, and allowlisted
-  client-safe backend modules. Nothing else from the backend.
+- May import: `@xolace/backend/api`, `@xolace/backend/dataModel`,
+  `@xolace/backend/shared`, and the client-safe backend modules listed in
+  `src/features/backend-imports.ts` (enforced by `import-cycles.test.ts`). Nothing
+  else from the backend. Read refusals with `convexErrorCode()`, never by message.
 - Must not import: `@xolace/ui` (web-only), other apps, `api.admin.*`.
 - One React / React Native / expo-modules-core copy: see `.agents/rules/expo-monorepo.md`.
 

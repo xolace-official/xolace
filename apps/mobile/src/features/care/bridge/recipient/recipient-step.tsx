@@ -1,3 +1,7 @@
+import {
+	BRIDGE_ADDRESS_TERM_MAX_CHARS,
+	BRIDGE_NAME_MAX_CHARS,
+} from "@xolace/backend/shared";
 import { useEffect, useRef } from "react";
 import { type TextInputInstance, View } from "react-native";
 import {
@@ -13,8 +17,6 @@ import { useBridgeScreen } from "@/features/care/bridge/bridge-data";
 import {
 	ADDRESS_TERMS,
 	canWrite,
-	MAX_ADDRESS_TERM_LENGTH,
-	MAX_NAME_LENGTH,
 	RELATIONSHIPS,
 	type Relationship,
 } from "@/features/care/bridge/bridge-model";
@@ -86,7 +88,7 @@ export function RecipientStep() {
 				<Field
 					autoFocus
 					label={COPY.recipient.nameLabel}
-					max={MAX_NAME_LENGTH}
+					max={BRIDGE_NAME_MAX_CHARS}
 					onChange={actions.setName}
 					placeholder={COPY.recipient.namePlaceholder}
 					value={name}
@@ -121,7 +123,7 @@ export function RecipientStep() {
 						) : null}
 						<Field
 							label={COPY.recipient.address}
-							max={MAX_ADDRESS_TERM_LENGTH}
+							max={BRIDGE_ADDRESS_TERM_MAX_CHARS}
 							onChange={actions.setAddressTerm}
 							placeholder={COPY.recipient.addressPlaceholder}
 							ref={addressRef}

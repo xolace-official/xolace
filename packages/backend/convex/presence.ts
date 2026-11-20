@@ -4,6 +4,10 @@ import { components } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { mutation, type QueryCtx, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import {
+	PRESENCE_HEARTBEAT_MS,
+	PRESENCE_ROOM as SHARED_PRESENCE_ROOM,
+} from "./lib/shared";
 
 /**
  * App-wide presence: one room, one heartbeat per client.
@@ -21,14 +25,14 @@ import { requireAuth } from "./lib/auth";
 export const presence = new Presence(components.presence);
 
 /** The single room. Users are members; membership never reaches a client. */
-export const PRESENCE_ROOM = "app";
+export const PRESENCE_ROOM = SHARED_PRESENCE_ROOM;
 
 /**
  * 30s. The component's session timeout is interval x 2.5, so a dropped client
  * is detected in ~75s. Nothing forces the documented 10s default, and no user
  * can perceive the difference on a signal that means "is around".
  */
-export const HEARTBEAT_INTERVAL_MS = 30_000;
+export const HEARTBEAT_INTERVAL_MS = PRESENCE_HEARTBEAT_MS;
 
 /**
  * Every authenticated user heartbeats. The "You're listed" switch gates

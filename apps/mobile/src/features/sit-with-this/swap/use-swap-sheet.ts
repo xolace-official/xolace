@@ -8,11 +8,9 @@ import { toast } from "@/components/shared/toast";
 import { usePathSession } from "@/lib/path-session/use-path-session";
 import { toExercise } from "../catalogue";
 import { COPY } from "../copy";
-import { swapChoices } from "../sit-model";
+import { isSwapRefused, swapChoices } from "../sit-model";
 import type { SwapSheet } from "./swap-data";
 import { useSwapOptions } from "./use-swap-options";
-
-const STALE = ["Maximum swaps reached", "Exercise not allowed"];
 
 export function useSwapSheetData(): SwapSheet {
 	const navigation = useNavigation();
@@ -49,8 +47,7 @@ export function useSwapSheetData(): SwapSheet {
 			posthog.capture("exercise_swapped", { swaps_used: result.swapsUsed });
 			close();
 		} catch (err) {
-			const msg = err instanceof Error ? err.message : "";
-			if (STALE.some((s) => msg.includes(s))) {
+			if (isSwapRefused(err)) {
 				close();
 				return;
 			}

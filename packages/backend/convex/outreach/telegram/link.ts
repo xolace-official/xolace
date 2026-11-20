@@ -8,6 +8,7 @@ import {
 import { requireAuth } from "../../lib/auth";
 import { updateNotificationPrefs } from "../../lib/notificationPrefs";
 import { rateLimiter } from "../../lib/rateLimits";
+import { TELEGRAM_LINK_TTL_MS } from "../../lib/shared";
 import { captureOutreach, planOf } from "../analytics";
 import { countryFromRegion, putChannelFirst } from "../channels";
 import { channelUnavailable } from "../router";
@@ -31,9 +32,8 @@ import type { Line } from "./lines";
  * ever stored: the webhook hashes it before the update is kept.
  */
 
-const MINUTE_MS = 60_000;
 /** How long a minted link works. */
-export const LINK_TOKEN_TTL_MS = 15 * MINUTE_MS;
+export const LINK_TOKEN_TTL_MS = TELEGRAM_LINK_TTL_MS;
 const TOKEN_BYTES = 32;
 const BASE64_PADDING = /[=]+$/;
 

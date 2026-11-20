@@ -19,6 +19,7 @@ import { noteQuoteOpened } from "./dailyQuotes/opened";
 import { requireAuth } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
 import { rateLimiter } from "./lib/rateLimits";
+import { QUOTE_REPLY_MAX_CHARS } from "./lib/shared";
 import { recordActivity } from "./streaks/activityLog";
 
 function utcDateString(): string {
@@ -298,7 +299,7 @@ export const unsave = mutation({
 /**
  * The cap on a reply. Client-side `maxLength` mirrors it; this is the fence.
  */
-export const REPLY_MAX_LENGTH = 500;
+export const REPLY_MAX_LENGTH = QUOTE_REPLY_MAX_CHARS;
 
 /**
  * Write back to today's quote. One reply per quote — sending again overwrites,

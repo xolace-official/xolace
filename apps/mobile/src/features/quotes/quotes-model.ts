@@ -233,8 +233,6 @@ export function reflectSeed(o: {
 	return reply;
 }
 
-export const REPLY_MAX = 500;
-
 export type KeptCard = {
 	id: string;
 	day: string;

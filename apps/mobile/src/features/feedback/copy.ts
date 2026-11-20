@@ -1,3 +1,4 @@
+import { FEEDBACK_MAX_CHARS } from "@xolace/backend/shared";
 export const FEEDBACK_COPY = {
 	back: "Go back",
 	menu: {
@@ -22,7 +23,7 @@ export const FEEDBACK_COPY = {
 			sent: "A person on our team reads every report.",
 			title: "Report a concern",
 		},
-		hint: "Up to 1000 characters",
+		hint: `Up to ${FEEDBACK_MAX_CHARS} characters`,
 		idea: {
 			placeholder: "What would you love to see?",
 			rateLimited: "You've sent a lot of feedback today. Come back tomorrow.",

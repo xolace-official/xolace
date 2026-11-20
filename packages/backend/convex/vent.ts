@@ -14,9 +14,9 @@ import {
 import { transcribeAudio } from "./ai/transcribe";
 import { writeVentAcknowledgement } from "./ai/ventAcknowledge";
 import { requireAuth } from "./lib/auth";
+import { resolveVoiceId, VENT_DEFAULT_VOICE_ID } from "./lib/elevenLabsVoices";
 import { hasPremium } from "./lib/premium";
 import { startOfTodayUTC } from "./lib/timeOfDay";
-import { resolveVoiceId, VENT_DEFAULT_VOICE_ID } from "./lib/voices";
 import { renderSemanticProfile } from "./semanticProfiles";
 import { recordActivity } from "./streaks/activityLog";
 

@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { SOCIAL } from "@/features/settings/follow/copy";
 import {
@@ -88,8 +89,24 @@ describe("sendErrorMessage", () => {
 		expect(sendErrorMessage(e)).toBe("Rate limited");
 	});
 
-	it("keeps a plain message and names anything else", () => {
-		expect(sendErrorMessage(new Error("Offline"))).toBe("Offline");
+	it("says today's limit is reached when production scrubs the message", () => {
+		const limited = new ConvexError({ code: "rate_limited" });
+		limited.message =
+			"[CONVEX M(feedback:submit)] [Request ID: abc123] Server Error";
+		expect(sendErrorMessage(limited)).toBe(
+			"You’ve sent feedback today. Come back tomorrow."
+		);
+	});
+
+	it("names anything else without showing its raw message", () => {
+		expect(
+			sendErrorMessage(
+				new Error(
+					"[CONVEX M(feedback:submit)] [Request ID: abc123] Server Error"
+				)
+			)
+		).toBe("Something went wrong");
+		expect(sendErrorMessage(new Error("Offline"))).toBe("Something went wrong");
 		expect(sendErrorMessage("nope")).toBe("Something went wrong");
 	});
 });

@@ -1,10 +1,10 @@
+import { TALK_DEMO_LINE_MAX_CHARS } from "@xolace/backend/shared";
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { TextInput, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { TalkChips } from "@/components/talk-chips";
 import { DemoListen } from "@/features/intake/first-look/talk-demo/demo-listen";
-import { LINE_MAX_CHARS } from "@/features/intake/first-look/talk-demo/demo-machine";
 import type { useTalkDemo } from "@/features/intake/first-look/talk-demo/use-talk-demo";
 import { playSoftPress } from "@/lib/haptics";
 import { TALK_CAST } from "@/lib/talk/voice-options";
@@ -138,7 +138,7 @@ function Typing({ demo }: Pick<Props, "demo">) {
 				accessibilityLabel="Say anything to Flux"
 				autoFocus
 				className="max-h-32 min-h-20 rounded-2xl border border-border bg-surface px-4 py-3 font-[Poppins-Regular] text-[16px] text-foreground"
-				maxLength={LINE_MAX_CHARS}
+				maxLength={TALK_DEMO_LINE_MAX_CHARS}
 				multiline
 				onChangeText={(text) => dispatch({ text, type: "DRAFT" })}
 				placeholder="Say anything…"

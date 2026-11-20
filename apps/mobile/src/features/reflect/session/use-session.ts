@@ -61,6 +61,7 @@ export function useSession() {
 	const serverState = session?.state ?? null;
 	const mirrorText = session?.mirrorText ?? null;
 	const errorMessage = session?.errorMessage ?? null;
+	const errorCode = session?.errorCode ?? null;
 
 	const initiateAndSubmit = useCallback(
 		async (
@@ -210,6 +211,7 @@ export function useSession() {
 		completeAsExit,
 		completePath,
 		confirmMirror,
+		errorCode,
 		errorMessage,
 		initiateAndSubmit,
 		isLoading,

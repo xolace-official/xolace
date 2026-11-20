@@ -10,7 +10,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
-import { VOICE_CATALOG } from "../lib/voices";
+import { VOICE_CATALOG } from "../lib/elevenLabsVoices";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import {
 	aggregatesMock,

@@ -2,10 +2,9 @@ import {
 	MAX_SPECIALTIES,
 	SPECIALTIES,
 } from "@xolace/backend/convex/lib/specialties";
+import { XOLACER_BIO_MAX_CHARS } from "@xolace/backend/shared";
 import { SETUP } from "./copy";
 
-export const BIO_MAX_LENGTH = 160;
-export const NAME_MAX_LENGTH = 40;
 export const BIO_WARN_AT = 20;
 export { MAX_SPECIALTIES };
 
@@ -67,7 +66,9 @@ export function isStepComplete(id: StepId, draft: SetupDraft): boolean {
 		case "name":
 			return draft.displayName.trim().length > 0;
 		case "bio":
-			return draft.bio.trim().length > 0 && draft.bio.length <= BIO_MAX_LENGTH;
+			return (
+				draft.bio.trim().length > 0 && draft.bio.length <= XOLACER_BIO_MAX_CHARS
+			);
 		case "specialties":
 			return draft.specialties.length > 0;
 		default:
@@ -116,7 +117,7 @@ export function chipLabel(slug: string): string {
 export function bioCount(bio: string): { text: string; warn: boolean } {
 	const n = bio.length;
 	return {
-		text: `${n} / ${BIO_MAX_LENGTH}`,
-		warn: BIO_MAX_LENGTH - n <= BIO_WARN_AT,
+		text: `${n} / ${XOLACER_BIO_MAX_CHARS}`,
+		warn: XOLACER_BIO_MAX_CHARS - n <= BIO_WARN_AT,
 	};
 }

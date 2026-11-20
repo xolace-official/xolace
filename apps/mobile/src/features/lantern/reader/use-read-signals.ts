@@ -1,5 +1,6 @@
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
+import { LIBRARY_HELPED_FLOOR } from "@xolace/backend/shared";
 import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useIsPreview } from "expo-router";
 import { usePostHog } from "posthog-react-native";
@@ -13,7 +14,6 @@ type EntryId = Id<"library_entries">;
 export const logDropped = (e: unknown) =>
 	console.warn("[lantern] read signal dropped:", e);
 
-const HELPED_FLOOR = 15;
 const TEND_ATTEMPTS = 3;
 
 const nudgeHelped = (count: number | null, was: boolean, now?: boolean) => {
@@ -21,7 +21,7 @@ const nudgeHelped = (count: number | null, was: boolean, now?: boolean) => {
 		return count;
 	}
 	const next = count + (now ? 1 : -1);
-	return next >= HELPED_FLOOR ? next : null;
+	return next >= LIBRARY_HELPED_FLOOR ? next : null;
 };
 
 export function useRecord() {

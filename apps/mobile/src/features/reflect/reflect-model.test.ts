@@ -243,6 +243,24 @@ describe("waitError", () => {
 	it("falls back to production's message when the server gave none", () => {
 		expect(waitError("", "free").body).toBe(COPY.wait.failed);
 	});
+
+	it("reads the session's error code before its message", () => {
+		expect(
+			waitError("Rephrased refusal", "plus", "content_policy_violation")
+		).toEqual({
+			body: COPY.wait.rejected,
+			kind: "rejected",
+		});
+		expect(
+			waitError("Slow down a little.", "free", "reflection_rate_limited")
+		).toEqual({
+			body: `Slow down a little. ${COPY.wait.limitMore}`,
+			kind: "limit",
+		});
+		expect(
+			waitError("Slow down a little.", "plus", "reflection_rate_limited").kind
+		).toBe("failed");
+	});
 });
 
 describe("holdsArrivals", () => {

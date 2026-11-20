@@ -148,6 +148,7 @@ describe("generateMirror", () => {
 		const session = await readSession(user, sessionId);
 		expect(session?.state).toBe("error");
 		expect(session?.errorMessage).toContain("Try again in 2 minutes.");
+		expect(session?.errorCode).toBe("reflection_rate_limited");
 		// Bailed before the model: nothing classified, nothing queued.
 		expect(await readMetadata(user, sessionId)).toBeNull();
 		expect(await scheduledCalls(user.root)).toHaveLength(0);
@@ -166,6 +167,7 @@ describe("generateMirror", () => {
 		const session = await readSession(user, sessionId);
 		expect(session?.state).toBe("error");
 		expect(session?.errorMessage).toBe("content_policy_violation");
+		expect(session?.errorCode).toBe("content_policy_violation");
 		expect(session?.mirrorText).toBeUndefined();
 		// Rejection is terminal — no metadata row, no downstream work.
 		expect(await readMetadata(user, sessionId)).toBeNull();

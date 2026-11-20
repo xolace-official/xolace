@@ -1,9 +1,9 @@
+import { QUOTE_REPLY_MAX_CHARS } from "@xolace/backend/shared";
 import { ActivityIndicator, TextInput, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { QuoteIcon } from "../chrome/quote-icons";
 import type { InkPalette } from "../chrome/quote-ink";
 import { QUOTE_COPY } from "../copy";
-import { REPLY_MAX } from "../quotes-model";
 import { QuoteSheet } from "./quote-sheet";
 import { SheetButton, SheetNote } from "./sheet-parts";
 
@@ -125,7 +125,7 @@ export function WriteSheet(p: Props) {
 				className="h-33 rounded-[22px] border-[0.5px] border-continuous px-4 py-3.5 font-normal text-[16.5px] leading-[24px]"
 				editable={!p.sending}
 				keyboardAppearance={p.dark ? "dark" : "light"}
-				maxLength={REPLY_MAX}
+				maxLength={QUOTE_REPLY_MAX_CHARS}
 				multiline
 				onChangeText={p.onDraft}
 				placeholder={QUOTE_COPY.placeholder}

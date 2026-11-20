@@ -4,11 +4,12 @@
  * cached system prefix; memory changes what it says, never who it is.
  */
 
+import { COMPANION_FALLBACK_NAME } from "../../lib/shared";
 import type { TalkDirectness } from "../../lib/voices";
 import { AUDIO_TAGS } from "../talk/audioTags";
 import type { AnthropicTurn } from "../talk/openaiCompat";
 
-export const COMPANION_FALLBACK_NAME = "Ember";
+export { COMPANION_FALLBACK_NAME };
 
 /** Our endpoint's own tool: saves a new name; never relayed to ElevenLabs. */
 export const RENAME_TOOL = "rename_companion";

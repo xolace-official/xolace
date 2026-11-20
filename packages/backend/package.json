@@ -12,6 +12,7 @@
     "./dataModel": {
       "types": "./convex/_generated/dataModel.d.ts"
     },
+    "./shared": "./convex/lib/shared.ts",
     "./convex/_generated/*": {
       "types": "./convex/_generated/*.d.ts",
       "default": "./convex/_generated/*.js"

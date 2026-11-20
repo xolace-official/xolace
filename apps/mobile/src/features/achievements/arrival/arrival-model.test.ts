@@ -1,7 +1,7 @@
+import { isStreakMilestone } from "@xolace/backend/shared";
 import { describe, expect, it } from "vitest";
 import {
 	arrivalPlan,
-	isStreakMilestone,
 	lastSevenDays,
 	mayArrive,
 	milestoneDayOf,

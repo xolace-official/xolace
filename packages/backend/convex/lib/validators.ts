@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { dailyQuoteSettingValidator } from "../dailyQuotes/validators";
 import { outreachChannelValidator } from "../outreach/validators";
+import { ERROR_CODES } from "./shared";
 import { DOMAINS } from "./understandingVocab";
 import {
 	talkDirectnessValidator,
@@ -26,6 +27,11 @@ export const platformValidator = v.union(
 );
 
 export const domainValidator = v.union(...DOMAINS.map((d) => v.literal(d)));
+
+export const sessionErrorCodeValidator = v.union(
+	v.literal(ERROR_CODES.safeguardRejected),
+	v.literal(ERROR_CODES.reflectionRateLimited)
+);
 
 export const resourceValidator = v.object({
 	description: v.optional(v.string()),

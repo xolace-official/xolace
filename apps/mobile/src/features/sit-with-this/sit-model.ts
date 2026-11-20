@@ -1,4 +1,6 @@
 import type { Doc } from "@xolace/backend/dataModel";
+import { ERROR_CODES, EXERCISE_MAX_SWAPS } from "@xolace/backend/shared";
+import { convexErrorCode } from "@/lib/convex-error-code";
 import { COPY } from "./copy";
 import { shortLength } from "./sit-timing";
 
@@ -69,7 +71,6 @@ export function sitResult<E>(
 	}
 	return standalone && { exercise: standalone, slots: {} };
 }
-const MAX_SWAPS = 2;
 
 export type ArcSize = "full" | "small" | "mid" | "gone";
 
@@ -118,7 +119,7 @@ type SwapLink = {
 };
 
 export function canSwap(s: SwapLink): boolean {
-	if (s.from !== "reflect" || s.swaps >= MAX_SWAPS || s.sheetOpen) {
+	if (s.from !== "reflect" || s.swaps >= EXERCISE_MAX_SWAPS || s.sheetOpen) {
 		return false;
 	}
 	if (s.stage === "pre") {
@@ -144,4 +145,21 @@ export function swapChoices(
 	}
 	add(options.nextBest, COPY.sheet.other);
 	return out;
+}
+
+const SWAP_REFUSED: readonly (string | undefined)[] = [
+	ERROR_CODES.swapLimitReached,
+	ERROR_CODES.swapNotAllowed,
+];
+const SWAP_REFUSED_BEFORE_CODES = [
+	"Maximum swaps reached",
+	"Exercise not allowed",
+];
+
+export function isSwapRefused(error: unknown): boolean {
+	if (SWAP_REFUSED.includes(convexErrorCode(error))) {
+		return true;
+	}
+	const message = error instanceof Error ? error.message : "";
+	return SWAP_REFUSED_BEFORE_CODES.some((s) => message.includes(s));
 }

@@ -1,7 +1,7 @@
+import { XOLACER_BIO_MAX_CHARS } from "@xolace/backend/shared";
 import { describe, expect, it } from "vitest";
 import { EMPTY_DRAFT, FULL_DRAFT } from "./dev/setup-fixtures";
 import {
-	BIO_MAX_LENGTH,
 	bioCount,
 	blockingStep,
 	chipLabel,
@@ -37,7 +37,7 @@ describe("setup progress", () => {
 	});
 
 	it("treats a bio past the limit as incomplete", () => {
-		const bio = "a".repeat(BIO_MAX_LENGTH + 1);
+		const bio = "a".repeat(XOLACER_BIO_MAX_CHARS + 1);
 		expect(isStepComplete("bio", { ...FULL_DRAFT, bio })).toBe(false);
 		expect(isStepComplete("bio", { ...FULL_DRAFT, bio: "   " })).toBe(false);
 	});

@@ -1,3 +1,4 @@
+import { retentionShortens } from "@xolace/backend/shared";
 import type { PlusStatus } from "@/features/purchases/plus-status";
 import {
 	PRIVACY_COPY as C,
@@ -17,11 +18,6 @@ export const sheetKind = (raw: string | string[] | undefined): SheetKind =>
 export const memoryOn = (personalMemoryEnabled: boolean | undefined) =>
 	personalMemoryEnabled !== false;
 
-const KEEPS_LONGER: readonly Retention[] = ["6_months", "1_year", "indefinite"];
-
-export const shortens = (from: Retention, to: Retention) =>
-	KEEPS_LONGER.indexOf(to) < KEEPS_LONGER.indexOf(from);
-
 export function retentionPick(
 	from: Retention,
 	to: Retention
@@ -29,7 +25,7 @@ export function retentionPick(
 	if (from === to) {
 		return "none";
 	}
-	return shortens(from, to) ? "count" : "save";
+	return retentionShortens(from, to) ? "count" : "save";
 }
 
 export type PastRetention = { count: number; capped: boolean };

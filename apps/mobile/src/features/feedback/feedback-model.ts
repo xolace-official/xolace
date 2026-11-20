@@ -1,4 +1,6 @@
 import type { Id } from "@xolace/backend/dataModel";
+import { ERROR_CODES, FEEDBACK_MAX_CHARS } from "@xolace/backend/shared";
+import { convexErrorCode } from "@/lib/convex-error-code";
 import { FEEDBACK_COPY } from "./copy";
 
 export type FeedbackKind = "bug" | "idea" | "concern";
@@ -13,8 +15,6 @@ export type ConcernSubject = {
 export type FeedbackStart =
 	| { step: "menu" }
 	| { step: "report"; kind: FeedbackKind; subject?: ConcernSubject };
-
-export const FEEDBACK_MAX = 1000;
 
 type Params = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) =>
@@ -59,12 +59,15 @@ export function concernParams(subject: ConcernSubject, from: string) {
 	};
 }
 
-export function errorMessageOf(e: unknown): string {
-	if (!(e instanceof Error)) {
-		return FEEDBACK_COPY.report.somethingWrong;
+const UNCAUGHT_BEFORE_CODES = /Uncaught Error: (.+?)(?:\n|$)/;
+
+export function errorMessageOf(e: unknown, kind: FeedbackKind): string {
+	if (convexErrorCode(e) === ERROR_CODES.rateLimited) {
+		return FEEDBACK_COPY.report[kind].rateLimited;
 	}
-	const match = e.message.match(/Uncaught Error: (.+?)(?:\n|$)/);
-	return match ? match[1] : e.message;
+	const before =
+		e instanceof Error ? UNCAUGHT_BEFORE_CODES.exec(e.message)?.[1] : undefined;
+	return before ?? FEEDBACK_COPY.report.somethingWrong;
 }
 
 export function reportView({
@@ -77,7 +80,7 @@ export function reportView({
 	limited: boolean;
 }) {
 	return {
-		count: `${text.length} / ${FEEDBACK_MAX}`,
+		count: `${text.length} / ${FEEDBACK_MAX_CHARS}`,
 		send: saving ? FEEDBACK_COPY.report.sending : FEEDBACK_COPY.report.send,
 		sendDisabled: saving || !text.trim() || limited,
 	};
