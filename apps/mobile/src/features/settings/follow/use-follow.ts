@@ -9,11 +9,11 @@ import type { Follow } from "@/features/settings/follow/follow-data";
 import {
 	canSendFeedback,
 	feedbackMailto,
-	reviewUrl,
 	SENT_CLOSE_MS,
 	type SendPhase,
 	sendErrorMessage,
 } from "@/features/settings/follow/follow-model";
+import { reviewUrl } from "@/lib/store-review";
 
 /** Production let a link that fails to open (no mail account) pass silently. */
 const openLink = (url: string) => {

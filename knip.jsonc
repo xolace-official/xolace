@@ -35,11 +35,7 @@
         "expo-atlas",
         // Native module with no JS import. Removing it changes the native
         // fingerprint, so it goes out with the next store build.
-        "react-native-purchases-ui",
-        // The store review prompt left with the old session end (S3); its new
-        // place is undecided. A native module: removing it changes the
-        // fingerprint, so it goes with the next store build if nothing asks.
-        "expo-store-review"
+        "react-native-purchases-ui"
       ]
     }
   }

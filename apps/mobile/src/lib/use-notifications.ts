@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { goHome } from "@/lib/landing";
+import { markNotificationTap } from "@/lib/last-notification-tap";
 import { suppressedInForeground } from "@/lib/notification-suppression";
 import {
 	notificationTapPlan,
@@ -118,6 +119,7 @@ export function useNotifications() {
 				subscribe: Notifications.addNotificationResponseReceivedListener,
 			},
 			(response) => {
+				markNotificationTap();
 				const { content } = response.notification.request;
 				const plan = notificationTapPlan(
 					content.data,

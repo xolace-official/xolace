@@ -15,6 +15,11 @@ import {
 	type PlusOfferSlice,
 	plusOfferPersistedKeys,
 } from "./plus-offer-slice";
+import {
+	createRatingsSlice,
+	type RatingsSlice,
+	ratingsPersistedKeys,
+} from "./ratings-slice";
 
 type ThemeSlice = {
 	theme: "system" | "light" | "dark";
@@ -45,7 +50,12 @@ type OnboardingSlice = {
 	 * reflection. */
 	homeComposing: boolean;
 	setHomeComposing: (v: boolean) => void;
-	/** A home sheet is on screen right now. Transient. */
+	/** A home sheet is open or armed to open (Coming back's greeting is due). Transient; the
+	 * rating rules wait while set, so nothing else greets first. */
+	homeSheetBlocking: boolean;
+	setHomeSheetBlocking: (v: boolean) => void;
+	/** A home sheet is on screen right now. Transient; unlike homeSheetBlocking it drops while
+	 * a greeting is merely due. */
 	homeSheetOpen: boolean;
 	setHomeSheetOpen: (v: boolean) => void;
 };
@@ -156,6 +166,7 @@ export type AppState = ThemeSlice &
 	TogglesSlice &
 	AccountFlagsSlice &
 	PlusOfferSlice &
+	RatingsSlice &
 	PreferencesSlice &
 	UpdateCheckSlice &
 	LastNotificationSlice &
@@ -175,6 +186,7 @@ export const useAppStore = create<AppState>()(
 				dictationUpsellSeen: false,
 
 				homeComposing: false,
+				homeSheetBlocking: false,
 				homeSheetOpen: false,
 
 				introSeen: false,
@@ -199,6 +211,7 @@ export const useAppStore = create<AppState>()(
 				setColorThemeId: (id) => set({ colorThemeId: id }),
 				setDictationUpsellSeen: (v) => set({ dictationUpsellSeen: v }),
 				setHomeComposing: (v) => set({ homeComposing: v }),
+				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
 				setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
@@ -223,6 +236,8 @@ export const useAppStore = create<AppState>()(
 				...createAccountFlagsSlice(set),
 
 				...createPlusOfferSlice(set),
+
+				...createRatingsSlice(set),
 
 				clearLastNotification: () => set({ lastNotification: null }),
 				clearReplySeed: () => set({ replySeed: null }),
@@ -281,6 +296,7 @@ export const useAppStore = create<AppState>()(
 					xolacerPrimerSeen: s.xolacerPrimerSeen,
 					...accountFlagsPersistedKeys(s),
 					...plusOfferPersistedKeys(s),
+					...ratingsPersistedKeys(s),
 				}),
 				storage: createJSONStorage(() => zustandJSONStorage),
 			}

@@ -105,6 +105,7 @@ export function useSettingsHome(): SettingsHome {
 			},
 			open: (to) => router.push(`/settings/${to}`),
 			openPlus: () => openPaywall("settings_row"),
+			openWhatsNew: () => router.push("/ratings/whats-new"),
 		},
 		state: {
 			mode: modeLabel(theme),

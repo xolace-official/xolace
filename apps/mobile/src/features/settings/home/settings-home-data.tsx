@@ -29,6 +29,8 @@ export type SettingsHome = {
 	actions: {
 		open: (page: SettingsPage) => void;
 		openPlus: () => void;
+		/** The latest release's What's New (S23), over everything. */
+		openWhatsNew: () => void;
 		checkForUpdates: () => void;
 	};
 };

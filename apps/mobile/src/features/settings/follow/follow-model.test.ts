@@ -14,9 +14,9 @@ import {
 	isLimited,
 	outside,
 	reviewRow,
-	reviewUrl,
 	sendErrorMessage,
 } from "@/features/settings/follow/follow-model";
+import { reviewUrl } from "@/lib/store-review";
 
 describe("feedbackView", () => {
 	it("keeps Send dim until there are words (render 34's dialog, empty)", () => {

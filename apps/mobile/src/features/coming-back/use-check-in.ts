@@ -8,6 +8,7 @@ import { useFullContext } from "@/lib/convex/use-full-context";
 import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
 import { LANDING } from "@/lib/landing";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useAppStore } from "@/store/store";
 import type { CheckIn } from "./check-in-data";
 import {
 	type CheckInParams,
@@ -44,6 +45,7 @@ export function useCheckInData(): CheckIn {
 	const contributeByDefault =
 		useQuery(api.preferences.getContributeByDefault) ?? false;
 	const streak = useFullContext()?.streak ?? 0;
+	const noteRatingsSignal = useAppStore((s) => s.noteRatingsSignal);
 
 	const [picked, setPicked] = useState<Answer | null>(null);
 	const [note, setNote] = useState("");
@@ -78,6 +80,8 @@ export function useCheckInData(): CheckIn {
 		setPicked(a);
 		episode?.().answer(a);
 		resolveCard({ cardId: card._id, response: a }).catch(() => undefined);
+		// The rating screen waits 48 h after "Got heavier" (features/ratings, RatingsRules).
+		noteRatingsSignal(a === "heavier" ? "check-in-heavier" : "check-in");
 		posthog.capture("follow_up_responded", { ...props, response: a });
 		return true;
 	};

@@ -8,6 +8,7 @@ export const HOME_ACTIONS: SettingsHome["actions"] = {
 	checkForUpdates: ignore,
 	open: ignore,
 	openPlus: ignore,
+	openWhatsNew: ignore,
 };
 
 /** 12 of 15 minutes left, as on the board. */

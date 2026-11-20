@@ -18,6 +18,7 @@ import {
 	letterPassed,
 	type NextKey,
 	pitchDismissed,
+	ratingsSignalsOf,
 	type SavedMood,
 	type SessionPath,
 	wordsToShare,
@@ -73,6 +74,7 @@ export function useSessionEndData({
 	const next = useNextStep(sessionId, session, letters);
 	const openPaywall = usePaywall((s) => s.open);
 	const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
+	const noteRatingsSignal = useAppStore((s) => s.noteRatingsSignal);
 	const recordPlusOfferShown = useAppStore((s) => s.recordPlusOfferShown);
 	const recordPlusOfferDismissal = useAppStore(
 		(s) => s.recordPlusOfferDismissal
@@ -236,6 +238,9 @@ export function useSessionEndData({
 			saveMood: (mood) => {
 				saved.current.mood = mood;
 				save(mood);
+				for (const signal of ratingsSignalsOf(mood)) {
+					noteRatingsSignal(signal);
+				}
 			},
 			share: (contributed) => {
 				saved.current.contributed = contributed;

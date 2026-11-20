@@ -8,7 +8,8 @@ import {
 	PLUS_OFFER_DISMISSAL_LIMIT,
 	PLUS_OFFER_FULL_STOP_MS,
 } from "@/features/purchases/plus-offer-policy";
-import { asksFollowUp, moodOf } from "./mood-scale";
+import type { RatingsSignal } from "@/store/ratings-slice";
+import { asksFollowUp, moodOf, stepOf } from "./mood-scale";
 
 /** The route's `path` param: Sit with this ("solo"), You're not alone, or the mirror's exit. */
 export type SessionPath = "solo" | "peers" | "exit";
@@ -60,6 +61,29 @@ export function savedMood({
 	return step === null
 		? null
 		: { moodPosition: position, postSessionMood: moodOf(step) };
+}
+
+/** "Much heavier" on the slider (`wordsFor`): the rating screen waits 48 h. */
+const MUCH_HEAVIER = -4;
+
+/**
+ * What a saved mood tells the rating rules (features/ratings, RatingsRules): anything but
+ * heavier makes the first ask due; heavy enough to ask a follow-up holds it while that
+ * follow-up is open; "much heavier" starts a 48 h wait.
+ */
+export function ratingsSignalsOf(mood: SavedMood): RatingsSignal[] {
+	if (mood.postSessionMood !== "heavier") {
+		return ["light-session"];
+	}
+	const step =
+		mood.moodPosition === undefined ? null : stepOf(mood.moodPosition);
+	if (step === null) {
+		return [];
+	}
+	return [
+		...(asksFollowUp(step) ? (["heavier-follow-up"] as const) : []),
+		...(step <= MUCH_HEAVIER ? (["much-heavier"] as const) : []),
+	];
 }
 
 /**
