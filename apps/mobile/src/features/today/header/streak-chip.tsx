@@ -11,7 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Flame } from "@/components/shared/flame";
 import { PressScale } from "@/components/shared/press-scale";
-import { RollingNumber } from "@/components/shared/rolling-number";
+import { QUICK_ROLL_MS, RollDigits } from "@/components/shared/roll-digits";
 import { keyframes } from "@/design/keyframes";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { cn } from "@/lib/cn";
@@ -32,7 +32,8 @@ const GLOW: readonly (readonly [number, number])[] = [
 	[0.18, 1],
 	[1, 0],
 ];
-const DIGITS = 15;
+/** The digits' line: 15 pt callout, 20 tall, centred in the 38 pt pill. */
+const DIGITS_LINE = 20;
 
 type Props = {
 	/** The flame's flicker clock, shared by the header's chip and the toolbar's so they hand over in step. */
@@ -51,7 +52,6 @@ type Props = {
  */
 export function StreakChip({ clock, running, elevated, reduced }: Props) {
 	const { state, actions } = useToday();
-	const emberInk = useTokenColor("ember-ink");
 	// The glow as the flame ignites: ember at .6, 24 pt.
 	const igniteGlow = `0 0 24px 6px ${useTokenColor("today-ignite-glow")}`;
 	const focused = useIsFocused();
@@ -131,7 +131,18 @@ export function StreakChip({ clock, running, elevated, reduced }: Props) {
 					reduced={reduced}
 					running={running}
 				/>
-				<RollingNumber color={emberInk} quick size={DIGITS} value={shown} />
+				{/* Plain views, not SwiftUI: a hosted number is left at a stale frame inside the press
+				    scale and the header's transforms, and draws outside the pill. Pinned: the pill is 38 tall. */}
+				<RollDigits
+					className="text-ember-ink tabular-nums"
+					durationMs={QUICK_ROLL_MS}
+					lineHeight={DIGITS_LINE}
+					maxScale={1}
+					rollIn={false}
+					value={shown}
+					variant="callout"
+					weight="bold"
+				/>
 			</View>
 		</PressScale>
 	);

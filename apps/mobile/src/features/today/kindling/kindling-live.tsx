@@ -8,7 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
-import { RollingNumber } from "@/components/shared/rolling-number";
+import { QUICK_ROLL_MS, RollDigits } from "@/components/shared/roll-digits";
 import { clearOf } from "@/design/clear-of";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { useClock } from "@/lib/motion/clock";
@@ -26,7 +26,8 @@ import { useTend } from "./use-tend";
 
 /** The path's pulse, wisp and node breath are slow: 30 frames a second is plenty. */
 const PATH_FPS = 30;
-const COUNT = 13;
+/** The count's line: 13 pt footnote, 18 tall, as the "of n" beside it. */
+const COUNT_LINE = 18;
 /** The warm wash sits at (-30, 10) in the card; the body starts inside the card's padding (18, 16). */
 const WASH = { x: -48, y: -6 } as const;
 const washWidth = (lit: number) => 40 + lit * 70;
@@ -42,7 +43,6 @@ const TOKENS = [
 	"accent",
 	"ember",
 	"accent-ink",
-	"muted",
 	"today-kindling-check",
 ] as const;
 
@@ -54,7 +54,7 @@ type Props = {
 
 /** The steps from your last session, as a path you tend (handoff `today.md` §4.5). */
 export function KindlingLive({ kindling, width, onScreen }: Props) {
-	const [surface, well, subtle, violet, ember, accentInk, muted, check] =
+	const [surface, well, subtle, violet, ember, accentInk, check] =
 		useTokenColors(TOKENS);
 	const { actions } = useToday();
 	const { live, reduced, low } = useTodayFrame();
@@ -117,12 +117,15 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 					{COPY.kindling.title}
 				</AppText>
 				<View className="flex-row items-center">
-					<RollingNumber
-						color={muted}
-						quick
-						size={COUNT}
+					{/* Plain views: the card rises in, and a SwiftUI-hosted number is left behind by it. */}
+					<RollDigits
+						className="text-muted tabular-nums"
+						durationMs={QUICK_ROLL_MS}
+						lineHeight={COUNT_LINE}
+						maxScale={1}
+						rollIn={false}
 						value={kin.count}
-						weight="regular"
+						variant="footnote"
 					/>
 					<AppText color="muted" variant="footnote">
 						{COPY.kindling.of(total)}

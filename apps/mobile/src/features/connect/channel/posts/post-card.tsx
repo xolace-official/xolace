@@ -123,7 +123,7 @@ function ReactionChip({
 			onPress={onPress}
 		>
 			<AppText variant="callout">{r.emoji}</AppText>
-			{/* Plain text, not the kit's RollingNumber: its SwiftUI host escapes the list's clip
+			{/* Plain text, not a SwiftUI-hosted number: a native host escapes the list's clip
 			    and floats over the header once the card scrolls under it. */}
 			<AppText className="tabular-nums" variant="footnote" weight="semibold">
 				{r.count}
