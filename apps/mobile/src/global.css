@@ -52,9 +52,6 @@
 	--color-heavy-wash: var(--heavy-wash);
 	--color-heavy-ink: var(--heavy-ink);
 	--color-frost: var(--frost);
-	--color-frost-text: var(--frost-text);
-	--color-resonance: var(--resonance);
-	--color-resonance-foreground: var(--resonance-foreground);
 	--color-glass: var(--glass);
 	--color-glass-edge: var(--glass-edge);
 	--color-backdrop: var(--backdrop);
@@ -62,8 +59,6 @@
 	--color-eink: var(--eink);
 	--color-mk: var(--mk);
 	--color-offer-ink: var(--offer-ink);
-	--color-event: var(--event);
-	--color-event-foreground: var(--event-foreground);
 	--color-tone-poetic: var(--tone-poetic);
 	--color-tone-gentle: var(--tone-gentle);
 	--color-tone-direct: var(--tone-direct);
@@ -78,11 +73,6 @@
 	--color-browse-music-foreground: var(--browse-music-foreground);
 	--color-browse-topics: var(--browse-topics);
 	--color-browse-topics-foreground: var(--browse-topics-foreground);
-	/* Playful's lips (bg-accent-lip, border-b-default-lip …); transparent in every other theme. */
-	--color-accent-lip: var(--accent-lip);
-	--color-default-lip: var(--default-lip);
-	--color-danger-lip: var(--danger-lip);
-	--color-warning-lip: var(--warning-lip);
 }
 
 /*
@@ -131,10 +121,6 @@
 @theme static {
 	/* Ink on content art (an avatar's own gradient), which is the same in every theme. */
 	--color-on-art: #ffffff;
-
-	/* Plus night — the Xolace+ offer's own sky (postcard art, path-stack
-     * layer). Dark in every theme because the art is. */
-	--color-plus-night: #0b0716;
 
 	--font-poppins-medium: "Poppins-Medium";
 

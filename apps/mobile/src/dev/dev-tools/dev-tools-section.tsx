@@ -19,7 +19,6 @@ const I = {
 	followUp: { android: "notifications_active", ios: "bell.badge" },
 	intake: { android: "restart_alt", ios: "figure.walk.arrival" },
 	plus: { android: "workspace_premium", ios: "sparkles" },
-	replay: { android: "replay", ios: "play.circle" },
 	reset: { android: "restart_alt", ios: "arrow.counterclockwise" },
 	sentry: { android: "bug_report", ios: "ant.circle" },
 	states: { android: "view_carousel", ios: "rectangle.stack" },
@@ -52,11 +51,6 @@ export function DevToolsSection() {
 					icon={I.reset}
 					label="Reset streak to day 1"
 					onPress={() => dev.runStreak("reset")}
-				/>
-				<TileRow
-					icon={I.replay}
-					label="Replay streak reveal"
-					onPress={dev.replayReveal}
 				/>
 				<TileRow
 					icon={I.awareness}

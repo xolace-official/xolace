@@ -45,12 +45,7 @@ type OnboardingSlice = {
 	 * reflection. */
 	homeComposing: boolean;
 	setHomeComposing: (v: boolean) => void;
-	/** True while any home sheet is open or armed to open. Transient; the reflect tour hides
-	 * its coach marks while set. */
-	homeSheetBlocking: boolean;
-	setHomeSheetBlocking: (v: boolean) => void;
-	/** A home sheet is on screen right now. Transient; unlike homeSheetBlocking it drops while
-	 * a follow-up is merely pending. */
+	/** A home sheet is on screen right now. Transient. */
 	homeSheetOpen: boolean;
 	setHomeSheetOpen: (v: boolean) => void;
 };
@@ -95,27 +90,12 @@ type TogglesSlice = {
 	/** One-time flag — once true, the "shake to send feedback" hint toast never shows again. */
 	shakeHintSeen: boolean;
 	setShakeHintSeen: (v: boolean) => void;
-	/** `lastSessionAt` value the Return Welcome greeting was last shown against. Keys "once per
-	 * return episode". */
-	returnWelcomeSeenAt: number | null;
-	setReturnWelcomeSeenAt: (n: number) => void;
 	/** Id of the newest What's New entry the user has opened. Drives the menu's unseen badge. */
 	lastSeenVersion: string | null;
 	setLastSeenVersion: (v: string) => void;
-	/** Menu item keys whose "new" glow has been acknowledged (item opened once). */
-	seenMenuItems: string[];
-	markMenuItemSeen: (key: string) => void;
-	/** Highest streak day each account (by Clerk user id) has seen the calendar reveal for. */
-	acknowledgedStreaks: Record<string, number>;
-	/** Pre-per-account acknowledged day; stands in for accounts without an entry until the
-	 * first write zeroes it. */
-	lastAcknowledgedStreak: number;
-	setLastAcknowledgedStreak: (n: number, owner: string) => void;
-	/** Awareness event slugs the user has already seen, with timestamps for pruning. */
+	/** Awareness event slugs the v1 sheet already showed. Coming back reads it once to let that
+	 * month's prompt pass (`useMonthEvent`); only the dev reset writes it now. */
 	seenEventIds: { slug: string; seenAt: number }[];
-	addToSeenEventIds: (slug: string) => void;
-	/** Drops entries older than 13 months. Called on hook mount, not during render. */
-	pruneSeenEventIds: () => void;
 	/** Prompt the next reflect session opens on: a monthly event's sessionPrompt (7 days) or a
 	 * Library entry's "Reflect on this" (#413). */
 	pendingEventPrompt: PendingEventPrompt | null;
@@ -171,24 +151,6 @@ type ReplySeedSlice = {
 	clearReplySeed: () => void;
 };
 
-/** Intake v2's first answer (#707), held for the account that gave it. */
-export type IntakeFirstAnswer = { text: string; userId: string };
-
-/** Ephemeral. Something outside the reflect screen (#462) asking it to open the card; see
- * useReflectBridge. */
-type ComposerOpenSlice = {
-	composerOpenRequested: boolean;
-	/** Words to open the card with, e.g. intake v2's first answer (#707). Raw user text. */
-	composerOpenText: string | null;
-	requestComposerOpen: (text?: string) => void;
-	clearComposerOpenRequest: () => void;
-	/** Intake v2's first answer (#707), for the Mirror's "Pick up where you left off". Memory
-	 * only: the user's own words never touch disk, so a cold kill drops the offer. Keyed by
-	 * Clerk user, so a sign-out and a second account never see the first one's words. */
-	intakeFirstAnswer: IntakeFirstAnswer | null;
-	setIntakeFirstAnswer: (answer: IntakeFirstAnswer | null) => void;
-};
-
 export type AppState = ThemeSlice &
 	OnboardingSlice &
 	TogglesSlice &
@@ -197,26 +159,13 @@ export type AppState = ThemeSlice &
 	PreferencesSlice &
 	UpdateCheckSlice &
 	LastNotificationSlice &
-	ReplySeedSlice &
-	ComposerOpenSlice;
+	ReplySeedSlice;
 
 export const useAppStore = create<AppState>()(
 	devtools(
 		persist(
 			(set) => ({
 				accountPending: false,
-				acknowledgedStreaks: {},
-				addToSeenEventIds: (slug) =>
-					set((s) =>
-						s.seenEventIds.some((e) => e.slug === slug)
-							? {}
-							: {
-									seenEventIds: [
-										...s.seenEventIds,
-										{ seenAt: Date.now(), slug },
-									],
-								}
-					),
 
 				bridgeIntroSeen: false,
 				chatEnabledCached: false,
@@ -226,20 +175,12 @@ export const useAppStore = create<AppState>()(
 				dictationUpsellSeen: false,
 
 				homeComposing: false,
-				homeSheetBlocking: false,
 				homeSheetOpen: false,
 
 				introSeen: false,
 
-				lastAcknowledgedStreak: 0,
 				lastSeenVersion: null,
 				libraryIntroSeen: false,
-				markMenuItemSeen: (key) =>
-					set((s) =>
-						s.seenMenuItems.includes(key)
-							? {}
-							: { seenMenuItems: [...s.seenMenuItems, key] }
-					),
 				musicIntroSeen: false,
 
 				nightModeEnabled: true,
@@ -247,45 +188,25 @@ export const useAppStore = create<AppState>()(
 				pendingEventPrompt: null,
 
 				previousTheme: null,
-				pruneSeenEventIds: () =>
-					set((s) => {
-						const threshold = new Date();
-						threshold.setMonth(threshold.getMonth() - 13);
-						return {
-							seenEventIds: s.seenEventIds.filter(
-								(e) => e.seenAt >= threshold.getTime()
-							),
-						};
-					}),
-
-				returnWelcomeSeenAt: null,
 
 				seatHeld: false,
 
 				seenEventIds: [],
 
-				seenMenuItems: [],
 				setAccountPending: (v) => set({ accountPending: v }),
 				setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
 				setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
 				setColorThemeId: (id) => set({ colorThemeId: id }),
 				setDictationUpsellSeen: (v) => set({ dictationUpsellSeen: v }),
 				setHomeComposing: (v) => set({ homeComposing: v }),
-				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
-				setLastAcknowledgedStreak: (n, owner) =>
-					set((s) => ({
-						acknowledgedStreaks: { ...s.acknowledgedStreaks, [owner]: n },
-						lastAcknowledgedStreak: 0,
-					})),
 				setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
 				setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
 				setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
 				setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
 				setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
 				setPreviousTheme: (t) => set({ previousTheme: t }),
-				setReturnWelcomeSeenAt: (n) => set({ returnWelcomeSeenAt: n }),
 				setSeatHeld: (v) => set({ seatHeld: v }),
 				setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
 				setSupportAudioIntroSeen: (v) => set({ supportAudioIntroSeen: v }),
@@ -303,14 +224,9 @@ export const useAppStore = create<AppState>()(
 
 				...createPlusOfferSlice(set),
 
-				clearComposerOpenRequest: () =>
-					set({ composerOpenRequested: false, composerOpenText: null }),
 				clearLastNotification: () => set({ lastNotification: null }),
 				clearReplySeed: () => set({ replySeed: null }),
-				composerOpenRequested: false,
-				composerOpenText: null,
 				hiddenProfileCards: [],
-				intakeFirstAnswer: null,
 				isNewVersionAvailable: false,
 
 				isVersionChecked: false,
@@ -321,9 +237,6 @@ export const useAppStore = create<AppState>()(
 				readingMode: "classic",
 
 				replySeed: null,
-				requestComposerOpen: (text) =>
-					set({ composerOpenRequested: true, composerOpenText: text ?? null }),
-				setIntakeFirstAnswer: (answer) => set({ intakeFirstAnswer: answer }),
 				setIsNewVersionAvailable: (v) => set({ isNewVersionAvailable: v }),
 				setIsVersionChecked: (v) => set({ isVersionChecked: v }),
 				setLastNotification: (n) => set({ lastNotification: n }),
@@ -344,14 +257,12 @@ export const useAppStore = create<AppState>()(
 			{
 				name: "xolace-app",
 				partialize: (s) => ({
-					acknowledgedStreaks: s.acknowledgedStreaks,
 					bridgeIntroSeen: s.bridgeIntroSeen,
 					chatEnabledCached: s.chatEnabledCached,
 					colorThemeId: s.colorThemeId,
 					dictationUpsellSeen: s.dictationUpsellSeen,
 					hiddenProfileCards: s.hiddenProfileCards,
 					introSeen: s.introSeen,
-					lastAcknowledgedStreak: s.lastAcknowledgedStreak,
 					lastSeenVersion: s.lastSeenVersion,
 					libraryIntroSeen: s.libraryIntroSeen,
 					musicIntroSeen: s.musicIntroSeen,
@@ -361,9 +272,7 @@ export const useAppStore = create<AppState>()(
 					readByFire: s.readByFire,
 					readerTextSize: s.readerTextSize,
 					readingMode: s.readingMode,
-					returnWelcomeSeenAt: s.returnWelcomeSeenAt,
 					seenEventIds: s.seenEventIds,
-					seenMenuItems: s.seenMenuItems,
 					shakeHintSeen: s.shakeHintSeen,
 					supportAudioIntroSeen: s.supportAudioIntroSeen,
 					textureSetId: s.textureSetId,

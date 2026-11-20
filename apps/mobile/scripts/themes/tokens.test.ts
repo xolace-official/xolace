@@ -9,9 +9,8 @@ const COLOR_LITERAL = /["'`](--color-[a-z0-9-]*[a-z0-9])["'`]/g;
 const COLOR_UTILITY =
 	/(?<![\w-])(?:bg|text|border(?:-[trblxyse])?|ring|fill|stroke|from|via|to|outline|divide|decoration|caret|placeholder|shadow)-([a-z][a-z0-9-]*[a-z0-9])(?:\/\d+)?(?![\w-])/g;
 
-/** Class-name tokens the hand-written CSS declared (global.css, playful.css); old screens still use them. */
+/** Class-name tokens production declared before the generator (global.css, playful.css) that screens still use. */
 const PRODUCTION_COLOR_TOKENS = [
-	"accent-lip",
 	"browse-audio",
 	"browse-audio-foreground",
 	"browse-music",
@@ -20,11 +19,7 @@ const PRODUCTION_COLOR_TOKENS = [
 	"browse-topics-foreground",
 	"cover-ink",
 	"cover-scrim",
-	"danger-lip",
-	"default-lip",
 	"ember",
-	"event",
-	"event-foreground",
 	"face-blush",
 	"face-brow",
 	"face-highlight",
@@ -32,19 +27,15 @@ const PRODUCTION_COLOR_TOKENS = [
 	"face-pupil",
 	"face-sclera",
 	"frost",
-	"frost-text",
 	"offer-ink",
 	"player-ink",
 	"player-scrim",
-	"plus-night",
 	"reader-night-bg",
 	"reader-night-ink",
 	"reader-night-muted",
 	"reader-paper-bg",
 	"reader-paper-ink",
 	"reader-paper-muted",
-	"resonance",
-	"resonance-foreground",
 	"tone-direct",
 	"tone-direct-text",
 	"tone-gentle",
@@ -53,7 +44,6 @@ const PRODUCTION_COLOR_TOKENS = [
 	"tone-poetic-text",
 	"tone-witnessed",
 	"tone-witnessed-text",
-	"warning-lip",
 	...["ash", "sage", "vesper", "wren"].flatMap((v) =>
 		["light", "mid", "deep"].map((s) => `orb-${v}-${s}`)
 	),
@@ -69,7 +59,7 @@ const tokens = new Set([
 ]);
 const sources = sourceFiles().map((file) => readFileSync(file, "utf8"));
 
-describe("token names old screens use", () => {
+describe("production token names the screens use", () => {
 	it("keeps every class-name token the hand-written CSS declared", () => {
 		const lost = PRODUCTION_COLOR_TOKENS.filter(
 			(t) => !tokens.has(`--color-${t}`)

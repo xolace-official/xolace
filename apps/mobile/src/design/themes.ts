@@ -74,8 +74,6 @@ const DEFAULT: ThemePalettes = {
 		overlay: "#17141f",
 		"overlay-foreground": "#f3f0fa",
 		"overlay-shadow": "0 0 1px 0 rgba(184, 169, 232, 0.08) inset",
-		resonance: "rgba(92, 201, 167, 0.15)",
-		"resonance-foreground": "#5cc9a7",
 		segment: "#201c2b",
 		"segment-foreground": "#f3f0fa",
 		separator: "rgba(255, 255, 255, 0.08)",
@@ -130,8 +128,6 @@ const DEFAULT: ThemePalettes = {
 		"overlay-foreground": "#191524",
 		"overlay-shadow":
 			"0 4px 16px 0 rgba(60, 40, 80, 0.06), 0 -2px 8px 0 rgba(60, 40, 80, 0.02), 0 12px 24px 0 rgba(60, 40, 80, 0.04)",
-		resonance: "rgba(47, 158, 126, 0.15)",
-		"resonance-foreground": "#2f9e7e",
 		segment: "#ffffff",
 		"segment-foreground": "#191524",
 		separator: "rgba(25, 21, 36, 0.09)",

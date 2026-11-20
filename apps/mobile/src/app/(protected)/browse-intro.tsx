@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { BrowseIntroScreen } from "@/components/shared/browse-intro-screen";
-import { useBackHandler } from "@/components/ui/tour/use-back-handler";
+import { useBackHandler } from "@/lib/use-back-handler";
 import { useAppStore } from "@/store/store";
 
 type Family = "music" | "support";
