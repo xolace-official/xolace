@@ -35,6 +35,14 @@ describe("loopFileName", () => {
 			"hearth-hearth.mp4"
 		);
 	});
+	it("ends a bare storage id in .mp4", () => {
+		expect(
+			loopFileName(
+				"rain-window",
+				"https://x.convex.cloud/api/storage/e5ff-ad9b"
+			)
+		).toBe("rain-window-e5ff-ad9b.mp4");
+	});
 	it("keeps the name to safe characters", () => {
 		expect(loopFileName("first light", "https://x/a b%20c.mp4")).toBe(
 			"first_light-a_b_20c.mp4"

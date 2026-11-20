@@ -14,7 +14,7 @@ export const QUOTE_COPY = {
 			paused ? "Play the background" : "Pause the background",
 		plusSheet: "Keep quotes with Xolace+",
 		plusTile: (name: string) => `${name}, Xolace+`,
-		share: "Share as an image",
+		share: "Share these words",
 		sound: (on: boolean) => (on ? "Turn the sound off" : "Turn the sound on"),
 		star: (saved: boolean, locked: boolean) => {
 			if (saved) {
