@@ -26,12 +26,6 @@ import { PlayerError } from "./stage/player-error";
 import { PlayerFoot } from "./stage/player-foot";
 import { PlayerHeader } from "./stage/player-header";
 
-/**
- * The player (handoff `player.md`): production's player, every part kept, with the waveform for
- * spoken tracks, glass close and sleep timer, the turning 15 s arcs and a 288 pt cover. Always
- * white on dark. Laid out on the board's 844 pt phone; extra height splits above the cover and
- * below the volume.
- */
 export function PlayerScreen() {
 	const { state, actions } = usePlayer();
 	const insets = useSafeAreaInsets();
@@ -46,7 +40,6 @@ export function PlayerScreen() {
 		transform: [{ translateY: y.get() }],
 	}));
 
-	// Free listeners never see the player: the paywall replaces it (the data hook).
 	if (state.status === "gated") {
 		return <View className="flex-1 bg-player-scrim" />;
 	}
@@ -58,7 +51,6 @@ export function PlayerScreen() {
 			insets.bottom -
 			(P.boardH - P.boardTopInset - P.boardBottomInset)
 	);
-	// The board's cover top, under this phone's safe area instead of the board's 50 pt.
 	const stageTop = insets.top + P.coverTop - P.boardTopInset + extra / 2;
 	const glassTop = insets.top + P.glassTop;
 	const { track, status, repeat } = state;
@@ -69,15 +61,12 @@ export function PlayerScreen() {
 		<Animated.View
 			accessibilityViewIsModal
 			className="flex-1 overflow-hidden bg-player-scrim"
-			// VoiceOver can't swipe the player down: the escape gesture closes it, as the chevron does.
 			onAccessibilityEscape={actions.close}
 			style={sheet}
 		>
 			<StatusBar hidden={false} style="light" />
 			<PlayerBackdrop coverUrl={track?.coverUrl} />
 
-			{/* Swipe down closes from above the scrubber and from the foot; the scrubber, time row,
-			    controls and volume keep their own gestures. */}
 			<GestureDetector gesture={swipeTop}>
 				<View
 					className="absolute inset-x-0 top-0"

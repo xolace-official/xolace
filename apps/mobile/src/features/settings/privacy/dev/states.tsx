@@ -1,4 +1,3 @@
-/** Settings › Privacy & Data on fixtures: `xolace://dev/settings/<id>` (handoff settings-sections.md §8–§9). */
 import type { DevState } from "@/dev/dev-state";
 import {
 	FixtureDeleteSheet,
@@ -7,6 +6,7 @@ import {
 import {
 	DELETE_ACCOUNT,
 	DELETE_ACCOUNT_PLUS,
+	DELETE_ACCOUNT_PLUS_LOADING,
 	DELETE_ACCOUNT_SIGN_OUT_LEFT,
 	DELETE_DATA,
 	DELETE_DATA_BUSY,
@@ -14,15 +14,14 @@ import {
 	PRIVACY_6_MONTHS,
 	PRIVACY_6_MONTHS_ALERT,
 	PRIVACY_ALERT_CAPPED,
+	PRIVACY_LETTERS_ON,
 	PRIVACY_LOADING,
 	PRIVACY_MEMORY_OFF_SHARE_ON,
 	PRIVACY_POLICY_OPEN,
 	PRIVACY_TOP,
 } from "@/features/settings/privacy/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Privacy & Data" };
-/** The sheet has no header of its own (`settings/_layout.tsx`); swipe back to leave. */
 const DATA_SHEET = { headerShown: false, title: "Delete all my data" };
 const ACCOUNT_SHEET = { headerShown: false, title: "Delete account" };
 
@@ -39,6 +38,12 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixturePrivacy state={PRIVACY_MEMORY_OFF_SHARE_ON} />,
 		title: "Privacy: memory off, sharing on (23)",
+	},
+	{
+		id: "privacy-letters-on",
+		options: OPTIONS,
+		Screen: () => <FixturePrivacy state={PRIVACY_LETTERS_ON} />,
+		title: "Privacy: receiving letters (Letters, S20)",
 	},
 	{
 		id: "privacy-6-months-alert",
@@ -112,6 +117,12 @@ export const devStates: readonly DevState[] = [
 		options: ACCOUNT_SHEET,
 		Screen: () => <FixtureDeleteSheet state={DELETE_ACCOUNT_PLUS} />,
 		title: "Delete account sheet on Xolace+ (29)",
+	},
+	{
+		id: "delete-account-plus-loading",
+		options: ACCOUNT_SHEET,
+		Screen: () => <FixtureDeleteSheet state={DELETE_ACCOUNT_PLUS_LOADING} />,
+		title: "Delete account sheet while Xolace+ loads: the billing line stays",
 	},
 	{
 		id: "delete-account-sign-out-left",

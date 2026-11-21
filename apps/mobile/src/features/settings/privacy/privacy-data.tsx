@@ -2,37 +2,26 @@ import { createContext, type ReactNode, use } from "react";
 import type { Retention, SheetKind } from "@/features/settings/privacy/copy";
 import type { PastRetention } from "@/features/settings/privacy/privacy-model";
 import { usePrivacy } from "@/features/settings/privacy/use-privacy";
+import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 
-/**
- * Everything Settings › Privacy & Data reads and does. Two adapters fill it: Convex in the app
- * (`PrivacyData`), fixtures in its dev states (`dev/`).
- */
 export type Privacy = {
 	state: {
-		/** Preferences haven't arrived yet. */
 		loading: boolean;
-		/** `personalMemoryEnabled`, on unless turned off. */
 		memory: boolean;
-		/** `contributeByDefault`. */
 		share: boolean;
-		/** `dataRetentionPreference`, as saved. */
+		receiveLetters: boolean | null;
 		retention: Retention;
-		/** A shorter period being counted or asked about; the list shows it meanwhile. */
 		pending: Retention | null;
-		/** What the pending period would delete: set, the alert is up. */
 		past: PastRetention | null;
-		/** "Delete them" is on its way. */
 		applying: boolean;
-		/** The privacy policy sheet is up. */
 		policyOpen: boolean;
 	};
 	actions: {
 		setMemory: (on: boolean) => void;
 		setShare: (on: boolean) => void;
+		setReceiveLetters: (on: boolean) => void;
 		pickRetention: (retention: Retention) => void;
-		/** The alert's Cancel: the previous choice stays. */
 		cancelRetention: () => void;
-		/** The alert's "Delete them": saves and deletes what it counted, now. */
 		confirmRetention: () => void;
 		openCopy: () => void;
 		openPolicy: () => void;
@@ -53,9 +42,16 @@ export function PrivacyProvider({
 	return <PrivacyContext value={value}>{children}</PrivacyContext>;
 }
 
-/** The app's adapter. */
-export function PrivacyData({ children }: { children: ReactNode }) {
-	return <PrivacyProvider value={usePrivacy()}>{children}</PrivacyProvider>;
+export function PrivacyData({
+	letters,
+	children,
+}: {
+	letters: ComposedSwitch;
+	children: ReactNode;
+}) {
+	return (
+		<PrivacyProvider value={usePrivacy(letters)}>{children}</PrivacyProvider>
+	);
 }
 
 export function usePrivacyScreen(): Privacy {

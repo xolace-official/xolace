@@ -9,12 +9,6 @@ type Props = {
 	children: ReactElement;
 };
 
-/**
- * Hold to report (board card 05): the system context menu, @expo/ui's SwiftUI
- * `ContextMenu` around the RN card (`RNHostView matchContents`), so the lift,
- * blur and haptic are the system's. Report… opens production's form sheet;
- * Hide this folds the card away.
- */
 export function CardMenu({ onReport, onHide, children }: Props) {
 	return (
 		<ThemedHost matchContents={{ vertical: true }}>

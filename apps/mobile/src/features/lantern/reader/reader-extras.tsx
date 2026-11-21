@@ -12,7 +12,6 @@ const ICON = {
 	phone: { android: "call", ios: "phone" },
 } as const;
 
-/** Reflect on this: the prompt, then a reflect session that opens on it. */
 export function ReflectOnThis() {
 	const { state, actions } = useReaderScreen();
 	const [line] = useTokenColors(["separator"]);
@@ -48,7 +47,6 @@ export function ReflectOnThis() {
 	);
 }
 
-/** Explainers end on a way to support, where there are crisis resources nearby (#403). */
 export function HelplineLink() {
 	const { state, actions } = useReaderScreen();
 	const [muted] = useTokenColors(["muted"]);
@@ -76,7 +74,6 @@ export function HelplineLink() {
 	);
 }
 
-/** Read by the fire: a warm dark layer at 30%, the most it can while the text keeps AA. */
 export function FireDim() {
 	const { fire } = useReaderScreen().state.prefs;
 	if (!fire) {

@@ -17,12 +17,10 @@ import { useScheme } from "@/design/scheme";
 import { cn } from "@/lib/cn";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** A chevron stays in Xolace; ↗ leaves it. Defaults to a chevron on a row you can press. */
 type Trail = "chevron" | "out" | "none";
 
 const CHEVRON: IconName = { android: "chevron_right", ios: "chevron.right" };
 const OUT: IconName = { android: "arrow_outward", ios: "arrow.up.right" };
-/** The board's ↗ is a 13 pt box drawing a 9 pt glyph. */
 const OUT_GLYPH = 9.5;
 const TILE_GLYPH = 16;
 
@@ -30,25 +28,17 @@ type Props = {
 	label: string;
 	sub?: string;
 	value?: string;
-	/** A system symbol, or any drawn mark (a brand mark) as `mark`. */
 	icon?: IconName;
 	mark?: ReactNode;
 	tile?: Tile;
 	trail?: Trail;
 	danger?: boolean;
 	last?: boolean;
-	/** Truncate the value at larger text (an email address). */
 	shrinkValue?: boolean;
 	onPress?: () => void;
 	a11y?: string;
 };
 
-/**
- * A grouped-card row: a 30 pt tile, a 16 pt label with an optional 13 pt
- * subtitle, a value at ink 50%, then a chevron or ↗. The hairline starts at the
- * label (58 pt). Danger rows tint the tile and label red.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function TileRow({
 	label,
 	sub,
@@ -68,13 +58,11 @@ export function TileRow({
 	const foreground = useTokenColor("foreground");
 	const subtle = useTokenColor("subtle");
 	const dark = useScheme() === "dark";
-	// The provider's neutral tile keeps the ink glyph, even on a danger row.
 	let glyph = danger ? dangerColor : accent;
 	if (tile === "neutral") {
 		glyph = foreground;
 	}
 	const hasTile = Boolean(icon || mark);
-	// A row that does nothing promises nothing: no chevron unless asked.
 	const end = trail ?? (onPress ? "chevron" : "none");
 	const body = (
 		<>

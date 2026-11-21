@@ -8,8 +8,6 @@ import {
 	setActiveNotificationConversation,
 } from "@/lib/notification-suppression";
 
-/** Clears the tray of this conversation's notifications once its thread is open; other threads'
- * entries stay. Best-effort. */
 export function useDismissThreadNotifications(conversationId: string) {
 	const isFocused = useIsFocused();
 
@@ -30,7 +28,6 @@ export function useDismissThreadNotifications(conversationId: string) {
 					)
 				)
 				.catch((error) => {
-					// Production's log, kept for development: a tray left as it was harms nothing.
 					if (__DEV__) {
 						console.log("[connect] failed to clear conversation tray", error);
 					}

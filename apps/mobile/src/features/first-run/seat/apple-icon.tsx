@@ -1,6 +1,5 @@
 import Svg, { Path } from "react-native-svg";
 
-/** Android: Apple's mark as an SVG (iOS draws the `apple.logo` SF Symbol). */
 export function AppleIcon({ size, color }: { size: number; color: string }) {
 	return (
 		<Svg fill="none" height={size} viewBox="0 0 24 24" width={size}>

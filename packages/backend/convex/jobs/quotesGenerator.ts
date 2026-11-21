@@ -64,7 +64,11 @@ export const getProfileStatus = internalQuery({
 			)
 			.unique();
 
-		if (prefs?.quotes !== undefined) {
+		// Asking for the daily quote push asks for a daily quote (B19).
+		if (
+			prefs?.quotes !== undefined ||
+			prefs?.notifications.dailyQuote?.enabled === true
+		) {
 			return { active: true, alreadyDone: false, prefs };
 		}
 

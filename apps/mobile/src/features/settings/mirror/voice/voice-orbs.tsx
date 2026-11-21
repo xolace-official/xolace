@@ -1,12 +1,12 @@
 import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import {
 	MIRROR_COPY as C,
 	MIRROR_ICONS,
 } from "@/features/settings/mirror/copy";
 import {
-	type Entitlement,
 	type MirrorTone,
 	orbA11y,
 	type VoiceSlug,
@@ -18,11 +18,6 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { VOICE_OPTIONS, type VoiceValue } from "@/lib/talk/voice-options";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/**
- * Voice as orbs (board `.orbs` and `.vnote`): a radio group you tap to choose and hear. On a
- * free account the named voices keep their colour and a lock; a tap plays one and the line
- * underneath offers Xolace+.
- */
 const ORB = 54;
 
 export function VoiceOrbs({
@@ -34,9 +29,8 @@ export function VoiceOrbs({
 	onTap,
 	onSeePlus,
 }: {
-	plus: Entitlement;
+	plus: PlusStatus;
 	voice: VoiceValue;
-	/** The voice the line describes: a locked one just tapped, or the chosen one. */
 	focus: VoiceValue;
 	playing: VoiceSlug | null;
 	tone: MirrorTone;

@@ -15,9 +15,11 @@ import {
 	MODERATION_UNAVAILABLE,
 	moderateInput,
 } from "./ai/providers/moderation";
+import { noteQuoteOpened } from "./dailyQuotes/opened";
 import { requireAuth } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
 import { rateLimiter } from "./lib/rateLimits";
+import { QUOTE_REPLY_MAX_CHARS } from "./lib/shared";
 import { recordActivity } from "./streaks/activityLog";
 
 function utcDateString(): string {
@@ -32,6 +34,8 @@ const quoteValidator = v.object({
 	date: v.string(),
 	emotionalProfileId: v.id("emotional_profiles"),
 	isPremium: v.boolean(),
+	keptBackground: v.optional(v.string()),
+	openedAt: v.optional(v.number()),
 	reaction: v.optional(v.union(v.literal("resonates"), v.literal("not_today"))),
 	repliedAt: v.optional(v.number()),
 	reply: v.optional(v.string()),
@@ -172,6 +176,18 @@ async function requireOwnQuote(ctx: MutationCtx, quoteId: Id<"daily_quotes">) {
 	return { profile, quote };
 }
 
+/** A background key worth keeping: kebab-case and short, like the catalogue's. Anything else
+ * is dropped rather than refused, so a stray value never costs the user the save. Not checked
+ * against the catalogue: a retired key still says what the card was kept with. */
+const BACKGROUND_KEY = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const BACKGROUND_KEY_MAX = 64;
+const keptBackground = (key: string | undefined) =>
+	key !== undefined &&
+	key.length <= BACKGROUND_KEY_MAX &&
+	BACKGROUND_KEY.test(key)
+		? key
+		: undefined;
+
 /**
  * Set a reaction on today's displayed quote.
  * Pass quoteId of whichever quote is currently shown.
@@ -189,10 +205,11 @@ export const react = mutation({
 		reaction: v.union(v.literal("resonates"), v.literal("not_today")),
 	},
 	handler: async (ctx, args) => {
-		const { profile } = await requireOwnQuote(ctx, args.quoteId);
+		const { profile, quote } = await requireOwnQuote(ctx, args.quoteId);
 		await ctx.db.patch("daily_quotes", args.quoteId, {
 			reaction: args.reaction,
 		});
+		await noteQuoteOpened(ctx, quote);
 		// Zero weight: logged as history, never extends a streak on its own.
 		await recordActivity(ctx, {
 			actionType: "quotes",
@@ -226,15 +243,23 @@ export const clearReaction = mutation({
  * must still be able to let go of what they kept.
  */
 export const save = mutation({
-	args: { quoteId: v.id("daily_quotes") },
+	args: {
+		/** S11: the background it was kept with (a catalogue key). Old builds omit it. */
+		background: v.optional(v.string()),
+		quoteId: v.id("daily_quotes"),
+	},
 	handler: async (ctx, args) => {
 		const { profile, quote } = await requireOwnQuote(ctx, args.quoteId);
 		await requirePremium(ctx, profile, "saving quotes");
+		await noteQuoteOpened(ctx, quote);
 		if (quote.savedAt !== undefined) {
 			return null;
 		}
 
-		await ctx.db.patch("daily_quotes", args.quoteId, { savedAt: Date.now() });
+		await ctx.db.patch("daily_quotes", args.quoteId, {
+			keptBackground: keptBackground(args.background),
+			savedAt: Date.now(),
+		});
 		await ctx.db.patch("emotional_profiles", profile._id, {
 			savedQuoteCount: (profile.savedQuoteCount ?? 0) + 1,
 			updatedAt: Date.now(),
@@ -257,7 +282,10 @@ export const unsave = mutation({
 			return null;
 		}
 
-		await ctx.db.patch("daily_quotes", args.quoteId, { savedAt: undefined });
+		await ctx.db.patch("daily_quotes", args.quoteId, {
+			keptBackground: undefined,
+			savedAt: undefined,
+		});
 		await ctx.db.patch("emotional_profiles", profile._id, {
 			// clamped: a count that drifted low must never go negative
 			savedQuoteCount: Math.max(0, (profile.savedQuoteCount ?? 0) - 1),
@@ -271,7 +299,7 @@ export const unsave = mutation({
 /**
  * The cap on a reply. Client-side `maxLength` mirrors it; this is the fence.
  */
-export const REPLY_MAX_LENGTH = 500;
+export const REPLY_MAX_LENGTH = QUOTE_REPLY_MAX_CHARS;
 
 /**
  * Write back to today's quote. One reply per quote — sending again overwrites,
@@ -375,7 +403,8 @@ export const writeReply = internalMutation({
 		text: v.string(),
 	},
 	handler: async (ctx, args) => {
-		await requireOwnQuote(ctx, args.quoteId);
+		const { quote } = await requireOwnQuote(ctx, args.quoteId);
+		await noteQuoteOpened(ctx, quote);
 		await ctx.db.patch("daily_quotes", args.quoteId, {
 			repliedAt: Date.now(),
 			reply: args.text,

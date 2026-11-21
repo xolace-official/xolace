@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { EmptyState } from "@/components/shared/empty-state";
 import { MOMENTS_COPY } from "@/features/you/moments/copy";
 import { MomentCard } from "@/features/you/moments/list/moment-card";
 import { MomentsSkeleton } from "@/features/you/moments/list/moments-skeleton";
@@ -14,29 +15,26 @@ import { useHeaderOptions } from "@/lib/header-options";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const L = MOMENTS_COPY.list;
-/** A card before it's measured: a two-line quote, the line and the gap. */
 const CARD_ESTIMATE = 128;
 const LOAD_AHEAD = 0.4;
-/** Clears the floating door (the prototype's pb-35), or just the home indicator. */
 const DOOR_CLEAR = 140;
 const END_CLEAR = 40;
 
 /**
  * Moments (was Timeline): the mirror's line leads each card, grouped by day under a native large
- * title that folds on scroll. The list is the screen's first descendant (the soft edge needs it);
- * the free window's door floats after it.
+ * title that folds on scroll. The list is the screen's first native view, with no wrapper: iOS
+ * folds the large title (and draws the soft edge) only for a scroll view it finds there. The
+ * header's `contentStyle` paints the background; the free window's door floats after the list.
  */
 export function MomentsScreen() {
 	const { state, actions } = useMomentsScreen();
 	const header = useHeaderOptions();
 	const reduced = useEffectiveReducedMotion();
 	const { screenReaderEnabled } = useAccessibilityInfo();
-	// Cards rise in on arrival only: rows remount as they scroll back into view, and must not
-	// replay it.
 	const [arriving, setArriving] = useState(true);
 	const door = state?.windowDays ?? null;
 	return (
-		<View className="flex-1 bg-background">
+		<>
 			<Stack.Screen
 				options={{
 					...header,
@@ -59,11 +57,12 @@ export function MomentsScreen() {
 					state === undefined ? (
 						<MomentsSkeleton />
 					) : (
-						<View className="px-6 pt-18">
-							<AppText center color="muted" variant="callout">
-								{L.empty}
-							</AppText>
-						</View>
+						<EmptyState
+							body={L.empty}
+							className="pt-35"
+							face
+							title={L.emptyTitle}
+						/>
 					)
 				}
 				ListFooterComponent={
@@ -72,7 +71,6 @@ export function MomentsScreen() {
 				onEndReached={state?.canLoadMore ? actions.loadMore : undefined}
 				onEndReachedThreshold={LOAD_AHEAD}
 				onScrollBeginDrag={() => setArriving(false)}
-				// Rows remount on reuse (cards hold an entering animation and a zoom trigger).
 				recycleItems={false}
 				renderItem={({ item }: { item: ListItem }) =>
 					item.kind === "when" ? (
@@ -105,6 +103,6 @@ export function MomentsScreen() {
 					onSeen={actions.doorSeen}
 				/>
 			)}
-		</View>
+		</>
 	);
 }

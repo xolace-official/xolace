@@ -5,7 +5,6 @@ import {
 	findingStep,
 } from "@/features/intake/finding-card-model";
 
-// Intake done mid-afternoon on Mon 2 Nov, local time.
 const INTAKE = new Date(2026, 10, 2, 15, 0).getTime();
 const DAY_3 = new Date(2026, 10, 4, 9, 0);
 
@@ -40,9 +39,7 @@ describe("findingCardDue", () => {
 				missing: ["acquisitionSource"],
 				now,
 			});
-		// Day 2, though more than 24 hours on.
 		expect(due(new Date(2026, 10, 3, 23, 59))).toBe(false);
-		// Day 3, though less than 48 hours on.
 		expect(due(new Date(2026, 10, 4, 0, 1))).toBe(true);
 		expect(due(new Date(2026, 10, 20, 12, 0))).toBe(true);
 	});

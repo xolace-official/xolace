@@ -7,7 +7,6 @@ import {
 	textWidth,
 } from "../skia-words";
 
-/** Board `.pr`: 28 pt in, top 478; the title 32/37 −.03em, words .24em apart; the body 14 below, 16/24. */
 export const BLOCK = {
 	bodyLH: 24,
 	bodySize: 16,
@@ -19,7 +18,6 @@ export const BLOCK = {
 	top: 478,
 	track: -0.03,
 };
-/** Room round the words for their blur and glow. */
 export const PAD = 24;
 export const HEIGHT = BLOCK.bodyTop + 3 * BLOCK.bodyLH + PAD * 2;
 
@@ -67,7 +65,6 @@ export function layout(faces: FirstRunFaces): Layout | null {
 	};
 }
 
-/** The words' tap target (board `.pr`): a tap while they arrive brings everything in at once. */
 export const WORDS_BOX = {
 	height: BLOCK.bodyTop + 3 * BLOCK.bodyLH,
 	left: BLOCK.left,

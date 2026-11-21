@@ -10,14 +10,8 @@ import {
 } from "@/features/vent/field/particle-config";
 import { clamp01 } from "@/features/vent/field/particle-render";
 
-/**
- * The field's per-frame state, stepped on the UI thread (production's frame callback, with the
- * board's v2 changes): the clock, the turn, the voice's level smoothed into radius and warmth,
- * the last 15 s, and the burn's own clock.
- */
 export type FieldState = {
 	now: number;
-	/** v2: the turn is integrated, so it can slow near the end without scaling time. */
 	spin: number;
 	sm: number;
 	r: number;
@@ -37,7 +31,6 @@ export type FieldState = {
 	flx: number;
 	fly: number;
 	notified: boolean;
-	/** When the words began to burn, or -1 until their image is ready. */
 	ash0: number;
 };
 
@@ -65,9 +58,7 @@ export const FIELD_START: FieldState = {
 	w0: 0,
 };
 
-/** A settled field: the entry and its pulse are long over. */
 const SETTLED_MS = 6000;
-/** v2: the level rises with a word and settles between words (production: 0.12 both ways). */
 const RISE = 0.14;
 const FALL = 0.05;
 
@@ -84,7 +75,6 @@ export const burnEnd = (s: FieldState, rm: boolean) => {
 	return rm ? RM_FADE_MS + 600 : explodeAt(s.skip) + SCATTER_MS + SILENCE_MS;
 };
 
-/** One frame. Returns true on the frame the burn (with its silence) is over. */
 export function stepField(s: FieldState, i: StepIn): boolean {
 	"worklet";
 	s.now += i.dt;
@@ -106,7 +96,6 @@ export function stepField(s: FieldState, i: StepIn): boolean {
 			s.enter0 = s.now - SETTLED_MS;
 		}
 		if (s.phase === PHASE.burn) {
-			// Snapshot the live field so the gather starts from where it is.
 			s.r0 = s.r;
 			s.w0 = s.w;
 			s.skip = i.cmd.skip;
@@ -122,11 +111,9 @@ export function stepField(s: FieldState, i: StepIn): boolean {
 	s.end = rec
 		? clamp01(1 - (s.ceilMs - (s.now - s.rec0 + s.recOff)) / NEAR_MS)
 		: 0;
-	// Production: the field turns at its own pace. v2: it slows by up to 45% near the end.
 	s.spin += i.rm ? 0 : i.dt * (1 - 0.45 * s.end);
 	const m = rec ? i.level : 0;
 	s.sm += (m - s.sm) * (m > s.sm ? RISE : FALL);
-	// v2, Reduce Motion: the voice warms the field but doesn't swell it.
 	const tr =
 		rec && !i.rm
 			? BASE_RADIUS + s.sm * (MAX_RADIUS - BASE_RADIUS)
@@ -138,7 +125,6 @@ export function stepField(s: FieldState, i: StepIn): boolean {
 		return false;
 	}
 	const bt = s.now - s.start;
-	// Pinch-spread: they chose to release, so it bursts at once from where it is (production).
 	if (i.pinch > 0 && s.skip < 0 && !i.rm && bt < explodeAt(-1)) {
 		s.skip = bt;
 	}

@@ -1,21 +1,17 @@
-/** What the first answer told us, in `intake.v2.complete`'s own terms (#704). */
 import type { api } from "@xolace/backend/convex/_generated/api";
+import { INTAKE_MAX_SELECTIONS } from "@xolace/backend/shared";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { MAX_SELECTIONS } from "@/features/intake/questions";
 
 type CompleteArgs = FunctionArgs<typeof api.intake.v2.complete>;
 
-/** Flux's reading of the answer (#708): the safety route, or what it heard. */
 export type Reading = FunctionReturnType<typeof api.ai.intake.read.firstAnswer>;
 type HeardReading = Extract<Reading, { route: "heard" }>;
-/** The one follow-up a reading may ask, and the field it is for. */
 export type FollowUp = NonNullable<HeardReading["followUp"]>;
 export type SafetyResource = Extract<
 	Reading,
 	{ route: "safety" }
 >["resources"][number];
 
-/** The four fields a first answer can fill. `weighingOn` is always held as a list. */
 export type Heard = Omit<
 	Pick<
 		CompleteArgs,
@@ -28,7 +24,6 @@ export const NOTHING_HEARD: Heard = { weighingOn: [] };
 
 type Single = "intent" | "disclosureStyle" | "emotionAwareness";
 
-/** One chip: the field it fills and the enum value it records. */
 export type Chip =
 	| { [F in Single]: { field: F; value: NonNullable<Heard[F]> } }[Single]
 	| { field: "weighingOn"; value: Heard["weighingOn"][number] };
@@ -38,11 +33,6 @@ export type ChipGroup = {
 	label: string;
 };
 
-/**
- * The chips "Here's what I heard" can show, grouped as the design groups them (README § A).
- * Short labels for a chip, not v1's question copy. No "I'd rather not say": a chip left off
- * already means not told.
- */
 export const CHIP_GROUPS: readonly ChipGroup[] = [
 	{
 		chips: [
@@ -134,12 +124,11 @@ export function isOn(heard: Heard, chip: Chip): boolean {
 		: heard[chip.field] === chip.value;
 }
 
-/** Taps one chip on or off. Weighing-on holds {@link MAX_SELECTIONS}, dropping the oldest. */
 export function toggleChip(heard: Heard, chip: Chip): Heard {
 	if (chip.field === "weighingOn") {
 		const weighingOn = isOn(heard, chip)
 			? heard.weighingOn.filter((v) => v !== chip.value)
-			: [...heard.weighingOn, chip.value].slice(-MAX_SELECTIONS);
+			: [...heard.weighingOn, chip.value].slice(-INTAKE_MAX_SELECTIONS);
 		return { ...heard, weighingOn };
 	}
 	return {
@@ -155,7 +144,6 @@ const chipsOf = (heard: Heard): string[] => [
 	...heard.weighingOn.map((value) => `weighingOn:${value}`),
 ];
 
-/** A reading's fields as chips, on (or, for `suggested`, marked). The confidences stay with the reader. */
 export function heardOf({
 	disclosureStyle,
 	emotionAwareness,
@@ -172,16 +160,13 @@ export function heardOf({
 
 export const heardNothing = (heard: Heard) => chipsOf(heard).length === 0;
 
-/** How many chips a reading suggested. */
 export const suggestionCount = (suggested: Heard) => chipsOf(suggested).length;
 
-/** Suggested chips the user tapped on. A count, never values. */
 export function suggestionsTaken(suggested: Heard, final: Heard): number {
 	const after = new Set(chipsOf(final));
 	return chipsOf(suggested).filter((chip) => after.has(chip)).length;
 }
 
-/** Chips tapped off and on, against what the answer was read as. Counts only, never values. */
 export function chipChanges(read: Heard, final: Heard) {
 	const before = new Set(chipsOf(read));
 	const after = new Set(chipsOf(final));
@@ -189,7 +174,6 @@ export function chipChanges(read: Heard, final: Heard) {
 	return { added: after.size - kept, kept, removed: before.size - kept };
 }
 
-/** `intake.v2.complete`'s args: the name, plus only the fields that were heard. */
 export function completeArgs(displayName: string, heard: Heard): CompleteArgs {
 	const { disclosureStyle, emotionAwareness, intent, weighingOn } = heard;
 	return {
@@ -203,7 +187,6 @@ export function completeArgs(displayName: string, heard: Heard): CompleteArgs {
 
 const ECHO_WORDS = 7;
 
-/** The answer as Flux quotes it back: whole if short, else its first words and an ellipsis. */
 export function echoOf(answer: string): string {
 	const words = answer.trim().split(/\s+/);
 	return words.length > ECHO_WORDS

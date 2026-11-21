@@ -8,7 +8,6 @@ import { useCanvasKick } from "../stage";
 import { cover, embers, ripples, seat, vent } from "./story-points-draw";
 import { beatPose, type SEng, seatOpen } from "./story-scene";
 
-/** Every spark, ember, ripple and coal of the story and the seat: points in one Skia canvas. */
 export function StoryPoints({ eng }: { eng: SharedValue<SEng> }) {
 	const kick = useCanvasKick();
 	const ink = useFireInk();

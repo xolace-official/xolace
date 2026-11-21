@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { View } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -15,7 +15,7 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import type { SessionColors } from "../session-colors";
-import type { ListenerCard } from "../session-end-data";
+import type { NextCards, NextParts } from "../session-end-data";
 import type { NextKey, SessionFrom } from "../session-end-model";
 import { LAYOUT, T2 } from "../session-look";
 import { appear } from "../timeline";
@@ -26,23 +26,18 @@ import { ShareCard } from "./share-card";
 import type { Send } from "./use-send";
 
 const L = LAYOUT;
-/**
- * Peers' top fade, deeper: once the column scrolls past 6 (large Dynamic Type
- * only) the page is solid to 40 below the header face (56–96 on the board),
- * then clears by the band's bottom (186), so scrolled text is gone before it
- * reaches the face.
- */
 const FADE = { after: 6, height: 186, ms: 300, solid: 136 } as const;
 
 type Props = {
 	W: number;
 	y: (v: number) => number;
-	/** Where the pinned buttons start (the column scrolls above them under large Dynamic Type). */
 	ctaTop: number;
 	from: SessionFrom | null;
 	words: string | null;
 	next: NextKey;
-	listener: ListenerCard | null;
+	cards: NextCards;
+	parts: NextParts;
+	letterTile: ReactNode;
 	send: Send;
 	c2: SharedValue<number>;
 	cs: SharedValue<number>;
@@ -52,12 +47,6 @@ type Props = {
 	onNext: () => void;
 };
 
-/**
- * Moment 2, "Leave it for someone?" (board `.w2`): the band of lights with an
- * empty place for yours, the title, your distilled words on a card, and one
- * next step. With nothing to share: "Go gently." and the next step only. The
- * face is already in the header (`FaceStage`).
- */
 export function MomentTwo(p: Props) {
 	const { W, y, words, send, c2, cs, colors, reduced } = p;
 	const subtle = useTokenColor("subtle");
@@ -162,11 +151,13 @@ export function MomentTwo(p: Props) {
 					) : null}
 					<NextCard
 						c2={c2}
+						cards={p.cards}
 						colors={colors}
 						k={p.next}
-						listener={p.listener}
+						letterTile={p.letterTile}
 						noneTop={!words}
 						onPress={p.onNext}
+						parts={p.parts}
 						reduced={reduced}
 					/>
 				</View>

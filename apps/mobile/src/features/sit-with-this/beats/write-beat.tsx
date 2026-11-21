@@ -15,14 +15,12 @@ import { COPY } from "../copy";
 import { LAYOUT } from "../sit-look";
 
 const W = LAYOUT.write;
-/** Board `.prq`: Bricolage 28/720, line height 1.12, −.025em (700 is the loaded cut). */
 const HEADING = {
 	fontFamily: FONTS.displayBold,
 	fontSize: 28,
 	letterSpacing: -0.7,
 	lineHeight: 31.36,
 } as const;
-/** Board `.prf textarea`: 18/1.45. */
 const FIELD = {
 	fontSize: 18,
 	lineHeight: 26.1,
@@ -32,12 +30,6 @@ const LOCK_ICON = { android: "lock", ios: "lock" } as const;
 
 type Props = { question: string; y: (v: number) => number; onDone: () => void };
 
-/**
- * Writing privately (Speak to it). fix: the question is the heading, and the
- * privacy line is said once and truthfully: nothing is kept, and the text goes
- * when the beat moves on (this unmounts, as production's did). Done sits 12 pt
- * above the keyboard, frame by frame (the keyboard rule).
- */
 export function WriteBeat({ question, y, onDone }: Props) {
 	const muted = useTokenColor("muted");
 	const scheme = useScheme();

@@ -17,11 +17,9 @@ type ModelOptions = Required<
 		| "levelOpacity"
 		| "onActiveCellChange"
 	> & {
-		/** Width taken by the y-axis beside the grid, in pixels. */
 		axisWidth: number;
 	};
 
-/** Everything the chart derives from its props: the grid and the ramp. */
 export function useHeatmapModel({
 	data,
 	layout,
@@ -39,8 +37,6 @@ export function useHeatmapModel({
 	const [width, setWidth] = useState(0);
 	const [activeCell, setActiveCellState] = useState<HeatmapCell | null>(null);
 
-	// `color` and `emptyColor` take a token name or a literal. Both hooks run
-	// unconditionally; which answer is used is decided after.
 	const baseToken = useCSSVariable(isToken(color) ? color : "--color-chart-1");
 	const emptyToken = useCSSVariable(
 		isToken(emptyColor) ? emptyColor : "--color-muted"
@@ -79,7 +75,6 @@ export function useHeatmapModel({
 		[levels, data]
 	);
 
-	// One colour at five opacities, unless five colours were supplied, which are used as-is.
 	const { ramp, opacities } = useMemo(
 		() =>
 			levelColors

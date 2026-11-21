@@ -1,4 +1,3 @@
-/** Web tab bar: expo-router/ui Tabs instead of NativeTabs, picked up via the .web.tsx extension. */
 import {
 	TabList,
 	type TabListProps,

@@ -3,7 +3,6 @@ import { EaseView } from "@/design/ease";
 import { usePhasedBreath } from "@/design/ease-breath";
 import { useReflectDraw } from "../reflect-draw";
 
-/** Board `.bars`: five bars, 5 ↔ 18 pt over .9 s, each at its own offset. */
 const BARS = {
 	max: 18,
 	min: 5,
@@ -13,10 +12,6 @@ const BARS = {
 const BAR_LO = BARS.min / BARS.max;
 const S = 1000;
 
-/**
- * The listening pill's level: no live voice level reaches the screen, so the bars breathe at
- * rest while listening rather than following the voice.
- */
 export function LevelBars({ active }: { active: boolean }) {
 	return (
 		<View className="h-5 flex-row items-center gap-[3px]">
@@ -27,10 +22,6 @@ export function LevelBars({ active }: { active: boolean }) {
 	);
 }
 
-/**
- * 5 → 18 → 5 per .9 s on a sine, each bar from its own offset (a CSS negative delay): a native
- * loop that first plays the rest of its current half. Reduced: still at 5.
- */
 function LevelBar({ offset, active }: { offset: number; active: boolean }) {
 	const { reduced, live } = useReflectDraw();
 	const breath = usePhasedBreath({

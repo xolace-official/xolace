@@ -4,35 +4,55 @@ import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useAppStore } from "@/store/store";
-import { type NextInput, pitchAllowed } from "./session-end-model";
+import type { Domain, EndLetters } from "./session-end-data";
+import {
+	endLetterOffer,
+	type NextInput,
+	pitchAllowed,
+	type SafeguardFields,
+} from "./session-end-model";
 import { type ListenerMatch, useListenerMatch } from "./use-listener-match";
+
+export type EndUpsell = { domain: Domain; stretchStartedAt: number };
 
 export type NextStep = {
 	slot: Omit<NextInput, "late" | "step">;
 	listener: ListenerMatch;
+	unlock: readonly Domain[] | null;
+	upsell: EndUpsell | null;
 };
 
-/**
- * What the next-step slot can offer this session (`nextKey`'s inputs): a
- * listener match, Xolace+, whether the session qualifies for kindling and
- * whether it has landed, and whether the free pitch's cadence allows it.
- */
-/** How long the slot holds for the plan and kindling answers (and a listener match). */
 const SLOT_WAIT_MS = 2000;
 
-export function useNextStep(sessionId: Id<"sessions"> | null): NextStep {
+type SessionUnlock = { domains: Domain[]; seenAt?: number };
+
+function useHeld<T>(live: T | null | undefined): T | null | undefined {
+	const [held, setHeld] = useState<{ value: T | null } | null>(null);
+	if (held === null && live !== undefined) {
+		setHeld({ value: live });
+	}
+	return held === null ? live : held.value;
+}
+
+export function useNextStep(
+	sessionId: Id<"sessions"> | null,
+	session:
+		| (SafeguardFields & { domainUnlock?: SessionUnlock })
+		| null
+		| undefined,
+	letters: EndLetters
+): NextStep {
 	const listener = useListenerMatch(sessionId);
 	const [waitedOut, setWaitedOut] = useState(false);
 	useEffect(() => {
 		const timer = setTimeout(() => setWaitedOut(true), SLOT_WAIT_MS);
 		return () => clearTimeout(timer);
 	}, []);
-	const { isPlus, isResolved } = usePlusEntitlement();
+	const { status, isPlus } = usePlusEntitlement();
 	const qualifies = useQuery(
 		api.paths.isKindlingQualifyingSession,
 		sessionId ? { sessionId } : "skip"
 	);
-	// Same args as Today's kindling card, so the subscription is shared and warm there.
 	const active = useQuery(
 		api.paths.getActive,
 		sessionId && isPlus ? { withRead: true, withTry: true } : "skip"
@@ -44,6 +64,18 @@ export function useNextStep(sessionId: Id<"sessions"> | null): NextStep {
 	const dismissalCount = useAppStore((s) => s.plusOfferDismissalCount);
 	const fullStopSince = useAppStore((s) => s.plusOfferFullStopAt);
 	const shownSessionId = useAppStore((s) => s.plusOfferShownSessionId);
+	const upsellLive = useQuery(
+		api.compounding.upsell.get,
+		sessionId && status === "free" ? { sessionId } : "skip"
+	);
+	const upsell = useHeld(sessionId === null || isPlus ? null : upsellLive);
+	const unlockRead =
+		session === undefined
+			? undefined
+			: session?.domainUnlock && session.domainUnlock.seenAt === undefined
+				? session.domainUnlock.domains
+				: null;
+	const unlock = useHeld(unlockRead);
 
 	const allowed =
 		context != null &&
@@ -62,14 +94,18 @@ export function useNextStep(sessionId: Id<"sessions"> | null): NextStep {
 		listener,
 		slot: {
 			kindlingReady: active != null && active.sessionId === sessionId,
-			// No backend pick for a track yet (open question 8): the slot never offers one.
+			letters: endLetterOffer(session, context, letters.offer),
 			listen: false,
 			listener: listener.status,
 			pitchAllowed: allowed,
 			plus: isPlus,
-			// Undefined holds the slot: until Xolace+ is read, the card can't be chosen.
-			qualifies: isResolved ? sessionId !== null && qualifies : undefined,
+			qualifies:
+				status === "loading" ? undefined : sessionId !== null && qualifies,
+			unlock: unlock === undefined ? undefined : unlock !== null,
+			upsell: upsell === undefined ? undefined : upsell !== null,
 			waitedOut,
 		},
+		unlock: unlock ?? null,
+		upsell: upsell ?? null,
 	};
 }

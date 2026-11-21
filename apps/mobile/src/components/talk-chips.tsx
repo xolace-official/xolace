@@ -1,5 +1,3 @@
-// A row of choices as pills (#603): the talk's voice, pace and directness.
-
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";

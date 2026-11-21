@@ -6,7 +6,6 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { resolveMessageIdentity } from "../../chat-rules";
 import { useConversationIdentity } from "./message-identity";
 
-/** The dots pulse 150 ms apart: .3 ↔ 1, 300 ms each way (an Ease loop). Reduced: still at .3. */
 const DOT_HALF_MS = 300;
 const DOT_STAGGER_MS = 150;
 const DOTS = [0, 1, 2];
@@ -27,11 +26,6 @@ function Dot({ index, reduced }: { index: number; reduced: boolean }) {
 	);
 }
 
-/**
- * Replaces Stream's `TypingIndicator` (raw Stream avatar, no override slot) with the prototype's
- * three dots in a bubble. Shown only for the counterpart (`resolveMessageIdentity`); Stream
- * already filters the local user out.
- */
 export function ConversationTypingIndicator() {
 	const { typing } = useTypingContext();
 	const identity = useConversationIdentity();
@@ -52,7 +46,6 @@ export function ConversationTypingIndicator() {
 			className="mx-3.5 my-1 flex-row gap-1.25 self-start rounded-[20px] bg-surface-secondary px-4 py-3.5"
 		>
 			{DOTS.map((i) => (
-				// Keyed on `reduced`: an Ease loop restarts only on remount.
 				<Dot index={i} key={`${i}-${reduced}`} reduced={reduced} />
 			))}
 		</View>

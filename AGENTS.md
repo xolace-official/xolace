@@ -169,7 +169,7 @@ Desktop dev (`tauri dev`) still expects web on 3001; run it from one worktree at
 
 | When | Run |
 |---|---|
-| Iterating | `bun run check:changed` (Biome on changed files, `check-types`+`lint` for affected packages and dependents, sibling tests). `--base <ref>` to compare elsewhere, `--list` to dry-run |
+| Iterating | `bun run check:changed` (Biome on changed files, `check-types` for affected packages and dependents, sibling tests) since the merge-base with `origin/dev`. `--base <ref>` to compare elsewhere, `--list` to dry-run |
 | One test file | `bunx vitest run <file>` inside the package, or `bunx turbo run test -F <pkg> -- <file>`; root scripts: `bun test scripts/` |
 | Before a PR | `bunx turbo run check-types lint test`, `bun run check` and `bun run knip` (unused files, exports and dependencies; mobile only for now) |
 
@@ -197,8 +197,8 @@ Full rules: `.agents/rules/convex.md` and `packages/backend/AGENTS.md`.
 - Auth through the shared helper (`requireAuth`), never ad-hoc identity checks.
 - Admin functions only in `convex/admin/*`, built with `adminQuery` / `adminMutation` /
   `adminAction`. Clients other than `apps/admin` never import `api.admin.*`.
-- Clients import only `@xolace/backend/api` (+ `dataModel` and allowlisted shared
-  modules). Never server-only code (`"use node"`, `ai/providers`, `jobs`).
+- Clients import only `@xolace/backend/api` (+ `dataModel`, `shared` and allowlisted
+  client-safe modules). Never server-only code (`"use node"`, `ai/providers`, `jobs`).
 - **Store-gap rule:** backend deploys before store review clears, so old app builds run
   against the new backend. Only additive changes: new functions, new optional args,
   widened arg types. Scheduled functions run the *current* code with *old* args.

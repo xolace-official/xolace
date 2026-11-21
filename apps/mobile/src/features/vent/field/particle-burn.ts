@@ -25,19 +25,12 @@ import {
 } from "@/features/vent/field/particle-render";
 import { VENT_COLORS } from "@/features/vent/vent-palette";
 
-/**
- * The burn (handoff §7), from the board's `drawBurn`: production's gather, flash and scatter, with
- * v2's shock ring, cooling trails, ash flakes and the flick's direction.
- */
 export type BurnOpts = {
 	t: number;
-	/** ms into the burn. */
 	bt: number;
 	r0: number;
 	w0: number;
-	/** ms into the gather when a pinch burst it, or -1. */
 	skip: number;
-	/** v2: the flick's unit direction (0, 0 when tapped). */
 	flx: number;
 	fly: number;
 	rm: boolean;
@@ -45,7 +38,6 @@ export type BurnOpts = {
 
 const FLASH_COLOR = VENT_COLORS.flash;
 const RING_COLOR = VENT_COLORS.ring;
-/** v2: two trail ghosts behind each spark: [lag ms, alpha, size]. */
 const TRAIL = [
 	[26, 0.34, 0.82],
 	[52, 0.16, 0.7],
@@ -57,7 +49,6 @@ export const explodeAt = (skip: number) => {
 	return skip >= 0 ? skip : COMPRESS_MS;
 };
 
-/** v2: one faint shock ring rides out from the flash (prism-timeline: easeOutCubic over 0.9 s). */
 function drawRing(canvas: SkCanvas, st: Stage, k: number) {
 	"worklet";
 	const e3 = 1 - (1 - k) ** 3;
@@ -73,7 +64,6 @@ function drawRing(canvas: SkCanvas, st: Stage, k: number) {
 export function drawBurn(canvas: SkCanvas, b: Batch, st: Stage, o: BurnOpts) {
 	"worklet";
 	if (o.rm) {
-		// v2: Reduce Motion. No gather, flash or scatter: the field warms and fades in place.
 		const k = clamp01(o.bt / RM_FADE_MS);
 		drawField(b, st, {
 			end: 0,
@@ -105,7 +95,6 @@ export function drawBurn(canvas: SkCanvas, b: Batch, st: Stage, o: BurnOpts) {
 		const ox = st.cx + q.x * 8;
 		const oy = st.cy + q.y * 8;
 		if (FLAKE[i]) {
-			// v2: a third of the field turns to slow ash that floats up and drifts.
 			const life = SCATTER_MS + FLAKE_EXTRA_MS;
 			if (te >= life) {
 				continue;
@@ -130,7 +119,6 @@ export function drawBurn(canvas: SkCanvas, b: Batch, st: Stage, o: BurnOpts) {
 			continue;
 		}
 		const fade = 1 - te / SCATTER_MS;
-		// v2: sparks cool from amber toward ash as they fly, and leave a short trail.
 		const warm = 1 - clamp01(te / 1500) * 0.82;
 		const s = SIZE[i] * (1 - te / (SCATTER_MS * 2));
 		if (te > TRAIL_FROM_MS) {

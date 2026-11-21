@@ -6,7 +6,7 @@ const HOUR = 60 * MINUTE;
 type Notifications = Doc<"preferences">["notifications"];
 
 /** Local hour and minute in an IANA zone, or null for an unknown zone. */
-function localTime(
+export function localTime(
 	timezone: string,
 	at: number
 ): { hour: number; minute: number } | null {
@@ -63,7 +63,11 @@ const MAX_CLOCK_CORRECTIONS = 3;
  * guess until it lands on `hour:00` local time. A local hour that a spring
  * forward skips has no exact match; the last guess is the nearest one.
  */
-function onLocalHour(timezone: string, guess: number, hour: number): number {
+export function onLocalHour(
+	timezone: string,
+	guess: number,
+	hour: number
+): number {
 	let t = guess;
 	for (let i = 0; i < MAX_CLOCK_CORRECTIONS; i++) {
 		const local = localTime(timezone, t);

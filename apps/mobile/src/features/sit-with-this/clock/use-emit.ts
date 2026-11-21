@@ -1,10 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ClockEvents } from "./clock-config";
 
-/**
- * One stable function per clock event, each calling the latest handler: the
- * frame callback captures them once and never re-registers.
- */
 export function useEmit(events: ClockEvents): ClockEvents {
 	const latest = useRef(events);
 	useEffect(() => {

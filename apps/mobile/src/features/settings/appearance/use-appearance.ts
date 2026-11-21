@@ -27,7 +27,6 @@ import { resolveMotionPreference } from "@/lib/motion/use-effective-reduced-moti
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
 
-/** The B7 list on the account, with production's optimistic update. */
 function useProfileCards() {
 	const server = useQuery(api.preferences.profileCards.getHidden);
 	const device = useAppStore((s) => s.hiddenProfileCards);
@@ -58,7 +57,6 @@ function useProfileCards() {
 	};
 }
 
-/** Settings › Appearance on the store, Uniwind, Convex and the paywall. */
 export function useAppearance(): Appearance {
 	const preferences = useQuery(api.preferences.get);
 	const save = usePreferenceMutation();
@@ -72,7 +70,7 @@ export function useAppearance(): Appearance {
 	const scheme = useScheme();
 	const osDark = useColorScheme() === "dark";
 	const osReduce = useOSReducedMotion();
-	const { isPlus } = usePlusEntitlement();
+	const { status } = usePlusEntitlement();
 	const openPaywall = usePaywall((s) => s.open);
 	const cards = useProfileCards();
 	const [replayOpen, setReplayOpen] = useState(false);
@@ -85,8 +83,11 @@ export function useAppearance(): Appearance {
 	return {
 		actions: {
 			pickTheme: (id) => {
-				if (themeTap(id, isPlus) === "locked") {
+				const tap = themeTap(id, status);
+				if (tap === "locked") {
 					openPaywall("premium_theme");
+				}
+				if (tap !== "pick") {
 					return;
 				}
 				setThemeWithFonts(themeVariant(id, pickMode(mode, scheme)));
@@ -118,9 +119,9 @@ export function useAppearance(): Appearance {
 			previewScheme: scheme,
 			profileCards: cards.rows,
 			replayOpen,
-			themeNote: themeNote(colorThemeId, isPlus),
+			themeNote: themeNote(colorThemeId, status),
 			themeStart: stripStart(colorThemeId),
-			themes: themeCards(colorThemeId, isPlus),
+			themes: themeCards(colorThemeId, status),
 		},
 	};
 }

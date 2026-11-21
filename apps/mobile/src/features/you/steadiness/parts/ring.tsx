@@ -6,10 +6,8 @@ import { COPY } from "@/features/you/copy";
 import { DOMAIN_ICON } from "@/features/you/steadiness/parts/domain-icon";
 import type { PartView } from "@/features/you/steadiness/steadiness-model";
 
-/** Production's SteadinessRing at the grid's size: 86 pt, stroke 7. */
 const SIZE = 86;
 const STROKE = 7;
-/** Rings fill from 0 over 900 ms ease-out, 500 ms after the screen opens, 40 ms apart. */
 export const RING_DELAY_MS = 500;
 export const RING_STAGGER_MS = 40;
 export const RING_FILL_MS = 900;
@@ -19,10 +17,6 @@ const easeOutCubic = (x: number) => {
 	return 1 - (1 - x) ** 3;
 };
 
-/**
- * A part's ring. With a number (Xolace+) it fills from 0 on the screen's one clock (`clock`,
- * ms since open, offset by `index`) and carries your usual's notch; without, its word.
- */
 export function Ring({
 	part,
 	clock,

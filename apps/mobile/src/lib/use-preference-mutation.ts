@@ -1,8 +1,16 @@
 import { api } from "@xolace/backend/convex/_generated/api";
+import type { Doc } from "@xolace/backend/dataModel";
 import { useMutation } from "convex/react";
 
-/** The one optimistic-update mutation for preferences; Convex dedupes the underlying
- * `useQuery`, so sharing is free. */
+type NotificationPrefs = Doc<"preferences">["notifications"];
+type DailyQuote = NonNullable<NotificationPrefs["dailyQuote"]>;
+
+function dailyQuotePatch(
+	choice: Pick<DailyQuote, "enabled" | "slot">
+): Partial<NotificationPrefs> {
+	return { dailyQuote: { enabled: choice.enabled, slot: choice.slot } };
+}
+
 export const usePreferenceMutation = () =>
 	useMutation(api.preferences.update).withOptimisticUpdate(
 		(localStore, args) => {
@@ -13,15 +21,13 @@ export const usePreferenceMutation = () =>
 
 			const hasNotificationsChange =
 				args.notifications !== undefined ||
+				args.notificationDailyQuote !== undefined ||
 				args.notificationReach !== undefined ||
 				args.notificationQuietWindow !== undefined ||
 				args.notificationTimezone !== undefined;
 
 			const mergedNotifications = hasNotificationsChange
 				? {
-						// Merge, mirroring the server: the whole-object form carries only the
-						// fields this installed client knows about, so replacing would drop
-						// any newer preference from the snapshot until the round-trip lands.
 						...current.notifications,
 						...args.notifications,
 						...(args.notificationReach !== undefined && {
@@ -33,12 +39,11 @@ export const usePreferenceMutation = () =>
 						...(args.notificationTimezone !== undefined && {
 							timezone: args.notificationTimezone,
 						}),
+						...(args.notificationDailyQuote !== undefined &&
+							dailyQuotePatch(args.notificationDailyQuote)),
 					}
 				: undefined;
 
-			// Mirror the server's bidirectional sync so the optimistic snapshot matches
-			// what the mutation writes: motionPreference is the source of truth, and
-			// reducedMotion is its back-compat boolean projection (and vice-versa).
 			const motionPatch =
 				args.motionPreference === undefined
 					? args.reducedMotion === undefined
@@ -88,8 +93,6 @@ export const usePreferenceMutation = () =>
 					...(args.spaceNamePromptDismissed !== undefined && {
 						spaceNamePromptDismissed: args.spaceNamePromptDismissed,
 					}),
-					// Mirrors the server's set-only-true rule, including the tone-change
-					// inference — the flag is never turned back off.
 					...((args.registerComplaint ||
 						(args.mirrorTone !== undefined &&
 							args.mirrorTone !== current.mirrorTone)) && {

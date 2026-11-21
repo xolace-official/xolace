@@ -1,5 +1,3 @@
-/** Connect and Archived on fixtures, through the same providers as the app. Taps do nothing,
- * except the ones a state needs to show itself (the segment, the filter, the delete dialog). */
 import { Stack } from "expo-router";
 import { useState } from "react";
 import { useHeaderOptions } from "@/lib/header-options";
@@ -42,11 +40,9 @@ function useFixtureRows() {
 export type ConnectFixture = {
 	conversations?: ConversationRow[];
 	stream?: StreamSnapshot;
-	/** Null: the directory still loading. */
 	directory?: DirectoryRow[] | null;
 	segment?: Segment;
 	filter?: string | null;
-	/** Undefined: still loading. */
 	status?: ChatStatus;
 	loading?: boolean;
 };

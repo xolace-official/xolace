@@ -1,5 +1,3 @@
-// Liquid-glass card ported from sample-codes/clarity-main onto Xolace tokens (#491).
-
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { useThemeColor } from "heroui-native";
 import type { ReactNode } from "react";
@@ -10,13 +8,10 @@ import { useAppTheme } from "@/context/app-theme-context";
 // runtime.
 const useToken = useThemeColor as (t: string) => string;
 
-// Entrance fade for a surface wrapping GlassSurface. Glass stops rendering
-// under an animated opacity, so the fade runs only where there is no glass.
 const hasGlass = isLiquidGlassAvailable();
 export const FADE_IN = hasGlass ? {} : { opacity: 0 };
 export const FADE_OUT = hasGlass ? {} : { opacity: 1 };
 
-// Interactive glass swells past its bounds on press; clipping would shear it.
 const unclipped: ViewStyle = { overflow: "visible" };
 
 type SurfaceProps = {
@@ -24,12 +19,9 @@ type SurfaceProps = {
 	radius?: number;
 	className?: string;
 	tint?: string;
-	/** Native press response. Only for a surface that is itself tappable. */
 	interactive?: boolean;
 };
 
-/** Frosted surface; `tint` is a token name washed faintly into the glass. Never put it under
- * an animated opacity: the blur stops rendering. */
 export function GlassSurface({
 	children,
 	radius = 32,
@@ -45,7 +37,6 @@ export function GlassSurface({
 		borderRadius: radius,
 		overflow: "hidden",
 	};
-	// GlassView is third-party, so Uniwind ignores a className on it; style the inside instead.
 	const inner = <View className={className}>{children}</View>;
 	if (!isLiquidGlassAvailable()) {
 		return (

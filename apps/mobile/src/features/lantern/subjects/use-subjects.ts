@@ -1,4 +1,3 @@
-/** A–Z's data hook: `getSubjects`, and the open counted once. */
 import { api } from "@xolace/backend/api";
 import { useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
@@ -13,7 +12,6 @@ export function useSubjects(letter?: string): Subjects {
 		trackLibrary(posthog, "library_subjects_opened", {
 			letter: letter ?? null,
 		});
-		// Once per open.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	return { state: { letter, subjects } };

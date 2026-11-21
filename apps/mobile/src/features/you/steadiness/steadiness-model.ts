@@ -1,10 +1,6 @@
-/**
- * The Steadiness screen (steadiness.md): `compounding.insights`' free or Xolace+ view in, the
- * dial, each part of life and the free doors out. Pure. Colour is state, never the part:
- * accent, ember (amber) for heavier lately and easing, muted for quiet. Never red.
- */
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { COPY } from "@/features/you/copy";
 
 type FreeView = FunctionReturnType<typeof api.compounding.insights.freeView>;
@@ -27,7 +23,6 @@ export type DomainItem = FreeView["domains"][number] &
 			| "trendSince"
 		>
 	>;
-/** Either view: Xolace+'s fields are absent from the free one, the upsell from Xolace+'s. */
 export type StView = {
 	domains: DomainItem[];
 	overall: number | null;
@@ -46,20 +41,14 @@ export type PartView = {
 	name: string;
 	warming: boolean;
 	tone: Tone;
-	/** Xolace+ with a reading: the number, your usual and the change. Null otherwise. */
 	value: number | null;
 	usual: number | null;
 	trend: Trend | null;
-	/** The line under the name in the list and the detail card. */
 	sub: string;
-	/** The ring's word when it shows no number. */
 	word: string;
-	/** The grid's small line under the name: "last seen 18 Sep", "Heavier lately". */
 	gridSub: string | null;
-	/** Ember sub-lines (heavier lately, easing). */
 	emberSub: boolean;
 	label: string;
-	/** Free only: the locked detail's line. */
 	peek: string;
 	kindling: boolean;
 	noticed: Noticed[];
@@ -69,16 +58,13 @@ export type DialView =
 	| {
 			lit: true;
 			score: number;
-			/** Xolace+ only; free users get the locked chip. */
 			trend: Trend | null;
 			label: string;
 			noticed: Noticed[];
 	  }
 	| { lit: false; known: number; label: string };
 
-/** Production's TickGauge: 56 ticks, lit up to the score. */
 export const DIAL_TICKS = 56;
-/** Steadiness lights at this many known parts (the server's rule). */
 const PARTS_TO_LIGHT = 2;
 
 /** Three letters, as the board ("18 Sep"; ICU's en-GB now writes "Sept"). */
@@ -101,13 +87,11 @@ const S = COPY.steadinessScreen;
 const STAGE = COPY.steadiness.stage;
 const LATELY = COPY.steadiness.lately;
 
-/** "18 Sep". */
 function shortDay(at: number): string {
 	const d = new Date(at);
 	return `${d.getDate()} ${SHORT_MONTHS[d.getMonth()]}`;
 }
 
-/** What a change is measured against: last week, or a quiet part's last reading ("April"). */
 function trendBasis(since: number | null, now: Date): string {
 	if (since === null) {
 		return COPY.steadiness.trendBasis;
@@ -118,7 +102,6 @@ function trendBasis(since: number | null, now: Date): string {
 		: `${MONTH.format(d)} ${d.getFullYear()}`;
 }
 
-/** The chip: "+4 vs last week", "−6 since April", "same as last week"; `short` for the list. */
 export function trendText(t: Trend, now: Date, short = false): string {
 	const vs =
 		t.since === null ? " vs last week" : ` since ${trendBasis(t.since, now)}`;
@@ -131,7 +114,6 @@ export function trendText(t: Trend, now: Date, short = false): string {
 	return short ? n : `${n}${vs}`;
 }
 
-/** Read aloud: "up 4 since last week", "same as last week". */
 export function trendSay(t: Trend, now: Date): string {
 	const basis = trendBasis(t.since, now);
 	if (t.delta === 0) {
@@ -140,7 +122,6 @@ export function trendSay(t: Trend, now: Date): string {
 	return `${t.delta > 0 ? "up" : "down"} ${Math.abs(t.delta)} since ${basis}`;
 }
 
-/** Ticks lit for a score, of `n`. */
 export const litTicks = (score: number, n = DIAL_TICKS) =>
 	Math.max(0, Math.min(n, Math.floor((score / 100) * n + 1e-9)));
 
@@ -170,7 +151,6 @@ function partOf(
 	const name = COPY.steadiness.domains[d.domain];
 	const warming = d.state === "warming";
 	const quiet = d.lastSeenAt !== null;
-	// Free users learn only of the upsell's part, and only that it's been heavier.
 	const lately = isPlus
 		? (d.compounding ?? null)
 		: view.upsell?.domain === d.domain
@@ -220,8 +200,6 @@ function partOf(
 	};
 }
 
-/** The dial: lit with the score (and, for Xolace+, the change and what Xolace noticed), or
- * waiting with how many parts it knows so far. */
 export function dialOf(view: StView, isPlus: boolean, now: Date): DialView {
 	if (view.overall === null) {
 		const known = view.domains.filter((d) => d.state !== "warming").length;
@@ -247,7 +225,6 @@ export function dialOf(view: StView, isPlus: boolean, now: Date): DialView {
 export const partsOf = (view: StView, isPlus: boolean, now: Date) =>
 	view.domains.map((d) => partOf(d, view, isPlus, now));
 
-/** The part in the grid's detail card: the one picked, else the first with a number. */
 export function selectedPart(
 	parts: readonly PartView[],
 	picked: Domain | null
@@ -256,7 +233,6 @@ export function selectedPart(
 	return scored.find((p) => p.domain === picked) ?? scored[0] ?? null;
 }
 
-/** An open row's first line: your usual and the change, whichever there are. */
 export function openLine(part: PartView, now: Date): string | null {
 	const pieces = [
 		part.usual === null ? null : S.usuallyCap(part.usual),
@@ -266,9 +242,17 @@ export function openLine(part: PartView, now: Date): string | null {
 	return line ? line.charAt(0).toUpperCase() + line.slice(1) : null;
 }
 
-/** What a tap on a part does. */
+export const asksFreeView = (
+	status: PlusStatus,
+	plusView: object | null | undefined
+) => status === "free" || plusView === null;
+
+export const steadinessAccess = (status: PlusStatus, plusView: boolean) => ({
+	doors: status !== "plus",
+	upsell: status === "free" && !plusView,
+});
+
 export type PartTap = "none" | "select" | "toggle-open" | "toggle-peek";
-/** `doors`: free, and the store agrees (no locked card while a new purchase reaches the server). */
 export function tapOf(
 	part: PartView,
 	isPlus: boolean,
@@ -282,7 +266,6 @@ export function tapOf(
 		if (!doors) {
 			return "none";
 		}
-		// The list keeps production's rows; only the heavier part opens its locked card there.
 		return view === "grid" || part.emberSub ? "toggle-peek" : "none";
 	}
 	if (part.value === null) {

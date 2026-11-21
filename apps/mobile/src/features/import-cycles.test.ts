@@ -1,7 +1,10 @@
-/** Feature layering guard (migration plan Phase 5): no feature cycles, `purchases` imports no
- * feature, no runtime file cycles; and the feature-shape rules for ported folders
- * (`feature-shape.ts`). Each failure lists the imports to move. */
 import { describe, expect, it } from "vitest";
+import {
+	backendFilesInAppBundle,
+	backendImportsOffList,
+	serverOnlyCodeReached,
+	staleBackendListings,
+} from "@/features/backend-imports";
 import {
 	backendCallsOutsideDataHooks,
 	crossFeatureImportsFromPorted,
@@ -32,7 +35,6 @@ import {
 const ENTITLEMENTS_FEATURE = "purchases";
 const graph = buildGraph();
 
-/** `a -> b` feature pairs, each with the file imports that create it. */
 function featureEdges(importGraph: ImportGraph): Map<string, string[]> {
 	const pairs = new Map<string, string[]>();
 	for (const [file, imports] of importGraph) {
@@ -58,8 +60,6 @@ describe("import graph", () => {
 		...new Set([...graph.keys()].map(featureOf).filter((f) => f !== undefined)),
 	];
 
-	// The checks below pass trivially on an empty graph (drifted tsconfig
-	// `include`, moved `src/`); pin the inputs so a silent pass cannot hide.
 	it("sees the source tree it is checking", () => {
 		expect(graph.size).toBeGreaterThan(0);
 		expect(features).toContain(ENTITLEMENTS_FEATURE);
@@ -73,7 +73,6 @@ describe("import graph", () => {
 			[...pairs.keys()]
 				.filter((k) => k.startsWith(`${f} -> `))
 				.map((k) => k.slice(`${f} -> `.length));
-		// A failure names the file imports inside each cycle, not just the features.
 		const report = findCycles(features, next).map((cycle) => ({
 			cycle,
 			imports: [...pairs]
@@ -140,10 +139,8 @@ describe("feature shape (apps/mobile/AGENTS.md)", () => {
 	it("reaches dev states only behind __DEV__, so release builds drop them", () => {
 		expect(
 			devCodeInReleaseGraph(graph),
-			'Open src/dev only from a dev route shim: `__DEV__ ? require("@/dev/…") : null`. A static import ships it'
+			'Open src/dev only from a dev route shim, or a fixture adapter seeding itself until its contract lands: `__DEV__ ? require("@/dev/…") : null`. A static import ships it'
 		).toEqual([]);
-		// The dev route shims are the guarded way in: without one, the check
-		// above would pass on a graph that never saw a guard.
 		const guarded = [...graph.values()]
 			.flat()
 			.filter((i) => i.devOnly)
@@ -201,6 +198,31 @@ describe("shared kit (apps/mobile/AGENTS.md)", () => {
 		expect(
 			staleKitListings(graph),
 			"Remove these from KIT_LEGACY_FILES in kit-imports.ts"
+		).toEqual([]);
+	});
+});
+
+describe("backend imports (packages/backend/AGENTS.md)", () => {
+	it("imports values only from the api, the data model, shared and the listed client-safe modules", () => {
+		expect(
+			backendImportsOffList(graph),
+			"Move the client-safe value into packages/backend/convex/lib/shared.ts and import it from @xolace/backend/shared; import types with `import type`"
+		).toEqual([]);
+	});
+
+	it("lists only client-safe modules the app still imports", () => {
+		expect(
+			staleBackendListings(graph),
+			"Remove these from BACKEND_LEGACY_MODULES in backend-imports.ts"
+		).toEqual([]);
+	});
+
+	it("bundles no server-only backend code through those modules", () => {
+		const entries = backendFilesInAppBundle(graph);
+		expect(entries.some((f) => f.endsWith("/convex/lib/shared.ts"))).toBe(true);
+		expect(
+			serverOnlyCodeReached(entries),
+			'A client-safe backend module imports server-only code at runtime: ElevenLabs ids, a "use node" file or process.env. Import it as a type, or move the value it needs into lib/shared.ts'
 		).toEqual([]);
 	});
 });

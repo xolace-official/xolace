@@ -8,11 +8,6 @@ import type { TalkMotion } from "../motion/use-talk-motion";
 const DROP = 6;
 const FADE_MS = 300;
 
-/**
- * Conversation | Companion, the platform's own segmented control (production's view
- * switch). It drops in at 340 ms of the move into the talk (§6). The choice is saved; the
- * next talk opens in it.
- */
 export function TalkSwitch({
 	top,
 	motion,

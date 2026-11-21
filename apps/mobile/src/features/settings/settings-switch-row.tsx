@@ -2,11 +2,8 @@ import type { ComponentProps } from "react";
 import { SwitchRow } from "@/components/settings-kit/switch-row";
 import { playSoftPress, playTextureSelect } from "@/lib/haptics";
 
-/**
- * The kit's `SwitchRow` with production's toggle haptics: a texture tick turning on, a soft
- * press turning off. The prototype's kit row plays none, so Settings adds them here rather
- * than in the kit.
- */
+export type ComposedSwitch = { on: boolean; set: (on: boolean) => void } | null;
+
 export function SettingsSwitchRow({
 	onChange,
 	...row

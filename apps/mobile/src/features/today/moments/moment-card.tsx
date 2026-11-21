@@ -13,11 +13,6 @@ import {
 const SPEAKER = 22;
 const ACTIVATE = [{ name: "activate" }];
 
-/**
- * Production's `discovery-moment-card.tsx`. The carousel wrapper is pointerEvents "none" and
- * `onCardPress` handles a touch; VoiceOver can't reach that layer, so each card is its own
- * button there and `onOpen` opens it.
- */
 export function MomentCard({
 	entry,
 	onOpen,

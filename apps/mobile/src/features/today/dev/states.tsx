@@ -1,6 +1,3 @@
-/** Today on fixtures: `xolace://dev/today/<id>`. The board's phases (handoff `today.md`
- * §4.1, renders `01`–`04`), each in light and dark, the first open, the streak igniting,
- * and Today with nothing loaded (offline). */
 import type { DevState } from "@/dev/dev-state";
 import { today } from "./fixture-today";
 
@@ -113,7 +110,8 @@ export const devStates: readonly DevState[] = [
 	},
 	{
 		id: "kindling-put-out",
-		title: "Kindling: put out (the card goes, nothing celebrates)",
+		title:
+			"Kindling: put out (the card swaps to none right now, nothing celebrates)",
 		...today({ kindling: "last", phase: "evening", putOut: true, tend: true }),
 	},
 	{
@@ -133,8 +131,43 @@ export const devStates: readonly DevState[] = [
 	},
 	{
 		id: "no-kindling",
-		title: "No kindling (S16 fills this frame)",
-		...today({ kindling: "none", phase: "evening" }),
+		title: "No kindling, Xolace+: none right now (Talk)",
+		...today({ empty: "plus", kindling: "none", phase: "day" }),
+	},
+	{
+		id: "no-kindling-dark",
+		title: "No kindling, Xolace+, dark",
+		...today({ empty: "plus", kindling: "none", phase: "day", theme: "dark" }),
+	},
+	{
+		id: "kindling-free",
+		title: "No kindling, free: part of Xolace+ (See how)",
+		...today({ empty: "free", kindling: "none", phase: "day" }),
+	},
+	{
+		id: "kindling-free-dark",
+		title: "No kindling, free, dark",
+		...today({ empty: "free", kindling: "none", phase: "day", theme: "dark" }),
+	},
+	{
+		id: "kindling-setting-up",
+		title: "Kindling setting up (the first node breathes)",
+		...today({ empty: "setting-up", kindling: "none", phase: "day" }),
+	},
+	{
+		id: "kindling-setting-up-dark",
+		title: "Kindling setting up, dark",
+		...today({
+			empty: "setting-up",
+			kindling: "none",
+			phase: "day",
+			theme: "dark",
+		}),
+	},
+	{
+		id: "kindling-arrives",
+		title: "Kindling arrives: setting up, then it lands 3 s in",
+		...today({ arrives: true, phase: "day" }),
 	},
 	{
 		id: "kindling-loading",
@@ -175,6 +208,32 @@ export const devStates: readonly DevState[] = [
 		id: "word-late",
 		title: "First open, with today's word arriving late (it still inks in)",
 		...today({ intro: true, lateWord: true, phase: "evening" }),
+	},
+	{
+		id: "word-long",
+		title: "A long word for today (clamped; the card keeps its height)",
+		...today({ longWord: true, phase: "day" }),
+	},
+	{
+		id: "word-long-late",
+		title: "First open, a long word arriving late (it inks in, clamped)",
+		...today({ intro: true, lateWord: true, longWord: true, phase: "day" }),
+	},
+	{
+		id: "word-long-dark",
+		title: "A long word for today, dark",
+		...today({ longWord: true, phase: "day", theme: "dark" }),
+	},
+	{
+		id: "empty-day-dark",
+		title: "Empty day, dark (the word card's fallback)",
+		...today({
+			campfire: "none",
+			kindling: "none",
+			modules: "none",
+			phase: "day",
+			theme: "dark",
+		}),
 	},
 	{
 		id: "finding",

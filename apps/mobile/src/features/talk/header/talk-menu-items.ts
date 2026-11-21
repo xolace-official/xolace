@@ -6,7 +6,6 @@ export type TalkMenuItem = {
 	key: string;
 	label: string;
 	subtitle?: string;
-	/** The SF Symbol iOS draws beside it. */
 	symbol: SFSymbol;
 	enabled: boolean;
 	onPress: () => void;
@@ -14,9 +13,7 @@ export type TalkMenuItem = {
 
 export type TalkMenuProps = {
 	top: number;
-	/** Mid-talk: whole minutes left; null before the talk ("Talk options"). */
 	minutesLeft: number | null;
-	/** Connected: mute and the two ends work. Get help now always does. */
 	live: boolean;
 	muted: boolean;
 	onMute: () => void;
@@ -25,11 +22,6 @@ export type TalkMenuProps = {
 	onJustEnd: () => void;
 };
 
-/**
- * The ⋯ menu (production's toolbar menu): "{n} min left in this talk"; mute, help, end
- * and make my mirror, or just end. Before the talk it is "Talk options" with only Get help
- * now (handoff §2.1, §4).
- */
 export function talkMenu(p: TalkMenuProps): {
 	title: string;
 	items: TalkMenuItem[];

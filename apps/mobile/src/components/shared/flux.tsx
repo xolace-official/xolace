@@ -9,7 +9,6 @@ import { useBreathPeriod } from "@/design/motion";
 import { BREATH } from "@/design/springs";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** Flux's poses, full-resolution art from assets/images/flux. */
 const FLUX = {
 	bundle: require("@/assets/images/flux/flux-bundle.png"),
 	campfire: require("@/assets/images/flux/flux-campfire.png"),
@@ -18,7 +17,6 @@ const FLUX = {
 	jump: require("@/assets/images/flux/jump-love-bgremove.png"),
 	map: require("@/assets/images/flux/flux-map.png"),
 	pair: require("@/assets/images/flux/flux-pair-listening.png"),
-	// The prototype's flux-point-down.png: the same file under production's name.
 	pointDown: require("@/assets/images/flux/flux-point-down-removebg-preview.png"),
 	postcard: require("@/assets/images/flux/plus-postcard-bg.png"),
 	sad: require("@/assets/images/flux/flux-sad.png"),
@@ -39,21 +37,13 @@ type Props = {
 	pose: FluxPose;
 	width: number;
 	height?: number;
-	/** Breath: rise 3 pt and scale 1.02 on a sine loop; paused off-screen. */
 	breathe?: boolean;
-	/** Override the loop (e.g. 6.7 s after two misses). */
 	periodMs?: number;
 	style?: StyleProp<ViewStyle>;
 	imageStyle?: StyleProp<ImageStyle>;
 	label?: string;
 };
 
-/**
- * The mascot. Breathes as a native loop, holds still with reduced motion, and
- * costs nothing when hidden: the loop eases back to rest and stops when its
- * screen loses focus or the app goes to the background.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function Flux({
 	pose,
 	width,
@@ -70,7 +60,6 @@ export function Flux({
 	const dayPeriod = useBreathPeriod();
 	const period = periodMs ?? dayPeriod;
 	const running = breathe && !reduced && focused && active;
-	// Ease restarts a loop only on remount: a new run (a start, or the night slowdown) moves the key.
 	const run = useLoopRun(running, period);
 
 	return (

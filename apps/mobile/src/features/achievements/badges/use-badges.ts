@@ -1,13 +1,7 @@
-/**
- * The Achievements screen's data hook: the overview, the freeze shelf, pins,
- * Share and the freeze buy. The one file here that calls Convex or the toast.
- */
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
-import { useRef, useState } from "react";
-import { Share } from "react-native";
+import { router } from "expo-router";
 import { toast } from "@/components/shared/toast";
-import { longDate } from "@/features/achievements/achievements-model";
 import type { Badges } from "@/features/achievements/badges/badges-data";
 import {
 	type BadgeView,
@@ -17,6 +11,7 @@ import {
 	pinRefused,
 } from "@/features/achievements/badges/badges-model";
 import { COPY } from "@/features/achievements/copy";
+import { canShareBadge } from "@/features/achievements/share/badge-card-model";
 import { convexErrorCode } from "@/lib/convex-error-code";
 import {
 	playAffirmativePress,
@@ -24,14 +19,13 @@ import {
 	playSoftPress,
 } from "@/lib/haptics";
 import { freezeRefusal } from "@/lib/streak-freeze";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
-/** The refusal's warning lands just after the press's soft tap, not on top of it. */
 const WARN_AFTER_MS = 120;
 
 export function useBadges(): Badges {
 	const overview = useQuery(api.achievements.display.overview);
 	const shelf = useQuery(api.achievements.display.shelf);
-	// The pin mark moves as it's pressed; a refusal puts it back.
 	const setPinned = useMutation(
 		api.achievements.pins.setPinned
 	).withOptimisticUpdate((store, { achievementId, pinned }) => {
@@ -54,9 +48,7 @@ export function useBadges(): Badges {
 		);
 	});
 	const buyFreeze = useMutation(api.achievements.sparks.buyFreeze);
-	const [buying, setBuying] = useState(false);
-	// Two quick taps land before `buying` re-renders: the ref stops the second purchase.
-	const inFlight = useRef(false);
+	const purchase = useSingleFlight();
 	const view = overview ? badgesView(overview) : undefined;
 
 	const togglePin = (b: BadgeView) => {
@@ -79,44 +71,39 @@ export function useBadges(): Badges {
 		});
 	};
 
+	// Opens the card's preview; the image (or, failing that, the old text) goes from there.
 	const share = (b: BadgeView) => {
-		if (b.earnedAt === undefined) {
+		if (!canShareBadge(b)) {
 			return;
 		}
-		Share.share({
-			message: COPY.badge.shareMessage(b.title, longDate(b.earnedAt)),
-		}).catch(() => undefined);
+		router.push({ params: { id: b.id }, pathname: "/badge-share" });
 	};
 
 	const freeze = shelf ? freezeView(shelf) : undefined;
 	const buy = async () => {
-		if (!(shelf && freeze) || inFlight.current) {
+		if (!(shelf && freeze) || purchase.isBusy()) {
 			return;
 		}
 		if (freeze.reason) {
 			toast(freeze.reason, { variant: "warning" });
 			return;
 		}
-		inFlight.current = true;
-		setBuying(true);
-		try {
-			await buyFreeze();
-			playAffirmativePress();
-		} catch (error) {
-			toast(freezeRefusal(convexErrorCode(error), shelf.freezeCap), {
-				variant: "warning",
-			});
-		} finally {
-			inFlight.current = false;
-			setBuying(false);
-		}
+		await purchase.run(async () => {
+			try {
+				await buyFreeze();
+				playAffirmativePress();
+			} catch (error) {
+				toast(freezeRefusal(convexErrorCode(error), shelf.freezeCap), {
+					variant: "warning",
+				});
+			}
+		});
 	};
 
-	// A link to a badge the screen doesn't list (an old one, or a typo).
 	const missing = () => toast(COPY.badge.gone);
 
 	return {
 		actions: { buyFreeze: buy, missing, share, togglePin },
-		state: { buying, freeze, view },
+		state: { buying: purchase.busy, freeze, view },
 	};
 }

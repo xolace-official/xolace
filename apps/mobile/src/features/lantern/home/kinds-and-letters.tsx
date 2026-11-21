@@ -22,7 +22,6 @@ const ART: Record<Kind, number> = {
 	story: require("@/assets/images/flux/flux-pair-listening.png"),
 };
 
-/** What kind of light: Explainers, Advice, Stories, each with its Flux art. */
 export function KindRows() {
 	const separator = useTokenColor("separator");
 	return (
@@ -71,7 +70,6 @@ export function KindRows() {
 	);
 }
 
-/** A–Z: every letter; a letter with no subject is dimmed and does nothing. */
 export function LetterStrip() {
 	const has = lettersWith(useHomeScreen().state.subjects ?? []);
 	return (

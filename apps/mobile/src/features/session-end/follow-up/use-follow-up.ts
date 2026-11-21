@@ -6,13 +6,8 @@ import { COPY } from "../copy";
 import { useFollowUpAsk } from "./follow-up-ask";
 import type { FollowUpSheet } from "./follow-up-data";
 
-/** The sheet closes first; the thanks lands once it has gone (board `answer`). */
 const THANKS_AFTER_MS = 420;
 
-/**
- * The heavier follow-up on Convex: one tap answers it (`feedback.submit`,
- * `mood_heavier`, which also starts its 24 h quiet), Not now answers nothing.
- */
 export function useFollowUp(): FollowUpSheet {
 	const ask = useFollowUpAsk((s) => s.ask);
 	const close = useFollowUpAsk((s) => s.close);

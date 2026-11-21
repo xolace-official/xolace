@@ -1,13 +1,9 @@
-/** Achievements on fixtures: `xolace://dev/achievements/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureBadges } from "@/features/achievements/badges/dev/fixture-badges";
 
-/** The screen draws its own bar and back button (badges §2). */
 const OPTIONS = { headerShown: false };
-/** The rows lay out before a badge measures its slot. */
 const OPEN_MS = 700;
 const HALF_TURN = Math.PI;
-/** The board's swipe-down frame (06): 140 pt pulled. */
 const PULLED = 140;
 const fromLatest = { below: false, latest: true };
 

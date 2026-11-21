@@ -12,7 +12,6 @@ import { FADE } from "../sit-look";
 
 type Props = {
 	on: boolean;
-	/** Keep the children while fading out (the first screen, the end): their content doesn't change. */
 	keep?: boolean;
 	ms?: number;
 	className?: string;
@@ -20,7 +19,6 @@ type Props = {
 	children: ReactNode;
 };
 
-/** Board `.blk`: a block of the stage fades in and out over .4 s and takes touches only while on. */
 export function Block({
 	on,
 	keep = false,

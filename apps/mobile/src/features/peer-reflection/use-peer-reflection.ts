@@ -24,17 +24,9 @@ import {
 	wantsRecent,
 } from "./peer-reflection-model";
 
-/** Production's fallback: four recent reflections when nothing matches. */
 const RECENT = { limit: 4 } as const;
 const NO_IDS: Id<"reflections">[] = [];
 
-/**
- * You're not alone on Convex: production's data flow, unchanged. The session's
- * matches, else recent ones; whether you've felt each; the path starts on
- * arrival and completes before the session end opens. "I've felt this too"
- * flips at once (an optimistic update of `hasResonated` and the count) and
- * flips back by itself when the server rate-limits it.
- */
 export function usePeerReflectionData(): PeerReflection {
 	const router = useRouter();
 	const posthog = usePostHog();
@@ -43,8 +35,6 @@ export function usePeerReflectionData(): PeerReflection {
 		usePathSession();
 	const afterPath = useSessionEndHref(sessionId);
 	const started = useRef(false);
-	// getActive goes null once completed: claim the finish so the guard below
-	// doesn't race the navigation to the session end.
 	const finishing = useRef(false);
 	const gone = useGoneStore((s) => s.gone);
 	const leave = useGoneStore((s) => s.leave);
@@ -64,7 +54,6 @@ export function usePeerReflectionData(): PeerReflection {
 		}
 	}, [sessionId, session, startPath]);
 
-	// No active session (completed or abandoned elsewhere); skipped while finishing.
 	useEffect(() => {
 		if (!(isLoading || sessionId || finishing.current)) {
 			goHome();
@@ -157,9 +146,6 @@ export function usePeerReflectionData(): PeerReflection {
 			return;
 		}
 		finishing.current = true;
-		// Complete before navigating, so the session is terminal even if the app
-		// closes on the session end. `afterPath` carries the id, since getActive is
-		// null once completed.
 		const href = afterPath("peers");
 		await completePath(true);
 		router.replace(href);
@@ -193,8 +179,6 @@ export function usePeerReflectionData(): PeerReflection {
 			cards: cardsOf(rows, resonated, gone),
 			late: isNight,
 			set,
-			// Whether you've felt each comes in before the cards do, so a card you
-			// already lit arrives lit rather than lighting as it lands.
 			status:
 				isLoading ||
 				shown === null ||

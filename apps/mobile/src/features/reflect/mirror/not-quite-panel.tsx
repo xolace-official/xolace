@@ -18,7 +18,6 @@ import { PANEL } from "../motion";
 import { useReflect } from "../reflect-data";
 import { NqReasons } from "./nq-reasons";
 
-/** Board `.nq`: 105% down when closed; laid out before it has measured. */
 const AWAY = 1.05;
 const UNMEASURED = 600;
 const CLOSE: IconName = { android: "close", ios: "xmark" };
@@ -35,12 +34,6 @@ function placeholderFor(sayMore: boolean, reason: string | null): string {
 	return r?.placeholder ?? COPY.notQuite.placeholder;
 }
 
-/**
- * Not quite, for one line (board `.nq`, card 06), and Say more on the last: the panel slides up
- * (.42 s on cubic-bezier(.32,.72,0,1)) with the line quoted on its ember bar, "What's closer?"
- * (Say more: "What's missing?"), production's four reasons, then the field and send. It rides
- * the keyboard: the field row sits 12 pt above it (the keyboard rule).
- */
 export function NotQuitePanel({ line }: { line: string }) {
 	const { state, actions } = useReflect();
 	const { nq, sayMore, nqReason, nqText } = state;
@@ -64,9 +57,7 @@ export function NotQuitePanel({ line }: { line: string }) {
 				...PLAY_AS_CHOSEN,
 			})
 		);
-		if (open) {
-			Presets.wobble();
-		} else {
+		if (!open) {
 			input.current?.blur();
 		}
 	}, [open, shown]);
@@ -80,13 +71,10 @@ export function NotQuitePanel({ line }: { line: string }) {
 		],
 	}));
 
-	// The panel keeps quoting the line while it slides away (the selection clears on send).
 	const [kept, setKept] = useState(line);
 	if (line && line !== kept) {
 		setKept(line);
 	}
-	// Words, as production asked for: a reason only steers the placeholder, and a refinement
-	// with nothing new in it would only shuffle the same mirror.
 	const ready = nqText.trim().length > 0;
 
 	return (

@@ -45,7 +45,6 @@ import {
 } from "./paywall-surface-map";
 import { ProgressiveBlurView } from "./progressive-blur-view";
 
-// Display prices while offerings are unavailable (payments off, or RC still loading).
 const FALLBACK = {
 	annual: {
 		detail: "$4.17/mo, billed yearly",
@@ -55,18 +54,12 @@ const FALLBACK = {
 	monthly: { detail: "billed monthly", numericPrice: 9.99, price: "$9.99/mo" },
 } as const;
 
-/** Why the paywall is closing; intake's `intake_completed` outcome hangs on it. */
 export type PaywallExitReason = "purchased" | "dismissed";
 
 type Props = {
 	surface?: PaywallSurface;
-	/** The companion's name for `{name}` in a surface line; passed by the route so purchases
-	 * never imports talk. */
 	companionName: string;
-	/** Session to fulfil kindling for via `paths.requestKindling` (docs/paths-v1.md §12). */
 	sessionId?: Id<"sessions">;
-	/** Where a dismiss or purchase goes. Called at most once per mount; resolve `false` if
-	 * swallowed to unlatch the guard. */
 	onExit?: (reason: PaywallExitReason) => void | Promise<boolean>;
 };
 
@@ -93,8 +86,6 @@ export function PaywallScreen({
 	const [busy, setBusy] = useState(false);
 	const [retrying, setRetrying] = useState(false);
 	const [ctaHeight, setCtaHeight] = useState(0);
-	// Single-flight exit: a second `onExit` call would persist and track a second intake
-	// outcome. The ref guards; two presses in one frame both read stale state.
 	const exiting = useRef(false);
 	const [isExiting, setIsExiting] = useState(false);
 
@@ -114,7 +105,6 @@ export function PaywallScreen({
 	const plansUnavailable =
 		appConfig.features.payments && !annualPkg && !monthlyPkg;
 
-	// Retry a failed cold-start offerings fetch as soon as the paywall opens.
 	useEffect(() => {
 		if (!plansUnavailable || isLoading) {
 			return;
@@ -163,8 +153,6 @@ export function PaywallScreen({
 		exiting.current = true;
 		setIsExiting(true);
 		Promise.resolve(closePaywall(reason)).then((written) => {
-			// Only intake reports back, and only to say the write was swallowed. Unlatch,
-			// or the close button is inert on a screen with no back edge.
 			if (written !== false) {
 				return;
 			}
@@ -175,7 +163,7 @@ export function PaywallScreen({
 
 	const handleContinue = () => {
 		if (!selectedPkg) {
-			return; // payments not live; the CTA is a visual placeholder
+			return;
 		}
 		setBusy(true);
 		purchase(selectedPkg, surface ?? undefined)
@@ -183,11 +171,10 @@ export function PaywallScreen({
 				if (!ok) {
 					return;
 				}
-				// Best-effort: a failure here costs this one kindling, never the purchase.
 				if (sessionId) {
 					requestKindling({ sessionId }).catch(console.error);
 				}
-				exit("purchased"); // server entitlement query flips reactively
+				exit("purchased");
 			})
 			.finally(() => setBusy(false));
 	};

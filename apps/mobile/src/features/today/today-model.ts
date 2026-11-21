@@ -1,46 +1,14 @@
-import { type DayPhase, PHASE_HOURS, phaseForHour } from "@/lib/day-phase";
+import type { api } from "@xolace/backend/api";
+import type { FunctionReturnType } from "convex/server";
+import { type DayPhase, NOON } from "@/lib/day-phase";
+import type { ProfileSummary } from "@/lib/profile-summary";
 import { COPY } from "./copy";
+import { type KindlingEmptyMode, kindlingCardMode } from "./kindling/card-mode";
+import type { KindlingView } from "./kindling/kindling-model";
+import type { RailTile } from "./rail/rail-model";
 
-/** The hour Today keeps: its sky, its greeting and how much it shows. */
 export type TodayPhase = DayPhase;
 
-const HOURS_IN_DAY = 24;
-
-/**
- * Today's phase. Late is the night window with night mode on (`useSessionMode().isNight`,
- * the same 22–4 window), which also puts the app on the night theme; with night mode off
- * those hours stay evening, as the prototype's Night "off" did.
- */
-export function todayPhase(hour: number, isNight: boolean): TodayPhase {
-	if (isNight) {
-		return "late";
-	}
-	const phase = phaseForHour(hour);
-	return phase === "late" ? "evening" : phase;
-}
-
-/**
- * The next hour Today has to wake at after `hour` (0–23): a phase boundary, or midnight
- * (24) for the weekday and the once-a-day intro.
- */
-export function nextWakeHour(hour: number): number {
-	const wakes = [
-		PHASE_HOURS.dawn,
-		PHASE_HOURS.day,
-		PHASE_HOURS.evening,
-		PHASE_HOURS.late,
-		HOURS_IN_DAY,
-	];
-	return wakes.find((w) => w > hour) ?? HOURS_IN_DAY;
-}
-
-/**
- * What the Reflect card shows for your open session (board `restWaiting` / `restReady`), from
- * `sessions.getActive`. A face says where a tap lands: your words with the mirror, the mirror
- * back, Where to from here (confirmed), or an error. The field shows when a tap starts fresh:
- * no session, one not sent yet, or one already on its path (Reflect doesn't reopen a path).
- * Until `getActive` answers (`undefined`) the card is still, so the field doesn't flash first.
- */
 export type CardMode =
 	| "loading"
 	| "idle"
@@ -67,12 +35,10 @@ export function cardMode(state: string | null | undefined): CardMode {
 	}
 }
 
-/** The face the card wears for a mode, or none: at rest the field, loading nothing yet. */
 export function cardFace(mode: CardMode) {
 	return mode === "idle" || mode === "loading" ? null : COPY.card[mode];
 }
 
-/** VoiceOver's hint for the card: where a face's tap lands, or the doors' hold at rest. */
 export function cardA11yHint(mode: CardMode, doorsHint: string): string {
 	const face = cardFace(mode);
 	if (face) {
@@ -81,27 +47,32 @@ export function cardA11yHint(mode: CardMode, doorsHint: string): string {
 	return mode === "idle" ? doorsHint : COPY.opensReflect;
 }
 
-/** The top row and greeting: "Thursday · evening", "Good evening, Ama". */
+/** The header's words: the phase, with the day phase's morning split off at noon. */
+export type HeaderPart = Exclude<TodayPhase, "day"> | "morning" | "afternoon";
+
+function headerPart(phase: TodayPhase, hour: number): HeaderPart {
+	if (phase !== "day") {
+		return phase;
+	}
+	return hour < NOON ? "morning" : "afternoon";
+}
+
 export function headerCopy(
 	phase: TodayPhase,
+	hour: number,
 	weekday: string,
 	name: string | null | undefined
 ): { eyebrow: string; greeting: string } {
+	const part = headerPart(phase, hour);
 	const trimmed = name?.trim();
 	return {
-		eyebrow: `${weekday} · ${COPY.partOfDay[phase]}`,
-		greeting: COPY.greeting[phase](trimmed ? trimmed : null),
+		eyebrow: `${weekday} · ${COPY.partOfDay[part]}`,
+		greeting: COPY.greeting[part](trimmed ? trimmed : null),
 	};
 }
 
-/** The doors a hold on the Reflect card opens. */
 export type Door = "talk" | "vent" | "sit";
 
-/**
- * The month's prompt on the card: while it's carried (`monthlyEvents/prompt.getCarried`,
- * read or written about), until its week ends. The server clears it then too; `use-today`
- * re-reads this at `carryUntil`, so it also goes on time while the app is open.
- */
 export function monthPromptOnCard(
 	carried: { prompt: string; carryUntil: number } | null | undefined,
 	now: number
@@ -113,22 +84,67 @@ export function monthPromptOnCard(
 	return prompt ? prompt : null;
 }
 
-/** The first open of the day plays once: the words, the rise, the ink. */
+export type TodayFold = {
+	phase: TodayPhase;
+	summary: Pick<ProfileSummary, "displayName" | "currentStreak"> | undefined;
+	session:
+		| Pick<
+				NonNullable<FunctionReturnType<typeof api.sessions.getActive>>,
+				"state"
+		  >
+		| null
+		| undefined;
+	kindling: KindlingView | null | undefined;
+	kindlingEmpty: KindlingEmptyMode | undefined;
+	campfireSettled: boolean;
+	rail: RailTile[] | undefined;
+};
+
+export function todayReady(fold: TodayFold): boolean {
+	if (fold.summary === undefined || fold.session === undefined) {
+		return false;
+	}
+	if (fold.phase === "late") {
+		return fold.rail !== undefined;
+	}
+	return (
+		kindlingCardMode(fold.kindling, fold.kindlingEmpty) !== undefined &&
+		fold.campfireSettled
+	);
+}
+
+export const TODAY_HOLD_MS = 2500;
+
+export function todayHolds(hold: {
+	ready: boolean;
+	offline: boolean;
+	waitedMs: number;
+}): boolean {
+	return !(hold.ready || hold.offline) && hold.waitedMs < TODAY_HOLD_MS;
+}
+
+export function campfireSettled(
+	cohortStatus: string | undefined,
+	v2Intake: boolean | undefined,
+	statsSettled: boolean
+): boolean {
+	if (cohortStatus === undefined) {
+		return false;
+	}
+	if (cohortStatus !== "hidden") {
+		return true;
+	}
+	return v2Intake !== undefined && (!v2Intake || statsSettled);
+}
+
 export const introDue = (playedDay: string | null, today: string): boolean =>
 	playedDay !== today;
 
-/** The streak as Today last showed it to this user, kept on the device. */
 export type SeenStreak = {
 	count: number;
-	/** The local day the flame last ignited, or null if it never has. */
 	ignitedDay: string | null;
 };
 
-/**
- * Whether the chip ignites now, and what to keep. It ignites once a day, when the
- * streak has grown since Today last showed it (the first thing that counted today).
- * The first time Today sees a streak it only remembers it: nothing grew on screen.
- */
 export function streakStep(
 	seen: SeenStreak | null,
 	count: number,
@@ -144,14 +160,8 @@ export function streakStep(
 	};
 }
 
-/** The streak as the chip shows it: the count, and a key that grows each time it ignites. */
 export type StreakShown = { count: number; day: string; igniteKey: number };
 
-/**
- * The next streak to show when the server's count or the day changes, or null when
- * nothing did. Count and key change in the same step, so the chip sees the new number and
- * the ignite together and rolls the digits (12 → 13) with the flame.
- */
 export function nextStreakShown(
 	shown: StreakShown | null,
 	count: number | undefined,
@@ -186,10 +196,6 @@ const parse = (raw: string | null): unknown => {
 	}
 };
 
-/**
- * What the device kept for this user: anything stored for another account (signed out,
- * someone else signed in), or not in the shape Today wrote, counts as nothing.
- */
 export function parseSeenStreak(
 	raw: string | null,
 	userId: string
@@ -206,7 +212,6 @@ export function parseSeenStreak(
 	return { count: v.count, ignitedDay: v.ignitedDay };
 }
 
-/** The day this user's first open last played, or null. */
 export function parseIntroDay(
 	raw: string | null,
 	userId: string
@@ -217,7 +222,6 @@ export function parseIntroDay(
 		: null;
 }
 
-/** Device-local "YYYY-MM-DD". */
 export function localDay(now: Date): string {
 	const pad = (n: number) => String(n).padStart(2, "0");
 	return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;

@@ -1,4 +1,4 @@
-/** Settings' main screen: what each row and the Plus card say. Pure. */
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { HOME_COPY as C } from "@/features/settings/home/copy";
 import { WEEKLY_TALK_S } from "@/lib/talk/talk-time";
 
@@ -7,11 +7,9 @@ export type ThemeMode = "system" | "light" | "dark";
 export const modeLabel = (mode: ThemeMode) =>
 	({ dark: "Dark", light: "Light", system: "System" })[mode];
 
-/** The mirror tone as its name ("Gentle"); nothing while preferences load. */
 export const toneLabel = (tone: string | undefined) =>
 	tone ? tone.charAt(0).toUpperCase() + tone.slice(1) : undefined;
 
-/** On while either family (reminders, chat) wants delivery: production's master flag. */
 export const notificationsLabel = (enabled: boolean | undefined) => {
 	if (enabled === undefined) {
 		return;
@@ -21,7 +19,6 @@ export const notificationsLabel = (enabled: boolean | undefined) => {
 
 export type SignIn = "apple" | "google" | "email";
 
-/** The first linked provider decides it; no provider means email. */
 export function signInOf(providers: readonly string[]): SignIn {
 	const provider = (providers[0] ?? "").toLowerCase();
 	if (provider.includes("apple")) {
@@ -33,27 +30,24 @@ export function signInOf(providers: readonly string[]): SignIn {
 	return "email";
 }
 
-/** `talk.time.left`: null off Plus, undefined while it loads. */
 export type TalkTime = { secondsLeft: number } | null | undefined;
 
-/**
- * Free: the card opens the paywall. Plus: it only shows talk time, as production's Plus row
- * did, so a subscriber's tap can't count as a paywall open that can never convert.
- */
 export type PlusCard =
+	| { kind: "loading"; a11y: string; opensPaywall: false }
 	| { kind: "free"; a11y: string; opensPaywall: true }
 	| {
 			kind: "plus";
 			opensPaywall: false;
-			/** "12 min of talk left this week"; null until talk time loads. */
 			line: string | null;
-			/** The bar, 0–1; null until talk time loads. */
 			fill: number | null;
 			a11y: string;
 	  };
 
-export function plusCard(isPlus: boolean, time: TalkTime): PlusCard {
-	if (!isPlus) {
+export function plusCard(plus: PlusStatus, time: TalkTime): PlusCard {
+	if (plus === "loading") {
+		return { a11y: C.plus.name, kind: "loading", opensPaywall: false };
+	}
+	if (plus === "free") {
 		return { a11y: C.plus.a11yFree, kind: "free", opensPaywall: true };
 	}
 	if (!time) {
@@ -76,9 +70,7 @@ export function plusCard(isPlus: boolean, time: TalkTime): PlusCard {
 	};
 }
 
-/** Where the manual update check stands (expo-updates, plus this screen's last result). */
 export type UpdateStatus = {
-	/** False in dev clients, which load JS from Metro. */
 	enabled: boolean;
 	checking: boolean;
 	downloading: boolean;
@@ -110,7 +102,6 @@ export function updateRow(s: UpdateStatus): { label: string; value: string } {
 	return { label, value: s.result === "failed" ? C.couldNotCheck : "" };
 }
 
-/** "Version 1.16.0 · Update Nov 8, 2026 · preview"; the channel is left out on production. */
 export const versionLabel = (v: {
 	version: string | undefined;
 	updateDate: string | null;

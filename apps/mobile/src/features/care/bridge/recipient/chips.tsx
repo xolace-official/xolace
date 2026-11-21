@@ -4,7 +4,6 @@ import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
 
-/** One-of chips that can be cleared: tapping the chosen one again unchooses it. */
 export function Chips({
 	options,
 	value,
@@ -14,7 +13,6 @@ export function Chips({
 	options: readonly string[];
 	value: string | null;
 	onPress: (option: string) => void;
-	/** The group's name, for VoiceOver. */
 	label: string;
 }) {
 	return (

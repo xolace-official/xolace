@@ -1,4 +1,3 @@
-/** A thread and a profile on fixtures: Maya, from the prototype, as production rows. */
 import type { Id } from "@xolace/backend/dataModel";
 import { NOW, PEOPLE } from "../../dev/fixtures";
 import type { Profile } from "../../xolacer/xolacer-model";
@@ -53,7 +52,6 @@ export const RESTING: ThreadConversation = {
 	status: "resting",
 };
 
-/** Blocked or stepped back: the same bar for every reason. */
 export const CLOSED: ThreadConversation = {
 	...OPEN,
 	canRate: true,

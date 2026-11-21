@@ -26,24 +26,16 @@ import {
 import { mmss } from "@/features/lantern/reader/reader-model";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** The dock's height above the safe area: the 3 pt line, a 68 pt row and 8 under it. */
 export const DOCK_H = 3 + 68 + 8;
 const IN_MS = 280;
 const OUT_MS = 200;
 const BAR_MAX_SCALE = 1.5;
 
-/**
- * Production's `AudioDock` (handoff §5.4): pinned to the bottom, under a violet progress line, one
- * row: the cover, the title and the time, back 15, play, the transcript and close. Once a free
- * reader's preview ends, Keep listening takes the transport's place. Its own toolbar group after
- * the body; appearing never takes focus.
- */
 export function AudioDock({
 	bottom,
 	inert,
 }: {
 	bottom: number;
-	/** Under the Aa sheet. */
 	inert: boolean;
 }) {
 	const { state, actions } = useReaderScreen();
@@ -135,7 +127,6 @@ export function AudioDock({
 	);
 }
 
-/** The two pieces that follow the narration's time, so only they re-render as it ticks. */
 function DockProgress({ reduced }: { reduced: boolean }) {
 	const { currentTime, duration } = useReaderClock();
 	const share = duration > 0 ? Math.min(currentTime / duration, 1) : 0;

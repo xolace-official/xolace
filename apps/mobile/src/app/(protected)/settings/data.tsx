@@ -1,10 +1,11 @@
+import { useReceiveLetters } from "@/features/letters/settings/use-letters-settings";
 import { PrivacyData } from "@/features/settings/privacy/privacy-data";
 import { PrivacyScreen } from "@/features/settings/privacy/privacy-screen";
 
-/** Privacy & Data (the route keeps production's name, `data`). */
 export default function DataRoute() {
+	const letters = useReceiveLetters();
 	return (
-		<PrivacyData>
+		<PrivacyData letters={letters}>
 			<PrivacyScreen />
 		</PrivacyData>
 	);

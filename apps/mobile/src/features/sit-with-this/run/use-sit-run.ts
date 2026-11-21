@@ -17,7 +17,6 @@ import { COPY } from "../copy";
 import { type Exercise, type HandIntensity, isBreathing } from "../sit-model";
 import { breathFelt, type RunStart, runReducer, startRun } from "./sit-run";
 
-/** Production's hand pulse by the step's intensity (the old haptic beat). */
 const HAND: Record<HandIntensity, () => void> = {
 	heavy: playCompassionateHold,
 	light: playGentlePresence,
@@ -35,23 +34,14 @@ const announce = (text: string) =>
 
 type Args = {
 	exercise: Exercise;
-	/** The first screen; skipped after a swap. */
 	preRoll: boolean;
 	W: number;
 	H: number;
 	reduced: boolean;
-	/** A dev state's frozen frame. */
 	at?: RunStart["at"];
 	hold?: boolean;
 };
 
-/**
- * One run of an exercise: the run's state (`sit-run.ts`), the one clock that
- * plays it, the breath's haptics in step with the phases, and what VoiceOver
- * hears. The clock runs while the screen is in front and the app is active, so
- * the swap sheet (a form sheet over it) and the background pause it; pause
- * freezes it. No haptics under reduced motion.
- */
 export function useSitRun({
 	exercise,
 	preRoll,
@@ -104,7 +94,6 @@ export function useSitRun({
 		W,
 	});
 
-	// The clock hears about a new beat (React's only part in the breath).
 	const { cfg } = clock;
 	useEffect(() => {
 		if (beat) {
@@ -112,8 +101,6 @@ export function useSitRun({
 		}
 	}, [cfg, run, beat]);
 
-	// A pause, the sheet, leaving the screen or the background stops a breath
-	// that's being felt; so does leaving Sit altogether.
 	const { stop } = breath;
 	useEffect(() => {
 		if (!feel) {
@@ -122,7 +109,6 @@ export function useSitRun({
 	}, [feel, stop]);
 	useEffect(() => stop, [stop]);
 
-	// VoiceOver hears each beat; a breath's caption is said with its phases.
 	const said =
 		run.stage === "close" ? `${COPY.stayed.title} ${COPY.stayed.sub}` : null;
 	const spoken =
@@ -140,7 +126,6 @@ export function useSitRun({
 		begin: () => dispatch({ total, type: "begin" }),
 		clock,
 		inFront,
-		/** A prompt's Done. */
 		next: () => dispatch({ serial: run.serial, total, type: "advance" }),
 		run,
 		setPaused: (paused: boolean) => dispatch({ paused, type: "pause" }),

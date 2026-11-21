@@ -2,11 +2,6 @@ import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Card } from "@/components/shared/card";
 
-/**
- * A stand-in for the intake's day-3 card (`features/intake/finding-card.tsx`), which the
- * Today route composes in: same card, same type, fixed copy, so the slot can be seen on
- * fixtures. Dev only; Today never imports intake.
- */
 export function FixtureFinding() {
 	return (
 		<Card className="gap-3 px-5 py-5">

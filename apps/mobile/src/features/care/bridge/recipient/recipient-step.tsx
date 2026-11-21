@@ -1,3 +1,7 @@
+import {
+	BRIDGE_ADDRESS_TERM_MAX_CHARS,
+	BRIDGE_NAME_MAX_CHARS,
+} from "@xolace/backend/shared";
 import { useEffect, useRef } from "react";
 import { type TextInputInstance, View } from "react-native";
 import {
@@ -13,8 +17,6 @@ import { useBridgeScreen } from "@/features/care/bridge/bridge-data";
 import {
 	ADDRESS_TERMS,
 	canWrite,
-	MAX_ADDRESS_TERM_LENGTH,
-	MAX_NAME_LENGTH,
 	RELATIONSHIPS,
 	type Relationship,
 } from "@/features/care/bridge/bridge-model";
@@ -25,9 +27,7 @@ import { Field } from "@/features/care/bridge/recipient/field";
 import { playSoftPress } from "@/lib/haptics";
 
 const CLOSE: IconName = { android: "close", ios: "xmark" };
-/** Production's: keeps a focused field clear of the keyboard and the button above it. */
 const KEYBOARD_GAP = 110;
-/** Long enough for the address section to lay out before focus scrolls to it. */
 const FOCUS_DELAY_MS = 50;
 const isRelationship = (s: string): s is Relationship =>
 	(RELATIONSHIPS as readonly string[]).includes(s);
@@ -45,14 +45,12 @@ function Section({ title, sub }: { title: string; sub: string }) {
 	);
 }
 
-/** Who it's for: their name, and optionally how they relate and what you call them. */
 export function RecipientStep() {
 	const { state, actions } = useBridgeScreen();
 	const { name, relationship, addressTerm } = state.recipient;
 	const addressRef = useRef<TextInputInstance>(null);
 	const insets = useSafeAreaInsets();
 
-	// A chosen relationship reveals the address field: focus it so it scrolls above the keyboard.
 	useEffect(() => {
 		if (!relationship) {
 			return;
@@ -90,7 +88,7 @@ export function RecipientStep() {
 				<Field
 					autoFocus
 					label={COPY.recipient.nameLabel}
-					max={MAX_NAME_LENGTH}
+					max={BRIDGE_NAME_MAX_CHARS}
 					onChange={actions.setName}
 					placeholder={COPY.recipient.namePlaceholder}
 					value={name}
@@ -125,7 +123,7 @@ export function RecipientStep() {
 						) : null}
 						<Field
 							label={COPY.recipient.address}
-							max={MAX_ADDRESS_TERM_LENGTH}
+							max={BRIDGE_ADDRESS_TERM_MAX_CHARS}
 							onChange={actions.setAddressTerm}
 							placeholder={COPY.recipient.addressPlaceholder}
 							ref={addressRef}
@@ -134,7 +132,6 @@ export function RecipientStep() {
 					</View>
 				) : null}
 			</KeyboardAwareScrollView>
-			{/* Rides on the keyboard while it's up; tucks into the safe area when it's down. */}
 			<KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
 				<View className="gap-1.5 bg-background px-4 pt-2 pb-safe-or-4">
 					<CtaButton

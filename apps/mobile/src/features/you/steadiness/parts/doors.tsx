@@ -11,7 +11,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 const S = COPY.steadinessScreen;
 const LOCK = { android: "lock", ios: "lock.fill" } as const;
 
-/** Free: production's "Unlock numbers" pill. */
 export function UnlockNumbers({ onPress }: { onPress: () => void }) {
 	const accent = useTokenColor("accent");
 	return (
@@ -33,10 +32,6 @@ export function UnlockNumbers({ onPress }: { onPress: () => void }) {
 	);
 }
 
-/**
- * Free: production's CompoundingUpsellLine, glass with an amber tint: a part has been heavier
- * than usual, with no number. `onPlaced` gives the screen its place, so it's spent once seen.
- */
 export function UpsellLine({
 	domain,
 	onPress,

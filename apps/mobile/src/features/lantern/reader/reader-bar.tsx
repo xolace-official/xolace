@@ -11,7 +11,6 @@ import type { Fold, FoldStyles } from "@/features/lantern/reader/cover-fold";
 import { MinutesLeft } from "@/features/lantern/reader/minutes-left";
 import { useReaderScreen } from "@/features/lantern/reader/reader-data";
 
-/** Capped so the bar stays one row; the full text is in the labels (#400). */
 const BAR_MAX_SCALE = 1.5;
 const LEFT_FROM = -10;
 const ICON = {
@@ -22,11 +21,9 @@ const ICON = {
 	share: { android: "share", ios: "square.and.arrow.up" },
 } as const;
 
-// A share link opens the reader with nothing under it.
 const goBack = () =>
 	router.canGoBack() ? router.back() : router.replace("/(protected)");
 
-/** The cover under its scrim. The reader draws it twice: behind the scroller and in the bar. */
 export function CoverPhoto({
 	f,
 	style,
@@ -55,8 +52,6 @@ export function CoverPhoto({
 	);
 }
 
-/** The bar window: the same photo at the same offset, clipped to the bar, with its shade and
- * the read line. */
 export function BarWindow({ f, styles }: { f: Fold; styles: FoldStyles }) {
 	return (
 		<View
@@ -79,10 +74,6 @@ export function BarWindow({ f, styles }: { f: Fold; styles: FoldStyles }) {
 	);
 }
 
-/**
- * Back, the title's echo (with minutes left, new in v2), then Save, Share and Aa. Outside the
- * bar's clip, so a pressed glass button can swell past its edge. Inert while a sheet is up.
- */
 export function BarRow({
 	f,
 	y,
@@ -109,7 +100,6 @@ export function BarRow({
 				label={COPY.reader.bar.back}
 				onPress={goBack}
 			/>
-			{/* A visual echo of the title; screen readers already have the heading. */}
 			<Animated.View
 				accessibilityElementsHidden
 				className="min-w-0 flex-1"

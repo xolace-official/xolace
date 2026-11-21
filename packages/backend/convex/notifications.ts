@@ -7,6 +7,7 @@ import {
 	mutation,
 	query,
 } from "./_generated/server";
+import { noteQuoteOpened } from "./dailyQuotes/opened";
 import { requireAuth } from "./lib/auth";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
 import { reconcilePushDevice } from "./lib/pushDevices";
@@ -68,7 +69,8 @@ const notificationLogDocValidator = v.object({
 		v.literal("kindling_ready"),
 		v.literal("streak_milestone"),
 		v.literal("domain_unlock"),
-		v.literal("achievement")
+		v.literal("achievement"),
+		v.literal("daily_quote")
 	),
 });
 
@@ -77,7 +79,8 @@ const notificationLogDocValidator = v.object({
  * push payload, is `legacyNotificationType` in outreach/push.ts.
  */
 const LEGACY_TYPE_INTENT: Record<
-	Exclude<Doc<"notification_log">["type"], "streak_milestone">,
+	// `daily_quote` is outreach-only (B19): `schedule` never sent it.
+	Exclude<Doc<"notification_log">["type"], "streak_milestone" | "daily_quote">,
 	OutreachIntent
 > = {
 	achievement: "achievement",
@@ -188,6 +191,13 @@ export const schedule = internalMutation({
  */
 export const registerToken = mutation({
 	args: {
+		/**
+		 * `false`: register this device and change no preference. For a client
+		 * asking for push on behalf of one kind of notification (the daily
+		 * quote, B19), so a yes to that wakes nothing else. Absent keeps the
+		 * first-grant auto-enable below, which shipped builds rely on.
+		 */
+		autoEnable: v.optional(v.boolean()),
 		pushToken: v.string(),
 	},
 	handler: async (ctx, args) => {
@@ -249,7 +259,11 @@ export const registerToken = mutation({
 			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
 			.unique();
 
-		if (preferences && !preferences.notifications.enabled) {
+		if (
+			args.autoEnable !== false &&
+			preferences &&
+			!preferences.notifications.enabled
+		) {
 			await updateNotificationPrefs(ctx, profile._id, {
 				// Chat notifications ride the same permission grant and the same
 				// token; a user who just allowed notifications gets the feature
@@ -338,6 +352,16 @@ export const markResultedInSession = mutation({
 			await ctx.db.patch("outreach", log.outreachId, {
 				resultedInSession: true,
 			});
+			// A tapped daily quote push opened its quote (B19); shipped builds
+			// make this call, so it counts before they call `markOpened`.
+			const outreach = await ctx.db.get("outreach", log.outreachId);
+			const quote =
+				outreach?.moment?.kind === "daily_quote"
+					? await ctx.db.get("daily_quotes", outreach.moment.quoteId)
+					: null;
+			if (quote) {
+				await noteQuoteOpened(ctx, quote);
+			}
 		}
 		return null;
 	},
@@ -473,7 +497,10 @@ export const loadGenerationContext = internalQuery({
 
 /**
  * List recent notifications for the current user's profile.
+ * @deprecated No current client calls it: the settings notification log is gone.
  */
+// DEPRECATED(remove-after: app >= first version without the settings notification log): old
+// builds still read it.
 export const list = query({
 	args: {},
 	handler: async (ctx) => {

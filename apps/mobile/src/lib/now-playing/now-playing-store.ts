@@ -8,12 +8,10 @@ import type { PlaybackReturn } from "@/lib/audio/use-playback";
 import { armPlayOnLoad, takePlayOnLoad } from "@/lib/now-playing/play-on-load";
 import { clearSlept, resetSleepTimer } from "@/lib/now-playing/sleep-timer";
 
-/** A track as `paths.getBoundAudioTrack` serves it. */
 export type BoundTrack = NonNullable<
 	FunctionReturnType<typeof api.paths.getBoundAudioTrack>
 >;
 
-/** Where a play was reached from (docs/paths-v1.md §13), for `browse_track_played`. */
 export type BrowseFrom =
 	| "hub-new"
 	| "family-list"
@@ -21,27 +19,34 @@ export type BrowseFrom =
 	| "discovery-strip"
 	| "twig-more-like-this"
 	| "library-hub"
-	| "search";
+	| "search"
+	| "explore-continue"
+	| "explore-featured"
+	| "explore-hour"
+	| "explore-named"
+	| "explore-short"
+	| "explore-pick";
 
 export type NowPlaying = {
 	slug: string;
 	stepId?: Id<"path_steps">;
 	from?: BrowseFrom;
+	preview?: true;
 };
 type Playback = PlaybackReturn<BoundTrack>;
 
-// The one track loaded outside any screen (S4): the player and the mini player show it, the
-// player feature's host plays it. Module-level because
-// writers and readers sit in unrelated subtrees. `current` is what to play;
-// `playback` is the live `useTrackPlayback` result the host publishes.
 let current: NowPlaying | null = null;
 let playback: Playback | null = null;
-// One `browse_track_played` per loaded track, however often the player reopens.
 let played = false;
-// A new track lifts the mini-player once, when the player closes over it (S4 pulse).
 let attention = 0;
 let attentionPending = false;
-// Bumped by Try again: the host remounts its runner, which mints the track afresh.
+type Return = {
+	track: NowPlaying | null;
+	at: number;
+	playing: boolean;
+	played: boolean;
+};
+let preview: Return | null = null;
 let attempt = 0;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
@@ -59,7 +64,7 @@ const getLoaded = () => !!playback?.track;
 const getIsPlaying = () => !!playback?.isPlaying;
 
 const noop = () => {};
-/** What a reader sees before the host has published. */
+const noopAsync = async () => {};
 const IDLE: Playback = {
 	currentTime: 0,
 	didJustFinish: false,
@@ -69,7 +74,7 @@ const IDLE: Playback = {
 	isPlaying: false,
 	laps: 0,
 	loop: false,
-	seekTo: noop,
+	seekTo: noopAsync,
 	setLoop: noop,
 	setVolume: noop,
 	toggle: noop,
@@ -77,16 +82,19 @@ const IDLE: Playback = {
 	volume: 1,
 };
 
-// A play asked for with the load (a Lantern hub's listen card plays in place), for the
-// host to start once the track is minted: the slug it was asked for (`play-on-load.ts`).
 let playOnLoad: string | null = null;
+let startAt: { slug: string; at: number } | null = null;
 
-/**
- * `play`: start it as soon as it's loaded, with no player screen to tap play on. Without it,
- * as before: load only.
- */
-export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
+export function setNowPlaying(
+	next: NowPlaying,
+	options?: { play?: boolean; at?: number }
+) {
 	playOnLoad = armPlayOnLoad(playOnLoad, next.slug, options?.play === true);
+	if (options?.play === true || options?.at !== undefined) {
+		startAt = { at: Math.max(0, options.at ?? 0), slug: next.slug };
+	} else if (startAt?.slug !== next.slug) {
+		startAt = null;
+	}
 	if (
 		current?.slug === next.slug &&
 		current.stepId === next.stepId &&
@@ -95,12 +103,9 @@ export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
 		return;
 	}
 	if (current?.slug !== next.slug) {
-		// Never show the previous track's status under the new slug.
 		playback = null;
 		played = false;
-		// A track played in place never went through the player: nothing to lift for later.
 		attentionPending = options?.play !== true;
-		// The timer carries over to the new track; "Paused by the sleep timer" was the old one's.
 		clearSlept();
 	}
 	current = next;
@@ -109,7 +114,8 @@ export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
 
 export function clearNowPlaying() {
 	playOnLoad = null;
-	// Stopping the track clears the sleep timer; starting a different one keeps it.
+	startAt = null;
+	preview = null;
 	resetSleepTimer();
 	if (!(current || playback)) {
 		return;
@@ -120,7 +126,6 @@ export function clearNowPlaying() {
 	emit();
 }
 
-/** Try again after a failed load: the host mints the same track afresh. */
 export function retryNowPlaying() {
 	if (!current) {
 		return;
@@ -129,11 +134,9 @@ export function retryNowPlaying() {
 	emit();
 }
 const getAttempt = () => attempt;
-/** Host only: changes on each Try again. */
 export const useNowPlayingAttempt = () =>
 	useSyncExternalStore(subscribe, getAttempt, getAttempt);
 
-/** Player screen unmount: a track loaded during that visit pulses the mini-player once. */
 export function releaseMiniPlayerAttention() {
 	if (!(attentionPending && current)) {
 		return;
@@ -146,24 +149,60 @@ const getAttention = () => attention;
 export const useMiniPlayerAttention = () =>
 	useSyncExternalStore(subscribe, getAttention, getAttention);
 
-/** Host only: whether `slug`, now loaded, was asked to play. Asks once. */
-export function consumePlayOnLoad(slug: string) {
+export function consumePlayOnLoad(slug: string): {
+	asked: boolean;
+	at: number;
+} {
 	const taken = takePlayOnLoad(playOnLoad, slug);
 	playOnLoad = taken.pending;
-	return taken.asked;
+	const at = startAt?.slug === slug ? startAt.at : 0;
+	if (startAt?.slug === slug) {
+		startAt = null;
+	}
+	return { asked: taken.asked, at };
 }
 
-/** Host only. */
+export function startPreview(slug: string): boolean {
+	if (current?.slug === slug) {
+		return false;
+	}
+	if (!(preview && current?.preview)) {
+		preview = {
+			at: playback?.currentTime ?? 0,
+			played,
+			playing: !!playback?.isPlaying,
+			track: current,
+		};
+		if (playback?.isPlaying) {
+			playback.toggle();
+		}
+	}
+	setNowPlaying({ preview: true, slug }, { play: true });
+	return true;
+}
+
+export function endPreview() {
+	const back = preview;
+	preview = null;
+	if (!(back && current?.preview)) {
+		return;
+	}
+	if (!back.track) {
+		clearNowPlaying();
+		return;
+	}
+	setNowPlaying(back.track, { at: back.at, play: back.playing });
+	played = back.played;
+	attentionPending = false;
+}
+
 export function publishPlayback(next: Playback | null) {
 	playback = next;
 	emit();
 }
 
-/** Play/pause for every control; the first start of a loaded track records
- * `browse_track_played`. */
 export function togglePlayback(p: Playback, posthog: PostHog) {
 	if (!p.isPlaying) {
-		// A play forgets "Paused by the sleep timer".
 		clearSlept();
 	}
 	if (!p.isPlaying && p.track && current?.from && !played) {
@@ -177,34 +216,24 @@ export function togglePlayback(p: Playback, posthog: PostHog) {
 	p.toggle();
 }
 
-/** What's loaded, read once (an action's moment). */
 export const nowPlaying = () => current;
 export const useNowPlaying = () =>
 	useSyncExternalStore(subscribe, getCurrent, getCurrent);
-/** The live playback, or the idle shape until `slug` is the one loaded and published. */
 export function useNowPlayingPlayback(slug?: string): Playback {
 	const np = useNowPlaying();
 	const pb = useSyncExternalStore(subscribe, getPlayback, getPlayback);
 	return pb && (slug === undefined || np?.slug === slug) ? pb : IDLE;
 }
-/** A boolean snapshot, so the tab layout doesn't re-render on every status tick. */
 const useNowPlayingLoaded = () =>
 	useSyncExternalStore(subscribe, getLoaded, getLoaded);
-/** Whether the loaded track is playing, as a boolean snapshot: a list that marks it doesn't
- * re-render on every status tick. */
 export const useNowPlayingIsPlaying = () =>
 	useSyncExternalStore(subscribe, getIsPlaying, getIsPlaying);
-/** The live playback, read once (an action's moment), or the idle shape. */
 export const nowPlayingPlayback = (): Playback => playback ?? IDLE;
 
-/** Mini-player capsule plus its gap above the tab bar; floating UI over the tabs must clear it. */
 const MINI_PLAYER_CLEARANCE = 64;
-/** Whether the mini-player (accessory on iOS 26, overlay elsewhere) is on screen. */
 export function useMiniPlayerShown() {
 	return useNowPlayingLoaded();
 }
-/** Scroll tail a tab screen reserves for the overlay (iOS 26 insets natively). Not tied to the
- * bar hiding: dropping it jumps a list at its end. */
 export function useMiniPlayerInset() {
 	return useNowPlayingLoaded() && !isLiquidGlassAvailable()
 		? MINI_PLAYER_CLEARANCE

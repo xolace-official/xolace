@@ -12,8 +12,6 @@ const S = COPY.steadinessScreen;
 const FLAME = { android: "local_fire_department", ios: "flame.fill" } as const;
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
 
-/** What Xolace noticed (production's SteadinessInsights): a hairline, then each with its
- * eyebrow and the day it was written. */
 export function NoticedList({
 	items,
 	className,
@@ -56,8 +54,6 @@ export function NoticedList({
 	);
 }
 
-/** Kindling is per session: offered only when the active one came from a session about this
- * part. */
 export function KindlingRow({ onPress }: { onPress: () => void }) {
 	const ember = useTokenColor("ember");
 	const subtle = useTokenColor("subtle");

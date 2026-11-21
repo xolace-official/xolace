@@ -9,23 +9,22 @@ import type { Timeline } from "../reflect-model";
 import { MirrorLine } from "./mirror-line";
 import type { MirrorInk } from "./mirror-word";
 
+/**
+ * The tick as the line arms. A plain function on purpose: the pan schedules it back on the RN
+ * runtime, and `scheduleOnRN` rejects a Pulsar preset itself (presets are worklets).
+ */
+const armTick = () => Presets.System.selection();
+
 type Props = {
 	e: SharedValue<number>;
 	tl: Timeline;
 	ink: MirrorInk;
 	wash: string;
-	/** The line Not quite or Say more is about (−1: none). */
 	chosen: number;
-	/** The face glances up at your words when a borrowed line is tapped. */
 	glance: () => void;
-	/** The first line, for VoiceOver to move to once the mirror has written in. */
 	firstRef: Ref<ComponentRef<typeof View>>;
 };
 
-/**
- * The mirror's lines, one block each for VoiceOver, in order. A tap flashes where you said a
- * borrowed line (or, picking, chooses it); a drag right says that part missed.
- */
 export function MirrorLines({
 	e,
 	tl,
@@ -69,7 +68,7 @@ export function MirrorLines({
 					ink={ink}
 					key={`${landN}-${mv}-${i}`}
 					line={line}
-					onArm={Presets.System.selection}
+					onArm={armTick}
 					onChoose={(k) => actions.notQuite(k)}
 					onTap={onTap}
 					pickMode={pickMode}

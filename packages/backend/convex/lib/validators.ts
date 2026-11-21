@@ -1,5 +1,7 @@
 import { v } from "convex/values";
+import { dailyQuoteSettingValidator } from "../dailyQuotes/validators";
 import { outreachChannelValidator } from "../outreach/validators";
+import { ERROR_CODES } from "./shared";
 import { DOMAINS } from "./understandingVocab";
 import {
 	talkDirectnessValidator,
@@ -25,6 +27,11 @@ export const platformValidator = v.union(
 );
 
 export const domainValidator = v.union(...DOMAINS.map((d) => v.literal(d)));
+
+export const sessionErrorCodeValidator = v.union(
+	v.literal(ERROR_CODES.safeguardRejected),
+	v.literal(ERROR_CODES.reflectionRateLimited)
+);
 
 export const resourceValidator = v.object({
 	description: v.optional(v.string()),
@@ -158,7 +165,10 @@ export const talkIssueValidator = v.object({
 /** Where an escalation was raised (#772). */
 export const escalationSourceValidator = v.union(
 	v.literal("session"),
-	v.literal("telegram")
+	v.literal("telegram"),
+	// The check at send found the letter's writer may be at risk (#750). No
+	// sessionId, and never the letter's words.
+	v.literal("letter")
 );
 
 export const actionTakenValidator = v.union(
@@ -458,18 +468,42 @@ export const profileCardValidator = v.union(
 	v.literal("week")
 );
 
-/** The background behind the daily quote (`quotes.md` §1), in the sheet's order. */
-export const quoteBackgroundValidator = v.union(
-	v.literal("poster"),
-	v.literal("first-light"),
-	v.literal("mountain-air"),
-	v.literal("deep-forest"),
-	v.literal("night"),
-	v.literal("quiet-lake"),
-	v.literal("golden-meadow"),
-	v.literal("birds-at-dusk"),
-	v.literal("last-light"),
-	v.literal("hearth")
+/**
+ * The background behind the daily quote: a key in the `quote_backgrounds`
+ * catalogue (B18). Widened from B7's fixed list of ten so backgrounds can be
+ * added, retired or moved between free and Xolace+ without a release; every
+ * key that list accepted is still a string, so the change is additive.
+ */
+export const quoteBackgroundValidator = v.string();
+
+/** A background is a photo (`still`) or a hosted video loop (`loop`). */
+export const quoteBackgroundKindValidator = v.union(
+	v.literal("still"),
+	v.literal("loop")
+);
+
+/** The words' colour over it: `dark` on the light Poster, `light` over the scrim. */
+export const quoteBackgroundInkValidator = v.union(
+	v.literal("light"),
+	v.literal("dark")
+);
+
+/** One hosted file of a loop, with the SHA-256 the upload script compares. */
+export const quoteBackgroundFileValidator = v.object({
+	sha256: v.string(),
+	storageId: v.id("_storage"),
+});
+
+/**
+ * Explore's time of day (B6, `explore.md` §7), the same four phases as
+ * Today's clock (`useTodayPhase`): dawn 4–9, day 9–17, evening 17–22, late
+ * 22–4. Also what an `audio_tracks.bestAt` tag holds.
+ */
+export const explorePhaseValidator = v.union(
+	v.literal("dawn"),
+	v.literal("day"),
+	v.literal("evening"),
+	v.literal("late")
 );
 
 /** A card on Explore's "Pick up where you left off": a track (an episode
@@ -506,8 +540,10 @@ export const preferencesDocValidator = v.object({
 		achievement: v.optional(v.boolean()),
 		channelOrder: v.optional(v.array(outreachChannelValidator)),
 		chat: v.optional(v.boolean()),
+		dailyQuote: v.optional(dailyQuoteSettingValidator),
 		enabled: v.boolean(),
 		gentleReturn: v.boolean(),
+		letters: v.optional(v.boolean()),
 		milestone: v.boolean(),
 		patternNudge: v.boolean(),
 		quietWindow: v.optional(

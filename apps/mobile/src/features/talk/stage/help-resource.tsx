@@ -6,7 +6,6 @@ import { cn } from "@/lib/cn";
 import { playSoftPress } from "@/lib/haptics";
 import { opensResource } from "../talk-model";
 
-/** One person or place who can help, in the crisis card; a number or link opens on tap. */
 export function HelpResource({
 	resource,
 	onOpen,

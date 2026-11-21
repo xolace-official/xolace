@@ -1,5 +1,3 @@
-// The demo's one take (#714): the intake's listen take, shorter. Their words show as they
-// come; stopping sends them, a denied or missing mic goes to typing.
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
@@ -9,7 +7,6 @@ import { formatTime } from "@/lib/format-time";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** One thing said, not a talk: the take stops itself here. */
 const DEMO_TAKE_SECONDS = 30;
 const STOP_ICON = { android: "stop", ios: "stop.fill", web: "stop" } as const;
 const STOP_ICON_SIZE = 22;

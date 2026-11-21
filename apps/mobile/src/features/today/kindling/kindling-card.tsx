@@ -1,61 +1,117 @@
+import { useEffect, useState } from "react";
 import { View } from "react-native";
-import { useSharedValue } from "react-native-reanimated";
+import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { Card } from "@/components/shared/card";
 import { EaseView } from "@/design/ease";
 import { useToday } from "../today-data";
 import { useOnScreen, useTodayFrame } from "../today-frame";
 import { MODULE_GAP } from "../today-motion";
 import { todayRiseProps } from "../today-rise";
+import { type KindlingCardMode, kindlingCardMode } from "./card-mode";
+import { KindlingEmpty } from "./kindling-empty";
 import { KindlingLive } from "./kindling-live";
+import type { KindlingView } from "./kindling-model";
+import { SWAP, SwapLayer } from "./swap-layer";
 
 const PAD_X = 18;
 const PAD_Y = 16;
 const CARD_H = 172;
-/** The board's `.card` radius. */
 const RADIUS = 26;
-/** The first rise slot after the hero; the campfire takes the next (1), S1d's modules the rest. */
 const RISE_SLOT = 0;
+const OUT = { left: PAD_X, right: PAD_X, top: PAD_Y } as const;
 
-/**
- * What the card shows. Today: a live kindling, or nothing, as production's card. S16 fills
- * the empty frame (Xolace+ with none right now, free, setting up: `P/src/features/today/
- * kindling/card-mode.ts`) by adding its modes here; the frame below stays.
- */
-type KindlingCardMode = "live" | "none";
+const SKELETON = "skeleton";
+type Layer = KindlingCardMode | typeof SKELETON;
 
-/** Today's kindling card: the steps from your last session, as a path you tend. */
+function useSwap(
+	mode: KindlingCardMode | undefined,
+	kindling: KindlingView | null | undefined
+) {
+	const layer: Layer = mode ?? SKELETON;
+	const [shown, setShown] = useState(layer);
+	const [leaving, setLeaving] = useState<Layer | null>(null);
+	const [swapped, setSwapped] = useState(false);
+	const [lastLive, setLastLive] = useState(kindling);
+	if (kindling && kindling !== lastLive) {
+		setLastLive(kindling);
+	}
+	if (shown !== layer) {
+		setLeaving(shown === SKELETON ? null : shown);
+		setShown(layer);
+		setSwapped(true);
+	}
+	useEffect(() => {
+		if (leaving === null) {
+			return;
+		}
+		const id = setTimeout(() => setLeaving(null), SWAP.inAt + SWAP.inMs);
+		return () => clearTimeout(id);
+	}, [leaving]);
+	return { lastLive: kindling ?? lastLive, leaving, shown, swapped };
+}
+
 export function KindlingCard({ width }: { width: number }) {
 	const { state } = useToday();
-	const { reduced, intro } = useTodayFrame();
+	const { reduced, intro, waiting } = useTodayFrame();
 	const top = useSharedValue(0);
 	const onScreen = useOnScreen(top, CARD_H);
-	const { kindling } = state;
-	const mode: KindlingCardMode = kindling === null ? "none" : "live";
-	if (mode === "none") {
-		return null;
-	}
+	const { kindling, kindlingEmpty } = state;
+	const mode = kindlingCardMode(kindling, kindlingEmpty);
+	const { lastLive, leaving, shown, swapped } = useSwap(mode, kindling);
+	const pathW = width - PAD_X * 2;
+	const layers: { layer: Layer; out: boolean }[] =
+		leaving === null
+			? [{ layer: shown, out: false }]
+			: [
+					{ layer: leaving, out: true },
+					{ layer: shown, out: false },
+				];
 
 	return (
 		<EaseView
-			{...todayRiseProps(RISE_SLOT, intro, reduced)}
+			{...todayRiseProps(RISE_SLOT, intro, reduced, waiting)}
 			className="mx-4"
 			onLayout={(e) => top.set(e.nativeEvent.layout.y)}
 			style={{ marginTop: MODULE_GAP }}
 		>
 			<Card className="overflow-hidden" radius={RADIUS}>
 				<View style={{ paddingHorizontal: PAD_X, paddingVertical: PAD_Y }}>
-					{kindling ? (
-						<KindlingLive
-							kindling={kindling}
-							onScreen={onScreen}
-							width={width - PAD_X * 2}
-						/>
-					) : (
-						// Loading (as production's skeleton): the frame holds its place.
-						<View style={{ height: CARD_H - PAD_Y * 2 }} />
-					)}
+					{layers.map((l) => (
+						<SwapLayer
+							fadeIn={swapped}
+							key={l.layer}
+							out={l.out ? OUT : null}
+							reduced={reduced}
+						>
+							<Body
+								kindling={lastLive}
+								layer={l.layer}
+								onScreen={onScreen}
+								width={pathW}
+							/>
+						</SwapLayer>
+					))}
 				</View>
 			</Card>
 		</EaseView>
 	);
+}
+
+type BodyProps = {
+	layer: Layer;
+	kindling: KindlingView | null | undefined;
+	width: number;
+	onScreen: SharedValue<boolean>;
+};
+
+function Body({ layer, kindling, width, onScreen }: BodyProps) {
+	if (layer === SKELETON) {
+		return <View style={{ height: CARD_H - PAD_Y * 2 }} />;
+	}
+	if (layer === "live") {
+		return kindling ? (
+			<KindlingLive kindling={kindling} onScreen={onScreen} width={width} />
+		) : null;
+	}
+	return <KindlingEmpty mode={layer} onScreen={onScreen} width={width} />;
 }

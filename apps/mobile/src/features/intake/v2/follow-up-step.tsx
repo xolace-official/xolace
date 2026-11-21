@@ -1,5 +1,3 @@
-// `followUp`: Flux's one follow-up (#708), only when a key field was unclear. Skipping keeps
-// what the first answer told us; there is never a second.
 import { Button, useThemeColor } from "heroui-native";
 import { TextInput, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
@@ -8,7 +6,6 @@ import { KeyboardStep } from "@/features/intake/v2/keyboard-step";
 import { playSoftPress } from "@/lib/haptics";
 
 const FLUX_SIZE = 64;
-/** A line or two: it only clears up one thing. */
 const MAX_REPLY_CHARS = 300;
 
 type Props = {
@@ -28,7 +25,6 @@ export function FollowUpStep({
 }: Props) {
 	const [placeholderColor] = useThemeColor(["muted"]);
 	const empty = draft.trim().length === 0;
-	// Talks while the question would take to say, then rests while they answer.
 	const saying = useSaying(question);
 
 	return (

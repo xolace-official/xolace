@@ -21,26 +21,17 @@ import { TabBadge, TabPill } from "@/features/you/home/tabs/tab-pill";
 import { tap } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** The bar is h-13 (52) with px-5 (20) gutters; the indicator maths needs the gutter. */
 const GUTTER = 20;
-// Morph only once the header is fully docked, so a slow scroll doesn't flicker.
 const DOCK_THRESHOLD = 0.99;
-// Pop in with a short overshoot; leave quickly with no bounce.
 const DOCK_SPRING = { damping: 14, mass: 0.8, stiffness: 320 };
 const UNDOCK_MS = 150;
-/** Reduce Motion: the pills cross-fade instead of springing. */
 const FADE_MS = 200;
 const PILL_FROM = 0.85;
 
 type Props = TabBarRenderProps & {
-	/** Count shown beside a tab's label, keyed by tab name. Zero hides it. */
 	badges?: Record<string, number>;
 };
 
-/**
- * Production's profile tabs, kept as they were: underlined text tabs while the header is open;
- * once it docks under the top bar they spring into pills. Both rows track the pager mid-swipe.
- */
 export function YouTabBar({
 	tabNames,
 	tabLabels,
@@ -53,8 +44,6 @@ export function YouTabBar({
 	const { width } = useWindowDimensions();
 	const tabWidth = (width - GUTTER * 2) / tabNames.length;
 	const collapse = useCollapseProgress();
-	// 0 = underline row, 1 = pill row. Separate from collapse so the two directions can use
-	// different curves.
 	const morph = useSharedValue(0);
 	const [docked, setDocked] = useState(false);
 
@@ -113,7 +102,6 @@ export function YouTabBar({
 	});
 
 	return (
-		// h-13 is the bar's 52 pt; px-5 is GUTTER.
 		<View accessibilityRole="tablist" className="h-13">
 			<Animated.View
 				accessibilityElementsHidden={docked}

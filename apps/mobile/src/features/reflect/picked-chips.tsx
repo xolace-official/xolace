@@ -6,11 +6,9 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { LAYOUT } from "./layout";
 
 const CHIP = { height: LAYOUT.write.chip };
-/** Board `.pchip`: rises in over .3 s. */
 const IN_MS = 300;
 const RISE = 8;
 
-/** The words you picked, as ember chips (board `.pchip`), under the question and in Your words. */
 export function PickedChips({ words }: { words: readonly string[] }) {
 	const reduced = useEffectiveReducedMotion();
 	if (words.length === 0) {

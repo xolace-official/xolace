@@ -19,7 +19,6 @@ import { type TalkMenuProps, talkMenu } from "./talk-menu-items";
 
 const GLYPH = 17;
 
-/** The ⋯ menu as SwiftUI's own, in a glass circle (`talk-menu.tsx` draws Android's). */
 export function TalkMenu(props: TalkMenuProps) {
 	const foreground = useTokenColor("foreground");
 	const { title, items } = talkMenu(props);

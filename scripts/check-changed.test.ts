@@ -7,18 +7,40 @@ import {
 	isInertPath,
 	parseArgs,
 	parseTurboFailures,
+	pickBaseRef,
 	planChecks,
 	resolveTestFiles,
 	siblingTestCandidates,
 	turboArgs,
+	turboLintArgs,
 } from "./check-changed";
 import type { WorkspacePackage } from "./lib/workspace";
 
 const packages: WorkspacePackage[] = [
-	{ dir: "apps/web", name: "@xolace/web", usesVitest: false },
-	{ dir: "apps/mobile", name: "@xolace/mobile", usesVitest: true },
-	{ dir: "packages/backend", name: "@xolace/backend", usesVitest: true },
-	{ dir: "packages/ui", name: "@xolace/ui", usesVitest: false },
+	{
+		biomeOnlyLint: true,
+		dir: "apps/web",
+		name: "@xolace/web",
+		usesVitest: false,
+	},
+	{
+		biomeOnlyLint: true,
+		dir: "apps/mobile",
+		name: "@xolace/mobile",
+		usesVitest: true,
+	},
+	{
+		biomeOnlyLint: false,
+		dir: "packages/backend",
+		name: "@xolace/backend",
+		usesVitest: true,
+	},
+	{
+		biomeOnlyLint: true,
+		dir: "packages/ui",
+		name: "@xolace/ui",
+		usesVitest: false,
+	},
 ];
 
 const existsIn =
@@ -66,7 +88,12 @@ describe("findOwningPackage", () => {
 	test("prefers the deepest matching package", () => {
 		const nested: WorkspacePackage[] = [
 			...packages,
-			{ dir: "apps/web/plugin", name: "plugin", usesVitest: false },
+			{
+				biomeOnlyLint: true,
+				dir: "apps/web/plugin",
+				name: "plugin",
+				usesVitest: false,
+			},
 		];
 		expect(findOwningPackage("apps/web/plugin/a.ts", nested)?.name).toBe(
 			"plugin"
@@ -176,6 +203,50 @@ describe("planChecks", () => {
 		expect(plan.runAllPackages).toBe(true);
 		const args = turboArgs(plan) ?? [];
 		expect(args.some((arg) => arg.startsWith("--filter"))).toBe(false);
+		const lint = turboLintArgs(plan) ?? [];
+		expect(lint).toContain("lint");
+		expect(lint.some((arg) => arg.startsWith("--filter"))).toBe(false);
+	});
+
+	test("a mobile-only change typechecks mobile and leaves lint to Biome", () => {
+		const changed = ["apps/mobile/src/a.tsx"];
+		const plan = planChecks(changed, packages, existsIn(changed));
+		expect(turboArgs(plan)).toEqual([
+			"run",
+			"check-types",
+			"--filter=...@xolace/mobile",
+			"--continue",
+			"--output-logs=errors-only",
+			"--ui=stream",
+		]);
+		expect(turboLintArgs(plan)).toBeNull();
+	});
+
+	test("a backend change typechecks its dependents but lints only itself", () => {
+		const changed = ["packages/backend/convex/a.ts"];
+		const plan = planChecks(changed, packages, existsIn(changed));
+		expect(turboArgs(plan)).toContain("--filter=...@xolace/backend");
+		const lint = turboLintArgs(plan) ?? [];
+		expect(lint).toContain("--filter=@xolace/backend");
+		expect(lint).not.toContain("--filter=...@xolace/backend");
+	});
+
+	test("a package's own lint config brings back its package-wide lint", () => {
+		for (const file of ["package.json", "biome.json"]) {
+			const changed = [`apps/mobile/${file}`];
+			const plan = planChecks(changed, packages, existsIn(changed));
+			expect(plan.lintPackages).toEqual(["@xolace/mobile"]);
+			expect(plan.lintAll).toBe(false);
+		}
+	});
+
+	test("the root Biome config lints every package without widening typecheck", () => {
+		const changed = ["biome.json"];
+		const plan = planChecks(changed, packages, existsIn(changed));
+		expect(plan.lintAll).toBe(true);
+		expect(plan.runAllPackages).toBe(false);
+		expect(turboArgs(plan)).toBeNull();
+		expect(turboLintArgs(plan)).not.toBeNull();
 	});
 
 	test("biome only sees files it supports", () => {
@@ -200,11 +271,39 @@ describe("plumbing helpers", () => {
 	});
 
 	test("parseArgs reads --base and --list", () => {
-		expect(parseArgs(["--base", "origin/main", "--list"])).toEqual({
-			base: "origin/main",
+		expect(parseArgs(["--base", "origin/dev", "--list"])).toEqual({
+			base: "origin/dev",
 			listOnly: true,
 		});
 		expect(() => parseArgs(["--base"])).toThrow();
+	});
+});
+
+describe("pickBaseRef", () => {
+	const has =
+		(refs: string[]) =>
+		(ref: string): boolean =>
+			refs.includes(ref);
+
+	test("defaults to dev, preferring origin/dev over the local branch", () => {
+		expect(pickBaseRef(has(["main", "origin/main", "dev", "origin/dev"]))).toBe(
+			"origin/dev"
+		);
+		expect(pickBaseRef(has(["main", "origin/main", "dev"]))).toBe("dev");
+	});
+
+	test("falls back to main only when no dev ref exists", () => {
+		expect(pickBaseRef(has(["main", "origin/main"]))).toBe("origin/main");
+		expect(pickBaseRef(has(["main"]))).toBe("main");
+	});
+
+	test("--base wins and is never swapped for a default", () => {
+		expect(pickBaseRef(has(["origin/dev", "v1.2.0"]), "v1.2.0")).toBe("v1.2.0");
+		expect(() => pickBaseRef(has(["origin/dev"]), "nope")).toThrow("nope");
+	});
+
+	test("throws with the refs it tried when nothing exists", () => {
+		expect(() => pickBaseRef(has([]))).toThrow("origin/dev, dev");
 	});
 });
 

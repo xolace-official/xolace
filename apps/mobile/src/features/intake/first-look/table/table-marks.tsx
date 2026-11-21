@@ -1,5 +1,3 @@
-// The table's marks: a check in a disc, and the band behind the Plus column that brightens as
-// the first Plus check lands.
 import { View } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -12,11 +10,9 @@ import { BAND_MS, unit } from "../first-look-motion";
 
 export const FREE_COL = 46;
 export const PLUS_COL = 52;
-/** Right of an open row's preview and of the separators: the Plus column and its 6 pt. */
 export const BODY_RIGHT = 58;
 const BAND_DIM = 0.35;
 
-/** `bg` is a background class; `color` is the tick's stroke. */
 export function Check({ bg, color }: { bg: string; color: string }) {
 	return (
 		<View className={cn("size-6 items-center justify-center rounded-full", bg)}>
@@ -36,7 +32,6 @@ export function Check({ bg, color }: { bg: string; color: string }) {
 	);
 }
 
-/** Inside the card's 1 pt border, so 6 from its outer edge. */
 export function Band({ clock }: { clock: SharedValue<number> }) {
 	const style = useAnimatedStyle(() => ({
 		opacity:

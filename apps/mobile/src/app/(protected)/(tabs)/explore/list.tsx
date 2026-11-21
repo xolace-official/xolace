@@ -1,3 +1,10 @@
-import { FamilyListScreen } from "@/features/browse/components/family-list-screen";
+import { FamilyListData } from "@/features/explore/list/family-list-data";
+import { FamilyListScreen } from "@/features/explore/list/family-list-screen";
 
-export default FamilyListScreen;
+export default function FamilyListRoute() {
+	return (
+		<FamilyListData>
+			<FamilyListScreen />
+		</FamilyListData>
+	);
+}

@@ -18,18 +18,12 @@ import {
 	versionLabel,
 } from "@/features/settings/home/home-model";
 import type { SettingsHome } from "@/features/settings/home/settings-home-data";
-import {
-	entitlementOf,
-	shownTone,
-} from "@/features/settings/mirror/mirror-model";
+import { shownTone } from "@/features/settings/mirror/mirror-model";
 import { useTalkTime } from "@/lib/talk/use-talk-time";
 import { useAppStore } from "@/store/store";
 
-// Dev clients load JS from Metro, so there is nothing for EAS Update to swap in.
 const UPDATES_ENABLED = Updates.isEnabled && !__DEV__;
 
-/** The manual EAS Update check. It only checks: `useOtaUpdate` in the root layout does the one
- * fetch, and there's no `reloadAsync` here (it crashes, see `update-bottom-sheet.tsx`). */
 function useUpdateCheck() {
 	const {
 		currentlyRunning,
@@ -82,11 +76,10 @@ function useUpdateCheck() {
 	};
 }
 
-/** Settings' main screen on Convex, Clerk, expo-updates and the paywall. */
 export function useSettingsHome(): SettingsHome {
 	const preferences = useQuery(api.preferences.get);
 	const { user } = useUser();
-	const { isPlus, isLoading } = usePlusEntitlement();
+	const { status, isPlus } = usePlusEntitlement();
 	const time = useTalkTime(isPlus);
 	const openPaywall = usePaywall((s) => s.open);
 	const theme = useAppStore((s) => s.theme);
@@ -105,16 +98,15 @@ export function useSettingsHome(): SettingsHome {
 			},
 			open: (to) => router.push(`/settings/${to}`),
 			openPlus: () => openPaywall("settings_row"),
+			openWhatsNew: () => router.push("/ratings/whats-new"),
 		},
 		state: {
 			mode: modeLabel(theme),
 			notifications: notificationsLabel(preferences?.notifications?.enabled),
-			plus: plusCard(isPlus, time),
+			plus: plusCard(status, time),
 			signIn,
-			// What Mirror shows: a free account is mirrored in Adaptive whatever is saved.
 			tone: toneLabel(
-				preferences?.mirrorTone &&
-					shownTone(preferences.mirrorTone, entitlementOf(isPlus, isLoading))
+				preferences?.mirrorTone && shownTone(preferences.mirrorTone, status)
 			),
 			update: update.row,
 			version: update.version,

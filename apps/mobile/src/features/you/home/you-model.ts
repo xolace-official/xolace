@@ -1,7 +1,3 @@
-/**
- * What the You tab shows, from production's reads (`profile.getSummary`, `achievements/display.shelf`,
- * `profile.getMoodDelta`, `profile.getReflectionRank`). Pure: no React, no Convex.
- */
 import type { api } from "@xolace/backend/api";
 import {
 	FREEZE_CAP,
@@ -19,23 +15,17 @@ export type ProfileCard = FunctionReturnType<
 	typeof api.preferences.profileCards.getHidden
 >[number];
 
-/** Moments before the usual day shows (production's stat band). */
 const USUAL_DAY_FROM = 5;
-/** Insights gates, as production's: chips from 1 moment, patterns from 3, rhythm from 5. */
 const CHIPS_FROM = 1;
 const PATTERNS_FROM = 3;
 const RHYTHM_FROM = 5;
-/** Production shows the top three tags. */
 const CHIPS_SHOWN = 3;
-/** Medallions stacked in the badges row. */
 const MEDALS_SHOWN = 3;
 
 export type Hero = {
 	name: string;
 	greeting: string;
-	/** "By the fire since July"; null before the first moment. */
 	since: string | null;
-	/** No moments yet: the welcome line instead of the since line. */
 	isNew: boolean;
 };
 
@@ -58,20 +48,15 @@ export function heroView(summary: ProfileSummary, now: Date): Hero {
 }
 
 export type Streak = {
-	/** Days in a row; 0 when the streak ended (the card then says the next one starts today). */
 	streak: number;
-	/** Shown only when it beats the current run (production). */
 	best: number | null;
 	moments: number;
 	momentsLabel: string;
-	/** "Tue", or a dash before there's a pattern. */
 	usualDay: string;
 	freezes: number;
 	label: string;
 };
 
-/** The streak card, or null when there's nothing to show yet (production's stat band rule:
- * a moment, or a freeze earned some other way). */
 export function streakView(summary: ProfileSummary): Streak | null {
 	const {
 		currentStreak,
@@ -80,7 +65,6 @@ export function streakView(summary: ProfileSummary): Streak | null {
 		streakFreezes,
 		typicalUsagePattern,
 	} = summary;
-	// A dev deployment that predates the field leaves it undefined.
 	const freezes = streakFreezes ?? 0;
 	if (sessionCount === 0 && freezes === 0) {
 		return null;
@@ -104,7 +88,6 @@ export function streakView(summary: ProfileSummary): Streak | null {
 	};
 }
 
-/** Production's freeze label and hint (freeze-row.tsx). */
 export function freezeCopy(
 	freezes: number,
 	lit: boolean
@@ -123,7 +106,6 @@ export function freezeCopy(
 export type Medal = {
 	id: string;
 	title: string;
-	/** Null when no art is uploaded: an empty disc keeps the stack's rhythm. */
 	url: string | null;
 	thumbhash: string | null;
 	lit: boolean;
@@ -134,9 +116,7 @@ export type BadgesRow = {
 	title: string;
 	sub: string;
 	label: string;
-	/** Exactly one badge: the star tile instead of the stack. */
 	star: boolean;
-	/** Up to three, pinned first (the shelf's order). */
 	medals: Medal[];
 };
 
@@ -163,7 +143,6 @@ export function badgesRowView(shelf: Shelf): BadgesRow {
 }
 
 type Pattern = NonNullable<ProfileSummary["typicalUsagePattern"]>;
-/** Production's icon per row: an SF Symbol and its Material twin. */
 export type PatternRow = { icon: IconName; text: string };
 
 const DAYS = [
@@ -214,7 +193,6 @@ function rhythmRow(pattern: Pattern): PatternRow | null {
 	};
 }
 
-/** Your patterns: how sessions end (from 3 moments), then the usual arrival (from 5). */
 export function patternRows(
 	sessionCount: number,
 	mood: MoodDelta | undefined,
@@ -235,7 +213,6 @@ export function patternRows(
 	return rows;
 }
 
-/** What you bring most: the top tags, from the first moment. */
 export function chipsView(summary: ProfileSummary): string[] {
 	if (summary.sessionCount < CHIPS_FROM) {
 		return [];
@@ -244,7 +221,6 @@ export function chipsView(summary: ProfileSummary): string[] {
 }
 
 export type RankCard = {
-	/** "64%" once ranked. */
 	pct: string | null;
 	line: string;
 	foot: string;
@@ -266,4 +242,21 @@ export function rankView(rank: NonNullable<Rank>): RankCard {
 				: COPY.rank.pending(rank.threshold, rank.remaining);
 	}
 	return { foot, line: COPY.rank.unlit, pct: null };
+}
+
+/**
+ * Whether everything the collapsing header draws has arrived. The tabs measure the header once
+ * to pad the page; a row landing later grows it under content already laid out (and scrolled),
+ * so the page jumps and shows through it.
+ */
+export function headerLoaded(state: {
+	hero: Hero | undefined;
+	streak: Streak | null | undefined;
+	badges: BadgesRow | undefined;
+}) {
+	return (
+		state.hero !== undefined &&
+		state.streak !== undefined &&
+		state.badges !== undefined
+	);
 }

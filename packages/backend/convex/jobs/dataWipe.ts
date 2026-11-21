@@ -1,7 +1,10 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
+import { drainListenProgress } from "../audio/progress";
+import { forgetDailyQuotePushHistory } from "../dailyQuotes/schedule";
 import { purgeReplyEntries } from "../episodicMemory";
+import { wipeLetters } from "../letters/erasure";
 import { rankReplace } from "../lib/aggregates";
 import { purgeSessions } from "../lib/sessionCascade";
 import { drainPromptStates } from "../monthlyEvents/prompt";
@@ -20,8 +23,10 @@ const BATCH_SIZE = 100;
  *
  * Deletes: sessions, emotional_metadata, session_turns,
  *          reflection_resonances, notification_log, library_reads,
+ *          listen_progress,
  *          monthly_event_states, activity_log,
  *          frozen_days, compounding_stretches, steadiness_insights, outreach,
+ *          the letters they sent and received (letters/erasure.ts),
  *          outreach_deliveries, the linked chats' inbound_events, an unused
  *          channel_link_tokens row, and the bot's last 48 h of Telegram
  *          messages (#773)
@@ -123,6 +128,9 @@ export const wipe = internalMutation({
 		for (const q of quotes) {
 			await ctx.db.delete("daily_quotes", q._id);
 		}
+		// The push's backoff points at quotes just deleted and records what was
+		// opened: it starts over. The setting itself is a preference, and stays.
+		await forgetDailyQuotePushHistory(ctx, emotionalProfileId);
 
 		// ── Delete Library reads ─────────────────────────────────────
 		// Private rows only; the public totals stay up (ADR 0016).
@@ -140,10 +148,22 @@ export const wipe = internalMutation({
 			await ctx.db.delete("library_reads", r._id);
 		}
 
+		// ── Delete listening positions (B6) ──────────────────────────
+		// Where they are in each track: history, like the reads above.
+		if (await drainListenProgress(ctx, emotionalProfileId)) {
+			hasMore = true;
+		}
+
 		// ── Delete monthly prompt choices (B2) ───────────────────────
 		// What they chose on a month's prompt is theirs too. The current
 		// month's prompt waits for them again.
 		if (await drainPromptStates(ctx, emotionalProfileId)) {
+			hasMore = true;
+		}
+
+		// ── Letters (B12, decision B) ────────────────────────────────
+		// What they sent and received; the opt-in and day cap stay.
+		if (await wipeLetters(ctx, emotionalProfileId)) {
 			hasMore = true;
 		}
 

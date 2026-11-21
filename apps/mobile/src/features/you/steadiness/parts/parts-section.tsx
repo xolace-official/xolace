@@ -16,11 +16,6 @@ import { useSteadinessScreen } from "@/features/you/steadiness/steadiness-data";
 import { selectedPart } from "@/features/you/steadiness/steadiness-model";
 import { useSteadinessUi } from "@/features/you/steadiness/steadiness-ui";
 
-/**
- * "Parts of your life": the header and toggle, free users' doors, the grid or the list (both
- * mounted, one shown), then the picked part's detail card (Xolace+, grid) or a free ring's
- * locked one. `onPartsY` reports where the header sits, for a dev state's scroll.
- */
 export function PartsSection({
 	clock,
 	onPartsY,
@@ -76,7 +71,6 @@ export function PartsSection({
 				plus={plus}
 			/>
 			{selected ? (
-				// Kept mounted in the list too, so going back to the grid doesn't rebuild it.
 				<ViewFade active={ui.view === "grid"}>
 					<DetailCard now={now} onKindling={actions.kindling} part={selected} />
 				</ViewFade>

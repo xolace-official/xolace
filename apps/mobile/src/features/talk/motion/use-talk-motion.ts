@@ -16,11 +16,6 @@ const INTRO_END = INTRO.gap * (INTRO.groups - 1) + INTRO.length;
 const VIEW_FADE_MS = 260;
 const BREATH = timing(GLOW.loopMs / 2, Easing.inOut(Easing.sin));
 
-/**
- * The screen's shared values (handoff §6): one timeline for start → talk that every piece
- * reads on the UI thread, the entrance cascade, which view shows, the hand-over to the
- * pill, and the glow behind the face. JS only starts them.
- */
 export function useTalkMotion({
 	phase,
 	view,
@@ -29,17 +24,12 @@ export function useTalkMotion({
 }: {
 	phase: Phase;
 	view: TalkView;
-	/** A sample playing, or the companion speaking: the glow breathes. */
 	talking: boolean;
 	reduced: boolean;
 }) {
-	/** ms on the start → talk timeline (0 … GO.length, or GO.reduced with Reduce Motion). */
 	const go = useSharedValue(0);
-	/** ms on the entrance cascade. */
 	const intro = useSharedValue(INTRO_END);
-	/** 1 while the hero flies to the pill (opening in Conversation). */
 	const toPill = useSharedValue(0);
-	/** 1 once the pill's own face has taken over from the hero. */
 	const handed = useSharedValue(0);
 	const stage = useSharedValue(1);
 	const conversation = useSharedValue(0);
@@ -54,7 +44,6 @@ export function useTalkMotion({
 		intro.set(withTiming(INTRO_END, timing(reduced ? GO.reduced : INTRO_END)));
 	};
 
-	/** Start pressed: the whole move, on one clock. */
 	const playGo = (opens: TalkView) => {
 		const length = reduced ? GO.reduced : GO.length;
 		toPill.set(opens === "conversation" && !reduced ? 1 : 0);
@@ -64,7 +53,6 @@ export function useTalkMotion({
 		go.set(0);
 		go.set(withTiming(length, timing(length)));
 		if (opens === "conversation") {
-			// The pill's face takes over when the hero arrives (or at once, cross-faded, reduced).
 			const at = reduced ? 0 : GO.toPill;
 			handed.set(withDelay(at, withTiming(1, timing(0))));
 			stage.set(withDelay(at, withTiming(0, timing(reduced ? GO.reduced : 0))));
@@ -78,7 +66,6 @@ export function useTalkMotion({
 		}
 	};
 
-	/** A talk that failed before it connected: the start screen comes back the way it left. */
 	const playBack = () => {
 		toPill.set(0);
 		handed.set(0);
@@ -87,7 +74,6 @@ export function useTalkMotion({
 		go.set(withTiming(0, timing(reduced ? GO.reduced : GO.length / 2)));
 	};
 
-	/** Straight into the talk (a reopened talk, a dev state): where the move leaves it. */
 	const settle = (opens: TalkView) => {
 		go.set(reduced ? GO.reduced : GO.length);
 		toPill.set(0);
@@ -96,7 +82,6 @@ export function useTalkMotion({
 		conversation.set(opens === "conversation" ? 1 : 0);
 	};
 
-	// The view switch mid-talk: the stage and the transcript cross-fade (production's 260 ms).
 	useEffect(() => {
 		if (phase !== "talk" && phase !== "ending") {
 			return;
@@ -106,7 +91,6 @@ export function useTalkMotion({
 		conversation.set(withTiming(view === "conversation" ? 1 : 0, config));
 	}, [phase, view, reduced, stage, conversation]);
 
-	// Speaking is a pose and a glow (§5): the glow breathes while it talks, then eases back.
 	const before = phase === "start";
 	useEffect(() => {
 		cancelAnimation(glowOpacity);

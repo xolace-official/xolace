@@ -1,9 +1,3 @@
-/**
- * What a failed sign-in was: backing out of the native sheet is not a failure, and only a few
- * safe fields of a real one reach analytics (a thrown SDK error can carry the response body, the
- * request payload or a token).
- */
-
 const SAFE_ERROR_KEYS = [
 	"name",
 	"message",
@@ -28,7 +22,6 @@ export function errorCode(error: unknown): string | number | undefined {
 	}
 }
 
-/** The sheet was closed: SDKs say so with a code; Clerk's web fallback throws a plain Error. */
 export function isCancellation(error: unknown) {
 	const code = errorCode(error);
 	if (code !== undefined && CANCEL_CODES.includes(code)) {
@@ -38,7 +31,6 @@ export function isCancellation(error: unknown) {
 	return message.includes("cancel") || message.includes("dismiss");
 }
 
-/** A one-line description for analytics, from the safe fields only. */
 export function describeError(error: unknown) {
 	if (error instanceof Error) {
 		return `${error.name}: ${error.message}`;

@@ -15,11 +15,13 @@ import { preferencesRow, requirePreferencesRow } from "./row";
  *   card. Kept per item (a track or a Lantern entry) with when it was hidden.
  * - **"Don't use my sessions here"** turns off what Explore suggests from
  *   their sessions ("Because you named…"). It's a privacy promise, not a
- *   display choice. No server query personalises Explore yet, so today the
- *   client keeps it by hiding the section. **Any server-side personalisation
- *   of Explore (B6's `browse.forYou` and anything like it) must read
- *   `exploreUsesSessions` and must not use the person's sessions, their
- *   Understanding or anything derived from them when it's false.**
+ *   display choice. `browse/explore.forYou` (B6) reads it and touches no
+ *   session data when it's false (pinned in `browse/explore.test.ts`).
+ *   **Any other server-side personalisation of Explore must do the same: no
+ *   sessions, Understanding or anything derived from them when it's false.**
+ *
+ * A removed Continue card stays removed even if the person goes back to it
+ * (B6 decided; `browse/explore.getContinue`).
  *
  * Neither changes anything outside Explore.
  */

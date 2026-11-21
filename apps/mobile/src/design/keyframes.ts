@@ -1,7 +1,3 @@
-/**
- * A CSS keyframe track: `stops` are offsets (0…1) with values, and the
- * animation's timing function applies within each segment, as CSS does.
- */
 export function keyframes(
 	p: number,
 	stops: readonly (readonly [number, number])[],

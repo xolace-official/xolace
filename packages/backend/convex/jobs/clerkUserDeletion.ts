@@ -31,7 +31,7 @@ const CLAIM_MS = 3 * CLERK_TIMEOUT_MS;
  * The Clerk user id from `iss|sub`. Not `users.authProviderAccountId`: rows
  * from before that field was server-set can hold a client placeholder.
  */
-function clerkUserIdOf(tokenIdentifier: string): string | null {
+export function clerkUserIdOf(tokenIdentifier: string): string | null {
 	const subject = tokenIdentifier.slice(tokenIdentifier.lastIndexOf("|") + 1);
 	return subject.startsWith("user_") ? subject : null;
 }

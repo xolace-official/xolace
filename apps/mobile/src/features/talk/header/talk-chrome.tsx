@@ -21,14 +21,11 @@ type Props = {
 	motion: TalkMotion;
 	lift: SharedValue<number>;
 	before: boolean;
-	/** The talk is in front: the pill's face keeps its clock. */
 	focused: boolean;
 };
 
-/** The header (back, the title pill, ⋯), the view switch and help (§2.1, §4). */
 export function TalkChrome({ geo, motion, lift, before, focused }: Props) {
 	const { state, actions } = useTalkScreen();
-	// Whole minutes: a label that changes every second rebuilds the open menu.
 	const minutesLeft = useTimeLeft(state.endsAt, MINUTE_MS);
 	const talking = state.phase === "talk";
 	return (
@@ -75,7 +72,6 @@ export function TalkChrome({ geo, motion, lift, before, focused }: Props) {
 	);
 }
 
-/** Under Start before the talk; after the button in the tree, so VoiceOver reads it second. */
 export function FootnoteOverlay({
 	motion,
 	startTop,

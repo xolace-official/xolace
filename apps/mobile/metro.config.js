@@ -39,7 +39,5 @@ module.exports = withUniwindConfig(config, {
 	cssEntryFile: "./src/global.css",
 	dtsFile: "./src/uniwind-types.d.ts",
 
-	// Theme names come from the registry (src/design/themes.ts) through
-	// scripts/gen-themes.ts; never list them by hand.
 	extraThemes: require("./src/design/theme-names.generated.json"),
 });

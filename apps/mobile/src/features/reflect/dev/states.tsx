@@ -1,7 +1,3 @@
-/** Reflect on fixtures: `xolace://dev/reflect/<id>`. Each stage of the board (write, wait, the
- * mirror and its sub-states, care, Where next, Heard), late and dark, plus the brief's states:
- * first open, streaming, error, offline, seeded and long text. Sends answer from the simulated
- * server (`use-fixture-reflect.ts`). Dictation's states are in `write/dev/states.tsx`. */
 import type { DevState } from "@/dev/dev-state";
 import { COPY } from "../copy";
 import { waitError } from "../reflect-model";
@@ -87,14 +83,14 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "error",
 		title: "The session failed (Try again)",
-		...reflect({ ...SENT, error: waitError("", false), stage: "wait" }),
+		...reflect({ ...SENT, error: waitError("", "free"), stage: "wait" }),
 	},
 	{
 		id: "error-rejected",
 		title: "The safeguard said no (Talk to someone)",
 		...reflect({
 			...SENT,
-			error: waitError("content_policy_violation", false),
+			error: waitError("content_policy_violation", "free"),
 			stage: "wait",
 		}),
 	},
@@ -103,7 +99,7 @@ export const devStates: readonly DevState[] = [
 		title: "A free account hit the hourly cap (See Xolace+)",
 		...reflect({
 			...SENT,
-			error: waitError(LIMIT_MESSAGE, false),
+			error: waitError(LIMIT_MESSAGE, "free"),
 			stage: "wait",
 		}),
 	},

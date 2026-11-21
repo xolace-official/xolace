@@ -9,17 +9,11 @@ import { COPY } from "../copy";
 import { useReflect } from "../reflect-data";
 import { useReflectDraw } from "../reflect-draw";
 
-/** Under the tiles, clear of the home indicator. */
 const BOTTOM = 24;
 const RISE = 8;
 const IN_MS = 400;
-/** After the three tiles have risen. */
 const AFTER_TILES_MS = 800;
 
-/**
- * Production's gave-up card, under Where next's tiles: left at the turn cap, Reflect asks once
- * what happened. One tap answers (`feedback.submit`, `gave_up`) and it goes.
- */
 export function WhatHappened() {
 	const { state, actions } = useReflect();
 	const { reduced } = useReflectDraw();

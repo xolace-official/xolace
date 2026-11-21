@@ -8,17 +8,10 @@ import { PlusHighlight } from "@/features/settings/home/plus/plus-highlight";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/**
- * Production's two-row Xolace+ section as one card (board `.pc`): talk time as a bar on Plus,
- * one line and a white button when free. The only colour on the screen, since it's the only
- * thing that changes week to week. A printed object: the same in light and dark.
- */
 const C = HOME_COPY.plus;
-/** CSS 125deg, as start and end points. */
 const FROM = { x: 0.09, y: 0.21 };
 const TO = { x: 0.91, y: 0.79 };
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
-/** The highlight's ellipse is sized from the card's rough height, not measured. */
 const H_PLUS = 138;
 const H_FREE = 166;
 
@@ -52,8 +45,9 @@ export function PlusCard({
 				colors={[from, to]}
 				end={TO}
 				start={FROM}
+				style={card.kind === "loading" ? { minHeight: H_PLUS } : undefined}
 			>
-				<PlusHighlight height={plus ? H_PLUS : H_FREE} />
+				<PlusHighlight height={card.kind === "free" ? H_FREE : H_PLUS} />
 				<View className="flex-row items-center gap-2.5">
 					<View className="size-7.5 items-center justify-center rounded-[9px] border-continuous bg-on-art/16">
 						<Icon color={white} name={HOME_ICONS.plus} size={17} />
@@ -83,7 +77,8 @@ export function PlusCard({
 						</View>
 					) : null}
 				</View>
-				{plus ? <PlusTime card={card} /> : <FreeOffer />}
+				{plus ? <PlusTime card={card} /> : null}
+				{card.kind === "free" ? <FreeOffer /> : null}
 			</LinearGradient>
 		</Pressable>
 	);

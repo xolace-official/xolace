@@ -4,7 +4,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 const LOCK = 10;
 
-/** Production's shelf-tile lock: a free member's track opens Xolace+. VoiceOver hears it in the label. */
 export function TileLock({ inline = false }: { inline?: boolean }) {
 	const ink = useTokenColor("foreground");
 	return (

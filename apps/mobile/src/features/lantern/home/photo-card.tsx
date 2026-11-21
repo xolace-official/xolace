@@ -20,7 +20,6 @@ const GLASS = isLiquidGlassAvailable();
 const PLAY = { android: "play_arrow", ios: "play.fill" } as const;
 const SHARE = "square.and.arrow.up";
 
-/** What a photo card draws: a card from any list, or Up next (which has no views). */
 export type PhotoEntry = Pick<
 	CardItem,
 	| "_id"
@@ -39,20 +38,12 @@ type Props = {
 	height: number;
 	from: ReaderFrom;
 	onShare: (entry: PhotoEntry) => void;
-	/** From a hub: the reader's Up next follows its order. */
 	hub?: string;
-	/** In place of production's meta line (Up next shows read and listen times). */
 	meta?: string;
-	/** Continue only: Explore's read bar under the meta (v2). */
 	progress?: number;
 	label?: string;
 };
 
-/**
- * Production's `PhotoCard`: the cover under its scrim, the kicker, the title and the meta, and a
- * play mark when the entry has audio. It zooms into the reader's cover (`Link.AppleZoom`);
- * Reduce Motion cross-fades.
- */
 export function PhotoCard({
 	entry,
 	kicker,
@@ -120,7 +111,6 @@ export function PhotoCard({
 					</PressScale>
 				</Link.Trigger>
 				<Link.Preview />
-				{/* No Save here: production's photo cards only share. */}
 				<Link.Menu>
 					<Link.MenuAction icon={SHARE} onPress={() => onShare(entry)}>
 						{COPY.row.share}
@@ -132,7 +122,6 @@ export function PhotoCard({
 	);
 }
 
-/** Explore's read bar: 3 pt, white 30% track, white fill at the read share. */
 function ReadBar({ share }: { share: number }) {
 	return (
 		<View
@@ -147,7 +136,6 @@ function ReadBar({ share }: { share: number }) {
 	);
 }
 
-/** A mark, not a control: this entry has audio. Taps fall through to the card. */
 function HasAudio() {
 	const ink = useTokenColor("cover-ink");
 	const round = { borderRadius: C.mark / 2, height: C.mark, width: C.mark };
@@ -165,7 +153,6 @@ function HasAudio() {
 			style={{ ...round, right: C.markInset, top: C.markInset }}
 		>
 			{GLASS ? (
-				// Fixed palette over the photo: dark clear glass, not the themed glass.
 				<GlassView
 					colorScheme="dark"
 					glassEffectStyle="clear"

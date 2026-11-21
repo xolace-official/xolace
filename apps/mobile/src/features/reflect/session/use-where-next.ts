@@ -3,13 +3,14 @@ import { validateSpaceName } from "@xolace/backend/convex/lib/spaceName";
 import type { Id } from "@xolace/backend/dataModel";
 import { useMutation } from "convex/react";
 import { type Href, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Linking } from "react-native";
 import { toast } from "@/components/shared/toast";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { LANDING } from "@/lib/landing";
 import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { useProfileSummary } from "@/lib/profile-summary";
+import { useSingleFlight } from "@/lib/use-single-flight";
 import { useAppStore } from "@/store/store";
 import { COPY, type PathId } from "../copy";
 import type { ResourceRow } from "../reflect-model";
@@ -24,11 +25,6 @@ const ACTIVITY: Record<Exclude<PathId, "exit">, Href> = {
 	solo: "/sit-with-this",
 };
 
-/**
- * Leaving Reflect: Where next's paths, Heard after "I just needed to say it", the space-name
- * prompt production asks once there, ✕ and the help button. Exit completes the session at once,
- * so Heard is held here over the machine's reset, and its button goes on to the session's end.
- */
 export function useWhereNext(m: Machine) {
 	const router = useRouter();
 	const context = useFullContext();
@@ -37,13 +33,8 @@ export function useWhereNext(m: Machine) {
 	const clearReplySeed = useAppStore((s) => s.clearReplySeed);
 	const [heard, setHeard] = useState<Id<"sessions"> | null>(null);
 	const endHref = useSessionEndHref(heard);
-	const screen = useRef(m.state.screen);
-	useEffect(() => {
-		screen.current = m.state.screen;
-	});
-	const busy = useRef(false);
+	const going = useSingleFlight();
 
-	// The exit failed: the machine shows its error, so Heard lets go.
 	if (heard && m.state.screen === "error") {
 		setHeard(null);
 	}
@@ -70,25 +61,20 @@ export function useWhereNext(m: Machine) {
 		}
 	};
 
-	const goPath = async (path: PathId) => {
-		if (busy.current) {
-			return;
-		}
-		busy.current = true;
-		try {
+	const goPath = (path: PathId) =>
+		going.run(async () => {
 			if (path === "exit") {
 				setHeard(m.sessionId);
 				await m.handleSelectExit();
 				return;
 			}
-			await (path === "solo" ? m.handleSelectSolo() : m.handleSelectPeers());
-			if (screen.current !== "error") {
+			const selected = await (path === "solo"
+				? m.handleSelectSolo()
+				: m.handleSelectPeers());
+			if (selected) {
 				router.replace(ACTIVITY[path]);
 			}
-		} finally {
-			busy.current = false;
-		}
-	};
+		});
 
 	return {
 		close: () => {
@@ -97,7 +83,6 @@ export function useWhereNext(m: Machine) {
 			if (writing && m.state.entryText.trim()) {
 				toast(COPY.write.draftKept);
 			}
-			// The reply it opened with goes with it; the draft stays.
 			clearReplySeed();
 			leave();
 		},
@@ -110,7 +95,6 @@ export function useWhereNext(m: Machine) {
 		finish: () => router.replace(endHref("exit")),
 		goPath: (path: PathId) => void goPath(path),
 		heard,
-		// Production's entry point for Reflect's help door, so crisis_resources_opened keeps its series.
 		openHelp: () => router.push("/crisis-resources?from=idle_button"),
 		openResource: (row: ResourceRow) => {
 			if (row.href) {

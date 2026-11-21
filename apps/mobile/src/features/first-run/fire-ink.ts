@@ -1,6 +1,5 @@
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** The fire's colours as Skia draws them, from `global.css`'s `first-run-*` tokens. */
 export type FireInk = {
 	coal: readonly string[];
 	emberFlare: string;
@@ -24,7 +23,6 @@ const TOKENS = [
 	"first-run-spark-glow",
 ] as const;
 
-/** Read once per canvas and handed to the draw worklets, which run on the UI thread. */
 export function useFireInk(): FireInk {
 	const [
 		coal1,
@@ -39,7 +37,6 @@ export function useFireInk(): FireInk {
 		sparkGlow,
 	] = useTokenColors(TOKENS);
 	return {
-		// The coal's white-hot core holds for its first two stops.
 		coal: [coal1, coal1, coal2, coal3],
 		emberFlare,
 		ground,

@@ -1,5 +1,3 @@
-/** The Xolace channel on fixtures, through the same provider as the app, on a Stream client that
- * never connects. A tap on a reaction reaches the fake client and goes nowhere. */
 import {
 	XOLACE_BROADCAST_CHANNEL_TYPE,
 	XOLACE_CHANNEL_ID,
@@ -35,7 +33,6 @@ export function FixtureChannel({
 			<ChannelProvider
 				value={{
 					actions: { openHelp: noop, retry: noop },
-					// The dev channel holds its state from the start.
 					state: channelState(stream, true, channel),
 				}}
 			>

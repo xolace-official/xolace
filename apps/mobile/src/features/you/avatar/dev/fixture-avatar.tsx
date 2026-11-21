@@ -1,18 +1,18 @@
-/** The avatar sheet on fixtures: the board's ten stand-ins; a pick only closes it. */
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import { AvatarProvider } from "@/features/you/avatar/avatar-data";
 import { AvatarSheet } from "@/features/you/avatar/avatar-sheet";
 import { FIXTURE_AVATARS } from "@/features/you/avatar/dev/avatars";
-import { isLocked, resolveAvatar } from "@/features/you/avatar-model";
+import { avatarTap, resolveAvatar } from "@/features/you/avatar-model";
 
-export function FixtureAvatar({ plus }: { plus: boolean }) {
+export function FixtureAvatar({ plus }: { plus: PlusStatus }) {
 	return (
 		<AvatarProvider
 			value={{
-				actions: { pick: (a) => !isLocked(a, plus) },
+				actions: { pick: (a) => avatarTap(a, plus) === "pick" },
 				state: {
 					avatars: FIXTURE_AVATARS,
 					current: resolveAvatar(FIXTURE_AVATARS, "moon"),
-					isPlus: plus,
+					plus,
 				},
 			}}
 		>

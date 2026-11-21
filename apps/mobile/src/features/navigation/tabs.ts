@@ -1,27 +1,14 @@
 import type { NativeTabsTriggerIconProps } from "expo-router/native-tabs";
 
-/**
- * One tab. `components/app-tabs.tsx` draws each as a `NativeTabs.Trigger`; the
- * route it opens is `src/app/(protected)/(tabs)/<name>/`.
- */
 export type TabSpec = {
 	readonly name: string;
 	readonly label: string;
-	/** SF Symbol on iOS, Material symbol on Android. */
 	readonly icon: NativeTabsTriggerIconProps;
-	/** A number on the tab: `unread` is Stream's total across every conversation. */
 	readonly badge?: "unread";
-	/** The tab's screens set their own content insets (a cover that runs under the bar). */
 	readonly ownInsets?: boolean;
-	/** Drawn with the person's avatar once it loads; `icon` until then (You). */
 	readonly avatar?: true;
 };
 
-/**
- * The tabs, in order: Today · Explore · Connect · You. Until its screen PR, a tab
- * hosts the old screen that did its job (Explore: the Browse hub); a screen PR swaps
- * the tab's route shim and edits only its own entry here.
- */
 export const TABS: readonly TabSpec[] = [
 	{
 		icon: {
@@ -35,6 +22,10 @@ export const TABS: readonly TabSpec[] = [
 		icon: { md: "explore", sf: { default: "safari", selected: "safari.fill" } },
 		label: "Explore",
 		name: "explore",
+		// A topic's cover runs under the bar (`contentInsetAdjustmentBehavior="never"`); every
+		// other Explore screen sets "automatic" itself. iOS only: on Android the flag also drops
+		// the tab bar's bottom inset, and the topic's cover sits below an opaque bar there.
+		ownInsets: process.env.EXPO_OS === "ios",
 	},
 	{
 		badge: "unread",

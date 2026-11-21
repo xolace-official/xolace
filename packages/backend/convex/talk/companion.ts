@@ -3,13 +3,9 @@ import type { Id } from "../_generated/dataModel";
 import { internalMutation, type MutationCtx } from "../_generated/server";
 import { COMPANION_FALLBACK_NAME, nameQuestion } from "../ai/prompts/companion";
 import { seededDisplayName, validateDisplayName } from "../lib/displayName";
+import { resolveVoiceId, VOICE_CATALOG } from "../lib/elevenLabsVoices";
 import { validateSpaceName } from "../lib/spaceName";
-import {
-	resolveVoiceId,
-	TALK_FALLBACK_VOICE,
-	TALK_SPEED,
-	VOICE_CATALOG,
-} from "../lib/voices";
+import { TALK_FALLBACK_VOICE, TALK_SPEED } from "../lib/voices";
 
 /**
  * The companion's rename tool (#601), run by our endpoint mid-talk. The name

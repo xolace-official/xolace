@@ -12,9 +12,6 @@ import { cn } from "@/lib/utils";
 import { createFounderClipPath } from "./clip-paths";
 import type { FounderMarqueeCard } from "./marquee-data";
 
-// A tinted frame (plain RN view, so the colour stays a theme token) with a
-// Skia-clipped photo inset. Only Skia can do the non-rectangular silhouettes.
-
 const INSET = 14;
 
 type Props = {

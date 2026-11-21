@@ -12,6 +12,7 @@
     "./dataModel": {
       "types": "./convex/_generated/dataModel.d.ts"
     },
+    "./shared": "./convex/lib/shared.ts",
     "./convex/_generated/*": {
       "types": "./convex/_generated/*.d.ts",
       "default": "./convex/_generated/*.js"
@@ -20,15 +21,21 @@
   },
   "scripts": {
     "badges:upload": "bun scripts/badges/upload.ts",
-    "check-types": "tsc --noEmit -p convex && tsc --noEmit -p tsconfig.json",
+    "check-types": "tsc --noEmit -p convex --incremental --tsBuildInfoFile node_modules/.cache/tsc/convex.tsbuildinfo && tsc --noEmit -p tsconfig.json",
     "codegen": "node scripts/codegen.mjs",
     "dev": "convex dev",
     "dev:setup": "convex dev --configure --until-success",
-    "kindling:hashes": "node scripts/kindling/ingest.ts --update-hashes",
-    "kindling:ingest": "node scripts/kindling/ingest.ts",
-    "kindling:ingest:prod": "node scripts/kindling/ingest.ts --prod",
+    "kindling:hashes": "bun scripts/kindling/ingest.ts --update-hashes",
+    "kindling:ingest": "bun scripts/kindling/ingest.ts",
+    "kindling:ingest:key": "bun scripts/kindling/ingest.ts --deploy-key",
+    "kindling:ingest:prod": "bun scripts/kindling/ingest.ts --prod",
+    "library:ingest": "bun scripts/library/ingest.ts",
+    "library:ingest:key": "bun scripts/library/ingest.ts --deploy-key",
+    "library:ingest:prod": "bun scripts/library/ingest.ts --prod",
     "lint": "biome check . && eslint convex",
     "lint:convex": "eslint convex",
+    "quote-backgrounds:process": "bun scripts/quote-backgrounds/process.ts",
+    "quote-backgrounds:upload": "bun scripts/quote-backgrounds/upload.ts",
     "stream:setup": "convex run streamSetup:setup",
     "stream:setup:prod": "convex run --prod streamSetup:setup",
     "stream:webhook": "convex run streamWebhook:registerWebhook",
@@ -38,6 +45,7 @@
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:evals": "RUN_EVALS=1 vitest run --testTimeout 30000 convex/ai/prompts/__evals__",
     "test:evals:intensity": "RUN_EVALS=1 vitest run --testTimeout 30000 convex/ai/prompts/__evals__/intensity.eval.test.ts",
+    "test:evals:letters": "RUN_EVALS=1 vitest run --testTimeout 30000 convex/ai/prompts/__evals__/lettersCheck.eval.test.ts",
     "test:evals:talk": "RUN_EVALS=1 vitest run --testTimeout 30000 convex/ai/prompts/__evals__/talk.eval.test.ts",
     "test:local": "node scripts/test-local.mjs",
     "test:watch": "vitest"

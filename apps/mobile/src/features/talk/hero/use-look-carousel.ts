@@ -21,25 +21,16 @@ const SPRING = {
 	stiffness: SNAP.stiffness,
 	...PLAY_AS_CHOSEN,
 };
-/** The pan starts past this much sideways travel, and gives way to a vertical scroll. */
 const ACTIVE_X = 10;
 const FAIL_Y = 14;
 
-/**
- * The look carousel's one horizontal pan (handoff §2.2): it drives a shared `x`, every
- * face's scale and opacity derive from it on the UI thread, and React hears only the
- * landed index. Release snaps on a spring that takes the velocity; a quick flick moves
- * one look. Reduced motion lands at once.
- */
 export function useLookCarousel({
 	index,
 	enabled,
 	reduced,
 	onLand,
 }: {
-	/** The landed look. */
 	index: number;
-	/** Only the start screen swipes. */
 	enabled: boolean;
 	reduced: boolean;
 	onLand: (i: number) => void;
@@ -71,7 +62,6 @@ export function useLookCarousel({
 		);
 	};
 
-	// A look chosen from outside (the saved one loading) moves the row without a spring.
 	useEffect(() => {
 		if (index === landed.current) {
 			return;
@@ -81,7 +71,6 @@ export function useLookCarousel({
 		x.set(-index * LAYOUT.slot);
 	}, [index, x]);
 
-	// A tick each time a look passes the centre.
 	useAnimatedReaction(
 		() => Math.min(LAST, Math.max(0, Math.round(-x.get() / LAYOUT.slot))),
 		(now, before) => {
@@ -111,7 +100,6 @@ export function useLookCarousel({
 		},
 		onUpdate: (e) => {
 			const raw = startX.get() + e.translationX;
-			// Rubber band past the ends.
 			if (raw > 0) {
 				x.set(raw * SNAP.rubber);
 			} else if (raw < MIN_X) {
@@ -122,7 +110,6 @@ export function useLookCarousel({
 		},
 	});
 
-	/** Tapping a neighbour or a dot, or VoiceOver's swipe: the same snap. */
 	const goTo = (i: number) => snapTo(i);
 
 	return { goTo, pan, x };

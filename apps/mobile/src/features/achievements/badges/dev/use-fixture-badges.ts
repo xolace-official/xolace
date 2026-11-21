@@ -1,16 +1,10 @@
-/**
- * The screen's fixture adapter: the same `{ state, actions }` as `useBadges`,
- * from fixtures. Pins live for the visit, so the pin mark and the fourth-pin
- * refusal (its toast) show as they do live; Share and the freeze buy do nothing.
- * Never reaches the backend.
- */
+import { BADGE_PIN_LIMIT } from "@xolace/backend/shared";
 import { useState } from "react";
 import { toast } from "@/components/shared/toast";
 import type { Badges } from "@/features/achievements/badges/badges-data";
 import {
 	badgesView,
 	freezeView,
-	PIN_LIMIT,
 } from "@/features/achievements/badges/badges-model";
 import { COPY } from "@/features/achievements/copy";
 import { fixtureArt } from "@/features/achievements/dev/fixture-art";
@@ -48,7 +42,7 @@ export function useFixtureBadges(): Badges {
 		playSoftPress();
 		if (pins.includes(id)) {
 			setPins(pins.filter((p) => p !== id));
-		} else if (pins.length >= PIN_LIMIT) {
+		} else if (pins.length >= BADGE_PIN_LIMIT) {
 			toast(COPY.pins.limit, {
 				haptic: () => setTimeout(playErrorNotice, WARN_AFTER_MS),
 				variant: "warning",

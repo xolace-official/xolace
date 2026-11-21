@@ -17,10 +17,6 @@ import { useTokenColors } from "@/lib/use-token-color";
 const CHIP = { h: 38, padH: 15 } as const;
 const CLOSE = { android: "close", ios: "xmark" } as const;
 
-/**
- * Production's Reading as… (handoff §2.2): once, inline, on a first visit. Pick any that fit, then
- * Done; Skip is an answer too. Afterwards the bar's person menu holds the same answer.
- */
 export function ReadingAsCard() {
 	const { state, actions } = useHomeScreen();
 	const reduced = useEffectiveReducedMotion();

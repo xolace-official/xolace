@@ -1,6 +1,6 @@
 /**
- * Where Lantern's screens live. The paths keep production's "library" names: shipped builds,
- * shares (`xolace://library/<slug>`) and notification payloads open them. The client feature is
+ * The paths keep production's "library" names: shipped builds,
+ * older shares (`xolace://library/<slug>`) and notification payloads open them. The client feature is
  * Lantern; the routes and the Convex namespace stay `library`.
  */
 import type { Href } from "expo-router";
@@ -9,7 +9,6 @@ import type { ReaderFrom } from "@/lib/library-analytics";
 
 export type { ReaderFrom };
 
-/** The reader. `hub` rides along from a hub so Up next follows its order (#417). */
 export const readerHref = (slug: string, from: ReaderFrom, hub?: string) =>
 	({
 		params: { from, slug, ...(hub ? { hub } : {}) },

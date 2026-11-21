@@ -8,7 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
-import { RollingNumber } from "@/components/shared/rolling-number";
+import { QUICK_ROLL_MS, RollDigits } from "@/components/shared/roll-digits";
 import { clearOf } from "@/design/clear-of";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { useClock } from "@/lib/motion/clock";
@@ -24,13 +24,10 @@ import { KindlingPath } from "./kindling-path";
 import { StepTargets } from "./step-targets";
 import { useTend } from "./use-tend";
 
-/** The path's pulse, wisp and node breath are slow: 30 frames a second is plenty. */
 const PATH_FPS = 30;
-const COUNT = 13;
-/** The warm wash sits at (-30, 10) in the card; the body starts inside the card's padding (18, 16). */
+const COUNT_LINE = 18;
 const WASH = { x: -48, y: -6 } as const;
 const washWidth = (lit: number) => 40 + lit * 70;
-/** The warm wash: the lit stroke's ember at 17%, fading out. */
 const WASH_ALPHA = 0.17;
 const washOf = (ember: string) =>
 	`radial-gradient(closest-side, ${clearOf(ember, WASH_ALPHA)}, ${clearOf(ember)})`;
@@ -42,7 +39,6 @@ const TOKENS = [
 	"accent",
 	"ember",
 	"accent-ink",
-	"muted",
 	"today-kindling-check",
 ] as const;
 
@@ -52,9 +48,8 @@ type Props = {
 	onScreen: SharedValue<boolean>;
 };
 
-/** The steps from your last session, as a path you tend (handoff `today.md` §4.5). */
 export function KindlingLive({ kindling, width, onScreen }: Props) {
-	const [surface, well, subtle, violet, ember, accentInk, muted, check] =
+	const [surface, well, subtle, violet, ember, accentInk, check] =
 		useTokenColors(TOKENS);
 	const { actions } = useToday();
 	const { live, reduced, low } = useTodayFrame();
@@ -64,7 +59,6 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 	const total = kindling.twigs.length;
 	const geo = pathGeometry(width, total);
 
-	// The warm wash behind the tended part widens over 1.4 s.
 	const lit = kin.shown.filter((s) => s === "done").length;
 	const wash = useSharedValue(washWidth(lit));
 	useEffect(() => {
@@ -79,9 +73,6 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 	const washStyle = useAnimatedStyle(() => ({ width: wash.get() }));
 
 	const { eyebrow, title } = nextRow(kindling.twigs, kin.shown, kin.peek);
-	// Peeks blur in at once. Right after a tend the next step blurs in as the light arrives;
-	// once a peek has come and gone, the row comes back at once (P replayed the late blur-in
-	// there, leaving the row blank for 1.35 s).
 	const tended = kin.peek < 0 && kin.fresh;
 	const textKey =
 		kin.peek >= 0 ? `p${kin.peekN}` : `t${kin.tendN}-${kin.peekN}`;
@@ -117,12 +108,15 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 					{COPY.kindling.title}
 				</AppText>
 				<View className="flex-row items-center">
-					<RollingNumber
-						color={muted}
-						quick
-						size={COUNT}
+					{/* Plain views: the card rises in, and a SwiftUI-hosted number is left behind by it. */}
+					<RollDigits
+						className="text-muted tabular-nums"
+						durationMs={QUICK_ROLL_MS}
+						lineHeight={COUNT_LINE}
+						maxScale={1}
+						rollIn={false}
 						value={kin.count}
-						weight="regular"
+						variant="footnote"
 					/>
 					<AppText color="muted" variant="footnote">
 						{COPY.kindling.of(total)}
@@ -146,7 +140,6 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 					current={kin.current}
 					nodes={geo.nodes}
 					onPeek={kin.peekAt}
-					peek={kin.peek}
 					shown={kin.shown}
 					twigs={kindling.twigs}
 				/>

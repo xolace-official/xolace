@@ -1,10 +1,7 @@
-// Body outlines in a 100×100 box, plus where the face sits on each.
-
 import { Skia } from "@shopify/react-native-skia";
 
 export type BodyName = "cloud" | "drop" | "flame" | "orb" | "square";
 
-// The logo's flame: rounded base, tall tip near the top middle, a smaller tip to its right.
 const FLAME = [
 	"M50 97",
 	"C25 97 9 82 9 61",
@@ -56,7 +53,6 @@ export const BODY_PATHS = {
 	square: SQUARE,
 };
 
-/** Eye line (y) and eye spacing for each body. */
 export const FACE_ANCHOR: Record<BodyName, { y: number; spread: number }> = {
 	cloud: { spread: 14, y: 61 },
 	drop: { spread: 13, y: 64 },

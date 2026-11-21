@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { type FaceTokens, faceColors } from "./face-colors";
 import { PALETTES } from "./face-palette";
 
-/** Each token named for itself, so a test can see which one a colour came from. */
 const TOKENS: FaceTokens = {
 	accent: "accent",
 	accentFg: "accentFg",

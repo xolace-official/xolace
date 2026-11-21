@@ -20,8 +20,6 @@ export async function getPushPermissionState(): Promise<PushPermissionState> {
 	return canAskAgain ? "undetermined" : "blocked";
 }
 
-/** This installation's Expo push token, or null without permission. Never prompts; for the
- * unregister paths. */
 export async function getGrantedPushToken(): Promise<string | null> {
 	const { status } = await Notifications.getPermissionsAsync();
 	if (status !== "granted") {
@@ -30,7 +28,6 @@ export async function getGrantedPushToken(): Promise<string | null> {
 	return requestPushToken();
 }
 
-/** Requests OS push permission and returns the Expo push token. Settings uses it to re-register. */
 export async function requestPushToken(): Promise<string | null> {
 	if (!Device.isDevice) {
 		console.log("Push notifications require a physical device");
@@ -38,8 +35,6 @@ export async function requestPushToken(): Promise<string | null> {
 	}
 
 	if (Platform.OS === "android") {
-		// Nothing targets it any more; stays as the landing spot for a notification without a
-		// channel.
 		await Notifications.setNotificationChannelAsync(DEFAULT_CHANNEL_ID, {
 			importance: AndroidImportance.MAX,
 			lightColor: "#6C63FF",

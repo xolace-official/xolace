@@ -1,8 +1,3 @@
-/**
- * The home's data hook: `getHome` and `getSubjects`, Reading as… (`setReadingAs`), the welcome
- * on a first visit, and the open counted once. The one home file that calls Convex, PostHog or
- * the toast.
- */
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
@@ -15,6 +10,7 @@ import type { Home } from "@/features/lantern/home/home-data";
 import { WELCOME_HREF } from "@/features/lantern/lantern-links";
 import { facetLabel, toggleIn } from "@/features/lantern/lantern-model";
 import { useEntryActions } from "@/features/lantern/use-entry-actions";
+import { useStoryCall } from "@/features/lantern/use-story-call";
 import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
 import { trackLibrary } from "@/lib/library-analytics";
 import { useAppStore } from "@/store/store";
@@ -22,7 +18,6 @@ import { useAppStore } from "@/store/store";
 export function useHome(): Home {
 	const home = useQuery(api.library.home.getHome, {});
 	const subjects = useQuery(api.library.home.getSubjects, {});
-	// The answer shows at once: the card goes and the bar's menu ticks before the round trip.
 	const setReadingAs = useMutation(
 		api.library.home.setReadingAs
 	).withOptimisticUpdate((store, { audiences }) => {
@@ -36,12 +31,12 @@ export function useHome(): Home {
 		}
 	});
 	const { share } = useEntryActions();
+	const writeStory = useStoryCall();
 	const posthog = usePostHog();
 	const arrival = useArrival();
 
 	useEffect(() => {
 		trackLibrary(posthog, "library_home_opened");
-		// Once per open.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -64,15 +59,12 @@ export function useHome(): Home {
 				save(toggleIn(home?.readingAs ?? [], slug));
 			},
 			share,
+			writeStory,
 		},
 		state: { arrival, home, subjects },
 	};
 }
 
-/**
- * A first visit opens the welcome, once, before the home. When it closes, the arrival moves on
- * and the home's sections rise in.
- */
 function useArrival() {
 	const introSeen = useAppStore((s) => s.libraryIntroSeen);
 	const [arrival, setArrival] = useState(0);
@@ -81,7 +73,6 @@ function useArrival() {
 		if (!introSeen) {
 			router.push(WELCOME_HREF);
 		}
-		// On mount: the welcome's own close sets the flag.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 	useEffect(() => {

@@ -9,7 +9,6 @@ import { useXolacerScreen } from "./xolacer-data";
 
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
 
-/** A label beside its sentence (the prototype's facts card). */
 function Row({ label, body }: { label: string; body: string }) {
 	return (
 		<View accessible className="flex-row gap-3">
@@ -27,8 +26,6 @@ function Row({ label, body }: { label: string; body: string }) {
 	);
 }
 
-/** You've talked before, or they're not taking conversations: an accent note. Then the facts
- * in front of you before you ask, with production's full note one tap away. */
 export function ProfileFacts() {
 	const { state, actions } = useXolacerScreen();
 	const muted = useTokenColor("muted");

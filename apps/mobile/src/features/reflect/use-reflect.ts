@@ -1,7 +1,12 @@
 import { api } from "@xolace/backend/api";
+import {
+	REFINEMENT_MAX_TURNS,
+	REFLECTION_INPUT_MAX_CHARS,
+} from "@xolace/backend/shared";
 import { useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
+import { Presets } from "react-native-pulsar";
 import { toast } from "@/components/shared/toast";
 import { useSessionMode } from "@/context/session-mode-context";
 import { usePaywall } from "@/features/purchases/use-paywall";
@@ -15,8 +20,6 @@ import { NUDGE } from "./motion";
 import type { Reflect, ReflectUi } from "./reflect-data";
 import {
 	holdsArrivals,
-	MAX_CHARS,
-	MAX_TURNS,
 	mirrorSentences,
 	pairPhrases,
 	promptFor,
@@ -46,11 +49,6 @@ const FRESH_UI: ReflectUi = {
 	sel: -1,
 };
 
-/**
- * Reflect on production's session machine (`session/use-reflection-machine.ts`): Convex, the AI
- * round trip, escalation, refinements, the draft, dictation and the analytics stay there. This
- * maps it onto the screen's stages, and keeps the screen state the stages share.
- */
 export function useReflectData(): Reflect {
 	const m = useReflectionMachine();
 	const { state: s, dispatch } = m;
@@ -61,7 +59,6 @@ export function useReflectData(): Reflect {
 	const posthog = usePostHog();
 	const replySeed = useAppStore((st) => st.replySeed);
 	const pending = useAppStore((st) => st.pendingEventPrompt);
-	// The route's starter bubble raises it while it's up over Write.
 	const sheetOpen = useAppStore((st) => st.homeSheetOpen);
 	const submitFeedback = useMutation(api.feedback.submit);
 	const audio = useMirrorAudio(m.sessionId);
@@ -72,7 +69,6 @@ export function useReflectData(): Reflect {
 	const [flash, setFlash] = useState({ line: -1, n: 0 });
 	const [liftN, setLiftN] = useState(0);
 	const [missTurn, setMissTurn] = useState(-1);
-	// Production's gave-up card: asked once, after Leave it here.
 	const [asked, setAsked] = useState<"asking" | "answered" | null>(null);
 
 	const next = useWhereNext(m);
@@ -80,9 +76,12 @@ export function useReflectData(): Reflect {
 	const stage = useLanding(
 		stageOf(s.screen, { heard: next.heard !== null, refining })
 	);
-	const { isPlus } = usePlusEntitlement();
+	const { status: plusStatus } = usePlusEntitlement();
 	const openPaywall = usePaywall((p) => p.open);
-	const error = s.screen === "error" ? waitError(s.errorMessage, isPlus) : null;
+	const error =
+		s.screen === "error"
+			? waitError(s.errorMessage, plusStatus, s.errorCode)
+			: null;
 	const slow = useWaitClock(stage === "wait" && !error);
 
 	const [shown, setShown] = useState(stage);
@@ -93,7 +92,6 @@ export function useReflectData(): Reflect {
 		}
 	}
 
-	// Production's pause before the nudge: longer at night (compose-screen's NIGHT_NUDGE_DELAY_MS).
 	const typingPause = useTypingPause(
 		() => dispatch({ type: "PAUSE_TIMEOUT" }),
 		late ? NUDGE.nightMs : NUDGE.dayMs
@@ -104,9 +102,7 @@ export function useReflectData(): Reflect {
 	useReflectBridge(
 		s.screen,
 		holdsArrivals(stage),
-		s.entryText.trim().length > 0,
-		m.isLoading,
-		dispatch
+		s.entryText.trim().length > 0
 	);
 
 	const scaffold = s.entryType === "scaffold";
@@ -166,14 +162,15 @@ export function useReflectData(): Reflect {
 					return;
 				}
 				setUi((u) => ({ ...u, pickMode: false, sel: line }));
-				m.handleNotQuite();
+				if (m.handleNotQuite()) {
+					Presets.wobble();
+				}
 			},
 			openHelp: next.openHelp,
 			openResource: next.openResource,
 			patch: (p) => setUi((u) => ({ ...u, ...p })),
 			pickReason: (reason) => {
 				dispatch({ reason, type: "MISS_REASON" });
-				// One miss per turn, as production's sheet recorded it.
 				if (!m.sessionId || missTurn === m.turnsCount) {
 					return;
 				}
@@ -188,11 +185,16 @@ export function useReflectData(): Reflect {
 			resourcesSeen: () => void m.handleEscalationContinue(),
 			retry: () => void m.handleRetry(),
 			saveSpaceName: next.saveSpaceName,
-			sayMore: () => (talk ? talk.open() : m.handleSayMore()),
+			sayMore: () => {
+				if (talk) {
+					talk.open();
+				} else if (m.handleSayMore()) {
+					Presets.wobble();
+				}
+			},
 			seePlus: () => openPaywall("rate_limit"),
 			send: () => {
 				const words = s.entryText.trim();
-				// A Plus take still being heard or written down would be lost to a send.
 				const taking = plus !== null && plus.phase !== "idle";
 				if (taking || !(words || s.selectedTextures.length > 0)) {
 					return false;
@@ -212,7 +214,10 @@ export function useReflectData(): Reflect {
 				posthog.capture("texture_set_changed", { from: set, to });
 			},
 			setText: (text) => {
-				dispatch({ text: text.slice(0, MAX_CHARS), type: "TEXT_CHANGE" });
+				dispatch({
+					text: text.slice(0, REFLECTION_INPUT_MAX_CHARS),
+					type: "TEXT_CHANGE",
+				});
 				typingPause.resetTimer();
 			},
 			setVersion: versions.setVersion,
@@ -245,7 +250,7 @@ export function useReflectData(): Reflect {
 			upgradeDictation: m.dictationUpsell.onUpgrade,
 		},
 		state: {
-			atCap: m.turnsCount >= MAX_TURNS || s.screen === "gave-up",
+			atCap: m.turnsCount >= REFINEMENT_MAX_TURNS || s.screen === "gave-up",
 			audio: { playing: audio.isPlaying, ready: audio.isReady },
 			canSayMore: talk ? talk.offered : true,
 			care: ui.care,
@@ -290,6 +295,7 @@ export function useReflectData(): Reflect {
 			take: {
 				note: plus?.phase === "idle" ? plus.note : null,
 				remainingMs: plus?.phase === "listening" ? plus.remainingMs : null,
+				scribe: plus?.phase === "listening",
 				writing: plus?.phase === "writing",
 			},
 			takeN: takes.takeN,

@@ -1,18 +1,12 @@
-// Xolace+, the first look (S18; the prototype's `PLUS_FIRST_LOOK`): intake's last step. Prices,
-// plan buttons and their lines come from the store (`purchases/plans.ts`), never from here.
-
 export type RowId = "say" | "talk" | "sup" | "ste" | "you";
 
-/** "flux" is the default voice ("Auto" in Settings); the others are Talk's named cast. */
 export type VoiceId = "flux" | "sage" | "wren" | "vesper" | "ash";
 
 type Row = {
 	id: RowId;
 	title: string;
-	/** Under the title once the row opens; the free row never opens. */
 	line: string;
 	free: boolean;
-	/** The open preview's fixed height, so opening is one height animation. */
 	height: number;
 };
 
@@ -99,7 +93,6 @@ export const FIRST_LOOK = {
 			title: "Make Flux yours",
 		},
 	] as const satisfies readonly Row[],
-	/** "You said <words>. Here’s what Plus adds to that." */
 	said: { after: ". Here’s what Plus adds to that.", before: "You said " },
 	supports: [
 		{ icon: "clock", label: "Sit with it" },

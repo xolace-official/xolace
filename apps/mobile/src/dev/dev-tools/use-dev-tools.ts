@@ -1,8 +1,3 @@
-/**
- * What Account › Dev tools does: production's dev rows, moved here from
- * `features/settings` so the ported Settings imports no other feature (S19b).
- * Every Convex call is honoured only on a deployment with DEV_TOOLS_ENABLED.
- */
 import { useAuth } from "@clerk/expo";
 import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/api";
@@ -29,7 +24,6 @@ export function useDevTools() {
 	const seedBadgeUnlock = useMutation(api.devTools.seedBadgeUnlock);
 	const [busy, setBusy] = useState(false);
 
-	/** One server call at a time, as production's section did. */
 	const once = (run: () => Promise<unknown>) => {
 		if (busy) {
 			return;
@@ -38,28 +32,7 @@ export function useDevTools() {
 		run().finally(() => setBusy(false));
 	};
 
-	const acknowledge = (streak: number) => {
-		if (userId) {
-			useAppStore.getState().setLastAcknowledgedStreak(streak, userId);
-		}
-	};
-
 	return {
-		/** Arms starter suggestions as a new user or on the real gate. */
-		armStarters: (asNewUser: boolean) => {
-			useAppStore.setState({ devStarterEligible: asNewUser });
-			if (userId) {
-				useAppStore
-					.getState()
-					.clearAccountFlags(userId, ["starterSuggestionsSeen"]);
-			}
-			toast(
-				asNewUser
-					? "Starter suggestions armed · new user"
-					: "Starter suggestions · real gate"
-			);
-			router.dismissTo("/reflect");
-		},
 		clearAgeGate: () =>
 			clearAgeDeclarations()
 				.then(() =>
@@ -74,7 +47,6 @@ export function useDevTools() {
 		replayDeferred: () =>
 			clearDeferredAnswers()
 				.then(() => {
-					// The once-only marks kept on this device, so each ask can show again here.
 					useAppStore.setState({ shakeHintSeen: false });
 					if (userId) {
 						useAppStore
@@ -87,32 +59,19 @@ export function useDevTools() {
 					});
 				})
 				.catch(failed("Deferred questions replay failed")),
-		// No navigation: `onboardingComplete` is the root guard and swaps the group.
 		replayIntake: () =>
 			once(() => resetIntake().catch(failed("Intake reset failed"))),
-		replayReveal: () => {
-			acknowledge(0);
-			toast("Reveal re-armed", {
-				description: "Go back home to watch it again.",
-			});
-		},
 		resetAwareness: () => {
 			useAppStore.setState({ seenEventIds: [] });
 			useAppStore.getState().setPendingEventPrompt(null);
 			toast("Awareness events reset", {
-				description: "Reopen home to see the card.",
+				description: "Reopen Today to see this month's prompt.",
 			});
 		},
 		runStreak: (mode: "bump" | "reset") =>
 			once(() =>
 				setStreak({ mode })
-					.then((streak) => {
-						// Make the reveal pending: acknowledged = the day before.
-						acknowledge(Math.max(streak - 1, 0));
-						toast(`Streak set to day ${streak}`, {
-							description: "Go back home to watch the reveal.",
-						});
-					})
+					.then((streak) => toast(`Streak set to day ${streak}`))
 					.catch(() =>
 						toast("Streak update failed", {
 							description: "Is DEV_TOOLS_ENABLED set on this deployment?",
@@ -125,7 +84,7 @@ export function useDevTools() {
 				seedFollowUpCard({ tier })
 					.then(() =>
 						toast(`Follow-up card seeded · ${tier}`, {
-							description: "Go back to the reflect home to see the check-in.",
+							description: "Reopen Today for the greeting, or find it in You.",
 						})
 					)
 					.catch(failed("Seed failed"))

@@ -1,10 +1,10 @@
-/** The part of the day an hour falls in, which sets a screen's sky, greeting and pace. */
 export type DayPhase = "dawn" | "day" | "evening" | "late";
 
-/** Phase windows by hour: dawn 4–9, day 9–17, evening 17–22, late 22–4. */
-export const PHASE_HOURS = { dawn: 4, day: 9, evening: 17, late: 22 } as const;
+const PHASE_HOURS = { dawn: 4, day: 9, evening: 17, late: 22 } as const;
 
-/** The phase an hour (0–23) falls in. */
+/** Where the day phase turns from morning to afternoon in words; the phase itself runs on. */
+export const NOON = 12;
+
 export function phaseForHour(hour: number): DayPhase {
 	if (hour >= PHASE_HOURS.late || hour < PHASE_HOURS.dawn) {
 		return "late";
@@ -16,4 +16,26 @@ export function phaseForHour(hour: number): DayPhase {
 		return "day";
 	}
 	return "evening";
+}
+
+const HOURS_IN_DAY = 24;
+
+export function todayPhase(hour: number, isNight: boolean): DayPhase {
+	if (isNight) {
+		return "late";
+	}
+	const phase = phaseForHour(hour);
+	return phase === "late" ? "evening" : phase;
+}
+
+export function nextWakeHour(hour: number): number {
+	const wakes = [
+		PHASE_HOURS.dawn,
+		PHASE_HOURS.day,
+		NOON,
+		PHASE_HOURS.evening,
+		PHASE_HOURS.late,
+		HOURS_IN_DAY,
+	];
+	return wakes.find((w) => w > hour) ?? HOURS_IN_DAY;
 }

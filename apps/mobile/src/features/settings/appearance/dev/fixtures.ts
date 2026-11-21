@@ -1,4 +1,4 @@
-/** Settings › Appearance on fixtures: the board's account (Xolace+, System, Default). */
+import type { PlusStatus } from "@/features/purchases/plus-status";
 import type { Appearance } from "@/features/settings/appearance/appearance-data";
 import {
 	modeNote,
@@ -21,14 +21,12 @@ export const APPEARANCE_ACTIONS: Appearance["actions"] = {
 	showProfileCard: ignore,
 };
 
-/** A theme's part of the state, for an account on or off Plus. */
-const themeState = (id: string, isPlus: boolean) => ({
-	themeNote: themeNote(id, isPlus),
+const themeState = (id: string, plus: PlusStatus) => ({
+	themeNote: themeNote(id, plus),
 	themeStart: stripStart(id),
-	themes: themeCards(id, isPlus),
+	themes: themeCards(id, plus),
 });
 
-/** Render 07: Plus, System on a light phone, Default, Match my phone with Reduce Motion off. */
 export const APPEARANCE_TOP: Appearance["state"] = {
 	mode: "system",
 	modeNote: modeNote("system", false),
@@ -38,32 +36,33 @@ export const APPEARANCE_TOP: Appearance["state"] = {
 	previewScheme: "light",
 	profileCards: profileRows([]),
 	replayOpen: false,
-	...themeState("default", true),
+	...themeState("default", "plus"),
 };
 
-/** Render 09: a free account on Default, opened at the line so the locked Plus themes show. */
 export const APPEARANCE_FREE: Appearance["state"] = {
 	...APPEARANCE_TOP,
-	...themeState("default", false),
+	...themeState("default", "free"),
 	themeStart: stripStart("human"),
 };
 
-/** Render 10: Dark, Rosé picked (Plus). */
 export const APPEARANCE_DARK_ROSE: Appearance["state"] = {
 	...APPEARANCE_TOP,
 	mode: "dark",
 	modeNote: modeNote("dark", false),
 	previewScheme: "dark",
-	...themeState("rose", true),
+	...themeState("rose", "plus"),
 };
 
-/** Render 11: the Replay intro alert. */
+export const APPEARANCE_PLUS_LOADING: Appearance["state"] = {
+	...APPEARANCE_TOP,
+	...themeState("rose", "loading"),
+};
+
 export const APPEARANCE_REPLAY: Appearance["state"] = {
 	...APPEARANCE_TOP,
 	replayOpen: true,
 };
 
-/** Reduced motion chosen while the phone asks for it, one Profile card hidden. */
 export const APPEARANCE_CALMED: Appearance["state"] = {
 	...APPEARANCE_TOP,
 	motion: "reduced",

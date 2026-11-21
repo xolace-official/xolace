@@ -11,8 +11,6 @@ const sessionEndHref = (
 		? `/session-end?path=${path}&sessionId=${sessionId}`
 		: `/session-end?path=${path}`;
 
-/** Where a finished path goes next: the session end, which carries the kindling
- * offer in its next step (the separate announcement beat, #458, folded into it). */
 export function useSessionEndHref(sessionId: Id<"sessions"> | string | null) {
 	return (path: SessionEndPath): Href => sessionEndHref(path, sessionId);
 }

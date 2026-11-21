@@ -1,3 +1,5 @@
+import { DISPLAY_NAME_MAX_CODE_POINTS } from "./shared";
+
 const NAMES = [
 	"Wren",
 	"River",
@@ -39,7 +41,7 @@ export function seededDisplayName(profileId: string): string {
 	return NAMES[hash % NAMES.length];
 }
 
-export const DISPLAY_NAME_MAX_LENGTH = 30;
+export const DISPLAY_NAME_MAX_LENGTH = DISPLAY_NAME_MAX_CODE_POINTS;
 
 export type DisplayNameValidation =
 	| { ok: true; trimmed: string }

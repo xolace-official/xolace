@@ -1,7 +1,3 @@
-/**
- * The Moments list's data: production's timeline queries (the free window is the server's), its
- * analytics and its paywall source (`timeline_extended`), unchanged.
- */
 import { api } from "@xolace/backend/api";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { useObserve } from "expo-observe";
@@ -22,24 +18,23 @@ export function useMoments(): MomentsScreenData {
 		{ initialNumItems: PAGE }
 	);
 	const windowInfo = useQuery(api.sessions.getTimelineWindowInfo);
-	const { isPlus } = usePlusEntitlement();
+	const { status: plus } = usePlusEntitlement();
 	const posthog = usePostHog();
 	const openPaywall = usePaywall((s) => s.open);
 	const { markInteractive } = useObserve();
 	const seen = useRef(false);
 	const loading = status === "LoadingFirstPage";
 
-	// Per-route TTI: ready once the first page resolves, not at mount (production's).
 	useEffect(() => {
 		if (!loading) {
 			markInteractive();
 		}
 	}, [loading, markInteractive]);
 
-	// Production's door: only once the list ran out with older moments hidden. It goes at once
-	// after a purchase, though the server's window can lag behind.
 	const hidden =
-		!isPlus && status === "Exhausted" && windowInfo?.hasOlderSessions === true;
+		plus === "free" &&
+		status === "Exhausted" &&
+		windowInfo?.hasOlderSessions === true;
 
 	return {
 		actions: {

@@ -9,6 +9,7 @@ import {
 	query,
 } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
+import { EVENT_PROMPT_CARRY_MS } from "../lib/shared";
 import { appEventValidator, recentEvents, toAppEvent } from "./events";
 
 /**
@@ -37,9 +38,8 @@ import { appEventValidator, recentEvents, toAppEvent } from "./events";
  * hides rows that were already done.
  */
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 /** How long a read or written prompt stays on the reflect card. */
-export const CARRY_MS = 7 * DAY_MS;
+export const CARRY_MS = EVENT_PROMPT_CARRY_MS;
 /** Carried prompts looked at per read; normally one, rarely two. */
 const MAX_CARRIED = 5;
 /** Rows deleted per batch on wipe and account deletion. */

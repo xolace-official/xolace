@@ -25,8 +25,9 @@ const server = (
 
 describe("ceilingMs", () => {
 	it("lets a free vent go at 120 s and a Plus one at 150 s", () => {
-		expect(ceilingMs(false)).toBe(120_000);
-		expect(ceilingMs(true)).toBe(150_000);
+		expect(ceilingMs("free")).toBe(120_000);
+		expect(ceilingMs("plus")).toBe(150_000);
+		expect(ceilingMs("loading")).toBe(150_000);
 	});
 });
 
@@ -89,7 +90,6 @@ describe("replyPace", () => {
 
 	it("follows the voice: each word when the voice reaches it, by its length", () => {
 		const pace = replyPace(["a", "bbb"], 600);
-		// "a " is 2 of 6 characters, so "bbb" starts a third of the way in.
 		expect(pace.starts).toEqual([0, 200]);
 	});
 

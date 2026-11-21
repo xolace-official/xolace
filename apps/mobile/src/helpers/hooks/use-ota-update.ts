@@ -8,8 +8,6 @@ type UseOtaUpdateOptions = {
 	onUpdateReady: () => void;
 };
 
-/** EAS OTA updates: fetches and notifies when one is ready; re-checks on foreground. Skipped in
- * dev builds. */
 export function useOtaUpdate({
 	isVersionChecked,
 	isNewVersionAvailable,
@@ -50,8 +48,6 @@ export function useOtaUpdate({
 		handleUpdate();
 	}, [handleUpdate]);
 
-	// Re-subscribed whenever handleUpdate changes so the foreground re-check never
-	// runs a stale closure. appState is a ref, so its tracking survives re-subscription.
 	useEffect(() => {
 		if (__DEV__) {
 			return;

@@ -25,16 +25,8 @@ import { usePeerReflection } from "./peer-reflection-data";
 import { usePeersColors } from "./peers-colors";
 import { LAYOUT, SKY_SCALE } from "./peers-look";
 
-/**
- * You're not alone ("A light for each of them", design/handoff/peers.md):
- * other people's words arrive one at a time, each joined to yours by a line of
- * light. The arrival is one UI-thread value; React renders when a card lands,
- * lights or leaves. `scene` is for dev states only.
- */
 export function PeerReflectionScreen({ scene }: { scene?: PeersScene }) {
 	const data = usePeerReflection();
-	// The quotes are set in the mirror's face: the arrival waits for it, so the
-	// write-on measures the lines it will draw.
 	const facesReady = useFixedFaces("mirror");
 	const peers = facesReady
 		? data

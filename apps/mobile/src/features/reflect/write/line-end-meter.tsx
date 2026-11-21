@@ -9,16 +9,11 @@ type Props = {
 	onWriting: (writing: Writing) => void;
 };
 
-/**
- * An invisible copy of the field's text, laid out like the field, so the face knows where the
- * last line really ends and when it really wraps. Fills the field's box.
- */
 export function LineEndMeter({ text, onWriting }: Props) {
 	const box = useRef<{ height: number; width: number } | null>(null);
 	const last = useRef<Line | undefined>(undefined);
 	const laidOut = useRef(false);
 
-	// Text and box layouts arrive in either order; report once both are known.
 	const report = () => {
 		if (box.current && laidOut.current) {
 			onWriting({ text, ...lineEnd(last.current, box.current) });

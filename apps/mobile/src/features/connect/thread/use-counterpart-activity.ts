@@ -13,8 +13,6 @@ type CounterpartActivity = {
 
 const IDLE: CounterpartActivity = { presence: null, typing: false };
 
-/** Whether two reads say the same thing: a repeated `typing.start` (Stream relays one about
- * every second while someone types) or another member's presence changes nothing on screen. */
 export function sameActivity(a: Activity, b: Activity): boolean {
 	if (a.typing !== b.typing) {
 		return false;
@@ -28,9 +26,6 @@ export function sameActivity(a: Activity, b: Activity): boolean {
 	);
 }
 
-/** Presence and typing read off the thread's channel. Called by the header's title, not the
- * screen's data: these events come every second while someone types, and only that line shows
- * them. `null` (no channel yet, or a thread that isn't open) is idle. */
 export function useCounterpartActivity(
 	channel: Channel | null,
 	counterpartUserId: string
@@ -46,7 +41,6 @@ export function useCounterpartActivity(
 				presence: readPresence(channel, counterpartUserId),
 				typing: counterpartUserId in channel.state.typing,
 			};
-			// The same state back: no render.
 			setActivity((prev) => (sameActivity(prev, next) ? prev : next));
 		};
 		read();
@@ -63,7 +57,6 @@ export function useCounterpartActivity(
 		return () => subs.forEach((sub) => sub.unsubscribe());
 	}, [channel, counterpartUserId]);
 
-	// Derived, not synced: no channel means IDLE whatever the last subscription left behind.
 	return channel ? activity : IDLE;
 }
 

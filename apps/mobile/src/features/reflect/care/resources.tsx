@@ -8,9 +8,7 @@ import { COPY } from "../copy";
 import { MORPH } from "../motion";
 import type { ResourceRow } from "../reflect-model";
 
-/** S11 chip-morph-menu's list: items rise 10 pt over .4 s on bezier(.23,1,.32,1), 150 ms after, 60 ms apart. */
 const RISE_EASE = Easing.bezier(0.23, 1, 0.32, 1);
-/** The 34 pt pill reaches 44 pt to the finger. */
 const PILL_HIT_SLOP = { bottom: 5, top: 5 };
 
 type Props = {
@@ -19,11 +17,6 @@ type Props = {
 	reduced: boolean;
 };
 
-/**
- * People who answer (production's escalation list, from the session): crisis lines first. Each
- * row says what it does, and VoiceOver reads its written-out readout. A row you only read (text)
- * has no verb and isn't a button.
- */
 export function Resources({ rows, onOpen, reduced }: Props) {
 	return (
 		<View className="gap-2">

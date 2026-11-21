@@ -20,8 +20,6 @@ type Props = {
 	isDisabled: boolean;
 };
 
-/** Sticky bottom CTA block: primary button, renewal legal line and Terms/Privacy links via
- * LegalBottomSheet. */
 export function PaywallCta({ label, onPress, isBusy, isDisabled }: Props) {
 	const [activeDocument, setActiveDocument] = useState<LegalDocument | null>(
 		null

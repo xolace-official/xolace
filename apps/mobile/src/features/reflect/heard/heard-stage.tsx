@@ -24,15 +24,9 @@ import { HeardTitle } from "./heard-title";
 
 const H = LAYOUT.heard;
 const H_COPY = COPY.heard;
-/** The body and the chip rise 8 pt over .5 s. */
 const FADE = { ms: 500, rise: 8 } as const;
 const BLEED = { delayMs: HEARD_MOTION.bleedDelayMs, ms: HEARD_MOTION.bleedMs };
 
-/**
- * Heard (board card 08, renders 14, 17): the circle from the wait, closed, bleeding once, the face
- * inside. "Heard." writes in; the line and the streak follow. 0.6 s in, the face's eyes close
- * into the crescent with one small hop (late: they close slowly to rest, no hop).
- */
 export function HeardStage() {
 	const { state, actions } = useReflect();
 	const { late, streak } = state;
@@ -62,7 +56,6 @@ export function HeardStage() {
 		return () => clearTimeout(id);
 	}, [late, reduced, to, hop, rest]);
 
-	// Late: the eyes close slowly to rest over 1.8 s (board `.slowc`), not on the move spring.
 	useAnimatedReaction(
 		() => rest.get(),
 		(u) => {

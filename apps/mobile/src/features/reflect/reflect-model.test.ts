@@ -218,29 +218,48 @@ describe("resourceRows", () => {
 
 describe("waitError", () => {
 	it("offers support, not a retry, when the safeguard said no", () => {
-		expect(waitError("content_policy_violation", true)).toEqual({
+		expect(waitError("content_policy_violation", "plus")).toEqual({
 			body: COPY.wait.rejected,
 			kind: "rejected",
 		});
 	});
 
 	it("opens Plus for a free account at the hourly cap", () => {
-		expect(waitError(LIMIT_MESSAGE, false)).toEqual({
+		expect(waitError(LIMIT_MESSAGE, "free")).toEqual({
 			body: `${LIMIT_MESSAGE} ${COPY.wait.limitMore}`,
 			kind: "limit",
 		});
 	});
 
-	it("keeps Try again for Plus at the cap and for other failures", () => {
-		expect(waitError(LIMIT_MESSAGE, true).kind).toBe("failed");
-		expect(waitError("Network down", false)).toEqual({
+	it("keeps Try again at the cap for Plus or while Xolace+ loads, and for other failures", () => {
+		expect(waitError(LIMIT_MESSAGE, "plus").kind).toBe("failed");
+		expect(waitError(LIMIT_MESSAGE, "loading").kind).toBe("failed");
+		expect(waitError("Network down", "free")).toEqual({
 			body: "Network down",
 			kind: "failed",
 		});
 	});
 
 	it("falls back to production's message when the server gave none", () => {
-		expect(waitError("", false).body).toBe(COPY.wait.failed);
+		expect(waitError("", "free").body).toBe(COPY.wait.failed);
+	});
+
+	it("reads the session's error code before its message", () => {
+		expect(
+			waitError("Rephrased refusal", "plus", "content_policy_violation")
+		).toEqual({
+			body: COPY.wait.rejected,
+			kind: "rejected",
+		});
+		expect(
+			waitError("Slow down a little.", "free", "reflection_rate_limited")
+		).toEqual({
+			body: `Slow down a little. ${COPY.wait.limitMore}`,
+			kind: "limit",
+		});
+		expect(
+			waitError("Slow down a little.", "plus", "reflection_rate_limited").kind
+		).toBe("failed");
 	});
 });
 

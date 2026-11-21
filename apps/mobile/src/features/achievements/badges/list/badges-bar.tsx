@@ -8,11 +8,8 @@ import { AppText } from "@/components/shared/app-text";
 import { BackButton } from "@/components/shared/back-button";
 import { COPY } from "@/features/achievements/copy";
 
-/** The board's bar: 104 pt from the top on a 54 pt status bar. */
 export const BAR = 50;
 const TITLE_TOP = 4;
-const BACK_TOP = 2;
-/** The backdrop fades in over 8–40 pt of scroll, the title over 30–50. */
 const BACKDROP = { from: 8, over: 32 } as const;
 const TITLE = { from: 30, over: 20 } as const;
 
@@ -21,10 +18,6 @@ const fade = (y: number, { from, over }: { from: number; over: number }) => {
 	return Math.min(1, Math.max(0, (y - from) / over));
 };
 
-/**
- * The bar over the list: Back, and "Achievements" once the large title scrolls
- * under it. Hidden from VoiceOver while a badge is out.
- */
 export function BadgesBar({
 	y,
 	hidden,
@@ -66,7 +59,7 @@ export function BadgesBar({
 					{COPY.list.title}
 				</AppText>
 			</Animated.View>
-			<BackButton className="absolute left-4" style={{ top: top + BACK_TOP }} />
+			<BackButton className="absolute left-4" style={{ top }} />
 		</View>
 	);
 }

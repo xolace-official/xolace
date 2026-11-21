@@ -7,23 +7,15 @@ import { fadeUpProps } from "@/design/entering";
 import { useTokenColors } from "@/lib/use-token-color";
 import { REWRITE_MOTION } from "../motion";
 
-/** Board `.shim`: 250% wide, from 100% to −50% background position. */
 const BAND_WIDTH = 2.5;
 const FROM = -1.5;
 const TO = 0.75;
-/** Board `.shim`: in by 15% of the sweep. */
 const IN_MS = REWRITE_MOTION.shimmerMs * 0.15;
 const STOPS = [0, 0.4, 0.5, 0.6, 1] as const;
 const START = { x: 0, y: 0.4 } as const;
 const END = { x: 1, y: 0.6 } as const;
-/** Reduce Motion: the band rests mid-line. */
 const STILL = (FROM + TO) / 2;
 
-/**
- * A line being rewritten (S10, tone-rewrite-composer): while the refinement is with the server a
- * pale shape holds the line's place, its layout held so nothing reflows, and a warm band crosses
- * it every 1.1 s (one native Ease loop) until the new mirror lands.
- */
 export function Shimmer({ reduced }: { reduced: boolean }) {
 	const [pale, warm] = useTokenColors(["surface-secondary", "ember-wash"]);
 	const [w, setW] = useState(0);

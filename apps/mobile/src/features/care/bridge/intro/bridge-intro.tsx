@@ -10,7 +10,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 const ROW_GLYPH = 18;
 
-/** The first time only: what Trusted Bridge does, and what it never keeps. */
 export function BridgeIntro() {
 	const { actions } = useBridgeScreen();
 	const accentInk = useTokenColor("accent-ink");

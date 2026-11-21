@@ -24,31 +24,21 @@ const CARD_H = 116;
 const RADIUS = 24;
 const RISE_SLOT = 1;
 const FIRE = { height: 104, width: 78 } as const;
-/** campG: the glow breathes over 2.2 s (ember-glow-story's BREATH): opacity .75 → 1, 10 pt right, 1.06. */
 const GLOW_MS = 2200;
 const GLOW_REST = { opacity: 0.75, scale: 1, translateX: 0 };
 const GLOW_UP = { opacity: 1, scale: 1.06, translateX: 10 };
 
-/**
- * Flux by a real fire: warmth breathing along the lower edge, embers rising, this week's
- * campers counted. Inert, as production's cohort card is.
- */
 export function CampfireCard() {
 	const { state } = useToday();
-	const { live, reduced, intro, low } = useTodayFrame();
-	// The warmth off its lower edge: fixed firelight, fading out.
+	const { live, reduced, intro, low, waiting } = useTodayFrame();
 	const warmth = useTokenColor("today-campfire-glow");
 	const top = useSharedValue(0);
 	const onScreen = useOnScreen(top, CARD_H);
-	// The glow and the embers are native loops (react-native-ease) that stop off screen.
 	const shown = useShown(onScreen);
 	const running = live && shown;
 	const image = useRef<ExpoImage>(null);
 
-	// The loop plays only while the card is on screen and Today is live. A direct call on
-	// the image, not React state, so scrolling past it commits nothing.
 	const animate = (on: boolean) => {
-		// The native view can be gone by now (a phase change unmounts the card).
 		const run = on
 			? image.current?.startAnimating()
 			: image.current?.stopAnimating();
@@ -79,7 +69,7 @@ export function CampfireCard() {
 
 	return (
 		<EaseView
-			{...todayRiseProps(RISE_SLOT, intro, reduced)}
+			{...todayRiseProps(RISE_SLOT, intro, reduced, waiting)}
 			className="mx-4"
 			onLayout={(e) => top.set(e.nativeEvent.layout.y)}
 			style={{ marginTop: MODULE_GAP }}
@@ -119,6 +109,7 @@ export function CampfireCard() {
 							rest={line.rest}
 							tail={line.tail}
 							value={line.count}
+							waiting={waiting}
 						/>
 						{link ? (
 							<AppText

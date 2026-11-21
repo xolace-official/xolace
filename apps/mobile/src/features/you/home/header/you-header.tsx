@@ -1,7 +1,6 @@
-import { useEffect } from "react";
 import { View } from "react-native";
 import { useHeaderScrollY } from "react-native-collapsible-tab";
-import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
+import { useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
 import { Aura } from "@/components/shared/aura";
@@ -15,35 +14,24 @@ import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** Scroll, in steps of this many points, that closes the freeze explanation. */
 const SCROLL_STEP = 4;
 const WARM_DRIFT_MS = 14_000;
 const COOL_DRIFT_MS = 16_000;
 const COOL_DRIFT_X = -12;
 const AURA_TOKENS = ["you-aura-warm", "you-aura-cool"] as const;
 
-/**
- * The collapsing part of You: the aurora, the avatar, the greeting, the streak card and the
- * badges row, plus the top bar that fades in as they scroll away.
- */
 export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 	const { hero } = useYouHome().state;
 	const { tip, closeTip } = useYouUi();
-	// The tip's open state where the scroll worklet can read it, so a closed tip costs no
-	// hop to JS as the header collapses.
-	const tipOpen = useSharedValue(tip.open);
-	useEffect(() => {
-		tipOpen.set(tip.open);
-	}, [tip.open, tipOpen]);
+	const tipOpen = tip.open;
 	const collapse = useHeaderScrollY();
 	useCollapseFollowsRange();
 	const [warm = "", cool = ""] = useTokenColors(AURA_TOKENS);
 
-	// The freeze explanation is drawn over the screen, not in the header: any scroll closes it.
 	useAnimatedReaction(
 		() => Math.round(collapse.get() / SCROLL_STEP),
 		(now, before) => {
-			if (tipOpen.get() && before !== null && now !== before) {
+			if (tipOpen && before !== null && now !== before) {
 				scheduleOnRN(closeTip);
 			}
 		}
@@ -109,7 +97,6 @@ export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 					) : null}
 				</>
 			) : (
-				// Holds the greeting's two lines while the summary loads.
 				<View className="h-[57px]" />
 			)}
 

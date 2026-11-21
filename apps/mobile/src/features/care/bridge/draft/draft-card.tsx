@@ -12,8 +12,6 @@ import { COPY } from "@/features/care/bridge/copy";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** A freshly written draft fades in over 400 ms (one block: on Fabric, text nested in text
- * isn't a view of its own, so a per-sentence fade wouldn't play). */
 const SETTLE_MS = 400;
 const LOCK: IconName = { android: "lock", ios: "lock" };
 const LOCK_GLYPH = 11;
@@ -37,7 +35,6 @@ function Settling({ text }: { text: string }) {
 	);
 }
 
-/** The draft, the hero: plainly yours, and editable with a tap. */
 export function DraftCard() {
 	const { state, actions } = useBridgeScreen();
 	const { text, written } = state.draft;

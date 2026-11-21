@@ -9,7 +9,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { useSwapSheet } from "./swap-data";
 
-/** Board `.sh h3`: Bricolage 24/740, −.02em (700 is the loaded cut). */
 const TITLE = {
 	fontFamily: FONTS.displayBold,
 	fontSize: 24,
@@ -17,16 +16,9 @@ const TITLE = {
 	lineHeight: 28,
 } as const;
 const MIN_BOTTOM = 22;
-/** Two option rows hold their space until the options are in, so the sheet measures once. */
 const PLACEHOLDERS = ["simpler", "other"] as const;
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
 
-/**
- * Something else? (board card 06): a form sheet with one detent and a
- * grabber. fix: the exercise waits while it's open (production kept playing
- * behind it), and "Try something simpler" is hidden while Three breaths plays.
- * Two swaps at most; a swap starts the new exercise at its first beat.
- */
 export function SwapSheetView() {
 	const { state, actions } = useSwapSheet();
 	const subtle = useTokenColor("subtle");

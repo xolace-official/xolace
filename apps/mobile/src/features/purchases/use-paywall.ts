@@ -2,7 +2,6 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { router } from "expo-router";
 import { create } from "zustand";
 
-/** Which locked surface opened the paywall; carried into the paywall_opened / purchase_* events. */
 export type PaywallSurface =
 	| "insight_teaser"
 	| "week_intensity"
@@ -28,8 +27,10 @@ export type PaywallSurface =
 	| "intake_same_week"
 	// A free user's tap on a Browse track row (#340, §9.4). The slug rides on browse_paywall_*.
 	| "browse"
-	// Session-end's free-user upsell line (docs/paths-v1.md §12, #337). A fixed slot,
-	// not one of the five ranked moments: no cooldown, shown every qualifying session.
+	// Kindling's Xolace+ upsell: session-end's free-user line (docs/paths-v1.md §12, #337;
+	// a fixed slot, not one of the five ranked moments: no cooldown, every qualifying
+	// session) and Today's kindling card with none (S16, "See how"). The spec keeps both on
+	// this one placement, so paywall_opened doesn't tell them apart.
 	| "kindling"
 	// The Lantern reader's audio dock at the end of the 30s preview (#411).
 	| "library_audio"
@@ -46,7 +47,6 @@ export type PaywallSurface =
 	// Get Xolace+ on Telegram's reply-cap line, through the bot's app link (#771).
 	| "telegram_cap";
 
-/** `sessionId` rides only with the `kindling` surface (`paths.requestKindling`). */
 type PaywallState = {
 	open: (
 		surface: PaywallSurface,
@@ -55,9 +55,6 @@ type PaywallState = {
 	close: () => void;
 };
 
-// Opens/closes the paywall route; analytics are captured in the screen. `close` cannot
-// assume a back stack (deep link `xolace:///upgrade` cold-starts on it). The route is
-// `(protected)/upgrade`, not its own group: expo-router >= 58 picks a sibling group for `/`.
 export const usePaywall = create<PaywallState>(() => ({
 	close: () =>
 		router.canGoBack() ? router.back() : router.replace("/(protected)"),

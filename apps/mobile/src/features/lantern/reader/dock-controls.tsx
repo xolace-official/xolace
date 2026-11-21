@@ -26,10 +26,8 @@ import { mmss } from "@/features/lantern/reader/reader-model";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** The dock's controls: its progress line, the transport, Keep listening. */
 const BAR_MAX_SCALE = 1.5;
 const FOCUS_MS = 300;
-/** The progress line eases across each status tick. */
 const TICK = { duration: 900, easing: Easing.linear, ...PLAY_AS_CHOSEN };
 export const ICON = {
 	back15: { android: "replay", ios: "gobackward.15" },
@@ -40,7 +38,6 @@ export const ICON = {
 	transcript: { android: "notes", ios: "text.quote" },
 } as const;
 
-/** The 3 pt violet line: a shared value, eased across each tick; the label alone re-renders. */
 export function Progress({
 	share,
 	reduced,
@@ -114,7 +111,6 @@ export function Transport() {
 						? COPY.reader.dock.pause(title)
 						: COPY.reader.dock.play(title)
 				}
-				// Skip 15 s by swiping up or down on play, not a scrubber (#400).
 				accessibilityRole="adjustable"
 				accessibilityValue={{
 					text: COPY.reader.dock.value(mmss(currentTime), mmss(left)),
@@ -141,19 +137,16 @@ export function Transport() {
 	);
 }
 
-/** In place of the transport once the preview is spent. It says so, and VoiceOver moves to it. */
 export function KeepListening({ onPress }: { onPress: () => void }) {
 	const reduced = useEffectiveReducedMotion();
 	const [onAccent] = useTokenColors(["accent-foreground"]);
 	const ref = useRef<ViewInstance>(null);
 	useEffect(() => {
-		// Focus set before the first layout is dropped.
 		const t = setTimeout(() => {
 			const node = findNodeHandle(ref.current);
 			if (node) {
 				AccessibilityInfo.setAccessibilityFocus(node);
 			}
-			// Queued so the focus move doesn't cut it off (iOS).
 			AccessibilityInfo.announceForAccessibilityWithOptions(
 				COPY.reader.dock.previewEndedAnnouncement,
 				{ queue: true }

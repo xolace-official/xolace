@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isBootstrapError } from "./bootstrap-error";
 
-/** A false negative red-screens every sign-in; a false positive hides a real crash behind a
- * loader. */
 describe("isBootstrapError", () => {
 	it("matches the typed requireAuth codes", () => {
 		for (const code of ["user_not_found", "account_inactive"]) {
@@ -22,8 +20,6 @@ describe("isBootstrapError", () => {
 	});
 
 	it("does not swallow other auth or app errors", () => {
-		// not_authenticated is Clerk's problem, not a settling row — letting it
-		// retry here would mask a broken session behind a loader.
 		expect(isBootstrapError({ data: { code: "not_authenticated" } })).toBe(
 			false
 		);

@@ -22,8 +22,6 @@ function useTabBarTop() {
 	return (process.env.EXPO_OS === "android" ? 80 : 49) + bottom;
 }
 
-/** Mini-player where the tab bar has no accessory slot (iOS < 26, Android). Sibling of
- * NativeTabs, so any pushed screen covers it. */
 export function MiniPlayerOverlay() {
 	const bottom = useTabBarTop() + GAP;
 	return (

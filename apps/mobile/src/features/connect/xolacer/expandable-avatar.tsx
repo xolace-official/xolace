@@ -31,9 +31,6 @@ const EASE = Easing.out(Easing.quad);
 const TIMING = { duration: 250, easing: EASE, ...PLAY_AS_CHOSEN };
 const FADE = { duration: REDUCED_FADE_MS, ...PLAY_AS_CHOSEN };
 
-/** Lifts the avatar photo to screen centre over a blur; tap, Android back or drag dismisses.
- * The anchor is measured at tap time, since the Modal blocks scrolling while open. With Reduce
- * Motion the photo doesn't travel: it fades in at the centre, and out again. */
 export function ExpandableAvatar({
 	photoUrl,
 	name,
@@ -84,7 +81,7 @@ export function ExpandableAvatar({
 		blur.set(withTiming(0, timing));
 		scale.set(withTiming(1, timing));
 		if (reduced) {
-			opacity.set(withTiming(0, timing, close)); // where it is, centred or dragged
+			opacity.set(withTiming(0, timing, close));
 			return;
 		}
 		const o = origin.get();
@@ -98,7 +95,7 @@ export function ExpandableAvatar({
 			playSoftPress();
 			origin.set({ size: w, x: ox, y: oy });
 			scale.set(1);
-			opacity.set(reduced ? 0 : 1); // reduced: unseen at the centre, then fades in
+			opacity.set(reduced ? 0 : 1);
 			x.set(reduced ? centerX : ox);
 			y.set(reduced ? centerY : oy);
 			size.set(reduced ? expanded : w);
@@ -106,8 +103,6 @@ export function ExpandableAvatar({
 		});
 	};
 
-	// Drag to dismiss: half-speed follow for weight, shrinking and un-blurring
-	// as it goes so the release point is legible before the finger lifts.
 	const pan = Gesture.Pan()
 		.onStart(() => {
 			panStart.set({ x: x.get(), y: y.get() });
@@ -154,7 +149,6 @@ export function ExpandableAvatar({
 			<Pressable
 				accessibilityLabel={PROFILE.viewPhoto(name)}
 				accessibilityRole="imagebutton"
-				// The overlay copy stands in while open: one photo moving, not two.
 				className={open ? "opacity-0" : undefined}
 				onPress={expand}
 				ref={anchor}

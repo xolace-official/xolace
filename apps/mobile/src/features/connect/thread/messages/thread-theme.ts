@@ -1,12 +1,6 @@
 import { useMemo } from "react";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/**
- * The prototype's thread on Stream's own list and composer: 22 pt bubbles all round (no tail),
- * no avatars in a one-to-one thread (the counterpart is in the header), and the composer as a
- * filled 26 pt pill with an ink send button. Bubble colours come from
- * `lib/stream-chat/stream-theme.ts` (yours take the accent, theirs the second surface).
- */
 const BUBBLE = 22;
 const PILL = 26;
 const SEND = 40;

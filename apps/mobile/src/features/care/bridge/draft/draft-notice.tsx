@@ -11,7 +11,6 @@ const ICON: Record<"rate_limited" | "error", IconName> = {
 };
 const GLYPH = 15;
 
-/** Why the words below are a template: out of drafts today, or the draft couldn't be written. */
 export function DraftNotice() {
 	const { state } = useBridgeScreen();
 	const muted = useTokenColor("muted");

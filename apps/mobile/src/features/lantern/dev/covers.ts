@@ -1,14 +1,7 @@
-/**
- * Stand-ins for production's cover photos in the dev states: the board's `PHOTO(a, b, c, x, y,
- * glow)`, a three-stop gradient at 165° with a soft glow, drawn as an SVG data URI that
- * `CoverImage` loads like any other cover. Fixed printed colours, dev only.
- */
 const SIZE = 400;
-/** The glow fades out by 36% of the way to the farthest corner. */
 const GLOW_REACH = 0.36;
 const ANGLE = 165;
 
-/** "rgba(255,222,160,.75)" → its colour and opacity, as SVG stops take them. */
 function stop(color: string, offset: number) {
 	const m = color.match(/rgba\(([^)]+)\)/);
 	if (!m) {

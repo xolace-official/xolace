@@ -1,10 +1,4 @@
-/**
- * Linking Telegram, three steps inside its card (#733): the disclosure, then
- * "Tap Start in Telegram" until `listChannels` says the chat is linked, then a
- * short confirmation. No client "link completed": the backend decides. A link
- * handed off but not redeemed within its lifetime turns the wait into
- * "expired", from where a fresh link starts the wait again.
- */
+import { TELEGRAM_LINK_TTL_MS } from "@xolace/backend/shared";
 export type LinkStep = "idle" | "disclose" | "waiting" | "expired" | "linked";
 
 export type LinkEvent =
@@ -18,7 +12,6 @@ export type LinkEvent =
 	| { type: "cancel" }
 	| { type: "dismiss" };
 
-/** Mid-flow: leaving now abandons the link. */
 export function isLinking(
 	step: LinkStep
 ): step is "disclose" | "waiting" | "expired" {
@@ -30,7 +23,6 @@ export function linkFlow(step: LinkStep, event: LinkEvent): LinkStep {
 		case "start":
 			return "disclose";
 		case "link_handed_off":
-			// Only mid-link: the chat may have linked before the handoff finished.
 			return isLinking(step) ? "waiting" : step;
 		case "link_expired":
 			return step === "waiting" ? "expired" : step;
@@ -41,28 +33,18 @@ export function linkFlow(step: LinkStep, event: LinkEvent): LinkStep {
 	}
 }
 
-/** How long a minted link works (`LINK_TOKEN_TTL_MS` on the backend). */
-export const LINK_LIFETIME_MINUTES = 15;
 const MINUTE_MS = 60_000;
-const LINK_LIFETIME_MS = LINK_LIFETIME_MINUTES * MINUTE_MS;
-/** A reused link keeps at least this long to reach Telegram and Start. */
+export const LINK_LIFETIME_MINUTES = TELEGRAM_LINK_TTL_MS / MINUTE_MS;
 const REUSE_MARGIN_MS = 5 * MINUTE_MS;
 
-/** Milliseconds until a link minted at `mintedAt` stops working. */
 export function linkMsLeft(mintedAt: number, now: number): number {
-	return mintedAt + LINK_LIFETIME_MS - now;
+	return mintedAt + TELEGRAM_LINK_TTL_MS - now;
 }
 
-/** Reuse a minted link only while it has a safe margin left. */
 export function canReuseLink(mintedAt: number, now: number): boolean {
 	return linkMsLeft(mintedAt, now) >= REUSE_MARGIN_MS;
 }
 
-/**
- * Run `run` unless a run is already in flight, in which case join it. Each
- * mint retires the link before it, so taps landing before the first mint
- * returns must share that one link.
- */
 export async function shareInFlight<T>(
 	slot: { current: Promise<T> | null },
 	run: () => Promise<T>

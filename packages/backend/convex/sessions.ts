@@ -20,6 +20,7 @@ import {
 import { hasPremium } from "./lib/premium";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
 import { purgeSessions } from "./lib/sessionCascade";
+import { REFLECTION_INPUT_MAX_CHARS } from "./lib/shared";
 import { getDayOfWeek, getTimeOfDay } from "./lib/timeOfDay";
 import {
 	confirmationStateValidator,
@@ -28,6 +29,7 @@ import {
 	pathChosenValidator,
 	postSessionMoodValidator,
 	resourceValidator,
+	sessionErrorCodeValidator,
 } from "./lib/validators";
 import { queueKindling } from "./paths/settingUp";
 import schema from "./schema";
@@ -39,12 +41,12 @@ const ABANDON_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 // for their return this long, not the typed 30 minutes.
 const TALK_MIRROR_WAIT_MS = 24 * 60 * 60 * 1000;
 
-// Hard ceiling on a single reflection's text. The client's TextArea enforces
+// Hard ceiling on a single reflection's text. The client's writing box enforces
 // the same limit via maxLength, so a normal user never reaches this — the
 // server throw only fires against a tampered client. A generous bound (~800
 // words); the mirror rate limit is the real cost containment, this is cheap
-// insurance on token spend. Keep in sync with MAX_RAW_INPUT in typing-state.tsx.
-const MAX_RAW_INPUT = 5000;
+// insurance on token spend.
+const MAX_RAW_INPUT = REFLECTION_INPUT_MAX_CHARS;
 
 // Terminal states — sessions in these states cannot be transitioned further.
 const TERMINAL_STATES = new Set(["completed", "abandoned"]);
@@ -672,6 +674,7 @@ async function reprocess(
 	rawText: string
 ) {
 	await ctx.db.patch("sessions", sessionId, {
+		errorCode: undefined,
 		errorMessage: undefined,
 		processingStage: undefined,
 		state: "processing",
@@ -1203,6 +1206,7 @@ export const getMirrorAudioUrl = query({
  */
 export const failSession = internalMutation({
 	args: {
+		errorCode: v.optional(sessionErrorCodeValidator),
 		errorMessage: v.string(),
 		/** The safeguard refused the input: a retry can only fail again. */
 		rejected: v.optional(v.boolean()),
@@ -1221,6 +1225,7 @@ export const failSession = internalMutation({
 		}
 
 		await ctx.db.patch("sessions", args.sessionId, {
+			errorCode: args.errorCode,
 			errorMessage: args.errorMessage,
 			state: "error",
 			updatedAt: Date.now(),

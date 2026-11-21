@@ -1,15 +1,6 @@
-/**
- * Production's dual breath, frame by frame (board `breathAt`), as worklets.
- *
- * - Geometry: `design/breath-arc.ts` (board `arcsAt`).
- * - Timings: production's `TIMINGS` (the old `paced-orb.tsx`).
- * - Easing: inhale bezier(.4, 0, .2, 1), exhale bezier(.2, 0, .1, 1), solved
- *   as the board's `bez` does (8 Newton steps).
- */
 import { ARC } from "@/design/breath-arc";
 import type { BreathPattern } from "../sit-model";
 
-/** 0 inhale, 1 top ("A little more"), 2 exhale. */
 export type PhaseKind = 0 | 1 | 2;
 export const INHALE: PhaseKind = 0;
 export const TOP: PhaseKind = 1;
@@ -17,7 +8,6 @@ const EXHALE: PhaseKind = 2;
 
 export type Step = readonly [PhaseKind, number];
 
-/** [kind, ms] per step (production `TIMINGS`). */
 export const PATTERNS: Record<BreathPattern, readonly Step[]> = {
 	ext: [
 		[INHALE, 4000],
@@ -45,7 +35,6 @@ export const clamp01 = (v: number) => {
 const NEWTON_STEPS = 8;
 const FLAT = 1e-6;
 
-/** The board's `bez(x1, y1, x2, y2)(x)`: a CSS cubic-bezier, x solved by Newton's method. */
 export function bezier(
 	x1: number,
 	y1: number,
@@ -90,32 +79,21 @@ const exhaleEase = (u: number) => {
 export type BreathAt = {
 	p: number;
 	wob: number;
-	/** Step index inside the cycle, −1 when done. */
 	step: number;
 	kind: PhaseKind;
 	cycle: number;
-	/** Progress through the step, 0–1. */
 	u: number;
-	/** ms into the step, and the step's length. */
 	ms: number;
 	d: number;
 	done: boolean;
 };
 
-/** The top's wobble: production's 6 pt / 880 ms inside `sin(π·u)`, so 0 at both ends. */
 function topWobble(u: number, ms: number): number {
 	"worklet";
 	const wave = 0.75 + 0.25 * Math.sin((2 * Math.PI * ms) / ARC.WOBBLE_MS);
 	return ARC.WOBBLE * Math.sin(Math.PI * u) * wave;
 }
 
-/**
- * Board `breathAt(pattern, cycles, t)`: where the breath is `t` ms in. The
- * next inhale starts straight after the exhale, as production's `playCycle`.
- * The top keeps production's wobble inside noodle-net-orbit's `sin(π·hold)`
- * envelope, so the exhale starts from production's exact rest geometry
- * (handoff §0).
- */
 export function breathAt(
 	steps: readonly Step[],
 	cycles: number,
@@ -166,7 +144,6 @@ export function breathAt(
 	};
 }
 
-/** Board `smooth`: exponential approach with time constant `tau` ms. */
 export function approach(
 	cur: number,
 	target: number,

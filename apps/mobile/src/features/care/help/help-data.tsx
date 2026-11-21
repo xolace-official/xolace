@@ -6,22 +6,16 @@ import type {
 } from "@/features/care/help/help-model";
 import { useHelp } from "@/features/care/help/use-help";
 
-/**
- * Everything Get help now reads and does. The app fills it from the device's region, PostHog and
- * the phone's dialer (`HelpData`); its dev states from fixtures, whose taps go nowhere.
- */
 export type HelpScreenData = {
 	state: {
 		choice: HelpChoice;
 		view: HelpView;
-		/** When the list was last checked (`LAST_UPDATED`). */
 		lastUpdated: string;
 	};
 	actions: {
 		choose: (choice: HelpChoice) => void;
 		callEmergency: () => void;
 		openLine: (line: LineView) => void;
-		/** Email support about a wrong number. */
 		reportError: () => void;
 	};
 };

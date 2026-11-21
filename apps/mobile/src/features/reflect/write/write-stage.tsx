@@ -30,18 +30,14 @@ import { WritingBox } from "./writing-box";
 
 const W = LAYOUT.write;
 const BAR = LAYOUT.bar;
-/** The header's bottom on the board: a long draft scrolls under it, not over it. */
 const HEADER_BOTTOM = LAYOUT.header.top + LAYOUT.header.height;
-/** The caret stays 16 pt above the bar's top: 12 (bar over keyboard) + 56 (bar) + 16. */
 const KEYBOARD_BOTTOM_OFFSET = 12 + BAR.height + CARET_CLEAR;
-/** Board `.wprompt`: Bricolage 26/1.12, 720, −.025em, over the title step. */
 const QUESTION = {
 	fontSize: 26,
 	letterSpacing: -0.65,
 	lineHeight: 29,
 } as const;
 
-/** Writing (board card 02, renders 01–03, 15, 20). */
 export function WriteStage() {
 	const { state, actions } = useReflect();
 	const { text, picks, listening, nudge, prompt, late, take } = state;
@@ -102,7 +98,6 @@ export function WriteStage() {
 				</View>
 				<PickedChips words={picks} />
 				<View
-					// The band measures from the screen's top; the scroll view starts under the header.
 					onLayout={(e) =>
 						boxTop.set(e.nativeEvent.layout.y + y(HEADER_BOTTOM))
 					}

@@ -1,11 +1,13 @@
-/** Settings › Notifications on fixtures: `xolace://dev/settings/<id>` (handoff settings.md §9–§10). */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureNotifications } from "@/features/settings/notifications/dev/fixture-notifications";
 import {
 	NOTIFY_BLOCKED,
 	NOTIFY_BLOCKED_ALERT,
+	NOTIFY_DAILY_QUOTE_OFF,
+	NOTIFY_DAILY_QUOTE_PAUSED,
 	NOTIFY_DIRECT_10PM,
 	NOTIFY_HELD,
+	NOTIFY_LETTERS_OFF,
 	NOTIFY_LOADING,
 	NOTIFY_QUIET_OFF,
 	NOTIFY_QUIET_VOICE,
@@ -14,7 +16,6 @@ import {
 	NOTIFY_REMINDERS_OFF,
 } from "@/features/settings/notifications/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Notifications" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
@@ -24,6 +25,24 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureNotifications state={NOTIFY_HELD} />,
 		title: "Notifications: Warm, held by quiet hours",
+	},
+	{
+		id: "notifications-daily-quote-off",
+		options: OPTIONS,
+		Screen: () => <FixtureNotifications state={NOTIFY_DAILY_QUOTE_OFF} />,
+		title: "Notifications: the daily quote off (B19)",
+	},
+	{
+		id: "notifications-daily-quote-paused",
+		options: OPTIONS,
+		Screen: () => <FixtureNotifications state={NOTIFY_DAILY_QUOTE_PAUSED} />,
+		title: "Notifications: the daily quote paused after unopened ones",
+	},
+	{
+		id: "notifications-letters-off",
+		options: OPTIONS,
+		Screen: () => <FixtureNotifications state={NOTIFY_LETTERS_OFF} />,
+		title: "Notifications: letters' pushes off (Letters, S20)",
 	},
 	{
 		id: "notifications-direct-10pm",

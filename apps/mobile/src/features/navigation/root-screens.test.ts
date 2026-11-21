@@ -6,10 +6,8 @@ import { DETACHED_SHEET, fitSheet, screenOptions } from "@/lib/root-screen";
 
 const PROTECTED = path.resolve(import.meta.dirname, "../../app/(protected)");
 
-/** Metro's platform variants: a route can exist only as `foo.ios.tsx`. */
 const ROUTE_FILES = [".tsx", ".ios.tsx", ".android.tsx", ".native.tsx"];
 
-/** A stack entry names a route file (`quotes/index`) or a folder with its own layout. */
 const routeExists = (name: string) =>
 	ROUTE_FILES.some(
 		(ext) =>
@@ -47,11 +45,6 @@ const REDUCED = {
 	surface: "#111",
 };
 
-/**
- * The 28 entries `(protected)/_layout.tsx` listed by hand before `screens.ts`
- * (#792), less the two badge moments S6 made an overlay, with the options each
- * resolved to, as literals: a change to a shared preset shows up here. Changing a route's presentation on purpose? Edit its pin.
- */
 const PLAYER = {
 	animation: "slide_from_bottom",
 	presentation: "fullScreenModal",
@@ -74,35 +67,27 @@ const pinned = (reduced: boolean) => {
 	const rise = reduced ? "fade" : "slide_from_bottom";
 	return {
 		"browse-intro": { ...PLAYER, gestureEnabled: false },
-		// Moved to /player (S10): its shim.
 		"browse-player": { animation: "none" },
 		"chat/[conversationId]": CHAT,
 		"crisis-resources": NO_GESTURE,
-		"follow-up": PLAYER,
+		"follow-up": { animation: "none" },
 		"kindling/index": undefined,
 		"lantern-welcome": { ...PLAYER, gestureEnabled: false },
 		"library/[slug]": { animation: reduced ? "fade" : "default" },
 		"peer-reflections": NO_GESTURE,
-		// A transparent modal since S10, so swipe down shows what's under it; it fades under
-		// Reduce Motion.
 		player: { animation: rise, presentation: "transparentModal" },
 		"quotes/archive": undefined,
 		"quotes/index": undefined,
-		"rate/[conversationId]": {
-			presentation: "formSheet",
-			sheetGrabberVisible: true,
-		},
-		// The redesign's sheet since S9b (Lantern's reader).
+		"rate/[conversationId]": FIT_SHEET,
 		"reader-appearance": {
 			...FIT_SHEET,
 			sheetLargestUndimmedDetentIndex: "last",
 		},
-		// The redesign's sheet since S15 (You're not alone).
 		"report-reflection": FIT_SHEET,
 		"session-end": NO_GESTURE,
 		"sit-with-this": NO_GESTURE,
 		"steadiness-face-info": FIT_SHEET,
-		"streak-held": PLAYER,
+		"streak-held": { animation: "none" },
 		"trusted-bridge": undefined,
 		upgrade: {
 			gestureEnabled: true,
@@ -114,10 +99,9 @@ const pinned = (reduced: boolean) => {
 		"voice-vent": { animation: "fade", gestureEnabled: false },
 		"xolace-channel": CHAT,
 		"xolacer-edit": {
+			...FIT_SHEET,
 			headerShown: true,
-			presentation: "formSheet",
 			sheetAllowedDetents: [1],
-			sheetCornerRadius: 28,
 		},
 		"xolacer-setup": undefined,
 		"xolacer/[profileId]": undefined,

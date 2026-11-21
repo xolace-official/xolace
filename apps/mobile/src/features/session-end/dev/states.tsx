@@ -1,5 +1,9 @@
-/** After a session on fixtures: `xolace://dev/session-end/<id>`, one per board render. */
 import type { DevState } from "@/dev/dev-state";
+import {
+	InsightsUpsell,
+	PartInFocus,
+	XolacerSuggestion,
+} from "./extras-screen";
 import { FixtureScreen } from "./fixture-screen";
 import {
 	FREE,
@@ -10,10 +14,9 @@ import {
 	NOTHING,
 	STATE,
 } from "./fixtures";
+import { LetterWaiting, LetterWrite } from "./letter-screen";
 
-/** The real route draws its own chrome: no header, no swipe back. */
 const OPTIONS = { gestureEnabled: false, headerShown: false };
-/** Thumb positions: much lighter, much heavier, "heavier" (step −3), a little lighter. */
 const LIGHTEST = 1;
 const HEAVIEST = 0;
 const HEAVIER = 0.2;
@@ -182,5 +185,35 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureScreen scene={{ moment: 2 }} state={LISTEN} />,
 		title: "Xolace+: something to listen to",
+	},
+	{
+		id: "xolacer",
+		options: OPTIONS,
+		Screen: XolacerSuggestion,
+		title: "C2 Xolacer suggestion",
+	},
+	{
+		id: "unlock",
+		options: OPTIONS,
+		Screen: PartInFocus,
+		title: "C2 A part of life comes into focus",
+	},
+	{
+		id: "upsell",
+		options: OPTIONS,
+		Screen: InsightsUpsell,
+		title: "C2 Insights upsell (free)",
+	},
+	{
+		id: "letter-waiting",
+		options: OPTIONS,
+		Screen: LetterWaiting,
+		title: "Letters 30: a letter is waiting for you",
+	},
+	{
+		id: "letter-write",
+		options: OPTIONS,
+		Screen: LetterWrite,
+		title: "Letters 29: write a letter to a stranger",
 	},
 ];

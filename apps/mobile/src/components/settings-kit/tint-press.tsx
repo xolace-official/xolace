@@ -12,10 +12,6 @@ import { cn } from "@/lib/cn";
 
 const FADE_BACK = { duration: S.pressFadeMs, ...PLAY_AS_CHOSEN };
 
-/**
- * A settings row's press: the tint shows at once and fades back over 150 ms, a
- * light tick, no scale (an opacity change, so it stays with reduced motion).
- */
 export function TintPress({
 	children,
 	onPress,
@@ -28,7 +24,6 @@ export function TintPress({
 }: {
 	children: ReactNode;
 	onPress?: () => void;
-	/** The pressed tint, as a `bg-*` class. */
 	tint?: string;
 	className?: string;
 	style?: ViewStyle;

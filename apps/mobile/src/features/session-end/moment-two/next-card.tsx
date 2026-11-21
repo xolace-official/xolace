@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { View } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -14,58 +14,36 @@ import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import type { SessionColors } from "../session-colors";
-import type { ListenerCard } from "../session-end-data";
+import type { NextCards, NextParts } from "../session-end-data";
 import { type NextKey, slotEmpty } from "../session-end-model";
 import { LAYOUT, REDUCED_MS, T2 } from "../session-look";
 import { appear, cardRise } from "../timeline";
 import { NextArt, Shimmer } from "./next-art";
+import { InsightBody, XolacerBody } from "./next-extras";
+import { nextLabel, nextText } from "./next-text";
 
 const N = LAYOUT.next;
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
 const CHEVRON_SCALE = 0.8;
 const LABEL_MAX = 1.4;
 
-/** The card's title and sub for a key; null while loading or empty. */
-function textOf(
-	k: NextKey,
-	listener: ListenerCard | null
-): { title: string; sub: string } | null {
-	if (k === "listener" && listener) {
-		return {
-			sub: COPY.next.listener.sub,
-			title: COPY.next.listener.title(listener.name, listener.listensTo),
-		};
-	}
-	if (
-		k === "kindling" ||
-		k === "kindlingSettingUp" ||
-		k === "kfree" ||
-		k === "listen"
-	) {
-		return COPY.next[k];
-	}
-	return null;
-}
-
 type Props = {
 	k: NextKey;
-	listener: ListenerCard | null;
+	cards: NextCards;
+	parts: NextParts;
+	letterTile: ReactNode;
 	c2: SharedValue<number>;
 	colors: SessionColors;
 	reduced: boolean;
-	/** Nothing to share: the label sits a little lower (board `.nxl` 30). */
 	noneTop: boolean;
 	onPress: () => void;
 };
 
-/**
- * One next step (board `.nxl`, `.nxc`): "Next, if you want it", then one 76 pt
- * card. With nothing to offer, the label and the slot fade away (.35 s, 6 pt
- * down) and the pinned buttons don't move. VoiceOver: one button, title then sub.
- */
 export function NextCard({
 	k,
-	listener,
+	cards,
+	parts,
+	letterTile,
 	c2,
 	colors,
 	reduced,
@@ -105,7 +83,7 @@ export function NextCard({
 			transform: [{ translateY: r.transform[0].translateY + drop }],
 		};
 	});
-	const text = textOf(k, listener);
+	const text = nextText(k, cards, parts.partName);
 
 	return (
 		<View
@@ -135,9 +113,7 @@ export function NextCard({
 			</Animated.View>
 			<Animated.View style={[{ marginTop: N.top }, card]}>
 				<PressScale
-					accessibilityLabel={
-						text ? `${text.title}. ${text.sub}` : COPY.next.loading
-					}
+					accessibilityLabel={nextLabel(k, cards, text)}
 					card
 					className="flex-row items-center border-continuous bg-surface py-2"
 					disabled={!text}
@@ -151,12 +127,23 @@ export function NextCard({
 						paddingHorizontal: N.padX,
 					}}
 				>
-					<NextArt colors={colors} k={k} listener={listener} />
+					<NextArt
+						cards={cards}
+						colors={colors}
+						k={k}
+						letterTile={letterTile}
+						parts={parts}
+						reduced={reduced}
+					/>
 					{k === "loading" ? (
 						<View className="flex-1 gap-[7px]">
 							<Shimmer reduced={reduced} width="100%" />
 							<Shimmer reduced={reduced} width="70%" />
 						</View>
+					) : k === "listener" && cards.listener && text ? (
+						<XolacerBody listener={cards.listener} title={text.title} />
+					) : (k === "unlock" || k === "upsell") && text ? (
+						<InsightBody kind={k} text={text} />
 					) : (
 						<View className="min-w-0 flex-1 gap-0.5">
 							<AppText

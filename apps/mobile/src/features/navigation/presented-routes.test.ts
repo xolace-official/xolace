@@ -17,7 +17,8 @@ describe("isPresentedRoute", () => {
 		"/reader-appearance",
 		"/xolacer-edit",
 		"/settings/reach",
-		"/follow-up",
+		"/check-in",
+		"/welcome-back",
 		"/talk-kept",
 		"/talk-style",
 		"/session-follow-up",
@@ -41,7 +42,6 @@ describe("isPresentedRoute", () => {
 	});
 });
 
-/** Every nested `_layout.tsx` under `(protected)`, as [its folder, its source]. */
 function nestedLayouts(dir = PROTECTED, folder = ""): [string, string][] {
 	return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
 		if (!entry.isDirectory()) {
@@ -61,7 +61,6 @@ const OPTIONS_CONST = /const (\w+)\s*=\s*\{([^}]*)\}/g;
 const PRESENTATION = /presentation:\s*"(\w+)"/;
 const SCREEN = /<Stack\.Screen\s+name="([^"]+)"\s+options=\{(\{[^}]*\}|\w+)\}/g;
 
-/** The routes a nested layout presents natively, read from its `Stack.Screen` options. */
 function presentedIn(folder: string, source: string): string[] {
 	const native = (body: string) => {
 		const kind = PRESENTATION.exec(body)?.[1];
@@ -74,7 +73,6 @@ function presentedIn(folder: string, source: string): string[] {
 		const body = options.startsWith("{")
 			? options
 			: (consts.get(options) ?? "");
-		// Route groups like `(tabs)` aren't part of the path.
 		const route = `${folder}/${screen}`.replace(/\([^)]+\)\//g, "");
 		return native(body) ? [route] : [];
 	});

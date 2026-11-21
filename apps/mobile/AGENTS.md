@@ -10,13 +10,16 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   add `-- --port <metro from .xolace/ports.json>`.
 - Native dev build: `bun run ios` / `bun run android` (needed after adding a native module).
 - Add an Expo package: `bunx expo install <pkg>` (picks the SDK-compatible version).
-- Check: `bun run check:changed` from the root; `bun run check-types` here.
+- Check: `bun run check:changed` from the root; `bun run check-types` here (incremental:
+  a no-change rerun takes seconds; `rm -rf node_modules/.cache/tsc` forces a cold one).
 - Tests: `bun run test` here (vitest, node + RN stubs in `vitest.setup.ts`).
 
 ## Boundaries
 
-- May import: `@xolace/backend/api`, `@xolace/backend/dataModel`, and allowlisted
-  client-safe backend modules. Nothing else from the backend.
+- May import: `@xolace/backend/api`, `@xolace/backend/dataModel`,
+  `@xolace/backend/shared`, and the client-safe backend modules listed in
+  `src/features/backend-imports.ts` (enforced by `import-cycles.test.ts`). Nothing
+  else from the backend. Read refusals with `convexErrorCode()`, never by message.
 - Must not import: `@xolace/ui` (web-only), other apps, `api.admin.*`.
 - One React / React Native / expo-modules-core copy: see `.agents/rules/expo-monorepo.md`.
 
@@ -48,9 +51,13 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   `heroui-native` for JS values. A fixed palette is allowed only for the listed
   "printed object" surfaces (quotes poster, vent, first run, Lantern reader pages, Talk's
   voice orbs, look glows, aurora and leave scrim, Today's sky and light, Today's
-  Reflect-card doors and light, Today's kindling and campfire firelight, Connect's avatar
-  art and Xolace flame, Reflect's sky and light), still as tokens in `global.css`. Today's sky is the hour's, not
-  the theme's, and its gradient stops stay strings in `features/today/sky/` because
+  Reflect-card doors and light, Today's kindling and campfire firelight, the kindling
+  screen's road, stop tints and the tend's light, Connect's avatar art and Xolace flame,
+  Reflect's sky and light, Letters' paper and ember, the launch cover's splash colours,
+  Coming back's month-prompt rose and banner, the check-in's paper and answer cards,
+  the rating screen's ember scene),
+  still as tokens in `global.css`. Today's sky is the hour's,
+  not the theme's, and its gradient stops stay strings in `features/today/sky/` because
   worklets interpolate them. Connect's art is content a person or the brand wears, the
   same in every theme. First run's colours are `first-run-*` tokens too; only the
   colours a worklet mixes per frame stay RGB triplets, in `features/first-run/first-run-palette.ts`.
@@ -84,6 +91,10 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   feature; a paywall that needs feature data gets it as a prop from its route.
   `src/features/import-cycles.test.ts` enforces all three, and its failure lists
   the imports to move.
+- **Xolace+ status:** `usePlusEntitlement().status` is `"loading" | "plus" | "free"`
+  (`PlusStatus`, `features/purchases/plus-status.ts`). While `"loading"`, never lock,
+  upsell, track as free or revoke; draw a neutral state. `isPlus` is only for
+  Plus-only queries and rendering.
 - **Unused code:** `bun run knip` from the root (config in `knip.jsonc`). An
   export kept on purpose before anything uses it gets a `/** @public <why> */` tag.
 - **Files** under ~200 lines; imports via the `@/` alias (`@/*` → `./src/*`; `@/assets/*` and `@/modules/*` keep their top-level folders).
@@ -184,6 +195,10 @@ worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
   dependencies. `import-cycles.test.ts` is the static guard: it fails when anything
   else imports dev code (`devCodeInReleaseGraph`) or a feature's `dev/` is imported
   from outside that feature's `dev/` folders and `src/dev` (`devImportsFromOutside`).
+- **One exception:** a fixture adapter may seed itself from `src/dev` the same way,
+  `__DEV__ ? require("@/dev/…") : null` with the require typed
+  (`typeof import("@/dev/…")`), until its contract lands. None does today (Letters'
+  stand-in went when S21 put it on the contract).
 
 ## The root guard
 
@@ -195,6 +210,22 @@ screen. `seatHeld` (the store) keeps `(first-run)` up for the seated moment afte
 the sign-in hook releases it, and an onboarded account goes straight to `(protected)`.
 The launch cover and native splash sit before the guard and aren't first run's.
 
+## The launch cover
+
+`src/features/launch/` draws the native splash again on the first JS frame and stays up while
+anything at launch is loading, then fades over the first screen (`launch.md` in the prototype's
+handoff). A step that loads at launch never draws a loader: it calls `useLaunchHold(active,
+reason)`, or renders `<LaunchHold reason />` in place of its content, which holds the cover at
+launch and after it shows a quiet spinner (only past 400 ms). The cover leaves after
+`maxCoverMs` (8 s) whatever still holds it. Native appearance stays on the phone's setting until
+the cover leaves. `src/lib/native-appearance.ts` is the only writer of the theme and native
+appearance (`applyTheme`, behind `setThemeWithFonts`; `setNativeAppearance`): it holds every
+write back, Uniwind's own included, and applies the last one when the cover leaves.
+`theme-switch.test.ts` fails if another file calls `Uniwind.setTheme` or
+`Appearance.setColorScheme`. The splash's options live
+in `native-splash.ts` (which `app.config.ts` passes to `expo-splash-screen`) and its colours in `--color-launch-*`; `launch-model.test.ts` keeps them equal to the Default
+theme's backgrounds. Replay each launch path in a dev build: `xolace://dev/launch/<state>`.
+
 ## Tabs and the root seams
 
 The tabs are Today · Explore · Connect · You (`TABS`, `src/features/navigation/tabs.ts`,
@@ -202,15 +233,16 @@ drawn by `components/app-tabs.tsx`). Today is the landing: "/" (where sign-in, i
 old links arrive) hands over to `/today` at once (`(protected)/index.tsx`, `ReturnTo`), so
 the tabs are the bottom of the stack. Home is `dismissTo("/today")` (`LANDING`,
 `src/lib/landing.ts`); Reflect is `/reflect`, pushed over the tabs (Today's card and pill zoom into it with `Link.AppleZoom`). What greets someone
-coming back (follow-up check-in, return welcome, the month's awareness sheet, streak held,
-the in-app banner) is composed on Today's route (`features/follow-up/coming-back/`) until
-S4 replaces it; the starter bubble stays with Reflect (its route, `app/(protected)/reflect.tsx`). There is no
+coming back is `features/coming-back/`, composed on Today's route: the greeting
+(`/welcome-back`, once per return: a freeze that held the streak, a waiting check-in, this
+month's prompt), the check-in it opens (`/check-in`, also opened from You's Follow-ups), the
+pill under Today's greeting for what was left, and the in-app banner. Nothing opens the
+check-in on its own. There is no
 flag: a screen PR replaces the old screen outright. Where a screen PR adds to the shell:
 
-- **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`, hosts
-  the old screen that did the job (Explore: the Browse hub) until the tab's screen PR
-  swaps it. Today, Connect and You are swapped. The tab's label and icon are its `TABS`
-  entry.
+- **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`,
+  renders the tab's screen. All four are swapped (Explore's home is S7,
+  `features/explore/home/`). The tab's label and icon are its `TABS` entry.
 - **A root screen:** an entry in the feature's `screens.ts` (see "Root screens").
 - **A host:** an entry in `ROOT_HOSTS` (`src/features/navigation/hosts.ts`). A host is a
   component the `(protected)` layout keeps mounted above the stack while someone is
@@ -221,7 +253,7 @@ flag: a screen PR replaces the old screen outright. Where a screen PR adds to th
   natively presented screen (the player, a form sheet) and position themselves
   absolutely. The layout maps the list; don't edit its lines.
 - **A path that moved** (`/discovery`, `/browse/**`, `/browse-player`, `/profile`,
-  `/profile/insights`, `/kindling-announcement`, `/timeline/**`; next, `/streak-held`;
+  `/profile/insights`, `/kindling-announcement`, `/timeline/**`, `/follow-up`, `/streak-held`;
   "/" itself, Reflect before Today landed, is the landing hand-off above, not a `MOVED` entry): `MOVED` in
   `src/features/navigation/moved-paths.ts` says where each lives now, a tab or a root
   screen, and whether its subpaths moved too (`subtree`) or one subpath moved somewhere of
@@ -249,14 +281,16 @@ older piece.
 | Press feedback | `PressScale` (.96, cards .98, Press curve, optional `haptic`) | heroui `PressableFeedback` |
 | Toast | `toast(message, opts)`, called from the data hook | heroui `useToast` |
 | Segments | `Segmented` (SwiftUI on iOS, Material 3 on Android) | `SegmentedControl` |
-| Form sheet | `fitSheet` (`src/lib/root-screen.ts`: fits its content, grabber, 40 pt, surface) | `legacyFitSheet` |
+| Form sheet | `fitSheet` (`src/lib/root-screen.ts`: fits its content, grabber, 40 pt, surface) | — |
 | Native header | `useHeaderOptions()` (`src/lib/header-options.ts`, theme faces) | `useLargeHeaderOptions` |
 
 - **Pieces:** `Card` + `SectionHeader`, `MediaRow` + `Kicker`, `CareRow`, `Avatar`,
-  `BackButton`, `GlassGroup`, `DetachedSheet` (its route takes `DETACHED_SHEET`), `RollingNumber`,
-  `CountryMenu`, `Flux`, `Aura`. Settings-like pages: `SettingsHeader`, `SectionTitle`,
-  `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`, `OpenRow`, `TileRow`, `SettingsDialog`,
-  `NameDialog`.
+  `BackButton`, `GlassGroup`, `DetachedSheet` (its route takes `DETACHED_SHEET`), `RollDigits`,
+  `CountryMenu`, `Flux`, `Aura`.
+- **Settings kit:** every settings-like page builds from it, never its own rows:
+  `SettingsHeader`, `SectionTitle`, `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`,
+  `OpenRow`, `TileRow`, `SheetButton`, `SettingsDialog`, `NameDialog`. Row measures live in
+  `settings-layout.ts` (`S`, `ROW`); change them there.
 - **The Xolace face** is a kit: `src/components/xolace-face/` (`XolaceFace`, `useFace`, the
   poses). Where it may appear: `docs/plan/xolace-face-placements.md`.
 - **Colours for native views and SVG:** `useTokenColor("danger-ink")`. Native views go in
@@ -270,15 +304,16 @@ older piece.
 - **Toast rule:** `toast()` counts as a backend side effect (`feature-shape.ts`), so in a ported
   folder only `use-*.ts` calls it. `ToastBridge` in `root-provider.tsx` hands it HeroUI's
   manager.
-- **Before first use:** each kit file is a knip `entry` (`knip.jsonc`) and its exports carry
-  `@public`. The first screen that imports a file deletes its line there.
+- **Before first use:** a kit file nothing imports yet is a knip `entry` (`knip.jsonc`) and
+  its exports carry `@public`. The first screen that imports it deletes its line there.
 
 ## Motion and haptics
 
 The redesign's motion lives in `src/design/`: `springs.ts` (the named springs, press and
 breath on Reanimated), `ease.ts` (their react-native-ease twins), `ease-loops.ts`,
 `ease-breath.ts`, `entering.ts` (`riseIn`, `fadeUp`) and `motion.ts` (loop timing for the
-hour). Night timing follows `useSessionMode().isNight`, which is re-read when the app comes to
+hour). Why it is split this way: `docs/adr/0003-mobile-design-system-and-ease-for-loops.md`
+(it covers themes, type and the kit too). Night timing follows `useSessionMode().isNight`, which is re-read when the app comes to
 the foreground, not by the minute like the prototype's clock.
 
 - **Ease for loops only.** An infinite loop goes on Ease (`loopProps`, `loopOrSettle` in
@@ -287,7 +322,7 @@ the foreground, not by the minute like the prototype's clock.
   colour toggles, chips and swaps stay on Reanimated. `fadeUpProps` and `stateTransition` exist only for the prototype pieces
   already on Ease; don't move another state-driven animation over.
 - **`src/design/ease.ts` is the only import of `react-native-ease`**, types included. The
-  legacy feature folders and three listed files predate it (`EASE_LEGACY_FILES` in
+  legacy feature folders and two listed files predate it (`EASE_LEGACY_FILES` in
   `src/features/motion-imports.ts`, which only shrinks); move them over when their screens
   are redone.
 - **Reduced motion:** read `useEffectiveReducedMotion()` and pass it as `reduced`. It puts

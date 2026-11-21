@@ -7,8 +7,6 @@ import {
 import { Image } from "expo-image";
 import { View } from "react-native";
 
-// Luminance greyscale, flattened and lifted toward a mid grey (#684): the rim
-// and subject stay readable but unlit, like Reddit's locked medallions.
 const LUMA = [0.2126, 0.7152, 0.0722];
 const CONTRAST = 0.45;
 const LIFT = 0.12;
@@ -17,27 +15,25 @@ const LOCKED_MATRIX = [...GREY_ROW, ...GREY_ROW, ...GREY_ROW, 0, 0, 0, 1, 0];
 const FADE_IN_MS = 150;
 
 type Props = {
-	/** A remote URL, or a bundled image (`require`); null when no art is uploaded. */
 	source: string | number | null;
 	thumbhash?: string | null;
-	/** Lit draws the art in colour; unlit draws it grey through Skia. */
 	lit: boolean;
 	size: number;
-	/** Set when the art is the element VoiceOver reads; a tile that labels itself leaves it out. */
 	accessibilityLabel?: string;
+	/** Fires once the lit art has drawn (a capture waits for it). */
+	onLoad?: () => void;
+	/** No fade-in, for a capture that must not catch it half-drawn. */
+	instant?: boolean;
 };
 
-/**
- * One badge's art: in colour once earned, else grey through production's
- * colour matrix. No art at all keeps an empty disc, so a row keeps its rhythm.
- * @public The badges (achievements) and the profile's spark card draw it.
- */
 export function BadgeArt({
 	source,
 	thumbhash,
 	lit,
 	size,
 	accessibilityLabel,
+	onLoad,
+	instant = false,
 }: Props) {
 	const box = { height: size, width: size };
 	const a11y = accessibilityLabel
@@ -57,10 +53,11 @@ export function BadgeArt({
 			<Image
 				{...a11y}
 				contentFit="contain"
+				onLoad={onLoad}
 				placeholder={thumbhash ? { thumbhash } : undefined}
 				source={typeof source === "string" ? { uri: source } : source}
 				style={box}
-				transition={FADE_IN_MS}
+				transition={instant ? 0 : FADE_IN_MS}
 			/>
 		);
 	}

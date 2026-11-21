@@ -1,14 +1,9 @@
-/**
- * After a session: every string the two moments show (the prototype's
- * `fixtures/session.ts`, from the board, curly apostrophes included).
- */
 export const COPY = {
 	another: "Start another",
 	chip: (day: number) => `Day ${day}`,
 	continue: "Continue",
 	done: "I’m done for now",
 	followUp: {
-		/** Step −4 and −5 (production's "high" bucket). */
 		high: {
 			ask: "What’s bearing down hardest right now?",
 			rows: [
@@ -18,7 +13,6 @@ export const COPY = {
 				{ key: "needed_to_say_it", label: "I needed to say it" },
 			],
 		},
-		/** Step −3 (production's "mid" bucket). */
 		mid: {
 			ask: "What’s keeping it this heavy?",
 			rows: [
@@ -47,21 +41,48 @@ export const COPY = {
 			sub: "3 small steps from tonight",
 			title: "Your kindling is ready",
 		},
-		/** Before this session's kindling has landed (production's slot said so too). */
 		kindlingSettingUp: {
 			sub: "It lands on Today when it’s ready",
 			title: "Setting up your kindling…",
+		},
+		letterRead: {
+			sub: "Someone wrote it for whoever needed it",
+			title: "A letter is waiting for you",
+		},
+		letterWrite: {
+			sub: "A few kind lines, for whoever needs them",
+			title: "Write a letter to a stranger",
 		},
 		listen: {
 			sub: "Sounds made for after a session",
 			title: "Something soft to listen to",
 		},
 		listener: {
-			sub: "A trained peer, not a therapist. This only opens their profile.",
+			hereNow: "Here now",
+			newXolacer: "New Xolacer",
+			rated: (rating: number) => `Rated ${rating}`,
+			rating: (rating: number) => `★ ${rating}`,
+			repliesInADay: "Replies within a day",
+			sub: "A trained peer, not a therapist. Nothing is sent: this only opens their profile.",
 			title: (name: string, listensTo: string) =>
 				`${name} listens to ${listensTo}`,
 		},
 		loading: "Finding something for you",
+		unlock: {
+			sub: (count: number) =>
+				count > 1
+					? "You’ve shared enough for Xolace to see how these parts of life tend to feel for you."
+					: "You’ve shared enough for Xolace to see how this part of life tends to feel for you.",
+			title: (names: readonly string[]) =>
+				names.length > 1
+					? `${names.slice(0, -1).join(", ")} and ${names.at(-1)} are coming into focus`
+					: `${names[0]} is coming into focus`,
+		},
+		upsell: {
+			sub: "See the pattern, with Xolace+",
+			title: (name: string) =>
+				`${name} has been heavier lately than your usual`,
+		},
 	},
 	nextLabel: "Next, if you want it",
 	nothing: {
@@ -82,7 +103,6 @@ export const COPY = {
 		leaving: "Leaving it for someone",
 		left: "Left for someone.",
 		letGo: "Let go",
-		/** The line under the title, by the path the session ended on. */
 		sub: {
 			peers: "Like the four you just read, someone out there might need yours.",
 			sit: "Someone out there might be carrying something just like this.",

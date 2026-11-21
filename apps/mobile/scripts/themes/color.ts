@@ -1,9 +1,3 @@
-/**
- * Just enough colour maths for the theme generator: read hex, rgb(a) and
- * oklch, mix in Oklab, write hex or rgba. Build time only; the app never
- * imports this.
- */
-
 interface Lab {
 	a: number;
 	b: number;
@@ -102,7 +96,6 @@ function format(c: Lab): string {
 	return `rgba(${r}, ${g}, ${b}, ${Math.round(c.opacity * 1000) / 1000})`;
 }
 
-/** `amount` of `b` into `a`, in Oklab (like `color-mix(in oklab, a, b amount)`). */
 export function mix(a: string, b: string, amount: number): string {
 	const x = parse(a);
 	const y = parse(b);
@@ -115,7 +108,6 @@ export function mix(a: string, b: string, amount: number): string {
 	});
 }
 
-/** The same colour at a new opacity. */
 export function alpha(color: string, value: number): string {
 	return format({ ...parse(color), opacity: value });
 }

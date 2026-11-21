@@ -1,12 +1,13 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
+import { ERROR_CODES, FEEDBACK_MAX_CHARS } from "./lib/shared";
 import { posthog } from "./posthog";
 
-const MAX_LENGTH = 1000;
+const MAX_LENGTH = FEEDBACK_MAX_CHARS;
 
 // "flag" is not here: it has its own mutation and no budget.
 const kindValidator = v.union(
@@ -80,7 +81,11 @@ export const submit = mutation({
 			key: profile._id,
 		});
 		if (!ok) {
-			throw new Error(RATE_LIMIT_MESSAGE[args.kind]);
+			throw new ConvexError({
+				code: ERROR_CODES.rateLimited,
+				kind: args.kind,
+				message: RATE_LIMIT_MESSAGE[args.kind],
+			});
 		}
 
 		const text = args.text.trim();

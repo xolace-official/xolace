@@ -11,17 +11,11 @@ type TriggerHaptic = NonNullable<
 >;
 type StreamHaptic = Parameters<TriggerHaptic>[0];
 
-// Stream's names are UIKit feedback styles; each maps onto the app's own
-// vocabulary so chat feels like the rest of Xolace.
 const streamHaptics: Record<StreamHaptic, () => void> = {
-	// Recording locked hands-free.
 	impactHeavy: playAffirmativePress,
-	// Reaction picked.
 	impactLight: playTextureSelect,
-	// Message long-press menu; recorder start, stop and delete.
 	impactMedium: playSoftPress,
 	notificationError: playErrorNotice,
-	// Voice message sent.
 	notificationSuccess: playAffirmativePress,
 	notificationWarning: playErrorNotice,
 	selection: playTextureSelect,

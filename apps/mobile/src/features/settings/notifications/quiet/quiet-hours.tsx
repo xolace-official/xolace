@@ -62,7 +62,6 @@ function PickRow({
 	);
 }
 
-/** One row's hours, open inline as 32 pt chips (board `.hrs`). */
 function Hours({
 	label,
 	list,
@@ -114,10 +113,6 @@ function Hours({
 	);
 }
 
-/**
- * Quiet hours under their switch (board `.day`, `.hrs`): the day bar, then "Not after" and "Not
- * before", each opening its hours inline, one at a time; picking an hour closes them.
- */
 export function QuietHours({
 	quiet,
 	onPick,
@@ -125,7 +120,6 @@ export function QuietHours({
 }: {
 	quiet: Quiet;
 	onPick: (end: QuietEnd, hour: number) => void;
-	/** Which row's hours start open (a dev state). */
 	initialOpen?: QuietEnd | null;
 }) {
 	const [open, setOpen] = useState<QuietEnd | null>(initialOpen);

@@ -17,7 +17,6 @@ const TOKENS = [
 	"face-highlight-clear",
 ] as const;
 
-/** A face's colours in the current theme (`faceColors` on the theme's tokens). */
 export function useFaceColors(
 	body: BodyName,
 	palette?: PaletteName

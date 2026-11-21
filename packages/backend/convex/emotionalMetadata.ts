@@ -1,8 +1,10 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { internalMutation, internalQuery, query } from "./_generated/server";
 import { adjustImportance, DEFAULT_IMPORTANCE } from "./episodicImportance";
+import { receivesLetters } from "./letters/pool";
 import { requireSessionOwnership } from "./lib/auth";
 import { specialtyValidator } from "./lib/specialties";
 import {
@@ -164,14 +166,31 @@ export const store = internalMutation({
 
 		if (existing) {
 			await ctx.db.patch("emotional_metadata", existing._id, row);
-			return;
+		} else {
+			await ctx.db.insert("emotional_metadata", {
+				...row,
+				createdAt: Date.now(),
+			});
 		}
-		await ctx.db.insert("emotional_metadata", {
-			...row,
-			createdAt: Date.now(),
-		});
+		await scheduleLetterPoolRefresh(ctx, args.emotionalProfileId);
 	},
 });
+
+/**
+ * Letters match recipients off their latest session (letters spec §5.1), so a
+ * written or refined one recomputes the pool, for people receiving letters
+ * only. Scheduled: a pool failure never costs this write.
+ */
+async function scheduleLetterPoolRefresh(
+	ctx: MutationCtx,
+	emotionalProfileId: Id<"emotional_profiles">
+): Promise<void> {
+	if (await receivesLetters(ctx, emotionalProfileId)) {
+		await ctx.scheduler.runAfter(0, internal.letters.pool.refresh, {
+			emotionalProfileId,
+		});
+	}
+}
 
 /**
  * Replace the Understanding of a session after a refinement turn
@@ -276,6 +295,7 @@ export const replaceForRefinement = internalMutation({
 				: {}),
 			...(args.followUpReason ? { followUpReason: args.followUpReason } : {}),
 		});
+		await scheduleLetterPoolRefresh(ctx, existing.emotionalProfileId);
 		return null;
 	},
 	returns: v.null(),
@@ -364,7 +384,10 @@ const emotionalMetadataDocValidator = v.object({
 
 /**
  * Get emotional metadata for a session (with ownership check).
+ * @deprecated No current client calls it: the old session details screen read it.
  */
+// DEPRECATED(remove-after: app >= first version without the old session details screen): old
+// builds still read it.
 export const getBySession = query({
 	args: {
 		sessionId: v.id("sessions"),

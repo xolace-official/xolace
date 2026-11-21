@@ -14,7 +14,6 @@ const SIGNED_OUT: RootGateInput = {
 };
 const SIGNED_IN = { ...SIGNED_OUT, authenticated: true };
 
-/** Every input the gate can see, signed in or out, loading or not, held or not. */
 function* everyInput(): Generator<RootGateInput> {
 	for (const authLoading of [true, false]) {
 		for (const authenticated of [true, false]) {
@@ -38,7 +37,6 @@ describe("rootGate", () => {
 	});
 
 	it("treats a Clerk session Convex hasn't accepted as signed out", () => {
-		// The layout passes Convex's view; a desync never opens intake or the app.
 		expect(rootGate({ ...SIGNED_OUT, onboardingComplete: true })).toBe(
 			"(first-run)"
 		);
@@ -66,7 +64,6 @@ describe("rootGate", () => {
 		expect(rootGate({ ...held, onboardingComplete: false })).toBe(
 			"(first-run)"
 		);
-		// A token refresh mid-seat doesn't swap the seat for the loader.
 		expect(rootGate({ ...held, authLoading: true })).toBe("(first-run)");
 	});
 

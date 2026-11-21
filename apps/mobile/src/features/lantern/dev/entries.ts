@@ -1,8 +1,3 @@
-/**
- * The board's ten entries (`LanternAlive.dc.html`'s `E`, the prototype's `lantern-entries.ts`),
- * as Convex serves a card. The returning reader: `thoughts-at-night` is at .4, `small-things` and
- * `heart` are finished, `panic` and `winter` are saved.
- */
 import type { Id } from "@xolace/backend/dataModel";
 import { photo } from "@/features/lantern/dev/covers";
 import type { CardItem, Kind } from "@/features/lantern/lantern-model";
@@ -176,7 +171,6 @@ const SEEDS = {
 
 export type EntrySlug = keyof typeof SEEDS;
 
-/** The returning reader's marks and saves. */
 const READ: Partial<Record<EntrySlug, Partial<CardItem>>> = {
 	heart: { finished: true },
 	panic: { saved: true },
@@ -185,7 +179,6 @@ const READ: Partial<Record<EntrySlug, Partial<CardItem>>> = {
 	winter: { saved: true },
 };
 
-/** One entry as a card. `fresh`: a first visit, nothing read or saved. */
 export function card(slug: EntrySlug, fresh = false): CardItem {
 	const s: Seed = SEEDS[slug];
 	return {
@@ -208,7 +201,6 @@ export function card(slug: EntrySlug, fresh = false): CardItem {
 	};
 }
 
-/** The board's order (its `E`), which the kind and subject lists keep. */
 export const SLUGS: readonly EntrySlug[] = [
 	"thoughts-at-night",
 	"small-things",

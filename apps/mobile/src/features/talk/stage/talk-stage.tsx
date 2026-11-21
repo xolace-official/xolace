@@ -20,7 +20,6 @@ type Props = {
 	geo: TalkGeometry;
 	motion: TalkMotion;
 	frame: StageFrame;
-	/** The stage's face answers a touch only mid-talk, in the Companion view. */
 	touchable: boolean;
 	reduced: boolean;
 	onSmile: () => void;
@@ -28,12 +27,6 @@ type Props = {
 	onSmileBack: () => void;
 };
 
-/**
- * The Companion view around the face (production's stage): the presence word under it, the
- * latest line as a caption, and the face as a button that smiles back. The face itself is
- * the hero (`hero/talk-hero.tsx`), which grew into place. A talk error shows here too, since
- * the transcript that carries it is hidden.
- */
 export function TalkStage({
 	geo,
 	motion,

@@ -16,7 +16,6 @@ import {
 	wordsOf,
 } from "@/features/you/moments/moments-model";
 
-/** Wednesday 18 November 2026, 4 pm local. */
 const NOW = new Date(2026, 10, 18, 16, 0);
 const at = (day: number, h = 21, m = 12, year = 2026, month = 10) =>
 	new Date(year, month, day, h, m).getTime();

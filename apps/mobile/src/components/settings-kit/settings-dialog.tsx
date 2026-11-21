@@ -3,10 +3,6 @@ import { Modal, Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { cn } from "@/lib/cn";
 
-/**
- * A small dialog (board `.nd`): a card near the top so the keyboard never
- * covers it, over a soft scrim (the same in every theme); Cancel and the main button side by side.
- */
 type Props = {
 	open: boolean;
 	title: string;
@@ -15,7 +11,6 @@ type Props = {
 	cancel: string;
 	ok: string;
 	okDisabled?: boolean;
-	/** The board's gap above the buttons: 18 for names, 14 for feedback. */
 	gap?: number;
 	top?: number;
 	onCancel: () => void;
@@ -107,6 +102,5 @@ export function SettingsDialog({
 	);
 }
 
-/** A dialog field's border: accent while you write, red when it can't be saved. */
 export const fieldBorder = (bad: boolean) =>
 	bad ? "border-danger" : "border-accent";

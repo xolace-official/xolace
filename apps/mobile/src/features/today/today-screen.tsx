@@ -28,21 +28,16 @@ import { TodayToolbar } from "./today-toolbar";
 import { WordCard } from "./word/word-card";
 
 const BOTTOM_ROOM = 150;
-/** Page padding each side. */
 const PAGE_X = 16;
-/** Long enough for the words, the rise and the ink (450 + 2400 ms) to finish. */
 const INTRO_WINDOW_MS = 3200;
 
 type Props = {
-	/**
-	 * Another feature's card the route composes in, under the campfire by day: the intake's
-	 * "How did you find Xolace?" (features meet in routes, not screens).
-	 */
 	finding?: ReactNode;
+	revealed?: boolean;
+	pill?: (fallback: ReactNode) => ReactNode;
 };
 
-/** Today: a sky that keeps the hour, the Reflect card as its horizon, then up to five quiet modules. */
-export function TodayScreen({ finding }: Props) {
+export function TodayScreen({ finding, pill, revealed = true }: Props) {
 	const insets = useSafeAreaInsets();
 	const { height } = useWindowDimensions();
 	const { state } = useToday();
@@ -52,8 +47,6 @@ export function TodayScreen({ finding }: Props) {
 	const live = useLive(reduced);
 	const tail = useMiniPlayerInset();
 	const scrollY = useSharedValue(0);
-	// The streak flame's flicker, shared by the header's chip and the toolbar's; still
-	// while there's no streak to show.
 	const flameClock = useClock(live && state.streak !== null);
 
 	const onScroll = useAnimatedScrollHandler((e) => {
@@ -90,10 +83,11 @@ export function TodayScreen({ finding }: Props) {
 					<TodayBody
 						finding={finding}
 						flameClock={flameClock}
-						// A new day (Today stays mounted for days) replays the first open, once.
 						key={state.day}
 						live={live}
+						pill={pill}
 						reduced={reduced}
+						revealed={revealed}
 						scrollY={scrollY}
 						viewH={height}
 					/>
@@ -111,33 +105,39 @@ export function TodayScreen({ finding }: Props) {
 	);
 }
 
-type BodyProps = Omit<TodayFrameValue, "intro" | "low"> & {
+type BodyProps = Omit<TodayFrameValue, "intro" | "low" | "waiting"> & {
 	flameClock: SharedValue<number>;
 	finding: ReactNode;
+	pill: Props["pill"];
+	revealed: boolean;
 };
 
-/** The page under the sky: the header, the hero and the modules for the hour. */
-function TodayBody({ flameClock, finding, ...frame }: BodyProps) {
+function TodayBody({
+	flameClock,
+	finding,
+	pill,
+	revealed,
+	...frame
+}: BodyProps) {
 	const { width } = useWindowDimensions();
 	const { state } = useToday();
-	// The first open of the day plays once: anything that mounts after this window
-	// (a phase change, a remount) shows at rest.
 	const [intro, setIntro] = useState(state.intro);
+	const waiting = intro && !revealed;
 	useEffect(() => {
-		if (!intro) {
+		if (!intro || waiting) {
 			return;
 		}
 		const id = setTimeout(() => setIntro(false), INTRO_WINDOW_MS);
 		return () => clearTimeout(id);
-	}, [intro]);
-	const low = useQualityGate(intro);
+	}, [intro, waiting]);
+	const low = useQualityGate(intro && !waiting);
 	const late = state.phase === "late";
 
 	return (
-		<TodayFrame value={{ ...frame, intro, low }}>
+		<TodayFrame value={{ ...frame, intro, low, waiting }}>
 			<SkyCanvas phase={state.phase} width={width} />
 			<View className="mx-4">
-				<TodayHeader flameClock={flameClock} />
+				<TodayHeader flameClock={flameClock} pill={pill} />
 			</View>
 			<ReflectCard />
 			{late ? (

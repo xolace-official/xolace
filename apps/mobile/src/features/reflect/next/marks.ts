@@ -1,11 +1,6 @@
 import { Skia, type SkPath } from "@shopify/react-native-skia";
 import { ARC, arcsAt, type Box, type Corners } from "@/design/breath-arc";
 
-/**
- * The three Where next marks (board tile paths, 44 × 44), built with four-elements-class-picker's
- * `markBuilder` (S13), ported to Skia 2.14's immutable paths: a PathBuilder, plus the block's 24
- * samples per cubic and its 128-entry arc-length table, so a tip can move at even speed.
- */
 export type Point = { x: number; y: number };
 export type Mark = { path: SkPath; lookup: Point[]; svg: string };
 
@@ -64,7 +59,6 @@ function markBuilder() {
 		curve(x - k, y + r, x - r, y + k, x - r, y);
 		curve(x - r, y - k, x - k, y - r, x, y - r);
 	};
-	/** An elliptical arc as cubics, ≤ 90° each (the board's last mark is one SVG arc). */
 	const arc = (
 		cx: number,
 		cy: number,
@@ -123,7 +117,6 @@ function markBuilder() {
 	return { arc, circle, curve, finish, line, move };
 }
 
-/** Where the tip is at `progress` (0–1) along the mark, at even speed (the block's `pointAt`). */
 export function pointAt(lookup: Point[], progress: number): Point {
 	"worklet";
 	const p = Math.min(TABLE - 1, Math.max(0, progress * (TABLE - 1)));
@@ -138,11 +131,6 @@ export function pointAt(lookup: Point[], progress: number): Point {
 
 const f = (n: number) => n.toFixed(2);
 
-/**
- * One of production's arcs as a closed outline: quarter-ellipse corners (KAPPA) with its
- * per-corner radii, scaled down when a side overflows, as Skia's addRRect and the board's `rrect`
- * do. Returns its SVG for the resting mark.
- */
 function arcOutline(
 	m: ReturnType<typeof markBuilder>,
 	b: Box,
@@ -227,23 +215,19 @@ function arcOutline(
 	return `M${f(x + tl[0])} ${f(y)}${segs.map((s) => `C${s.map(f).join(" ")}`).join("")}Z`;
 }
 
-/** Board spec card 01: `arcsAt(390, 480, .45, 0)`, scaled by 44/480 and centred in the 44 box. */
 const MARK_BOX = 44;
 const MARK_CANVAS = { H: 480, p: 0.45, W: 390 } as const;
 
 function makeMarks(): Mark[] {
-	// Sit with this: production's two arcs, facing each other across the gap.
 	const sit = markBuilder();
 	const a = arcsAt(MARK_CANVAS.W, MARK_CANVAS.H, MARK_CANVAS.p, 0);
 	const k = MARK_BOX / MARK_CANVAS.H;
 	const ox = (MARK_BOX - MARK_CANVAS.W * k) / 2;
 	const sitSvg = `${arcOutline(sit, a.top, ARC.TOP_CORNERS, k, ox)} ${arcOutline(sit, a.bot, ARC.BOT_CORNERS, k, ox)}`;
-	// You're not alone: three small circles.
 	const peers = markBuilder();
 	peers.circle(10, 20, 5);
 	peers.circle(34, 20, 5);
 	peers.circle(22, 36, 5);
-	// I just needed to say it: the ensō's open circle (`M33 11a14 13 0 1 1-17-2`).
 	const said = markBuilder();
 	said.arc(23.108, 20.2, 14, 13, -45.05, 284.53);
 	return [

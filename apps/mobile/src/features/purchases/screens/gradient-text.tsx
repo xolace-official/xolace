@@ -16,14 +16,10 @@ export const GradientText = ({
 	className,
 	textProps,
 }: GradientTextProps) => {
-	// The mask and the hidden Text must share identical text metrics: the mask clips
-	// the gradient, the hidden Text sets the layout size.
 	const { className: textClassName, ...restTextProps } = textProps ?? {};
 	const textClasses = cn(className, textClassName);
 
-	// MaskedView takes the mask as an element; React Compiler memoizes it.
 	const mask = (
-		// eslint-disable-next-line react-perf/jsx-no-jsx-as-prop
 		<Text {...restTextProps} className={textClasses}>
 			{text}
 		</Text>

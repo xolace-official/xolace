@@ -10,7 +10,6 @@ import { TALK_COPY } from "../copy";
 
 const MIN_BOTTOM = 22;
 
-/** A talk sheet's top: close (×, 34) on the left, the title and a line under it (board `.sh`). */
 export function SheetChrome({
 	title,
 	sub,
@@ -56,7 +55,6 @@ export function SheetChrome({
 	);
 }
 
-/** The sheet's one button (board `.sh .done`): ink fill, 50 tall. */
 export function SheetDone({ label }: { label: string }) {
 	return (
 		<PressScale

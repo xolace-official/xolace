@@ -1,5 +1,4 @@
-// `name`: the camper name, already picked. Keep it, edit it, or roll the dice. No "Hey,
-// name" beat after it (#707).
+import { DISPLAY_NAME_MAX_CODE_POINTS } from "@xolace/backend/shared";
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { useRef } from "react";
@@ -14,11 +13,9 @@ import { AppText } from "@/components/shared/app-text";
 import { suggestHandle } from "@/features/intake/answer-rules";
 import { Flux } from "@/features/intake/v2/flux";
 import { KeyboardStep } from "@/features/intake/v2/keyboard-step";
-import { NAME_MAX_CHARS } from "@/features/intake/v2/machine";
 import { playSoftPress } from "@/lib/haptics";
 
 const FLUX_SIZE = 160;
-/** Flux steps back while the keyboard is up, so the field clears the button. */
 const FLUX_SIZE_TYPING = 96;
 
 type Props = {
@@ -26,7 +23,6 @@ type Props = {
 	name: string;
 	onChange: (name: string) => void;
 	onKeep: () => void;
-	/** "Got it." only follows an answer; after Skip there is nothing to have got. */
 	skipped: boolean;
 };
 
@@ -55,7 +51,6 @@ export function NameStep({ busy, name, onChange, onKeep, skipped }: Props) {
 				className="flex-1 overflow-hidden"
 				contentContainerClassName="items-center"
 				keyboardShouldPersistTaps="handled"
-				// A short screen still can't fit it all over the keyboard: keep the field in view.
 				onLayout={() => {
 					if (typing) {
 						scroll.current?.scrollToEnd({ animated: false });
@@ -82,7 +77,7 @@ export function NameStep({ busy, name, onChange, onKeep, skipped }: Props) {
 						accessibilityLabel="Your name here"
 						className="h-14 flex-1 rounded-2xl border border-border bg-surface-secondary px-[18px] font-[Poppins-Medium] text-[18px] text-foreground"
 						enablesReturnKeyAutomatically
-						maxLength={NAME_MAX_CHARS}
+						maxLength={DISPLAY_NAME_MAX_CODE_POINTS}
 						onChangeText={onChange}
 						onSubmitEditing={keep}
 						placeholder="Your name here"

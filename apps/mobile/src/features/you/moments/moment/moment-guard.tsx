@@ -13,8 +13,6 @@ const GONE: MomentScreenData = {
 	state: null,
 };
 
-/** The gone state for a moment that isn't there; anything else goes on to the root boundary,
- * which reports it. */
 function Gone({ error }: FallbackProps) {
 	if (!isMissingMoment(error)) {
 		throw error;
@@ -26,12 +24,6 @@ function Gone({ error }: FallbackProps) {
 	);
 }
 
-/**
- * A moment's reads throw, never return null, when the session is gone (deleted by retention or
- * a wipe, even while open) or isn't yours, or the link's id isn't a session's: a stale card or
- * an old `/timeline/session/<id>` link. Caught here, that's "This moment isn't here any more"
- * instead of the whole app's error screen.
- */
 export function MomentGuard({
 	id,
 	children,

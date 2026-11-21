@@ -20,7 +20,6 @@ import { useFollowBottom } from "./use-follow-bottom";
 const BUBBLE_IN = FadeInDown.duration(220).reduceMotion(
 	PLAY_AS_CHOSEN.reduceMotion
 );
-/** A third-party scroll view takes its layout as styles (`grow justify-end gap-3 px-4`). */
 const FILL = { flex: 1 } as const;
 const CONTENT = {
 	flexGrow: 1,
@@ -40,7 +39,6 @@ function Bubble({
 }) {
 	const subtle = useTokenColor("subtle");
 	const mine = turn.speaker === "person";
-	// Streamed here (not a typed or reopened line): its words stay word views, so it never reflows.
 	const [streamed] = useState(() => streams(turn));
 	return (
 		<Animated.View
@@ -103,26 +101,12 @@ function Bubble({
 type Props = {
 	top: number;
 	bottom: number;
-	/**
-	 * How much of the keyboard the composer's lift doesn't cover: the composer rises by
-	 * `keyboard − offset`, and the thread's content rises by the same.
-	 */
 	offset: number;
-	/** The keyboard's share of the bottom inset: `keyboard − offset`. */
 	inset: DerivedValue<number>;
-	/** The thread is in front; the follow loop runs only then. */
 	focused: boolean;
 	reduced: boolean;
 };
 
-/**
- * The Conversation view (production's transcript): the companion on the left under its
- * name, you on the right with "spoken" under a spoken line. It sits on the composer and
- * follows the newest words; scroll up to reread and it stays put until you settle back near
- * the end. With the keyboard up the thread's bottom inset grows with the composer, on the
- * keyboard's own frames: at the latest line it rides up with the keyboard; scrolled back,
- * it stays where it is.
- */
 export function TalkThread({
 	top,
 	bottom,

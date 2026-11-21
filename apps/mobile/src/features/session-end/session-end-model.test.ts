@@ -1,15 +1,30 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	PLUS_OFFER_COOLDOWN_MS,
 	PLUS_OFFER_FULL_STOP_MS,
 } from "@/features/purchases/plus-offer-policy";
-import { FREE, LISTEN, LISTENER, LOADING, STATE } from "./dev/fixtures";
+import {
+	FREE,
+	LETTER_WAITING,
+	LETTER_WRITE,
+	LISTEN,
+	LISTENER,
+	LOADING,
+	STATE,
+	UNLOCK,
+	UPSELL,
+	XOLACER,
+} from "./dev/fixtures";
 import {
 	continueStep,
 	ctaLabel,
 	dayOf,
+	endLetterOffer,
+	endSafeguard,
 	fromOf,
+	isPitch,
 	keptAtMoment2,
+	letterPassed,
 	momentGate,
 	type NextInput,
 	nextKey,
@@ -17,6 +32,7 @@ import {
 	pathOf,
 	pitchAllowed,
 	pitchDismissed,
+	ratingsSignalsOf,
 	savedMood,
 	wordsToShare,
 } from "./session-end-model";
@@ -143,6 +159,139 @@ describe("nextKey", () => {
 	});
 });
 
+describe("nextKey with letters", () => {
+	const READ = { waiting: true, write: true };
+	const WRITE = { waiting: false, write: true };
+	const NONE = { waiting: false, write: false };
+	const PLUS_SETTING_UP = { ...STATE.slot, kindlingReady: false };
+
+	it("holds the slot until letters answer, then 2 s at most", () => {
+		expect(nextKey(input({ ...FREE.slot, letters: undefined }))).toBe(
+			"loading"
+		);
+		expect(
+			nextKey(input({ ...FREE.slot, letters: undefined, waitedOut: true }))
+		).toBe("kfree");
+	});
+
+	it("puts a matched listener above both letter cards", () => {
+		expect(nextKey(input({ ...LISTENER.slot, letters: READ }))).toBe(
+			"listener"
+		);
+	});
+
+	it("offers the waiting letter, then writing one, above the free pitch", () => {
+		expect(nextKey(input(LETTER_WAITING.slot))).toBe("letterRead");
+		expect(nextKey(input(LETTER_WRITE.slot))).toBe("letterWrite");
+		expect(nextKey(input({ ...FREE.slot, letters: NONE }))).toBe("kfree");
+	});
+
+	it("puts a waiting letter above kindling, and kindling above writing one", () => {
+		expect(nextKey(input({ ...STATE.slot, letters: READ }))).toBe("letterRead");
+		expect(nextKey(input({ ...STATE.slot, letters: WRITE }))).toBe("kindling");
+	});
+
+	it("collides with kindling setting up as with kindling", () => {
+		expect(nextKey(input({ ...PLUS_SETTING_UP, letters: READ }))).toBe(
+			"letterRead"
+		);
+		expect(nextKey(input({ ...PLUS_SETTING_UP, letters: WRITE }))).toBe(
+			"kindlingSettingUp"
+		);
+	});
+
+	it("doesn't need the session to qualify, and doesn't wait on it past 2 s", () => {
+		const free = { ...FREE.slot, letters: WRITE, qualifies: false };
+		expect(nextKey(input(free))).toBe("letterWrite");
+		const plus = { ...STATE.slot, letters: WRITE, qualifies: false };
+		expect(nextKey(input({ ...plus, listen: true }))).toBe("letterWrite");
+		const pending = { ...FREE.slot, letters: READ, qualifies: undefined };
+		expect(nextKey(input(pending))).toBe("loading");
+		expect(nextKey(input({ ...pending, waitedOut: true }))).toBe("letterRead");
+	});
+
+	it("never follows a heavier answer, no answer, or a late session", () => {
+		for (const extra of [{ step: -1 }, { step: null }, { late: true }]) {
+			expect(nextKey(input(LETTER_WAITING.slot, extra))).not.toMatch(/letter/);
+			expect(nextKey(input(LETTER_WRITE.slot, extra))).not.toMatch(/letter/);
+		}
+		expect(nextKey(input(LETTER_WRITE.slot, { step: 0 }))).toBe("letterWrite");
+		expect(nextKey(input(LETTER_WRITE.slot, { step: -1 }))).toBe("kfree");
+	});
+
+	it("offers the waiting letter on the same answer (step 0), not only a lighter one", () => {
+		expect(nextKey(input(LETTER_WAITING.slot, { step: 0 }))).toBe("letterRead");
+		expect(nextKey(input({ ...STATE.slot, letters: READ }, { step: 0 }))).toBe(
+			"letterRead"
+		);
+	});
+
+	it("gives a late Xolace+ session its kindling, not the waiting letter", () => {
+		const plus = { ...STATE.slot, letters: READ };
+		expect(nextKey(input(plus, { late: true }))).toBe("kindling");
+		expect(
+			nextKey(input({ ...plus, kindlingReady: false }, { late: true }))
+		).toBe("kindlingSettingUp");
+	});
+
+	it("gives Xolace+ its kindling once 2 s pass with letters still unread", () => {
+		const unread = { ...STATE.slot, letters: undefined };
+		expect(nextKey(input(unread))).toBe("loading");
+		expect(nextKey(input({ ...unread, waitedOut: true }))).toBe("kindling");
+	});
+});
+
+describe("the letters' slot and the safeguard", () => {
+	const READ = { waiting: true, write: true };
+	const STEADY = { safeguardLevel: "gentle" as const };
+	const offerWith = () => vi.fn((_safeguard: boolean) => READ);
+
+	it("reaches Xolace+, whose offer context is null, off the session alone", () => {
+		const offer = offerWith();
+		const letters = endLetterOffer(STEADY, null, offer);
+		expect(offer).toHaveBeenCalledWith(false);
+		expect(nextKey(input({ ...STATE.slot, letters }))).toBe("letterRead");
+	});
+
+	it("mirrors offerContext's rule: an escalation, elevated or crisis", () => {
+		expect(endSafeguard({ escalationTriggered: true }, null)).toBe(true);
+		expect(endSafeguard({ safeguardLevel: "elevated" }, null)).toBe(true);
+		expect(endSafeguard({ safeguardLevel: "crisis" }, null)).toBe(true);
+		expect(endSafeguard({ safeguardLevel: "gentle" }, null)).toBe(false);
+		expect(endSafeguard({ safeguardLevel: "none" }, null)).toBe(false);
+		expect(endSafeguard({}, null)).toBe(false);
+	});
+
+	it("passes a Xolace+ safeguard to letters, so they can withhold both cards", () => {
+		const offer = offerWith();
+		endLetterOffer({ safeguardLevel: "crisis" }, null, offer);
+		expect(offer).toHaveBeenCalledWith(true);
+	});
+
+	it("keeps a free user's offer context as well as the session", () => {
+		const active = { safeguardActive: true };
+		expect(endSafeguard(STEADY, active)).toBe(true);
+		expect(endSafeguard(STEADY, { safeguardActive: false })).toBe(false);
+	});
+
+	it("holds the slot until both are read, and treats a missing session as a safeguard", () => {
+		const offer = offerWith();
+		expect(endLetterOffer(undefined, null, offer)).toBeUndefined();
+		expect(endLetterOffer(STEADY, undefined, offer)).toBeUndefined();
+		expect(offer).not.toHaveBeenCalled();
+		expect(endSafeguard(null, null)).toBe(true);
+	});
+});
+
+describe("letterPassed", () => {
+	it("counts leaving with the write card shown and untaken", () => {
+		expect(letterPassed("letterWrite", false)).toBe(true);
+		expect(letterPassed("letterWrite", true)).toBe(false);
+		expect(letterPassed("letterRead", false)).toBe(false);
+		expect(letterPassed(null, false)).toBe(false);
+	});
+});
+
 describe("pitchAllowed", () => {
 	const NOW = 1_000_000_000_000;
 	const quiet: PitchContext = {
@@ -211,7 +360,6 @@ describe("Continue", () => {
 		expect(gate.busy).toBe(false);
 		gate.hold();
 		expect(gate.busy).toBe(true);
-		// The sheet closing, then a stray second tap: only the first moves on.
 		expect(gate.enter()).toBe(true);
 		expect(gate.enter()).toBe(false);
 		expect(continueStep({ ...at, pending: gate.busy })).toBe("ignore");
@@ -232,7 +380,108 @@ describe("keptAtMoment2", () => {
 		expect(keptAtMoment2(null, 1, "words")).toBeNull();
 		const opened = keptAtMoment2<string | null>(null, 2, null);
 		expect(opened).toEqual({ value: null });
-		// The session lands after the 4 s fallback: "Go gently." stays.
 		expect(keptAtMoment2(opened, 2, "late words")).toBe(opened);
+	});
+});
+
+describe("nextKey with C2's cards (session-end-extras.md)", () => {
+	const READ = { waiting: true, write: true };
+	const WRITE = { waiting: false, write: true };
+
+	it("offers the Xolacer suggestion first, above the unlock", () => {
+		expect(nextKey(input({ ...XOLACER.slot, unlock: true }))).toBe("listener");
+	});
+
+	it("puts the unlock after a waiting letter and above kindling and writing one", () => {
+		expect(nextKey(input(UNLOCK.slot))).toBe("unlock");
+		expect(nextKey(input({ ...UNLOCK.slot, letters: READ }))).toBe(
+			"letterRead"
+		);
+		expect(nextKey(input({ ...UNLOCK.slot, letters: WRITE }))).toBe("unlock");
+		expect(nextKey(input({ ...UNLOCK.slot, kindlingReady: false }))).toBe(
+			"unlock"
+		);
+		expect(nextKey(input({ ...UPSELL.slot, unlock: true }))).toBe("unlock");
+	});
+
+	it("shows the unlock only on a steady session, every plan", () => {
+		expect(nextKey(input({ ...UNLOCK.slot, plus: false }))).toBe("unlock");
+		expect(nextKey(input(UNLOCK.slot, { late: true }))).toBe("kindling");
+		expect(nextKey(input(UNLOCK.slot, { step: -1 }))).toBe("kindling");
+		expect(nextKey(input(UNLOCK.slot, { step: null }))).toBe("kindling");
+	});
+
+	it("gives the free pitch's place to the upsell, under the pitch's rules", () => {
+		expect(nextKey(input(UPSELL.slot))).toBe("upsell");
+		expect(nextKey(input(UPSELL.slot, { step: -2 }))).toBe("upsell");
+		expect(nextKey(input(UPSELL.slot, { late: true }))).toBe("none");
+		expect(nextKey(input(UPSELL.slot, { step: -3 }))).toBe("none");
+		expect(nextKey(input({ ...UPSELL.slot, pitchAllowed: false }))).toBe(
+			"none"
+		);
+	});
+
+	it("doesn't need the session to qualify for kindling to show the upsell", () => {
+		expect(nextKey(input({ ...UPSELL.slot, qualifies: false }))).toBe("upsell");
+	});
+
+	it("keeps a letter to write above the upsell, and the upsell from Xolace+", () => {
+		expect(nextKey(input({ ...UPSELL.slot, letters: WRITE }))).toBe(
+			"letterWrite"
+		);
+		expect(nextKey(input({ ...UPSELL.slot, plus: true }))).toBe(
+			"kindlingSettingUp"
+		);
+	});
+
+	it("holds the slot for the unlock and the upsell, 2 s at most", () => {
+		expect(nextKey(input({ ...UPSELL.slot, upsell: undefined }))).toBe(
+			"loading"
+		);
+		expect(nextKey(input({ ...UNLOCK.slot, unlock: undefined }))).toBe(
+			"loading"
+		);
+		expect(
+			nextKey(input({ ...UPSELL.slot, upsell: undefined, waitedOut: true }))
+		).toBe("kfree");
+	});
+
+	it("counts the upsell as the ending's one pitch", () => {
+		expect(isPitch("upsell")).toBe(true);
+		expect(isPitch("kfree")).toBe(true);
+		expect(isPitch("unlock")).toBe(false);
+		expect(isPitch(null)).toBe(false);
+		expect(pitchDismissed("upsell", false)).toBe(true);
+		expect(pitchDismissed("upsell", true)).toBe(false);
+	});
+});
+
+describe("ratingsSignalsOf", () => {
+	it("anything but heavier makes the first ask due", () => {
+		for (const postSessionMood of ["lighter", "same", "unsure"] as const) {
+			expect(ratingsSignalsOf({ moodPosition: 0.5, postSessionMood })).toEqual([
+				"light-session",
+			]);
+		}
+	});
+
+	it("a little heavier says nothing", () => {
+		expect(
+			ratingsSignalsOf({ moodPosition: 0.35, postSessionMood: "heavier" })
+		).toEqual([]);
+	});
+
+	it("heavy enough for a follow-up holds the ask while it's open", () => {
+		expect(
+			ratingsSignalsOf({ moodPosition: 0.2, postSessionMood: "heavier" })
+		).toEqual(["heavier-follow-up"]);
+	});
+
+	it("much heavier (step −4 and below) also starts the 48 h wait", () => {
+		for (const moodPosition of [0.13, 0]) {
+			expect(
+				ratingsSignalsOf({ moodPosition, postSessionMood: "heavier" })
+			).toEqual(["heavier-follow-up", "much-heavier"]);
+		}
 	});
 });

@@ -7,7 +7,6 @@ import { mapEntryType } from "@/features/reflect/session/session-service";
 import type { EntryType } from "@/features/reflect/session/types";
 import { useAppStore } from "@/store/store";
 
-// States where the mirror has been delivered at least once.
 const TURN_RELEVANT_STATES = new Set([
 	"mirror_delivered",
 	"confirmed",
@@ -16,14 +15,12 @@ const TURN_RELEVANT_STATES = new Set([
 	"completed",
 ]);
 
-/** Holds the client-side session id and exposes server session data plus lifecycle actions. */
 export function useSession() {
 	const [localSessionId, setLocalSessionId] = useState<Id<"sessions"> | null>(
 		null
 	);
 	const { mode: sessionModeAtHook } = useSessionMode();
 
-	// Prefer the local id; fall back to the server's active session.
 	const activeSession = useQuery(
 		api.sessions.getActive,
 		localSessionId ? "skip" : undefined
@@ -64,6 +61,7 @@ export function useSession() {
 	const serverState = session?.state ?? null;
 	const mirrorText = session?.mirrorText ?? null;
 	const errorMessage = session?.errorMessage ?? null;
+	const errorCode = session?.errorCode ?? null;
 
 	const initiateAndSubmit = useCallback(
 		async (
@@ -74,8 +72,6 @@ export function useSession() {
 			freezeDuration?: number
 		) => {
 			const serverEntryType = mapEntryType(entryType);
-			// "Reflect on this" (#413): one session per tap takes the entry and spends
-			// the prompt. A quote-reply seed outranks the prompt on the card.
 			const { pendingEventPrompt: pending, replySeed } = useAppStore.getState();
 			const fromEntryId =
 				pending && pending.expiresAt > Date.now() && !replySeed
@@ -102,12 +98,9 @@ export function useSession() {
 					sessionId: newSessionId,
 				});
 			} catch (error) {
-				// Roll back the dangling initiated session.
 				try {
 					await abandonMutation({ sessionId: newSessionId });
-				} catch {
-					// best-effort cleanup
-				}
+				} catch {}
 				setLocalSessionId(null);
 				throw error;
 			}
@@ -189,13 +182,9 @@ export function useSession() {
 		}
 		try {
 			await abandonMutation({ sessionId });
-		} catch {
-			// best-effort: the session may already be terminal
-		}
+		} catch {}
 	}, [sessionId, abandonMutation]);
 
-	// The server reprocesses the input it stored, so this works for a session
-	// picked up from getActive too.
 	const retry = useCallback(async () => {
 		if (!sessionId) {
 			return;
@@ -222,6 +211,7 @@ export function useSession() {
 		completeAsExit,
 		completePath,
 		confirmMirror,
+		errorCode,
 		errorMessage,
 		initiateAndSubmit,
 		isLoading,

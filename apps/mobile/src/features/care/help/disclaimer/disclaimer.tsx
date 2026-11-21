@@ -6,8 +6,6 @@ import { useHelpScreen } from "@/features/care/help/help-data";
 
 const LINK_HIT_SLOP = 8;
 
-/** Production's small print: when the list was checked, what Xolace vouches for, and where to
- * report a wrong number. */
 export function Disclaimer() {
 	const { state, actions } = useHelpScreen();
 	return (

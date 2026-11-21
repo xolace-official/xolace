@@ -12,7 +12,6 @@ import type { Playhead } from "./use-playhead";
 
 const SLOT = 80;
 
-/** The white time pill riding above the finger, clamped 26 pt in from each end. */
 export function ScrubPill({
 	head,
 	boxW,

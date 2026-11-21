@@ -19,13 +19,9 @@ import { loadBreath } from "./mark-geo";
 
 const SIZE = 84;
 const C = SIZE / 2;
-/** `.s-none .you .hl`: scale 1.35, α .8. */
 const NONE_HALO = { alpha: 0.8, scale: 1.35 } as const;
-/** `yb`: you breathe α .82 ↔ 1. */
 const BREATH_LOW = 0.82;
-/** `ldb`'s delay for your ring (board `--ld: .2s`). */
 const LD_DELAY = 200;
-/** The halo's centre α, and the core's highlight offset and stops. */
 const HALO_CORE = 0.7;
 const HIGHLIGHT = { r: 1.4, x: 0.2, y: 0.28 } as const;
 
@@ -39,16 +35,9 @@ type Props = {
 	ink3: string;
 	arrive: SharedValue<number>;
 	ld: SharedValue<number>;
-	/** 0 → 1 → 0 on the face's breath (4.8 s, late 6.7 s). */
 	breath: SharedValue<number>;
 };
 
-/**
- * Your star (board `.st.you`): the tile's lower circle as a ring until the first
- * card lands, then the warm star, halo r 30 and core r 7. Its own small canvas,
- * so its breath (`yb`, α .82 ↔ 1 on the face's clock) is the view's opacity and
- * never redraws the mark.
- */
 export function YouStar({
 	ox,
 	oy,

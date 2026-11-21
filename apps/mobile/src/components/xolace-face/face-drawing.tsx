@@ -1,9 +1,3 @@
-// The Xolace face as a Skia group, for drawing inside another canvas (Reflect's ensō draws it
-// inside the circle). `XolaceFace` turns its head with a view transform around its own canvas;
-// here the same transform (perspective, nod/hop, lean, tilt + fidget, squash + breath, from
-// its base) is a Skia matrix on the group. Both take the motion from `face-motion.ts` and the
-// colours from `face-colors.ts`.
-
 import {
 	Group,
 	LinearGradient,
@@ -32,15 +26,12 @@ type Props = {
 	body?: BodyName;
 	eyes?: EyeStyle;
 	face: FaceHandle;
-	/** Defaults to the brand gradient; an orb defaults to the theme accent. */
 	palette?: PaletteName;
 	size: number;
-	/** Top-left of the face inside its canvas. */
 	x?: number;
 	y?: number;
 };
 
-/** The face as a Skia group, `size` square at (`x`, `y`) in the canvas it is drawn in. */
 export function FaceDrawing({
 	body = "flame",
 	eyes = "round",
@@ -63,7 +54,6 @@ export function FaceDrawing({
 			face.hopAmount.get()
 		);
 		return [
-			// The perspective is in points; this group draws in the face's 100-unit box.
 			{ perspective: (HEAD_PERSPECTIVE * FACE_BOX) / size },
 			{ translateY: m.drop * FACE_BOX },
 			{ rotateY: m.lean * DEG },

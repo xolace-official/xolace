@@ -1,4 +1,3 @@
-/** Notifications' fixture adapter: the real screen under a provider filled from fixtures. */
 import { NOTIFY_ACTIONS } from "@/features/settings/notifications/dev/fixtures";
 import {
 	type Notifications,

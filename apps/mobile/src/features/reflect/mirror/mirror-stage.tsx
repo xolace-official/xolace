@@ -32,12 +32,6 @@ const INK_TOKENS = [
 	"ember-wash",
 ] as const;
 
-/**
- * The mirror lands (board cards 05–07): Your words with the borrowed phrases marked, THE MIRROR
- * writing in word by word on one clock, its phrases lighting where they came from, then the
- * actions. A heavy mirror writes in slowly, lights nothing, and the care card takes the actions'
- * place. A refinement shimmers the lines until the revised mirror lands and writes in again.
- */
 export function MirrorStage() {
 	const { state } = useReflect();
 	const { reduced, live, light } = useReflectDraw();
@@ -52,7 +46,6 @@ export function MirrorStage() {
 	const [halo, lit, warm, glow, ember, wash] = useTokenColors(INK_TOKENS);
 	const ink: MirrorInk = { ember, flash: warm, glow, halo, lit };
 
-	// The bottom light surges once as it lands (S7 `glowPose`): 80 pt in .18 s, out over .9 s.
 	useAnimatedReaction(
 		() => e.get(),
 		(now) => {
@@ -67,8 +60,6 @@ export function MirrorStage() {
 	);
 	useEffect(() => () => light.surge.set(0), [light.surge]);
 
-	// The three-beat arrival (not when it's heavy: the care card has its own), and VoiceOver
-	// moves to the mirror once it has written in.
 	const arrive = useEffectEvent(() => {
 		if (!heavy) {
 			playMirrorArrival();
@@ -84,7 +75,6 @@ export function MirrorStage() {
 		return () => clearTimeout(id);
 	}, [landN]);
 
-	// Say more is about the whole mirror: the panel quotes its last line.
 	const chosen = sel >= 0 ? sel : sayMore ? tl.lines.length - 1 : -1;
 	const chosenText = tl.lines[chosen]?.words.map((w) => w.text).join(" ") ?? "";
 	const flashPairs = tl.lines[flash.line]?.pairs ?? [];

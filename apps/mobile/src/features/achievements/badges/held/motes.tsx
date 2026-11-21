@@ -6,13 +6,11 @@ import Animated, {
 } from "react-native-reanimated";
 import type { Pose } from "@/features/achievements/coin/pose";
 
-/** Motes rise 170 pt and fade over 1.9 s, staggered, from landing (badges §3). */
 const MOTE_MS = 1900;
 const COUNT = 12;
 const GOLDEN_ANGLE = 2.399_96;
 const RISE = 170;
 const DRIFT = 0.55;
-/** Each mote peaks this far into its life, then fades. */
 const PEAK = 0.18;
 const RING = { base: 58, step: 22 } as const;
 const SPREAD_Y = 46;
@@ -22,7 +20,6 @@ const SIZE = { base: 3, step: 1 } as const;
 const GROW_FROM = 0.6;
 const bez = Easing.bezierFn(0.2, 0.7, 0.3, 1);
 
-/** The board's MOTES: 12 on a golden-angle spiral around the badge. */
 const MOTES = Array.from({ length: COUNT }, (_, i) => {
 	const a = i * GOLDEN_ANGLE;
 	return {
@@ -35,11 +32,6 @@ const MOTES = Array.from({ length: COUNT }, (_, i) => {
 
 type Mote = (typeof MOTES)[number];
 
-/**
- * Twelve small views moved by transforms: a Skia picture didn't draw inside the
- * moving page on device. `glow` is a shared value, so a new badge recolours them
- * without a render.
- */
 export function Motes({
 	pose,
 	cx,

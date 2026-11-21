@@ -12,13 +12,7 @@ import { useVentGestures } from "@/features/vent/flow/vent-gestures";
 import { useVentScreen } from "@/features/vent/vent-data";
 import { ReplyWords } from "@/features/vent/words/reply-words";
 
-/**
- * Vent v2 (handoff `vent.md`): production's ritual on the same dark room in every theme, status
- * bar hidden, the screen kept awake. Say it, let it go, watch it burn, a few words back, they
- * burn too, "Gone.", and it closes itself.
- */
 export function VentScreen() {
-	// Released on unmount, so the lock never outlives the screen.
 	useKeepAwake();
 	const { state, actions } = useVentScreen();
 	const gesture = useVentGestures(state.phase, actions.burst, actions.flick);

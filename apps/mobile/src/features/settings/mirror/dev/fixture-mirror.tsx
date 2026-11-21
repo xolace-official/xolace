@@ -1,4 +1,3 @@
-/** Mirror's fixture adapter: the real screen under a provider filled from fixtures. */
 import { MIRROR_ACTIONS } from "@/features/settings/mirror/dev/fixtures";
 import {
 	MirrorProvider,

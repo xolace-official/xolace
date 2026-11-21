@@ -2,24 +2,59 @@ import type {
 	EntryType,
 	ReflectionAction,
 	ReflectionState,
+	TypingClock,
 } from "@/features/reflect/session/types";
 import { MAX_TEXTURES } from "@/features/reflect/texture-sets";
 import { joinDictation } from "@/lib/speech/dictation-transcript";
-
-export const MAX_TURNS = 2;
 
 export const initialState: ReflectionState = {
 	clarifyText: "",
 	entryText: "",
 	entryType: "typed",
+	errorCode: null,
 	errorMessage: "",
 	lastFeedbackType: null,
 	missReason: null,
 	screen: "idle",
 	selectedTextures: [],
+	typing: { froze: false, frozeAt: null, frozeMs: undefined, startedAt: null },
 };
 
-/** Produces the next reflection UI state for an action. */
+/** `reducer`, plus the typing clock, stamped with when the action was dispatched. */
+export function timedReducer(
+	state: ReflectionState,
+	action: ReflectionAction & { at: number }
+): ReflectionState {
+	const next = reducer(state, action);
+	if (next.screen === state.screen) {
+		return next;
+	}
+	const typing = clockTyping(next.typing, next.screen, action.at);
+	return typing === next.typing ? next : { ...next, typing };
+}
+
+function clockTyping(
+	clock: TypingClock,
+	screen: ReflectionState["screen"],
+	at: number
+): TypingClock {
+	if (screen === "typing-nudge") {
+		return { ...clock, froze: true, frozeAt: at };
+	}
+	if (screen !== "typing") {
+		return clock;
+	}
+	const resumed =
+		clock.frozeAt === null
+			? clock
+			: {
+					...clock,
+					frozeAt: null,
+					frozeMs: (clock.frozeMs ?? 0) + (at - clock.frozeAt),
+				};
+	return resumed.startedAt === null ? { ...resumed, startedAt: at } : resumed;
+}
+
 export function reducer(
 	state: ReflectionState,
 	action: ReflectionAction
@@ -32,7 +67,6 @@ export function reducer(
 				screen: "typing",
 			};
 
-		// Closing the composer keeps the draft; it is discarded explicitly (#258).
 		case "DISMISS_TYPING":
 			return { ...state, screen: "idle" };
 
@@ -107,7 +141,12 @@ export function reducer(
 			return { ...state, clarifyText: action.text };
 
 		case "SESSION_ERROR":
-			return { ...state, errorMessage: action.message, screen: "error" };
+			return {
+				...state,
+				errorCode: action.code ?? null,
+				errorMessage: action.message,
+				screen: "error",
+			};
 
 		case "SESSION_RESUMED":
 			return { ...state, screen: action.screen };
@@ -137,7 +176,6 @@ export function reducer(
 		case "RESET":
 			return initialState;
 
-		// Nothing of the previous person's composer survives into the next one's.
 		case "ACCOUNT_SWITCHED":
 			return { ...initialState, entryText: action.entryText };
 

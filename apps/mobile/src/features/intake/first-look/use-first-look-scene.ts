@@ -1,6 +1,3 @@
-// The first look's own motion and UI state, no backend: the arrival clock every check and
-// title reads, Flux's mood, which row is open (and which have mounted), and the voice picked.
-// A dev state can hold any of it.
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Presets } from "react-native-pulsar";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
@@ -18,10 +15,8 @@ import {
 } from "./first-look-model";
 import { LOOK_MS } from "./first-look-motion";
 
-/** Flux glancing down at the row that opened. */
 const LOOK = { ...NEUTRAL, gazeX: -0.5, gazeY: 0.6, mouth: 0.5, tilt: -0.1 };
 
-/** A dev state's hold. Without `at`, the arrival has settled. */
 export type SceneHold = { at?: number; open?: RowId | null; voice?: VoiceId };
 
 export function useFirstLookScene(
@@ -45,7 +40,6 @@ export function useFirstLookScene(
 		return first ? [first] : [];
 	});
 	const [voice, setVoice] = useState<VoiceId>(hold?.voice ?? "flux");
-	// The row the person opened themselves, which VoiceOver follows; the arrival's Talk isn't.
 	const [focused, setFocused] = useState<RowId | null>(null);
 	const lit = settled || heldAt >= HAPPY_AT;
 	const face = useFace(lit ? MOOD_POSES.happy : MOOD_POSES.idle);
@@ -60,7 +54,6 @@ export function useFirstLookScene(
 	const show = (id: RowId) =>
 		setMounted((m) => (m.includes(id) ? m : [...m, id]));
 
-	// The arrival, once: the column lights, Flux turns happy and hops, Talk opens.
 	const arrive = useEffectEvent(() => {
 		if (settled || heldAt >= 0) {
 			return;
@@ -83,7 +76,6 @@ export function useFirstLookScene(
 	});
 	useEffect(() => arrive(), []);
 
-	// Reduce Motion switched on mid-arrival: settle.
 	useEffect(() => {
 		if (reduced) {
 			clock.set(SETTLED);
@@ -91,7 +83,6 @@ export function useFirstLookScene(
 		}
 	}, [clock, face.to, reduced]);
 
-	/** Opens or closes a row; returns what was open and what is now. */
 	const toggle = (id: RowId) => {
 		Presets.System.selection();
 		const next = toggled(open, id);

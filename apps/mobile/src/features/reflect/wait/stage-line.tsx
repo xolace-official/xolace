@@ -1,11 +1,5 @@
-import MaskedViewClass from "@react-native-masked-view/masked-view";
-import {
-	type ComponentType,
-	type ReactElement,
-	type ReactNode,
-	useEffect,
-	useState,
-} from "react";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { useEffect, useState } from "react";
 import { AccessibilityInfo, View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
@@ -20,15 +14,7 @@ import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { useTokenColors } from "@/lib/use-token-color";
 import { STAGE_LINE } from "../motion";
 
-// The package's class types predate React 19's JSX types (as band-blur notes).
-const MaskedView = MaskedViewClass as unknown as ComponentType<{
-	maskElement: ReactElement;
-	children?: ReactNode;
-}>;
-
-/** Board `.sline`: 16/500, line height 1.4, centred. */
 const LINE_CLASS = "text-[16px] leading-[22.4px]";
-/** Board `band`: a 260%-wide gradient from 100% to −60% background position. */
 const BAND_WIDTH = 2.6;
 const BAND_FROM = -1.6;
 const BAND_TO = 0.96;
@@ -47,12 +33,6 @@ function Line({ text, className }: { text: string; className?: string }) {
 	);
 }
 
-/**
- * The wait's line (S6, thinking-word-shimmer, slowed by the board). It changes only when the
- * stage really changes; each new line rises 10 pt out of a soft glow in .45 s, and a light band
- * passes along it every 1.4 s (a native Ease loop over a MaskedView). Each new line is
- * announced politely.
- */
 export function StageLine({
 	text,
 	running,
@@ -89,8 +69,6 @@ export function StageLine({
 	const soft = useAnimatedStyle(() => ({
 		opacity: reduced ? 0 : 1 - enter.get(),
 	}));
-	// Restarted by key when the width is measured or it runs again. Stopped, the band snaps
-	// back off the line's left edge (easing back would sweep it the wrong way).
 	const sweep = loopProps({
 		easing: "linear",
 		from: { translateX: width * BAND_FROM },
@@ -110,7 +88,6 @@ export function StageLine({
 			style={rise}
 		>
 			<MaskedView maskElement={<Line text={text} />}>
-				{/* Sized by an invisible copy, so the mask and the band have the line's box. */}
 				<Line className="opacity-0" text={text} />
 				<View className="absolute inset-0 bg-subtle" />
 				<EaseView

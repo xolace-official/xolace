@@ -32,19 +32,15 @@ import {
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
 
-// Production's TickGauge (insights/glass.tsx): 240 pt, 56 ticks from 135° over 270°, outer
-// radius 118, 20 long, 4 wide, round caps.
 const GAUGE = 240;
 const START = 135;
 const SWEEP = 270;
 const R_OUT = 118;
 const TICK_LEN = 20;
 const TICK_W = 4;
-/** The fill; the number rolls with it. The face settles at 900 ms (production's). */
 const FILL_MS = 1100;
 const FILL_DELAY_MS = 120;
 const SETTLE_MS = 900;
-/** The chip sits in the 90° the sweep leaves open, its top at y 193 of the gauge box. */
 const GAP_TOP = 193;
 const FACE = 60;
 const FACE_WAITING = 76;
@@ -59,11 +55,6 @@ const TICKS = tickPath(
 	GAUGE / 2
 );
 
-/**
- * The glass dial's gauge (steadiness.md §2): the fan, the Xolace face above the number, the
- * change in the bottom gap. Fills once per visit with production's rising swell; the face
- * waits, then settles at 900 ms. `running`: false while the bar's chip shows, so its clock stops.
- */
 export function Gauge({
 	dial,
 	plus,
@@ -74,7 +65,6 @@ export function Gauge({
 }: {
 	dial: DialView;
 	plus: boolean;
-	/** Free, and the store agrees: the locked chip. */
 	doors: boolean;
 	now: Date;
 	running: boolean;
@@ -89,8 +79,6 @@ export function Gauge({
 	const { end, opacity } = useSnappedEnd(progress, lit, DIAL_TICKS);
 	const face = useFace(PRESETS.waiting, running);
 	const { to, hold } = face;
-	// Filled this visit: a later score (the hourly re-read) moves the ticks and the face only,
-	// with no second swell.
 	const filled = useRef(false);
 
 	useEffect(() => {
@@ -126,7 +114,6 @@ export function Gauge({
 		return () => {
 			clearTimeout(swell);
 			clearTimeout(settle);
-			// Torn down mid-fill (a remount, Strict Mode): the next run fills again.
 			if (!settled) {
 				filled.current = false;
 			}

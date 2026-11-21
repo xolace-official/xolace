@@ -1,6 +1,3 @@
-// Eyes, brows, mouth and cheeks, drawn in the body's 100×100 box and recomputed from the
-// pose on the UI thread every frame.
-
 import { Oval, Path, Skia } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { FaceEye } from "./face-eye";
@@ -39,10 +36,8 @@ export function FaceFeatures({
 		const p = pose.get();
 		const c = clock.get();
 		const r = p.restless;
-		// Layered sines, so the fidget never visibly loops.
 		const jx = (Math.sin(c * 6.1) + 0.5 * Math.sin(c * 13.7)) * r * 0.8;
 		const jy = (Math.cos(c * 5.3) + 0.5 * Math.sin(c * 11.9)) * r * 0.6;
-		// Restless eyes dart a little; still ones don't.
 		const dart = Math.sin(c * 2.3) * Math.sin(c * 0.7) * r * 0.7;
 		return {
 			asym: p.browAsym,

@@ -1,4 +1,3 @@
-/** "Reach me on…" on fixtures: `xolace://dev/reach-me-on/<id>`. */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureSheet } from "@/features/reach-me-on/dev/fixture-sheet";
 import {
@@ -7,7 +6,6 @@ import {
 	NOT_LINKED,
 } from "@/features/reach-me-on/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Reach me on…" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

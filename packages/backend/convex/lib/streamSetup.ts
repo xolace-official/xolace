@@ -16,6 +16,8 @@
  * (verified: a bare phone number sailed through with it set).
  */
 
+import { CONTACT_PATTERNS, streamRegexOf } from "./contactPatterns";
+
 /** The fields of a channel type this plan reads or writes. Stream returns many
  * more; they are passed through untouched because the PUT only carries these. */
 export type ChannelTypeConfig = {
@@ -42,21 +44,12 @@ export type BlockListConfig = { name: string; type: string; words: string[] };
  * Regex rules, RE2 syntax (Stream's matcher — no lookaround). Each is one
  * "word" of a `type: "regex"` blocklist. Flagged, never blocked: a phone
  * number can be a step someone chose, and a human decides that, not a regex.
+ * The patterns live in `contactPatterns`, which letters read too.
  */
 export const CONTACT_LEAK_BLOCKLIST: BlockListConfig = {
 	name: "contact_leak",
 	type: "regex",
-	words: [
-		// Phone-number shapes: 9+ digits with optional +, spaces, dots, dashes, parens.
-		String.raw`\+?\d[\d\s().-]{7,}\d`,
-		// @handle
-		String.raw`(^|\s)@[A-Za-z0-9_.]{3,}`,
-		// Off-platform invitations. The unambiguous app names stand alone; the
-		// short ones ("ig", "snap", "signal") are ordinary English and only count
-		// as "my ig" / "on snap" / "via signal".
-		String.raw`(?i)\b(whatsapp|telegram|snapchat|instagram|insta)\b`,
-		String.raw`(?i)\b(my|on|via)\s+(ig|snap|signal)\b`,
-	],
+	words: CONTACT_PATTERNS.map(streamRegexOf),
 };
 
 export const DESIRED_MESSAGING = {

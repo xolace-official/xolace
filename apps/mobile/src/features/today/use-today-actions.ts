@@ -8,23 +8,15 @@ import { usePushOnce } from "@/lib/use-push-once";
 import type { RailTile } from "./rail/rail-model";
 import type { Today } from "./today-data";
 
-/** Plays reached from Today keep Discovery's name, so the analytics keep their history. */
 const FROM: BrowseFrom = "discovery-strip";
 
-/**
- * Today's ways out to the catalogue, Moments and Quotes, with production's gate and
- * events: a free member's tap on a track opens the paywall (`browse`), Plus goes to the
- * player, as every catalogue surface does (Browse's `useOpenTrack`).
- */
 export function useTodayActions(): Pick<
 	Today["actions"],
 	"openTrack" | "openExplore" | "openMoment" | "openMoments" | "openQuotes"
 > {
 	const posthog = usePostHog();
-	// One screen per tap, however fast the taps.
 	const pushOnce = usePushOnce();
-	const { isPlus, isLoading } = usePlusEntitlement();
-	const locked = !(isLoading || isPlus);
+	const locked = usePlusEntitlement().status === "free";
 
 	const openTrack = (tile: RailTile) => {
 		playSoftPress();

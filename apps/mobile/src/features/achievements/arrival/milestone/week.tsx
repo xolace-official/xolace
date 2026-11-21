@@ -19,14 +19,12 @@ const WEEK_TOP = 548;
 const SLIDE = { in: 500, rise: 30 } as const;
 const CHECK: IconName = { android: "check", ios: "checkmark" };
 const CHECK_SIZE = 13;
-/** A day lights over 240 ms, growing from .7; today pops from .55 on `fs(14, .45)` with its ring. */
 const LIGHT_MS = 240;
 const RING_MS = 300;
 const GROW_FROM = 0.7;
 const UNLIT_SCALE = 0.6;
 const TODAY = { from: 0.55, w: 14, z: 0.45 } as const;
 
-/** A card sliding up 30 pt and fading in over 500 ms from its time. */
 export function useSlideUp(eng: SharedValue<Eng>, at: number) {
 	return useAnimatedStyle(() => {
 		const e = eng.get();
@@ -35,7 +33,6 @@ export function useSlideUp(eng: SharedValue<Eng>, at: number) {
 	});
 }
 
-/** The last seven days, lighting in turn 110 ms apart; today last, popping, with its ring. */
 export function Week({
 	eng,
 	geo,
@@ -55,7 +52,6 @@ export function Week({
 		<Animated.View
 			className="absolute inset-x-5 rounded-[22px] bg-surface px-4 pt-[13px] pb-[11px]"
 			pointerEvents="none"
-			// The hairline is a ring outside the card: a border would take room inside it.
 			style={[
 				{ boxShadow: `0px 0px 0px 0.5px ${separator}`, top: WEEK_TOP + geo.dy },
 				style,
@@ -128,7 +124,6 @@ function Day({
 		return { opacity: e.rm ? 1 : seg(age(e, e.tm), at, at + RING_MS) };
 	});
 	return (
-		// The board's dot is 30 pt (size-7.5); today's ring sits 4 pt outside it.
 		<View className="w-9 items-center gap-[5px]">
 			<View className="size-7.5 rounded-full bg-surface-secondary">
 				<Animated.View

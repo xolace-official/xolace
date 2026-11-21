@@ -18,17 +18,11 @@ import {
 } from "@/features/achievements/motion-math";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** One digit's row: 96 tall, 88 pt. The roll translates a two-row column by it. */
 const ROW = 96;
 const FADE = { from: 250, to: 600 } as const;
 const LIGHT = { from: 900, to: 1300 } as const;
 const BOUNCE = { by: 0.08, over: 600 } as const;
 
-/**
- * The count: yesterday's number unlit, rolling to today's at 1 s (each digit a
- * two-row column that translates) as it takes the fire's colour, with a bounce.
- * The milestone is one VoiceOver element, so the digits are hidden.
- */
 export function Count({
 	eng,
 	top,

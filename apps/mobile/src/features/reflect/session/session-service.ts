@@ -30,14 +30,10 @@ const ENTRY_TYPE_MAP: Record<EntryType, ServerEntryType> = {
 	voice: "voice",
 };
 
-/** Maps a client entry type to the server-side entry type. */
 export function mapEntryType(clientType: EntryType): ServerEntryType {
 	return ENTRY_TYPE_MAP[clientType];
 }
 
-/**
- * Server state to screen, applied only on a `serverState` change; null means local wins.
- */
 export function projectScreen(
 	serverState: ServerSessionState,
 	localScreen: ReflectionStateName,
@@ -46,13 +42,10 @@ export function projectScreen(
 	switch (serverState) {
 		case "initiated":
 		case "input_received":
-			// Local owns idle / typing / nudge / optimistic processing.
 			return null;
 		case "processing":
 			return "processing";
 		case "mirror_delivered":
-			// Local sub-modes and the optimistic That's-it advance all happen while the
-			// server sits in mirror_delivered.
 			if (
 				localScreen === "clarify" ||
 				localScreen === "gave-up" ||
@@ -65,18 +58,15 @@ export function projectScreen(
 			return "path-selection";
 		case "path_selected":
 		case "path_in_progress":
-			// In-path sessions belong to the path screens. Mapping these to path-selection
-			// resurrects stale sessions getActive picks up after the current one ends.
 			return null;
 		case "error":
 			return "error";
 		case "completed":
 		case "abandoned":
-			return null; // terminal: the machine resets instead of showing a screen
+			return null;
 	}
 }
 
-/** True when the error is the server's "maximum refinement turns" rejection. */
 export function isMaxRefinementError(error: unknown): boolean {
 	const data = (error as { data?: { code?: string } } | null)?.data;
 	if (data?.code === "max_refinement_turns") {
@@ -89,9 +79,6 @@ export function isMaxRefinementError(error: unknown): boolean {
 	);
 }
 
-/**
- * True for either rate-limit rejection: session-initiate (extractErrorMessage) or failSession.
- */
 export function isRateLimitMessage(message: string): boolean {
 	return (
 		message.includes("You've been reflecting a lot") ||
@@ -99,7 +86,6 @@ export function isRateLimitMessage(message: string): boolean {
 	);
 }
 
-/** Produces a user-facing message for an error value. */
 export function extractErrorMessage(error: unknown): string {
 	if (error instanceof Error) {
 		// Production scrubs the message to "Server Error"; only ConvexError `data`
@@ -128,9 +114,6 @@ export function extractErrorMessage(error: unknown): string {
 	return "Something unexpected happened.";
 }
 
-/**
- * Extract retryAfter (ms) from a RateLimited ConvexError message and convert to minutes.
- */
 function parseRetryAfter(message: string): number | null {
 	const match = message.match(/"retryAfter"\s*:\s*([\d.]+)/);
 	if (!match) {

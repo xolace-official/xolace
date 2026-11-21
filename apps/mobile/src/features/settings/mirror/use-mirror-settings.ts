@@ -4,32 +4,22 @@ import { usePostHog } from "posthog-react-native";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import type { MirrorSettings } from "@/features/settings/mirror/mirror-data";
-import {
-	entitlementOf,
-	shownTone,
-	shownVoice,
-} from "@/features/settings/mirror/mirror-model";
+import { shownTone, shownVoice } from "@/features/settings/mirror/mirror-model";
 import { saved } from "@/features/settings/use-save-failed";
 import { useCompanionName } from "@/lib/talk/use-companion-name";
 import { useTalkStyle } from "@/lib/talk/use-talk-style";
 import { useVoicePreview } from "@/lib/talk/use-voice-preview";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
-/**
- * Mirror on Convex: production's tone (`tone_changed`, the register complaint on a reach for
- * Witnessed), voice (`voice_changed`, "auto" clears it, Plus-gated server-side), the talk's
- * style, the previews and the paywall.
- */
 export function useMirrorSettings(): MirrorSettings {
 	const preferences = useQuery(api.preferences.get);
 	const update = usePreferenceMutation();
 	const posthog = usePostHog();
-	const { isPlus, isLoading } = usePlusEntitlement();
+	const { status: plus, isPlus } = usePlusEntitlement();
 	const talk = useTalkStyle();
 	const companion = useCompanionName();
 	const preview = useVoicePreview();
 	const openPaywall = usePaywall((s) => s.open);
-	const plus = entitlementOf(isPlus, isLoading);
 
 	return {
 		actions: {
@@ -37,7 +27,6 @@ export function useMirrorSettings(): MirrorSettings {
 			play: (voice) => {
 				preview.play(voice).catch(() => undefined);
 			},
-			// The mutation throws before the write for a tone they lack, so it's sent on its own.
 			reachForTone: () => saved(update({ registerComplaint: true })),
 			setDirectness: (directness) => saved(talk.setDirectness(directness)),
 			setPace: (pace) => saved(talk.setPace(pace)),

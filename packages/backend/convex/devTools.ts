@@ -139,6 +139,7 @@ export const seedFollowUpCard = mutation({
 			createdAt: Date.now(),
 			emotionalProfileId: profile._id,
 			escalationDerived: args.escalationDerived ?? args.tier === "acute",
+			readyAt: Date.now(),
 			sessionId: session._id,
 			status: "ready",
 			tier: args.tier,

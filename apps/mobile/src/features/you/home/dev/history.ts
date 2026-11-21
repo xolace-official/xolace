@@ -1,8 +1,3 @@
-/**
- * The board's history (`P/src/fixtures/you-v2.ts` `history(kind)`), as `streaks/history.get`
- * returns it: 16 weeks from Monday 27 July 2026 to today, Thursday 12 November. Same seeded
- * draw, so Your days matches the renders cell for cell. Dev only.
- */
 import type { History } from "@/features/you/home/days-model";
 
 export type HistoryKind = "regular" | "ended" | "new";
@@ -11,7 +6,6 @@ const JOIN = new Date(2026, 6, 27);
 export const FIXTURE_TODAY = "2026-11-12";
 const WEEKS = 16;
 const TODAY_INDEX = 108;
-/** Minimal standard generator constants (Park–Miller), as the board's `rng`. */
 const RNG_MULTIPLIER = 16_807;
 const RNG_MODULUS = 2_147_483_647;
 const ACTIONS = [
@@ -41,7 +35,6 @@ const keyOf = (i: number) => {
 
 type State = "pre" | "lit" | "frozen" | "quiet";
 
-/** The board's state per day index (0 = the join Monday). */
 function stateOf(kind: HistoryKind, i: number, r: () => number): State {
 	if (kind === "new") {
 		return i < TODAY_INDEX ? "pre" : "quiet";

@@ -1,5 +1,3 @@
-/** Per-day streak messages beneath the calendar reveal; honest acknowledgment, never
- * cheerleader. No entry, no line. */
 const STREAK_COPY: Record<number, string> = {
 	1: "You showed up. That's everything.",
 	2: "Back again. It counts.",
@@ -20,7 +18,6 @@ const STREAK_COPY: Record<number, string> = {
 	100: "One hundred days. You kept coming back to yourself.",
 };
 
-/** Every 50 days past 100 gets an acknowledgment. */
 const LONG_STREAK_INTERVAL = 50;
 
 export function getStreakCopy(day: number): string | null {

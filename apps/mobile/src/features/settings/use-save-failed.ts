@@ -1,8 +1,3 @@
-/**
- * Settings' one failed-write toast, for every page's data hook: an optimistic write that
- * failed has been rolled back by Convex, so say so. A `use-*` file because only data hooks
- * call the toast (`feature-shape.ts`).
- */
 import { toast } from "@/components/shared/toast";
 
 const SAVE_FAILED = {
@@ -17,7 +12,6 @@ export const saveFailed = () => {
 	});
 };
 
-/** Sends a write and toasts if it fails. */
 export const saved = (write: Promise<unknown>) => {
 	write.catch(saveFailed);
 };

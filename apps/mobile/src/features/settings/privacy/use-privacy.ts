@@ -15,19 +15,11 @@ import {
 	type PastRetention,
 	retentionPick,
 } from "@/features/settings/privacy/privacy-model";
+import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 import { saveFailed } from "@/features/settings/use-save-failed";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
-/**
- * Settings › Privacy & Data on Convex: production's three preferences (`useDataSettings`), and
- * the redesign's retention alert (B9: `privacy.retention`).
- *
- * The alert's count is fetched once, with the client's one-off `convex.query`, when a shorter
- * period is picked: the backend documents it that way, since the answer depends on the clock and
- * nothing re-runs it as time passes. A `useQuery` held while the alert is up would also change
- * the number under the reader's eyes if a session landed or the nightly purge ran meanwhile.
- */
-export function usePrivacy(): Privacy {
+export function usePrivacy(letters: ComposedSwitch): Privacy {
 	const preferences = useQuery(api.preferences.get);
 	const updatePreferences = usePreferenceMutation();
 	const applyRetentionNow = useMutation(
@@ -38,7 +30,6 @@ export function usePrivacy(): Privacy {
 	const [past, setPast] = useState<PastRetention | null>(null);
 	const [applying, setApplying] = useState(false);
 	const [policyOpen, setPolicyOpen] = useState(false);
-	/** The latest count asked for; an older answer that lands late is dropped. */
 	const asked = useRef(0);
 
 	const retention: Retention =
@@ -71,7 +62,6 @@ export function usePrivacy(): Privacy {
 				setPast(result);
 				return;
 			}
-			// Nothing would go: no alert, just the choice.
 			save(to);
 			setPending(null);
 		} catch {
@@ -91,8 +81,6 @@ export function usePrivacy(): Privacy {
 					return;
 				}
 				setApplying(true);
-				// Resolves once the saved preference is back in `preferences.get`, so the list
-				// moves from the pending choice to the saved one without a flicker.
 				applyRetentionNow({ preference: pending })
 					.catch(saveFailed)
 					.finally(() => {
@@ -108,7 +96,6 @@ export function usePrivacy(): Privacy {
 			},
 			openPolicy: () => setPolicyOpen(true),
 			pickRetention: (to) => {
-				// The saved choice is what a pick is measured from; there's none while loading.
 				if (preferences === undefined || applying) {
 					return;
 				}
@@ -125,6 +112,7 @@ export function usePrivacy(): Privacy {
 			setMemory: (on) => {
 				updatePreferences({ personalMemoryEnabled: on }).catch(saveFailed);
 			},
+			setReceiveLetters: (on) => letters?.set(on),
 			setShare: (on) => {
 				updatePreferences({ contributeByDefault: on }).catch(saveFailed);
 			},
@@ -136,6 +124,7 @@ export function usePrivacy(): Privacy {
 			past,
 			pending,
 			policyOpen,
+			receiveLetters: letters ? letters.on : null,
 			retention,
 			share: preferences?.contributeByDefault ?? false,
 		},

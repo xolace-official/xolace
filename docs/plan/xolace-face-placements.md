@@ -33,8 +33,8 @@ The shared face itself is built: `apps/mobile/src/components/xolace-face/` (`Xol
   "not sure" sheet straight away (unchanged from today).
 - The face, status word and slider fill the space between the header and the button, so
   the face sits lower and larger.
-- **Continue** is the app's themed `Button` (`components/shared/playful-button`): the raised
-  lip in Playful, the theme's normal filled button elsewhere. It reads "Skip for now"
+- **Continue** is the app's themed button (HeroUI's `Button`; the Playful-lip wrapper,
+  `components/shared/playful-button`, was removed with the old kindling sheet in S16). It reads "Skip for now"
   (secondary) until there's an answer, then "Continue" (primary).
 - **The heavier follow-up opens on Continue**, not when you let go of the slider. The drag
   depth is the intensity (1–5), so the sheet **skips the flame step** and opens on the

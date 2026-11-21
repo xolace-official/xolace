@@ -59,7 +59,7 @@ describe("the place kept on leaving", () => {
 describe("keeping the place across a reflow", () => {
 	it("scrolls to the same share once the new height is in", () => {
 		const keep = placeKeeper();
-		keep.arm(500, 2000); // a quarter in
+		keep.arm(500, 2000);
 		expect(keep.sized(3000)).toBe(750);
 	});
 
@@ -79,7 +79,7 @@ describe("keeping the place across a reflow", () => {
 
 	it("holds the share between the top and the end, and arms nothing before a layout", () => {
 		const keep = placeKeeper();
-		keep.arm(2400, 2000); // overscrolled past the end
+		keep.arm(2400, 2000);
 		expect(keep.sized(1000)).toBe(1000);
 		keep.arm(300, 0);
 		expect(keep.sized(1000)).toBeNull();

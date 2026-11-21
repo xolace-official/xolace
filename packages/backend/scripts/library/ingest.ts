@@ -51,12 +51,28 @@
 //
 // dev/ (small fixture set) and prod/ (real catalogue) are disjoint trees,
 // same convention as scripts/kindling — `--prod` picks both the deployment
-// and the prod/ tree.
+// and the prod/ tree; `--deploy-key` (staging, a preview: for testing) picks
+// the dev/ tree. An explicit `--manifest` wins either way.
+//
+// Which deployment (../target.ts): a bare run reaches only your own dev
+// deployment (.env.local) and first pushes this checkout's functions to it.
+// `--prod` and `--deploy-key` (needs CONVEX_DEPLOY_KEY, e.g. staging's) are
+// the release owner's; agents never pass them. A bare run with
+// CONVEX_DEPLOY_KEY set refuses, because the Convex CLI would follow the key.
+//
+// Where it lands: covers and narration audio go to Cloudflare R2 (the same
+// R2 component as Kindling, not Convex file storage), records to the
+// `library_*` tables, and each entry is embedded for search. So the target
+// deployment needs R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT,
+// R2_BUCKET and OPENAI_API_KEY set, and a deploy key that may run internal
+// functions.
 //
 // Usage:
 //   bun scripts/library/ingest.ts             # dev deployment + dev/ fixtures
 //   bun scripts/library/ingest.ts --prod      # prod deployment + prod/ catalogue
-//   bun scripts/library/ingest.ts --cover-variants   # + 512/1280 WebP covers (add --prod for prod)
+//   bun scripts/library/ingest.ts --deploy-key   # CONVEX_DEPLOY_KEY's deployment (staging) + dev/ fixtures
+//   bun scripts/library/ingest.ts --dry-run [--deploy-key]   # print target, tree and counts; no Convex calls
+//   bun scripts/library/ingest.ts --cover-variants   # + 512/1280 WebP covers (add --prod / --deploy-key)
 //   bun scripts/library/ingest.ts --manifest scripts/library/dev/manifest.json   # sources/hubs read from the same dir
 
 import { execFileSync } from "node:child_process";
@@ -66,6 +82,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import { rgbaToThumbHash } from "thumbhash";
+import { catalogueFor, targetFromArgs } from "../target";
 
 type Source = { slug: string; refreshDays?: number; [k: string]: unknown };
 type Entry = {
@@ -88,12 +105,11 @@ type Audio = {
 
 const args = process.argv.slice(2);
 const i = args.indexOf("--manifest");
-const prod = args.includes("--prod");
 const coverVariants = args.includes("--cover-variants");
+const dryRun = args.includes("--dry-run");
+const target = targetFromArgs(args);
 const manifestPath = path.resolve(
-	i === -1
-		? `scripts/library/${prod ? "prod" : "dev"}/manifest.json`
-		: args[i + 1]
+	i === -1 ? `scripts/library/${catalogueFor(args)}/manifest.json` : args[i + 1]
 );
 const dir = path.dirname(manifestPath);
 const DAY_MS = 86_400_000;
@@ -106,13 +122,7 @@ const sha256 = (...parts: string[]) =>
 function convexRun<T = { action: string }>(fn: string, jsonArgs: unknown): T {
 	const out = execFileSync(
 		"npx",
-		[
-			"convex",
-			"run",
-			fn,
-			JSON.stringify(jsonArgs),
-			...(prod ? ["--prod"] : []),
-		],
+		["convex", "run", fn, JSON.stringify(jsonArgs), ...target.convexArgs],
 		{ encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] }
 	);
 	// A `null` return (imageSources:note) prints nothing.
@@ -335,7 +345,34 @@ async function main() {
 	const entries = readJson<Entry[]>(manifestPath);
 	const hubs = readJson<Hub[]>(path.join(dir, "hubs.json"));
 
-	if (!prod) {
+	const audioPath = path.join(dir, "audio.json");
+	const audio = existsSync(audioPath) ? readJson<Audio[]>(audioPath) : [];
+	if (dryRun) {
+		const missing = [
+			...new Set([
+				...entries.map((e) => e.bodyPath),
+				...[...entries, ...hubs].flatMap((e) =>
+					e.coverPath ? [path.join("media/cover", e.coverPath)] : []
+				),
+				...audio.flatMap((a) =>
+					[a.audioPath, a.transcriptPath].map((p) => path.join("media", p))
+				),
+			]),
+		].filter((file) => !existsSync(path.resolve(dir, file)));
+		console.log(
+			[
+				`Target: ${target.label}`,
+				`Manifest: ${manifestPath}`,
+				`Would ingest ${sources.length} source(s), ${entries.length} entr(ies), ${hubs.length} hub(s), ${audio.length} narration(s)`,
+				missing.length > 0
+					? `Missing files (${missing.length}): ${missing.join(", ")}`
+					: "All files present",
+			].join("\n")
+		);
+		return;
+	}
+	console.log(`Ingesting into ${target.label}`);
+	if (target.pushFunctions) {
 		execFileSync("npx", ["convex", "dev", "--once"], { stdio: "inherit" });
 	}
 
@@ -400,8 +437,7 @@ async function main() {
 		});
 	}
 
-	const audioPath = path.join(dir, "audio.json");
-	for (const a of existsSync(audioPath) ? readJson<Audio[]>(audioPath) : []) {
+	for (const a of audio) {
 		await attempt(`audio ${a.entrySlug}`, () => ingestAudio(a));
 	}
 

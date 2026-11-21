@@ -1,6 +1,6 @@
 import { useIsFocused } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { MorphLoader } from "@/components/shared/loader/morph/morph-loader";
@@ -29,16 +29,8 @@ import { useMomentFlow } from "./use-moment-flow";
 import { useNextKey } from "./use-next-key";
 import { useSessionClocks } from "./use-session-clocks";
 
-/** The board draws Reflect's sky at .38 over Reflect's .6. */
 const SKY_SCALE = 0.38 / 0.6;
 
-/**
- * After a session (handoff `after.md`): one route, two moments, one face.
- * Moment 1 asks how you feel now, the Xolace face reacting to one slider;
- * moment 2 offers to leave your words for someone, then one next step. The
- * motion is three UI-thread clocks; React renders when a moment, a step, the
- * hold or the share changes. `scene` is a dev state's starting point.
- */
 export function SessionEndScreen({ scene }: { scene?: Scene }) {
 	const session = useSessionEnd();
 	const { late, ready } = session.state;
@@ -49,8 +41,6 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 	const active = useAppActive();
 	const running = focused && active;
 	const colors = useSessionColors(late ? "late" : "day");
-	// The face's light was drawn for a light page by day and the dusk page late; on a
-	// dark theme by day the day light reads as a spotlight, so it takes the dusk light.
 	const dark = useScheme() === "dark";
 	const lightColors = useSessionColors(late || dark ? "late" : "day");
 	const faces = useFixedFaces("mirror");
@@ -83,22 +73,23 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 	});
 	const { moment, step, unsure } = flow.answer;
 	const next = useNextKey({ late, moment, session, step });
-	// The words as moment 2 opened: a session landing later doesn't pop a card in.
 	const words = useKeptAtMoment2(moment, session.state.words);
 
-	// The arrival starts once, when the session and the faces are in.
 	const started = useRef(false);
 	const live = ready && faces;
-	useEffect(() => {
-		if (!live || started.current) {
-			return;
-		}
-		started.current = true;
+	const arrive = useEffectEvent(() => {
 		flow.arrive(scene?.at?.clock !== "c1");
 		if (scene) {
 			applyScene(scene, { clocks, face, flow, send, slider });
 		}
 	});
+	useEffect(() => {
+		if (!live || started.current) {
+			return;
+		}
+		started.current = true;
+		arrive();
+	}, [live]);
 
 	const ctaTop = H - LAYOUT.cta.bottom2 - LAYOUT.cta.height;
 	return (
@@ -135,13 +126,15 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 				<MomentTwo
 					breath={face.breath}
 					c2={clocks.c2}
+					cards={session.state.cards}
 					colors={colors}
 					cs={clocks.cs}
 					ctaTop={ctaTop}
 					from={session.state.from}
-					listener={session.state.listener}
+					letterTile={session.state.letterTile}
 					next={next}
 					onNext={() => session.actions.openNext(next)}
+					parts={session.state.parts}
 					reduced={reduced}
 					send={send}
 					W={W}

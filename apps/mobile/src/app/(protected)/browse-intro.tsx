@@ -1,12 +1,11 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { BrowseIntroScreen } from "@/components/shared/browse-intro-screen";
-import { useBackHandler } from "@/components/ui/tour/use-back-handler";
+import { useBackHandler } from "@/lib/use-back-handler";
 import { useAppStore } from "@/store/store";
 
 type Family = "music" | "support";
 
-// Dev/preview storage buckets differ from prod (Convex deploys are per-env).
 const HERO_IMAGE: Record<Family, string> = __DEV__
 	? {
 			music:
@@ -39,8 +38,6 @@ const CONTENT: Record<
 	},
 };
 
-/** Browse family welcome, full-screen modal. Opened by `FamilyListScreen` (`?family=`); each
- * intro flag is independent. Lantern has its own (`/lantern-welcome`). */
 export default function BrowseIntroRoute() {
 	const { family: rawFamily } = useLocalSearchParams<{ family?: string }>();
 	const family: Family = rawFamily === "support" ? "support" : "music";

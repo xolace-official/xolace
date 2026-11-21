@@ -7,7 +7,6 @@ import {
 import {
 	cardInk,
 	cardName,
-	entitlementOf,
 	opensAtEnd,
 	orbA11y,
 	orbTap,
@@ -20,12 +19,6 @@ import {
 } from "@/features/settings/mirror/mirror-model";
 
 describe("entitlement", () => {
-	it("is Plus once either source says so, else loading, else free", () => {
-		expect(entitlementOf(true, true)).toBe("plus");
-		expect(entitlementOf(false, true)).toBe("loading");
-		expect(entitlementOf(false, false)).toBe("free");
-	});
-
 	it("shows what the server does off Plus: Adaptive for Witnessed, Auto for a voice", () => {
 		expect(shownTone("witnessed", "free")).toBe("adaptive");
 		expect(shownTone("witnessed", "loading")).toBe("witnessed");
@@ -43,7 +36,6 @@ describe("toneTap", () => {
 	});
 
 	it("compares with the saved tone: a lapsed Witnessed is replaced by tapping Adaptive", () => {
-		// Shown as Adaptive off Plus, saved as Witnessed: the tap writes Adaptive.
 		expect(toneTap("adaptive", "witnessed", "free")).toBe("choose");
 		expect(toneTap("adaptive", "adaptive", "free")).toBe("none");
 	});

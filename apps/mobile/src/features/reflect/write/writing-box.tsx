@@ -1,3 +1,4 @@
+import { REFLECTION_INPUT_MAX_CHARS } from "@xolace/backend/shared";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import { TextInput, type TextInputInstance, View } from "react-native";
 import { RotatingPlaceholder } from "@/components/shared/rotating-placeholder";
@@ -5,16 +6,13 @@ import { BODY_MAX_SCALE } from "@/design/type";
 import { COPY } from "../copy";
 import { LAYOUT } from "../layout";
 import { useReflect } from "../reflect-data";
-import { MAX_CHARS } from "../reflect-model";
 import type { Writing } from "./compose-face-gaze";
 import { FIELD_TEXT } from "./field-type";
 import { LineEndMeter } from "./line-end-meter";
 import { useTakeDrop } from "./use-take-drop";
 import { WarmText, type Warmth } from "./warm-text";
 
-/** The field takes focus once the zoom has settled, so the keyboard never fights it. */
 const FOCUS_AFTER_MS = 440;
-/** A word is finished when a space or punctuation follows it (board `onType`). */
 const ENDS_WORD = /[\s.,!?]$/;
 const FIELD_STYLE = [
 	FIELD_TEXT,
@@ -22,26 +20,19 @@ const FIELD_STYLE = [
 ];
 
 type Props = {
-	/** The placeholder rotates (Reflect is live and the box is empty). */
 	running: boolean;
 	reduced: boolean;
 	onWriting: (w: Writing) => void;
 	inputRef: RefObject<TextInputInstance | null>;
 };
 
-/**
- * The writing box (board `.wbox`): a transparent TextInput under the words you see. It grows
- * with the text inside the page's KeyboardAwareScrollView, so the caret stays above the bar.
- */
 export function WritingBox({ running, reduced, onWriting, inputRef }: Props) {
 	const { state, actions } = useReflect();
-	const { text, late, listening, takeN, prompt } = state;
-	const drop = useTakeDrop(text, listening, takeN);
+	const { text, late, listening, takeN, prompt, take } = state;
+	const drop = useTakeDrop(text, listening, takeN, !take.scribe);
 	const [warm, setWarm] = useState<Warmth | null>(null);
 	const stamp = useRef(0);
 
-	// A sheet over Write (the starter bubble) would sit behind the keyboard: the field gives the
-	// keyboard up while it's open and takes focus again once it resolves.
 	const { sheetOpen } = state;
 	useEffect(() => {
 		if (sheetOpen) {
@@ -90,7 +81,7 @@ export function WritingBox({ running, reduced, onWriting, inputRef }: Props) {
 				accessibilityLabel={prompt}
 				className="type-compose p-0 font-normal text-transparent"
 				maxFontSizeMultiplier={BODY_MAX_SCALE}
-				maxLength={MAX_CHARS}
+				maxLength={REFLECTION_INPUT_MAX_CHARS}
 				multiline
 				onChangeText={onChange}
 				ref={inputRef}

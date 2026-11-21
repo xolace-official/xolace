@@ -11,7 +11,7 @@
  * flags its session.
  */
 import { describe, expect, it, vi } from "vitest";
-import { internal } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import {
 	classificationArgs,
@@ -211,6 +211,25 @@ describe("sessions.failSession", () => {
 
 		expect(await readSession(user, sessionId)).toMatchObject({
 			errorMessage: "articulation failed",
+			state: "error",
+		});
+	});
+
+	it("records the error code beside the message, and the owner reads both", async () => {
+		const user = await asNewUser();
+		const sessionId = await seedSession(user.root, user.profileId);
+
+		await user.root.mutation(internal.sessions.failSession, {
+			errorCode: "reflection_rate_limited",
+			errorMessage: "You've reached the limit for reflections.",
+			sessionId,
+		});
+
+		expect(
+			await user.t.query(api.sessions.getById, { sessionId })
+		).toMatchObject({
+			errorCode: "reflection_rate_limited",
+			errorMessage: "You've reached the limit for reflections.",
 			state: "error",
 		});
 	});

@@ -8,7 +8,6 @@ import { VENT_COPY } from "@/features/vent/copy";
 import { useVentScreen } from "@/features/vent/vent-data";
 import { underMic } from "@/features/vent/vent-model";
 
-/** Production's absolute positions: the hint at 68% of the height, the mic 100 pt from the bottom. */
 const HINT_AT = 0.68;
 const MIC_BOTTOM = 100;
 const MIC = 60;
@@ -20,7 +19,6 @@ const LINE_TEXT = {
 	soon: VENT_COPY.underSoon,
 } as const;
 
-/** Ready and listening: the hint, the mic button, the line under it, and v2's mic-off message. */
 export function VentReady() {
 	const { state, actions } = useVentScreen();
 	const { height } = useWindowDimensions();
@@ -34,7 +32,6 @@ export function VentReady() {
 		state.capBefore
 	);
 
-	// Production fades the hint in at 3.2 s; v2 keeps it until the first tap.
 	const hint = useFade(idle && !micOff, {
 		delayMs: 3200,
 		easing: EASE_OUT_QUAD,
@@ -51,7 +48,6 @@ export function VentReady() {
 		inMs: 400,
 		outMs: 400,
 	});
-	// Once it lets go, the line keeps its words while it fades.
 	const text = LINE_TEXT[line?.text ?? (soon ? "soon" : "recording")];
 
 	return (

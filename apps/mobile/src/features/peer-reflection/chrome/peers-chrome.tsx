@@ -18,7 +18,6 @@ import { LAYOUT, MOTION, T } from "../peers-look";
 
 const H = LAYOUT.header;
 const F = LAYOUT.footer;
-/** Board `.fbr`: the face rises 1.5 pt and grows 3% / 6% with the breath, from its 92% origin. */
 const FACE_BREATH = { rise: 1.5, sx: 0.03, sy: 0.06 } as const;
 
 type HeaderProps = {
@@ -28,10 +27,6 @@ type HeaderProps = {
 	breath: SharedValue<number>;
 };
 
-/**
- * The header (board `.hd`): the face centred (Sit's header without its buttons),
- * breathing on the shared breath. Hidden from VoiceOver.
- */
 export function PeersHeader({ top, face, late, breath }: HeaderProps) {
 	const breathe = useAnimatedStyle(() => {
 		const v = breath.get();
@@ -69,18 +64,12 @@ export function PeersHeader({ top, face, late, breath }: HeaderProps) {
 
 type FooterProps = {
 	arrive: SharedValue<number>;
-	/** Done is pressable from the first card's landing. */
 	ui: boolean;
 	hint: boolean;
 	reduced: boolean;
 	onDone: () => void;
 };
 
-/**
- * The footer (board `.ft`, `.cta`, `.hint`): a 168 pt fade to the page, Done
- * pinned 56 up, and "Hold a card to report it" in ink 3. Both fade in (.45 s) as
- * the first card lands; Done is pressable from then.
- */
 export function PeersFooter({
 	arrive,
 	ui,

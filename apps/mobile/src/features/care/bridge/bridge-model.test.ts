@@ -1,10 +1,10 @@
+import { BRIDGE_NAME_MAX_CHARS } from "@xolace/backend/shared";
 import { describe, expect, it } from "vitest";
 import {
 	ADDRESS_TERMS,
 	canWrite,
 	charactersLeft,
 	failedStatus,
-	MAX_NAME_LENGTH,
 	noticeOf,
 	quotaHintOf,
 	recipientOf,
@@ -31,13 +31,13 @@ describe("who it's for", () => {
 	});
 
 	it("shows the characters left only near the cap", () => {
-		expect(charactersLeft("Mum", MAX_NAME_LENGTH)).toBeNull();
-		expect(charactersLeft(LONG_NAME, MAX_NAME_LENGTH)).toBe(
-			MAX_NAME_LENGTH - LONG_NAME.length
+		expect(charactersLeft("Mum", BRIDGE_NAME_MAX_CHARS)).toBeNull();
+		expect(charactersLeft(LONG_NAME, BRIDGE_NAME_MAX_CHARS)).toBe(
+			BRIDGE_NAME_MAX_CHARS - LONG_NAME.length
 		);
-		expect(charactersLeft("x".repeat(MAX_NAME_LENGTH), MAX_NAME_LENGTH)).toBe(
-			0
-		);
+		expect(
+			charactersLeft("x".repeat(BRIDGE_NAME_MAX_CHARS), BRIDGE_NAME_MAX_CHARS)
+		).toBe(0);
 	});
 
 	it("suggests no address terms for a friend", () => {

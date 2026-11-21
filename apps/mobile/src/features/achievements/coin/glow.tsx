@@ -5,12 +5,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { HELD_R, type Pose, type Pt } from "@/features/achievements/coin/pose";
 
-/**
- * The colour and the bloom (badges §3, §6): one scaled disc and one glow image,
- * white and tinted with the family's colour. A Skia canvas inside the moving
- * page didn't draw on device, so these are images, made once by the prototype's
- * `scripts/make-badge-glows.py`. Nothing full-screen is redrawn per frame.
- */
 const FLOOD_BOX = 256;
 const FLOOD_R = FLOOD_BOX / 2;
 const DISC = require("@/assets/images/badges/flood-disc.png");
@@ -19,7 +13,6 @@ const GLOW_DAY = require("@/assets/images/badges/bloom-day.png");
 const BLOOM = 520;
 const BLOOM_R = BLOOM / 2;
 
-/** The page colour pouring out of `o`, out to `reach` (the farthest corner and a margin). */
 export function Flood({
 	pose,
 	o,
@@ -61,7 +54,6 @@ export function Flood({
 	);
 }
 
-/** The family's light behind the badge, from landing; it follows the coin's size. */
 export function Bloom({
 	pose,
 	glow,

@@ -1,13 +1,6 @@
-/**
- * The You tab's data hook: production's profile reads (summary, history, the sparks shelf,
- * avatars, mood, rank, follow-ups), Steadiness and This week, the hidden cards (B7), the
- * freeze buy and the doors out.
- * The one file here that calls Convex, PostHog, the paywall or the toast.
- */
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
-import { useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
@@ -34,6 +27,7 @@ import { convexErrorCode } from "@/lib/convex-error-code";
 import { playAffirmativePress } from "@/lib/haptics";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { freezeReason, freezeRefusal } from "@/lib/streak-freeze";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
 export function useYou(): YouHome {
 	const summary = useProfileSummary();
@@ -44,12 +38,10 @@ export function useYou(): YouHome {
 	const rank = useQuery(api.profile.getReflectionRank);
 	const hidden = useHiddenCards();
 	const followUps = useYouFollowUps();
-	const { isPlus, isLoading: plusLoading } = usePlusEntitlement();
+	const { status: plus } = usePlusEntitlement();
 	const openPaywall = usePaywall((s) => s.open);
 	const buyFreeze = useMutation(api.achievements.sparks.buyFreeze);
-	const [buying, setBuying] = useState(false);
-	// Two quick taps land before `buying` re-renders: the ref stops the second purchase.
-	const inFlight = useRef(false);
+	const purchase = useSingleFlight();
 
 	const indexed = history
 		? indexHistory(history, todayIn(history.timezone))
@@ -57,14 +49,13 @@ export function useYou(): YouHome {
 	const steadiness = useYouSteadiness();
 	const sessionCount = summary?.sessionCount ?? 0;
 	const weekHidden = hidden === undefined ? undefined : hidden.includes("week");
-	// Production's gate: the chart from the first moment.
 	const showWeek = weekHidden === false && sessionCount >= 1;
 	const week = useYouWeek(showWeek, sessionCount);
 	const hides = (card: "calendar" | "rank") =>
 		hidden === undefined ? undefined : hidden.includes(card);
 
 	const buy = async () => {
-		if (!shelf || inFlight.current) {
+		if (!shelf || purchase.isBusy()) {
 			return;
 		}
 		const reason = freezeReason(shelf);
@@ -72,19 +63,16 @@ export function useYou(): YouHome {
 			toast(reason, { variant: "warning" });
 			return;
 		}
-		inFlight.current = true;
-		setBuying(true);
-		try {
-			await buyFreeze();
-			playAffirmativePress();
-		} catch (error) {
-			toast(freezeRefusal(convexErrorCode(error), shelf.freezeCap), {
-				variant: "warning",
-			});
-		} finally {
-			inFlight.current = false;
-			setBuying(false);
-		}
+		await purchase.run(async () => {
+			try {
+				await buyFreeze();
+				playAffirmativePress();
+			} catch (error) {
+				toast(freezeRefusal(convexErrorCode(error), shelf.freezeCap), {
+					variant: "warning",
+				});
+			}
+		});
 	};
 
 	const daysHidden = hides("calendar");
@@ -109,7 +97,7 @@ export function useYou(): YouHome {
 		state: {
 			avatar: avatars ? resolveAvatar(avatars, summary?.avatarId) : undefined,
 			badges: shelf ? badgesRowView(shelf) : undefined,
-			buying,
+			buying: purchase.busy,
 			chips: summary ? chipsView(summary) : [],
 			days: daysHidden === undefined ? undefined : daysHidden ? null : indexed,
 			followUps: followUps.state,
@@ -130,9 +118,7 @@ export function useYou(): YouHome {
 			patterns: summary
 				? patternRows(summary.sessionCount, mood, summary.typicalUsagePattern)
 				: [],
-			// A door, always there for free users (production). `isPlus` is false while the
-			// entitlement resolves; waiting keeps a subscriber from watching the row come and go.
-			plusRow: !(plusLoading || isPlus),
+			plusRow: plus === "free",
 			rank:
 				rankHidden === undefined || rank === undefined
 					? undefined

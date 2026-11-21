@@ -1,7 +1,3 @@
-/**
- * The promise (board PromiseAlive `scene()`), ported as worklets. One engine, stepped by one frame
- * callback: the marquee's offset, speed and lean live here, so a drag or a throw never renders React.
- */
 import { MOOD_WORDS } from "../copy";
 import {
 	clamp,
@@ -15,24 +11,20 @@ import {
 } from "../first-run-motion";
 
 export const N = MOOD_WORDS.length;
-/** Production's drift, 18 pt/s; the throw's return (velocity-marquee): critically damped, ω 3.2. */
 export const DRIFT = 18;
 const OMEGA = 3.2;
 export const MAX_THROW = 6000;
 export const DRAG_SMOOTH = 0.06;
-/** The lean: an underdamped spring (140, 11.8) towards −speed·.0055°, capped at 7°. */
 const LEAN_K = 140;
 const LEAN_C = 11.8;
 const LEAN_PER = 0.0055;
 const LEAN_MAX = 7;
 const STRETCH_PER = 0.000_04;
 const STRETCH_MAX = 0.06;
-/** The press: .97 on a spring (420, 26). */
 const PRESS_K = 420;
 const PRESS_C = 26;
 const MAX_DT = 0.05;
 
-/** The opening, ms from the first frame. */
 export const OPEN = {
 	acct: 2650,
 	cardFor: 900,
@@ -47,7 +39,6 @@ export const OPEN = {
 	wordStep: 110,
 } as const;
 const NAME_HOLD = 2600;
-/** The hand-off, ms from letting go. */
 export const X = {
 	amber: 160,
 	catch: 420,
@@ -67,11 +58,9 @@ export const SPARKS = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 export type PEng = {
-	/** Clock, ms. `hold` ≥ 0 holds the opening at that age (review). */
 	now: number;
 	t0: number;
 	hold: number;
-	/** Let go of the button (−1 not yet); `xHold` holds the hand-off age. */
 	tx: number;
 	xHold: number;
 	acct: boolean;
@@ -87,15 +76,12 @@ export type PEng = {
 	down: boolean;
 	dragging: boolean;
 	dragVel: number;
-	/** The finger: where it started, where it was last, and when (engine ms). */
 	startX: number;
 	lastX: number;
 	lastAt: number;
 	ni: number;
 	tn: number;
-	/** Review: hold the named card at an age. */
 	nHold: number;
-	/** Events already fired (bit flags). */
 	fired: number;
 };
 
@@ -155,15 +141,9 @@ function ageN(e: PEng) {
 	return e.tn >= 0 ? e.now - e.tn : -1;
 }
 
-/** Past the opening's last piece (the account link) under Reduce Motion, with room to spare. */
 const SETTLE_AFTER = OPEN.acct + 1000;
 const AT_REST = 0.001;
 
-/**
- * Nothing on the promise moves by time alone: Reduce Motion, the opening done, no finger down,
- * no card named, not letting go, and the lean and press at rest. The frame callback skips while
- * this holds, so nothing recomputes or re-records; any touch makes it false again.
- */
 export function promiseSettled(e: PEng) {
 	"worklet";
 	return (
@@ -180,7 +160,6 @@ export function promiseSettled(e: PEng) {
 	);
 }
 
-/** One frame of the marquee, the lean and the press (board `tick`). */
 export function step(e: PEng, dtMs: number) {
 	"worklet";
 	const dt = Math.min(MAX_DT, dtMs / 1000);
@@ -211,7 +190,6 @@ export function step(e: PEng, dtMs: number) {
 	e.sq += e.sqd * dt;
 }
 
-/** The card's left edge on screen. */
 export function cardLeft(e: PEng, i: number, cw: number) {
 	"worklet";
 	return mod(i * cw - e.off + cw, N * cw) - cw;
@@ -228,7 +206,6 @@ export type CardPose = {
 	lift: number;
 };
 
-/** A card's pose: production's arc by position, then v2's entrance, naming and exit. */
 export function cardPose(e: PEng, i: number, cw: number, sw: number): CardPose {
 	"worklet";
 	const t = ageT(e);
@@ -281,7 +258,6 @@ export function cardPose(e: PEng, i: number, cw: number, sw: number): CardPose {
 	};
 }
 
-/** The named card's word gleam (0..1, with the held warmth) and its answer line. */
 export function namePose(e: PEng, i: number) {
 	"worklet";
 	const n = ageN(e);
@@ -299,21 +275,18 @@ export function namePose(e: PEng, i: number) {
 	};
 }
 
-/** The promise block leaving on the hand-off. */
 export function leaveOf(e: PEng) {
 	"worklet";
 	const x = ageX(e);
 	return x < 0 ? 0 : e.rm ? clamp(x / 200) : ease(seg(x, 60, 380));
 }
 
-/** The ground's darkening to #050405 over 100–600. */
 export function darkOf(e: PEng) {
 	"worklet";
 	const x = ageX(e);
 	return x < 0 ? 0 : e.rm ? clamp(x / 300) : ease(seg(x, 100, 600));
 }
 
-/** The underglow's opacity and transform. */
 export function underglow(e: PEng) {
 	"worklet";
 	const t = ageT(e);

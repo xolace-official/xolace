@@ -9,11 +9,8 @@ import { DEFAULT_HOLD, MONTHS, TOOLTIP_HEIGHT } from "./constants";
 import { type HeatmapCell, type Slot, useHeatmap } from "./context";
 
 export interface HeatmapTooltipProps {
-	/** Hold before the readout claims the touch; non-zero so a chart in a horizontal scroller
-	 * can scroll. */
 	activateAfterLongPress?: number;
 	className?: string;
-	/** The line shown for a cell. Defaults to the count and the date. */
 	formatLabel?: (cell: HeatmapCell) => string;
 }
 
@@ -38,7 +35,6 @@ export function HeatmapTooltip({
 	);
 	const clear = useMemo(() => () => setActiveCell(null), [setActiveCell]);
 
-	// Resolved on the UI thread; crosses into JS only when the cell changes.
 	const pick = (x: number, y: number) => {
 		"worklet";
 		const column = Math.floor(x / step);
@@ -84,7 +80,6 @@ export function HeatmapTooltip({
 			: defaultTooltipLabel(activeCell)
 		: null;
 
-	// Flipped left of the finger past halfway, and dropped below the cell in the top two rows.
 	const anchorX = activeCell ? activeCell.column * step + grid.size / 2 : 0;
 	const flipped = anchorX > grid.width / 2;
 	const below = (activeCell?.row ?? 0) < 2;
@@ -124,8 +119,6 @@ export function HeatmapTooltip({
 }
 HeatmapTooltip.slot = "tooltip" as Slot;
 
-// A cell without a date is a non-calendar cell, not missing data: the count alone is
-// the label, and a grid that wants a noun passes `formatLabel`.
 function defaultTooltipLabel(cell: HeatmapCell) {
 	if (!cell.date) {
 		return `${cell.count}`;

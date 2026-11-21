@@ -13,11 +13,6 @@ import {
 
 const STORE = Platform.OS === "android" ? "android" : "ios";
 
-/**
- * Xolace+: on Plus, the store's subscription page (↗); free, production's restore. Hidden until
- * the entitlement is known, so it never shows Restore to someone on Plus. No plan or renewal
- * line: production doesn't read them.
- */
 export function PlusSection() {
 	const { state, actions } = useAccountScreen();
 	if (state.plus === undefined) {

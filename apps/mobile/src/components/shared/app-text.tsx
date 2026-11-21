@@ -30,15 +30,8 @@ const styles = StyleSheet.create({
 });
 
 type Props = ComponentPropsWithRef<typeof RNText> & {
-	/**
-	 * A step of the type scale (`type-<variant>`, src/design/type.ts): the
-	 * theme's face, size, line height and tracking. New code always passes
-	 * one. Without it, AppText is the old one: the theme's body face and
-	 * whatever size the classes give.
-	 */
 	variant?: TypeVariant;
 	weight?: Weight;
-	/** Body text in the theme's italic. */
 	italic?: boolean;
 	color?: TextColor;
 	center?: boolean;
@@ -47,7 +40,6 @@ type Props = ComponentPropsWithRef<typeof RNText> & {
 const androidStyle = (style: Props["style"]) =>
 	Platform.OS === "android" ? [styles.android, style] : style;
 
-/** The only way text is drawn in the app. */
 export function AppText({
 	variant,
 	weight,
@@ -95,5 +87,4 @@ export function AppText({
 	);
 }
 
-/** @public AppText for Reanimated styles (entering, layout, animated colour). */
 export const AnimatedAppText = Animated.createAnimatedComponent(AppText);

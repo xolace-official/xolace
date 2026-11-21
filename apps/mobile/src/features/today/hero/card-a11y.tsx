@@ -6,15 +6,11 @@ export type Frame = { x: number; y: number; width: number; height: number };
 
 type Props = {
 	card: Frame;
-	/** The field's input and mic, while the card shows it (at rest). */
 	field?: { input: Frame; mic: Frame; label: string };
 	prompt: string;
 	hint: string;
-	/** The doors' VoiceOver action ("Talk or Vent"). */
 	doorsAction: string;
-	/** Only while the card is at rest: the doors' action. */
 	onDoors?: () => void;
-	/** The card's button, for VoiceOver to come back to after Write instead. */
 	cardRef?: Ref<ComponentRef<typeof View>>;
 };
 

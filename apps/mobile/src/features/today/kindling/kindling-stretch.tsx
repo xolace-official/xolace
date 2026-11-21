@@ -5,7 +5,6 @@ import { useTokenColors } from "@/lib/use-token-color";
 import { easeInOutFn, seg, trimFn } from "../today-motion";
 import { BEAT, STROKE } from "./kindling-model";
 
-/** pulseRun: the highlight runs 0 → 30% of the loop, seen from 6% to 30%. */
 const PULSE_POS: readonly (readonly [number, number])[] = [
 	[0, -12],
 	[0.3, 96],
@@ -19,7 +18,6 @@ const PULSE_OPACITY: readonly (readonly [number, number])[] = [
 	[1, 0],
 ];
 
-/** A lit stretch: the glow, the ember stroke trimming on with the wisp, and the highlight that runs it. */
 export function Stretch({
 	path,
 	len,
@@ -37,15 +35,12 @@ export function Stretch({
 	beat: SharedValue<number>;
 	clock: SharedValue<number>;
 	low: boolean;
-	/** The lit stroke: the theme's ember. */
 	ember: string;
 }) {
-	// The soft amber under the lit stroke and the highlight that runs it: fixed firelight.
 	const [amber, highlight] = useTokenColors([
 		"today-kindling-glow",
 		"today-kindling-pulse",
 	]);
-	// The lit stroke trims on in step with the wisp.
 	const end = useDerivedValue(() =>
 		drawing
 			? trimFn(seg(beat.get(), BEAT.travelAt, BEAT.travelAt + BEAT.travel))

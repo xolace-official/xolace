@@ -3,6 +3,7 @@ import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
 import type { ExerciseSimilarity } from "../exercises/match";
 import { AI_MIRROR_LIMITS_PLUS, rateLimiter } from "../lib/rateLimits";
+import { ERROR_CODES } from "../lib/shared";
 import { posthog } from "../posthog";
 import { classifierCache, moderationCache } from "./cached";
 import type { SessionContext } from "./context";
@@ -91,6 +92,7 @@ export const generateMirror = internalAction({
 						: "Try again in a few minutes.";
 
 				await ctx.runMutation(internal.sessions.failSession, {
+					errorCode: ERROR_CODES.reflectionRateLimited,
 					errorMessage: `You've reached the limit for reflections. ${retryText}`,
 					retryAfterMs: retryAfter,
 					sessionId: args.sessionId,
@@ -193,7 +195,9 @@ export const generateMirror = internalAction({
 			// 5a. If content should be rejected, fail the session
 			if (safeguard.shouldReject) {
 				await ctx.runMutation(internal.sessions.failSession, {
-					errorMessage: safeguard.rejectionReason ?? "content_policy_violation",
+					errorCode: ERROR_CODES.safeguardRejected,
+					errorMessage:
+						safeguard.rejectionReason ?? ERROR_CODES.safeguardRejected,
 					rejected: true,
 					sessionId: args.sessionId,
 				});
@@ -202,7 +206,7 @@ export const generateMirror = internalAction({
 					event: "mirror_content_rejected",
 					properties: {
 						rejectionReason:
-							safeguard.rejectionReason ?? "content_policy_violation",
+							safeguard.rejectionReason ?? ERROR_CODES.safeguardRejected,
 					},
 				});
 				return null;

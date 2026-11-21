@@ -27,10 +27,6 @@ import { bIf, type SEng, SKY, WE } from "./story-scene";
 
 const LAV = BEAT_COLORS.plus.lit;
 
-/**
- * 6 · Xolace+: a panel that starts inside your words (scaled 1.9) and steps back to the pattern, with
- * nothing under it. The line and its dots are drawn in Skia; drag the panel to step back yourself.
- */
 const PANEL_TOKENS = [
 	"first-run-panel-fill-1",
 	"first-run-panel-fill-2",
@@ -69,7 +65,6 @@ export function BeatPlus({ eng }: { eng: SharedValue<SEng> }) {
 		seedPicture(c);
 		const z = zoomOf(eng.get());
 		const g = Skia.Paint();
-		// radial-gradient(120% 90% at 50% 100%)
 		g.setShader(
 			Skia.Shader.MakeRadialGradient(
 				{ x: 0, y: 0 },
@@ -82,7 +77,6 @@ export function BeatPlus({ eng }: { eng: SharedValue<SEng> }) {
 		c.save();
 		c.translate(C.x, SKY.h);
 		c.scale(1, (SKY.h * 0.9) / (SKY.w * 1.2));
-		// The last stop holds past the ellipse, as CSS does.
 		c.drawRect(Skia.XYWHRect(-SKY.w * 2, -SKY.w * 4, SKY.w * 4, SKY.w * 8), g);
 		c.restore();
 		const s = scaleOf(z);

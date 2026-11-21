@@ -6,10 +6,6 @@ import type { TalkScreen } from "./talk-data";
 const say = (message: string) =>
 	AccessibilityInfo.announceForAccessibility(message);
 
-/**
- * What a screen reader hears without moving focus: each finished line (the caption is a
- * live region), a talk error, and the people who can help when the server raises crisis.
- */
 export function useTalkAnnouncements(state: TalkScreen["state"]) {
 	const before = state.phase === "start";
 	const latest = state.turns.at(-1);

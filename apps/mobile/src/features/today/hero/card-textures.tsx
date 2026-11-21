@@ -13,7 +13,6 @@ import {
 import { PixelRatio } from "react-native";
 import { HERO, LIGHT } from "./hero-model";
 
-/** Room around the card for the shadow's and the edge light's blur (σ 22). */
 export const BLEED = 80;
 const PR = PixelRatio.get();
 const CLEAR = "rgba(0,0,0,0)";
@@ -26,15 +25,9 @@ type Sizes = {
 	edgeW: number;
 	edgeH: number;
 	edgeColors: string[];
-	/** The inner shadows' colours, in `LIGHT.inner`'s order. */
 	innerColors: string[];
 };
 
-/**
- * The card's two blurred lights, drawn once into textures: the edge pill behind its lower
- * edge, and the inner light as stacked inner shadows rising from its floor (at the device's
- * pixel ratio). Rebuilt only when the card's size or the hour's light changes.
- */
 export function useCardTextures({
 	w,
 	h,

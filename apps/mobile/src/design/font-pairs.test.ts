@@ -7,7 +7,6 @@ import {
 	FONT_PAIR_IDS,
 	FONT_PAIRS,
 	FONT_ROLES,
-	LEGACY_FACES,
 	launchFaces,
 	pairFaces,
 } from "./font-pairs";
@@ -16,7 +15,6 @@ import { NIGHT_VARIANT, THEME_BY_ID, VARIANTS, variantFonts } from "./themes";
 const root = join(import.meta.dirname, "../..");
 const read = (path: string) => readFileSync(join(root, path), "utf8");
 
-/** `Figtree_400Regular_Italic` → its package folder and file, as @expo-google-fonts lays them out. */
 const PACKAGE_OF: Record<string, string> = {
 	AtkinsonHyperlegibleNext: "atkinson-hyperlegible-next",
 	BricolageGrotesque: "bricolage-grotesque",
@@ -47,7 +45,6 @@ function fontFile(face: string): string {
 const sources = read("src/design/font-sources.ts");
 const themesCss = read("src/themes/themes.generated.css");
 
-/** One variant's `--font-<role>` values in the generated theme CSS. */
 function cssFaces(variant: string): Record<string, string> {
 	const block = themesCss.split(`@variant ${variant} {`)[1]?.split("}")[0];
 	if (!block) {
@@ -87,16 +84,14 @@ describe("font pairs", () => {
 		expect(variantFonts("quiet-dark")).toBe("clear");
 		expect(variantFonts("noir-light")).toBe("clear");
 		expect(variantFonts("playful-dark")).toBe("playful");
-		// Anything Uniwind reports that isn't a variant draws Default's faces.
 		expect(variantFonts("system")).toBe(DEFAULT_FONT_PAIR);
 		expect(variantFonts(null)).toBe(DEFAULT_FONT_PAIR);
 	});
 
-	it("every face a pair, a fixed face or a legacy screen needs has a source and a file", () => {
+	it("every face a pair, or a fixed face needs has a source and a file", () => {
 		const needed = new Set([
 			...FONT_PAIR_IDS.flatMap(pairFaces),
 			...Object.values(FIXED_FACES),
-			...LEGACY_FACES,
 		]);
 		for (const face of needed) {
 			expect(sources, face).toMatch(
@@ -114,10 +109,8 @@ describe("font pairs", () => {
 			expect(faces).toContain(face);
 		}
 		expect(faces).not.toContain(FONT_PAIRS.playful.normal);
-		// On Default: Default's pair and the legacy Space Grotesk, nothing else.
-		expect(launchFaces("warm")).toHaveLength(12);
+		expect(launchFaces("warm")).toEqual(pairFaces("warm"));
 		expect(launchFaces("warm")).not.toContain(FONT_PAIRS.clear.normal);
-		// Fixed faces load where they're drawn, never at launch.
 		for (const face of [
 			FIXED_FACES.mirror,
 			FIXED_FACES.letter,

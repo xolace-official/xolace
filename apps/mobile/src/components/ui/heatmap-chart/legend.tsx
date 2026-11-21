@@ -4,7 +4,6 @@ import { Text } from "@/components/ui/text";
 import { cn } from "@/lib/cn";
 import { type Slot, useHeatmap } from "./context";
 
-/** `Less ▢▢▢▢▢ More` — the ramp as swatches. Shared by the legend and the header. */
 export function RampKey({
 	component,
 	size,
@@ -25,8 +24,6 @@ export function RampKey({
 				{lessLabel}
 			</Text>
 			{ramp.map((fill, level) => (
-				// The index *is* the level — a fixed five-slot ramp, never reordered.
-				// eslint-disable-next-line react/no-array-index-key
 				<Svg height={side} key={level} width={side}>
 					<Rect
 						fill={fill}
@@ -49,15 +46,11 @@ export function RampKey({
 
 export interface HeatmapLegendProps {
 	className?: string;
-	/** Text at the low end of the ramp. */
 	lessLabel?: string;
-	/** Text at the high end. */
 	moreLabel?: string;
-	/** Side of a swatch, in pixels. Defaults to the chart's cell size. */
 	swatchSize?: number;
 }
 
-/** The `Less ▢▢▢▢▢ More` key, under the grid. */
 export function HeatmapLegend({
 	className,
 	lessLabel = "Less",

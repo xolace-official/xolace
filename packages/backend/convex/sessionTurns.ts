@@ -2,10 +2,11 @@ import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { requireSessionOwnership } from "./lib/auth";
+import { REFINEMENT_MAX_TURNS } from "./lib/shared";
 import { userFeedbackValidator } from "./lib/validators";
 
 /** The refinement cap. Exported so the clarify action agrees on the ceiling. */
-export const MAX_TURNS = 2;
+export const MAX_TURNS = REFINEMENT_MAX_TURNS;
 
 // Full `session_turns` document shape, mirroring schema.ts exactly.
 const sessionTurnDocValidator = v.object({

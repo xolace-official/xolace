@@ -14,7 +14,6 @@ import { SitLine } from "./sit-line";
 import { WriteBeat } from "./write-beat";
 import { StayedDone, StayedText } from "./you-stayed";
 
-/** Board `.hc`: Newsreader italic 25/1.34. */
 const HAND = {
 	fontFamily: FONTS.mirror,
 	fontSize: 25,
@@ -37,12 +36,6 @@ type Props = {
 	onFinish: () => void;
 };
 
-/**
- * Everything below the header, by beat (board "stages"): the first screen, a
- * line, a breath's caption, the hand pulse's line, writing, and "You stayed.".
- * Each block fades .4 s; a line's words and a caption's phase come from the
- * clock.
- */
 export function SitStage({
 	stage,
 	beat,

@@ -5,8 +5,6 @@ import { Platform, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 
-/** Starts a chat's body below the header: iOS 26's glass header is see-through and content
- * starts at y=0, which would also skew the keyboard offset the messages measure. */
 export function BodyFrame({ children }: { children: ReactNode }) {
 	const headerHeight = useHeaderHeight();
 	const underGlass = Platform.OS === "ios" && isLiquidGlassAvailable();
@@ -20,7 +18,6 @@ export function BodyFrame({ children }: { children: ReactNode }) {
 	);
 }
 
-/** Messages couldn't load: a quiet line and a way to try again. */
 export function MessagesFailed({
 	message,
 	retry,

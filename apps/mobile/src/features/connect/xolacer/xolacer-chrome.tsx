@@ -11,8 +11,6 @@ import { useXolacerScreen } from "./xolacer-data";
 
 const IOS = process.env.EXPO_OS === "ios";
 
-/** The header's right side: Edit on your own profile, otherwise Rate, Report and Block. Block
- * is mounted only with a conversation to block, never `hidden` (it eats touches on Android). */
 export function XolacerToolbar() {
 	const { state, actions } = useXolacerScreen();
 	if (state.phase !== "ready") {

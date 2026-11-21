@@ -1,3 +1,3 @@
-import { FollowUpScreen } from "@/features/follow-up/follow-up-screen";
+import { MovedRoute } from "@/features/navigation/moved-route";
 
-export default FollowUpScreen;
+export default MovedRoute;

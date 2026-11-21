@@ -26,7 +26,6 @@ const MEDALLION = 84;
 const PIN_ICON = 11;
 const PIN: IconName = { android: "keep", ios: "pin.fill" };
 
-/** One medallion in a row (production's `Medallion`), with the press tip and the slot it flies from. */
 export function BadgeTile({ badge }: { badge: BadgeView }) {
 	const window = useWindowDimensions();
 	const earned = badge.earnedAt !== undefined;
@@ -78,7 +77,6 @@ export function BadgeTile({ badge }: { badge: BadgeView }) {
 	);
 }
 
-/** The pin on a pinned badge's top-right: a 20 pt accent circle. */
 function PinMark() {
 	const dark = useScheme() === "dark";
 	const ink = useTokenColor(dark ? "background" : "on-art");
@@ -93,7 +91,6 @@ function PinMark() {
 	);
 }
 
-/** The ember bar under a ladder's next rung: 64 × 4 pt. */
 function SmallBar({ share }: { share: number }) {
 	return (
 		<View className="mt-1.5 h-1 w-16 overflow-hidden rounded-full bg-separator">

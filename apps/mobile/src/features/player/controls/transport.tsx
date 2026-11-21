@@ -24,8 +24,6 @@ const TURN_OUT = { duration: MOTION.turnOut, easing: OUT, ...PLAY_AS_CHOSEN };
 const DISC_IN = { duration: MOTION.discIn, ...PLAY_AS_CHOSEN };
 const GLYPH_FADE = { duration: MOTION.glyphFade, ...PLAY_AS_CHOSEN };
 
-/** Back or forward 15: the arc turns 26° toward where time goes and springs home (§3). Under
- * Reduce Motion it only dims. */
 function Skip({ dir, reduced }: { dir: -1 | 1; reduced: boolean }) {
 	const { actions } = usePlayer();
 	const turn = useSharedValue(0);
@@ -65,7 +63,6 @@ function Skip({ dir, reduced }: { dir: -1 | 1; reduced: boolean }) {
 	);
 }
 
-/** The 76 pt white disc. It presses to .93; one glyph turns and fades into the other. */
 function PlayDisc({ reduced }: { reduced: boolean }) {
 	const { state, actions } = usePlayer();
 	const { playing } = state;
@@ -133,7 +130,6 @@ function PlayDisc({ reduced }: { reduced: boolean }) {
 	);
 }
 
-/** Back 15 · play · forward 15, centred on the board's y 668. */
 export function Transport({ reduced }: { reduced: boolean }) {
 	return (
 		<View

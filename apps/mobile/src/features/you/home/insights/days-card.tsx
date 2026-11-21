@@ -26,30 +26,19 @@ import { useTokenColors } from "@/lib/use-token-color";
 
 const GAP = 3;
 const RADIUS = 3.5;
-// Breadth is fixed, not quartile-derived: 1/2/3/4+ distinct kinds.
 const LEVELS = [1, 2, 3, 4];
-// Level 1 has to read as lit, not muddy, against a dark card.
 const LEVEL_OPACITY = [1, 0.45, 0.65, 0.85, 1];
 const INACTIVE = 0.45;
-/** While the week is ringed, the other days step back to this. */
 const WEEK_DIM = 0.5;
 const FUTURE = 0.3;
 const RING_WIDTH = 1.5;
-/** The ⓘ's explanation sits under the readout. */
 const TIP_TOP = 64;
 
-/**
- * Production's Your days (contribution-graph-card.tsx), unchanged in what it shows: the
- * readout, the hold, frozen and today cells, 16 weeks filling the width, scrolling back to the
- * join day, month labels along the top. Tapping the header's week rings this week's column.
- */
 export function DaysCard({ history }: { history: IndexedHistory }) {
 	const { weekRing } = useYouUi();
 	const [width, setWidth] = useState(0);
 	const [heldDay, setHeldDay] = useState<string | null>(null);
 	const [info, setInfo] = useState(false);
-	// Read by the gesture callback rather than closed over, so the callback and the chart's
-	// props stay put while a hold drags across days.
 	const holding = useRef(false);
 	const scrollRef = useRef<ScrollViewInstance>(null);
 	const [frost = "", foreground = "", accent = ""] = useTokenColors([
@@ -76,7 +65,6 @@ export function DaysCard({ history }: { history: IndexedHistory }) {
 			setHeldDay(null);
 			return;
 		}
-		// Pre-join padding has no day: keep the last one rather than flicker.
 		if (!cell.date) {
 			return;
 		}
@@ -96,7 +84,6 @@ export function DaysCard({ history }: { history: IndexedHistory }) {
 	};
 
 	const cellStyle = (cell: HeatmapCell) => {
-		// Before join / the padding of join's first week: not part of the record.
 		if (!cell.date) {
 			return { fillOpacity: 0 };
 		}
@@ -113,11 +100,9 @@ export function DaysCard({ history }: { history: IndexedHistory }) {
 		if (state === "future") {
 			return { fillOpacity: FUTURE };
 		}
-		// Held by a freeze, not lit: a frost outline round an unlit cell.
 		if (state === "frozen") {
 			return { stroke: frost, strokeDasharray: "2,2", strokeWidth: 1 };
 		}
-		// Today wears a ring, lit or not yet.
 		if (day === history.today) {
 			return { stroke: foreground, strokeWidth: 1 };
 		}
@@ -158,7 +143,6 @@ export function DaysCard({ history }: { history: IndexedHistory }) {
 						>
 							<HeatmapChart.XAxis />
 							<HeatmapChart.Cells cellStyle={cellStyle} />
-							{/* The gesture only: the readout lives above. */}
 							<HeatmapChart.Tooltip formatLabel={() => ""} />
 						</HeatmapChart>
 					</ScrollView>

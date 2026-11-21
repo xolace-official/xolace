@@ -1,4 +1,3 @@
-/** Mirror on fixtures: `xolace://dev/settings/<id>` (handoff settings.md §9, §10: renders 12–16). */
 import type { DevState } from "@/dev/dev-state";
 import { FixtureMirror } from "@/features/settings/mirror/dev/fixture-mirror";
 import {
@@ -9,7 +8,6 @@ import {
 	MIRROR_WREN_PLAYING,
 } from "@/features/settings/mirror/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Mirror" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */

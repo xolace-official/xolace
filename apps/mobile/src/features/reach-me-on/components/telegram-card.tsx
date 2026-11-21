@@ -29,7 +29,6 @@ const WARNING = {
 	ios: "exclamationmark.triangle.fill",
 } as const;
 
-/** A lone action, or Get Xolace+, is the card's call to action; Unlink reads as destructive. */
 function pillTone(action: TelegramAction, count: number): PillTone {
 	if (count === 1 || action === "get_plus") {
 		return "primary";
@@ -37,10 +36,6 @@ function pillTone(action: TelegramAction, count: number): PillTone {
 	return action === "unlink" ? "danger" : "secondary";
 }
 
-/**
- * The Telegram card, per `listChannels` state, with the link flow inside it (P's `TelegramCard`).
- * Reads and acts through the sheet's provider.
- */
 export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 	const view = telegramCard(entry);
 	const ember = useTokenColor("ember-ink");
@@ -60,8 +55,6 @@ export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 		unlink: () => setConfirmUnlink(true),
 	};
 
-	// One child of the sheet's gap-3 column: the dialog's closed root still lays out a view, which
-	// would double the gap between the cards.
 	return (
 		<View>
 			<ChannelCard

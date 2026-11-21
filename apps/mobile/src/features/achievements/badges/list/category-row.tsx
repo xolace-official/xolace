@@ -3,18 +3,11 @@ import { AppText } from "@/components/shared/app-text";
 import type { CategoryView } from "@/features/achievements/badges/badges-model";
 import { BadgeTile } from "@/features/achievements/badges/list/badge-tile";
 
-/** Production's Streak row mounts 25: a windowed list keeps only the near ones (and their canvases). */
 const ROW_INITIAL = 5;
 const ROW_WINDOW = 3;
 
-/**
- * One category (production's `category-row.tsx`): "N of M unlocked", then
- * medallions scrolling sideways in the server's order (earned, the next rung
- * with its bar, then locked).
- */
 export function CategoryRow({ category }: { category: CategoryView }) {
 	return (
-		// The board: 28 pt between rows, 20 pt sides.
 		<View className="mt-7">
 			<View className="flex-row items-baseline justify-between px-5">
 				<AppText

@@ -22,13 +22,11 @@ import {
 } from "./sky-model";
 import type { SkyMotion } from "./use-sky-motion";
 
-/** Skia gradients interpolate premultiplied, as CSS does (no grey fringe into transparent). */
 const PREMUL = 1;
 const DISC_LIGHT = vec(
 	-SUN_R + SUN_LIGHT.cx * SUN_R * 2,
 	-SUN_R + SUN_LIGHT.cy * SUN_R * 2
 );
-/** `circle at 45% 40%` reaches the box's farthest corner. */
 const DISC_REACH = Math.hypot(
 	SUN_R * 2 * (1 - SUN_LIGHT.cx),
 	SUN_R * 2 * (1 - SUN_LIGHT.cy)
@@ -38,10 +36,6 @@ const TAU = Math.PI * 2;
 
 type Body = { motion: SkyMotion; clock: SharedValue<number>; sx: number };
 
-/**
- * The sun: a pale-centred disc in a halo that breathes. It moves and scales as
- * one (walking-steps-buddy's sun), drawn behind the ridges so it sinks.
- */
 export function SkySun({ motion: m, clock, sx }: Body) {
 	const transform = useDerivedValue(() => [
 		{ translateX: m.sunX.get() * sx },
@@ -51,7 +45,6 @@ export function SkySun({ motion: m, clock, sx }: Body) {
 	const breath = useDerivedValue(
 		() => 0.5 - 0.5 * Math.cos((TAU * clock.get()) / HALO_BREATH.period)
 	);
-	// The breath scales the halo by its radius, not a transform: numbers only, nothing allocated per frame.
 	const haloR = useDerivedValue(
 		() => HALO_R * (1 + HALO_BREATH.scale * breath.get())
 	);
@@ -97,11 +90,9 @@ export function SkySun({ motion: m, clock, sx }: Body) {
 
 const MOON_R = MOON.size / 2;
 
-/** The late moon: a crescent (a disc with an offset disc cut out), rising 50 pt with a soft glow. */
 export function SkyMoon({ motion: m, sx }: Omit<Body, "clock">) {
 	const cx = MOON.x * sx + MOON_R;
 	const cy = MOON.y + MOON_R;
-	// The crescent: the disc minus the same disc moved (−10, +4), as the board's inset shadow.
 	const disc = Skia.PathBuilder.Make().addCircle(cx, cy, MOON_R).build();
 	const cut = Skia.PathBuilder.Make()
 		.addCircle(cx + MOON.cut.dx, cy + MOON.cut.dy, MOON_R)
@@ -120,7 +111,6 @@ export function SkyMoon({ motion: m, sx }: Omit<Body, "clock">) {
 	);
 }
 
-/** Two soft pills drifting a few points along the horizon by day. */
 export function SkyClouds({
 	motion: m,
 	clock,
@@ -149,7 +139,6 @@ function Cloud({
 }) {
 	const mid = (CLOUD.from + CLOUD.to) / 2;
 	const reach = (CLOUD.to - CLOUD.from) / 2;
-	// ease-in-out, alternating: a cosine over one period each way.
 	const x = useDerivedValue(() => {
 		const k = Math.cos((Math.PI * clock.get()) / c.period);
 		return c.x * sx + mid + (c.reverse ? reach : -reach) * k;

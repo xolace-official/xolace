@@ -1,9 +1,3 @@
-/**
- * A post's body through Stream's own text renderer, as production's bubble drew it: links open,
- * and **bold**, _italic_, lists and quotes render, in the card's type and colours instead of a
- * bubble's. Stream's link press goes through the message's handlers, so a tap opens the link and
- * a hold on one opens the overlay.
- */
 import { createElement, Fragment, type ReactNode } from "react";
 import { Linking, type TextStyle } from "react-native";
 import {
@@ -15,8 +9,6 @@ import {
 import { useResolveClassNames } from "uniwind";
 import { isOpenableLink } from "../post-text";
 
-/** Stream's own tap (check, then open), for the links a post may open; others do nothing.
- * Stream doesn't catch what this returns, so a link the phone won't open stops here. */
 async function openLink(url: string): Promise<void> {
 	try {
 		if (isOpenableLink(url) && (await Linking.canOpenURL(url))) {
@@ -33,10 +25,6 @@ type Rules = NonNullable<RenderTextParams["markdownRules"]>;
 type Mark = "em" | "strong";
 type Face = TextStyle;
 
-/** Bold and italic each set the face, so under both one would replace the other. Stream's text
- * takes its style from the marks around it (`state.style`), so these marks only set that:
- * bold, italic, or under both the heaviest italic the app loads (no pair ships a semibold
- * italic). */
 function emphasis(em: Face, strong: Face, both: Face): Rules {
 	const mark =
 		(own: Mark, face: Face): NonNullable<Rules["em"]>["react"] =>
@@ -83,7 +71,6 @@ export function usePostBody(body: string): ReactNode {
 			strong,
 			text,
 		},
-		// The body only: the title above it is the post's first paragraph.
 		message: { ...message, text: body },
 		onLink: openLink,
 		onLongPress,

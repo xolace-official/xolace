@@ -1,6 +1,3 @@
-/** You're not alone on fixtures: the real screen under its provider, filled from
- * the board's sets. A still holds the arrival at a moment; a scene presses a card
- * or scrolls once the screen has settled. */
 import { router } from "expo-router";
 import { View } from "react-native";
 import { ScopedTheme } from "uniwind";
@@ -18,7 +15,6 @@ import { type FixtureProps, useFixturePeers } from "./use-fixture-peers";
 type Props = Omit<FixtureProps, "late"> & {
 	late?: boolean;
 	scene?: PeersScene;
-	/** Default's light or dark (late: night mode's theme), whatever the app's theme is. */
 	theme?: ThemeMode;
 };
 
@@ -31,7 +27,6 @@ function FixturePeers({ scene, ...props }: Props & { late: boolean }) {
 	);
 }
 
-/** In Default's light or dark by day, night mode's theme late: beside the board's renders. */
 function Themed({ late = false, theme = "light", ...props }: Props) {
 	return (
 		<ScopedTheme theme={late ? NIGHT_VARIANT : themeVariant("default", theme)}>
@@ -40,10 +35,8 @@ function Themed({ late = false, theme = "light", ...props }: Props) {
 	);
 }
 
-/** The real route draws its own chrome: no header, no swipe back. */
 const OWN = { gestureEnabled: false, headerShown: false };
 
-/** A dev state's options and screen, spread into its entry next to its `id` and `title`. */
 export const peers = (props: Props) => ({
 	options: OWN,
 	Screen: () => <Themed {...props} />,
@@ -53,7 +46,6 @@ const SHEET_RADIUS = 40;
 const back = () => router.back();
 const SHEET_ACTIONS: ReportSheet = { actions: { cancel: back, pick: back } };
 
-/** "Why are you reporting this?" on fixtures, drawn as the form sheet presents it. */
 function FixtureReport({ theme = "light" }: { theme?: ThemeMode }) {
 	return (
 		<ScopedTheme theme={themeVariant("default", theme)}>

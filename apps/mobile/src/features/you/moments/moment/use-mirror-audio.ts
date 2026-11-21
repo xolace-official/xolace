@@ -1,8 +1,3 @@
-/**
- * A past mirror's voice: production's `useMirrorAudio` (features/reflect), carried over as it is,
- * since new code can't import the old folder. When Reflect is ported the two become one in
- * `src/lib/audio`.
- */
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useQuery } from "convex/react";
@@ -20,21 +15,16 @@ export function useMirrorAudio(sessionId: Id<"sessions"> | null) {
 		api.sessions.getMirrorAudioUrl,
 		sessionId ? { sessionId } : "skip"
 	);
-	// The native player is only built on the first tap: `new AudioPlayer(url)` loads the file
-	// synchronously during render, and most mirrors are never played.
 	const [activated, setActivated] = useState(false);
 	const player = useAudioPlayer(activated ? (audioUrl ?? null) : null);
 	const status = useAudioPlayerStatus(player);
 	const awaitingFirstPlay = useRef(false);
 	const focus = useRef(null);
-	// Undefined while the query is in flight, null when the session has no mirror audio.
 	const ready = !!audioUrl;
 
-	// A claim can resolve after the person left the app or another player took focus.
 	const canPlay = () =>
 		AppState.currentState === "active" && holdsAudioFocus(focus);
 
-	// The first tap only marks intent; playback starts once the player finishes loading.
 	useEffect(() => {
 		if (!(awaitingFirstPlay.current && status.isLoaded)) {
 			return;

@@ -15,7 +15,6 @@ interface AppInfoFromStore {
 	version: string;
 }
 
-/** Latest app info from the iTunes lookup API. */
 async function getInfoFromAppStore(
 	country = ""
 ): Promise<AppInfoFromStore | null> {
@@ -43,7 +42,6 @@ async function getInfoFromAppStore(
 	}
 }
 
-/** Latest app info scraped from the Play Store page HTML; tries two known layout patterns. */
 async function getInfoFromPlayStore(
 	_country = ""
 ): Promise<AppInfoFromStore | null> {
@@ -66,7 +64,6 @@ async function getInfoFromPlayStore(
 	}
 }
 
-/** Platform-aware store lookup. */
 export async function getAppInfoFromTheStore(
 	country = ""
 ): Promise<AppInfoFromStore | null> {
@@ -82,7 +79,6 @@ export async function getAppInfoFromTheStore(
 	return null;
 }
 
-/** True when `newestVersion` is strictly greater than `installedVersion` (semver-style). */
 export function shouldUpdateApp(
 	installedVersion: string,
 	newestVersion: string

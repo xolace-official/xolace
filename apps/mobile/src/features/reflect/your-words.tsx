@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useRef } from "react";
 import { View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
@@ -14,46 +14,34 @@ import { PickedChips } from "./picked-chips";
 import { useReflect } from "./reflect-data";
 import { useReflectDraw } from "./reflect-draw";
 
-/** Board `.qlab` and `.qtext`. */
 export const QUOTE_TEXT = { fontSize: 15.5, lineHeight: 23.56 } as const;
 const LABEL = { fontSize: 11, letterSpacing: 1.1 } as const;
 const MAX_LINES = 4;
-/** The block's LIFT_OFF: the flight starts .02 s after the send. */
 const LIFT_OFF_MS = 20;
-/** With nothing to lift from (a cold open), it rises from 64 pt below, as the board's `liftA`. */
 const DEFAULT_DROP = 64;
-/** Board `liftA`: it arrives from 40% opacity. */
 const FROM_OPACITY = 0.4;
 
 type Props = {
-	/** The wait: the words lift out of the writing box and settle here (S1b). */
 	lift?: boolean;
-	/** Where this block sits on screen (its left and top), for the lift's start. */
 	at: { x: number; y: number };
-	/** The mirror: the text with its measured marker bands (S8). */
 	children?: ReactNode;
 };
 
-/**
- * YOUR WORDS (board `.quote`): what you let out, kept at the top through the wait and under the
- * mirror, so the mirror is always read beside what you said.
- *
- * The lift is docking-prompt-card's flight (S1b): `p` springs 0 → 1 on 130/17, `lift = sin(πp)`;
- * the text travels from the writing box's origin to here, minus `lift·18`, and its scale is
- * (1.24 → 1)·(1 + .05·lift), the writing size settling into Your words.
- */
 export function YourWords({ lift, at, children }: Props) {
 	const { liftFrom, reduced } = useReflectDraw();
 	const { state } = useReflect();
 	const sent = state.yourWords.map(([t]) => t).join("");
-	// The text's offset in this block, from layout (untransformed).
-	const [textY, setTextY] = useState<number | null>(null);
+	const laidOut = useRef(false);
 	const flying = lift && !reduced;
 	const p = useSharedValue(flying ? 0 : 1);
 	const from = useSharedValue({ dx: 0, dy: DEFAULT_DROP });
 
-	useEffect(() => {
-		if (!flying || textY === null) {
+	const liftOff = (textY: number) => {
+		if (laidOut.current) {
+			return;
+		}
+		laidOut.current = true;
+		if (!flying) {
 			return;
 		}
 		const f = liftFrom.get();
@@ -67,7 +55,7 @@ export function YourWords({ lift, at, children }: Props) {
 				withSpring(1, { ...FLY.spring, ...PLAY_AS_CHOSEN })
 			)
 		);
-	}, [flying, textY, liftFrom, from, p, at.x, at.y]);
+	};
 
 	const fly = useAnimatedStyle(() => {
 		const q = p.get();
@@ -106,7 +94,7 @@ export function YourWords({ lift, at, children }: Props) {
 				<PickedChips words={state.sentPicks} />
 			</Animated.View>
 			<Animated.View
-				onLayout={(e) => textY === null && setTextY(e.nativeEvent.layout.y)}
+				onLayout={(e) => liftOff(e.nativeEvent.layout.y)}
 				style={fly}
 			>
 				{children ??

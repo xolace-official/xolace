@@ -13,11 +13,9 @@ import { useVentScreen } from "@/features/vent/vent-data";
 
 const IN_MS = 400;
 const HOLD_MS = 2000;
-/** Hold longer when the replies-used footnote shows, so it can be read (production). */
 const CAP_HOLD_MS = 3600;
 const OUT_MS = 1000;
 
-/** Production's period: "Gone." fades in, holds 2 s, fades over 1 s; the flow then closes the screen. */
 export function VentGone() {
 	const { state } = useVentScreen();
 	const gone = state.phase === "gone";

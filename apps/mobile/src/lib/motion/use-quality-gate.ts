@@ -6,12 +6,6 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-/**
- * ember-charge-widget's quality gate (ember-motion `quality`): on the first
- * open, let the screen settle for six smooth frames, then count two seconds of
- * real frame times. More than six frames over 24 ms and the screen steps down once
- * (Today: half the particles, no blurs). It never steps back up that session.
- */
 const QUALITY = {
 	allowed: 6,
 	frame: 24,
@@ -20,8 +14,16 @@ const QUALITY = {
 	window: 2000,
 } as const;
 
+/**
+ * Measures frame times once `run` turns true, then holds the verdict. A started measurement
+ * runs to its verdict even if `run` turns false again; only unmounting stops it.
+ */
 export function useQualityGate(run: boolean): boolean {
 	const [low, setLow] = useState(false);
+	const [started, setStarted] = useState(run);
+	if (run && !started) {
+		setStarted(true);
+	}
 	const smooth = useSharedValue(0);
 	const startedAt = useSharedValue(-1);
 	const slow = useSharedValue(0);
@@ -34,7 +36,6 @@ export function useQualityGate(run: boolean): boolean {
 			return;
 		}
 		const dt = frame.timeSincePreviousFrame ?? 0;
-		// Mount and first draws don't vote.
 		if (smooth.get() < QUALITY.settle) {
 			smooth.set(dt < QUALITY.settledUnder ? smooth.get() + 1 : 0);
 			return;
@@ -58,12 +59,12 @@ export function useQualityGate(run: boolean): boolean {
 
 	useEffect(() => {
 		gateRef.current = gate;
-		if (!run) {
+		if (!started) {
 			return;
 		}
 		gate.setActive(true);
 		return () => gate.setActive(false);
-	}, [gate, run]);
+	}, [gate, started]);
 
 	return low;
 }

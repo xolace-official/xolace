@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { AccessibilityInfo, Pressable } from "react-native";
 import { COPY } from "../copy";
 import { PATH_H, type TwigView } from "./kindling-model";
@@ -9,7 +8,6 @@ import { PATH_H, type TwigView } from "./kindling-model";
  */
 const HIT = 44;
 
-/** What VoiceOver says a step is. */
 function stepState(
 	state: TwigView["state"] | undefined,
 	current: boolean
@@ -28,46 +26,42 @@ type Props = {
 	twigs: readonly TwigView[];
 	shown: readonly TwigView["state"][];
 	current: number;
-	peek: number;
 	onPeek: (i: number) => void;
 };
 
-/**
- * The path's steps for touch and VoiceOver, over the drawn nodes: each named for its step,
- * with its state. Tapping one peeks at it in the NEXT row, and VoiceOver says what it shows;
- * the current step is already there, so it's text, not a button.
- */
-export function StepTargets({
-	nodes,
-	twigs,
-	shown,
-	current,
-	peek,
-	onPeek,
-}: Props) {
-	const peeked = peek >= 0 ? twigs[peek] : undefined;
-	const peekLine = peeked
-		? `${peeked.title}, ${stepState(shown[peek], false)}`
-		: null;
-	useEffect(() => {
-		if (peekLine) {
-			AccessibilityInfo.announceForAccessibility(peekLine);
+export function StepTargets({ nodes, twigs, shown, current, onPeek }: Props) {
+	const peekAt = (i: number) => {
+		if (i === current) {
+			return;
 		}
-	}, [peekLine]);
+		onPeek(i);
+		const twig = twigs[i];
+		if (twig) {
+			AccessibilityInfo.announceForAccessibility(
+				`${twig.title}, ${stepState(shown[i], false)}`
+			);
+		}
+	};
 
-	return nodes.map(([x], i) => {
-		const isCurrent = i === current;
-		return (
-			<Pressable
-				accessibilityHint={isCurrent ? undefined : COPY.kindling.a11y.peekHint}
-				accessibilityLabel={twigs[i]?.title}
-				accessibilityRole={isCurrent ? "text" : "button"}
-				accessibilityValue={{ text: stepState(shown[i], isCurrent) }}
-				className="absolute"
-				key={twigs[i]?.id ?? i}
-				onPress={() => onPeek(i)}
-				style={{ height: PATH_H, left: x - HIT / 2, top: 0, width: HIT }}
-			/>
-		);
-	});
+	return (
+		<>
+			{nodes.map(([x], i) => {
+				const isCurrent = i === current;
+				return (
+					<Pressable
+						accessibilityHint={
+							isCurrent ? undefined : COPY.kindling.a11y.peekHint
+						}
+						accessibilityLabel={twigs[i]?.title}
+						accessibilityRole={isCurrent ? "text" : "button"}
+						accessibilityValue={{ text: stepState(shown[i], isCurrent) }}
+						className="absolute"
+						key={twigs[i]?.id ?? i}
+						onPress={() => peekAt(i)}
+						style={{ height: PATH_H, left: x - HIT / 2, top: 0, width: HIT }}
+					/>
+				);
+			})}
+		</>
+	);
 }

@@ -9,7 +9,6 @@ import { HelpScreen } from "@/features/care/help/help-screen";
 
 const noop = () => undefined;
 
-/** Get help now on fixtures: the menu switches countries, nothing dials. */
 export function FixtureHelp({ choice: start }: { choice: HelpChoice }) {
 	const [choice, setChoice] = useState(start);
 	const value: HelpScreenData = {

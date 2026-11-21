@@ -2,6 +2,7 @@ import { ActivityIndicator, View } from "react-native";
 import { TabLegendList } from "react-native-collapsible-tab/legend-list";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { EmptyState } from "@/components/shared/empty-state";
 import { COPY } from "@/features/you/copy";
 import {
 	FollowUpRow,
@@ -13,7 +14,6 @@ import { useYouHome } from "@/features/you/home/you-data";
 const ROW_ESTIMATE = 84;
 const TAB_BAR_ROOM = 110;
 
-/** Production's follow-ups: Waiting, Coming up, then Earlier, loaded a page at a time. */
 export function FollowUpsTab() {
 	const insets = useSafeAreaInsets();
 	const { state, actions } = useYouHome();
@@ -71,24 +71,12 @@ function Item({ item }: { item: FollowUpItem }) {
 			);
 		default:
 			return (
-				<View className="px-6 py-10">
-					<AppText
-						center
-						className="mb-1 text-[16px]"
-						variant="subhead"
-						weight="semibold"
-					>
-						{COPY.followUps.emptyTitle}
-					</AppText>
-					<AppText
-						center
-						className="text-[14.5px] leading-[21.75px]"
-						color="muted"
-						variant="callout"
-					>
-						{COPY.followUps.empty}
-					</AppText>
-				</View>
+				<EmptyState
+					body={COPY.followUps.empty}
+					className="py-10"
+					face
+					title={COPY.followUps.emptyTitle}
+				/>
 			);
 	}
 }

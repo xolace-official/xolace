@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
 import type { ExerciseSimilarity } from "../exercises/match";
+import { ERROR_CODES } from "../lib/shared";
 import { posthog } from "../posthog";
 import { MAX_TURNS } from "../sessionTurns";
 import { classifierCache, moderationCache } from "./cached";
@@ -244,7 +245,9 @@ export const handleClarification = internalAction({
 
 			if (safeguard?.shouldReject) {
 				await ctx.runMutation(internal.sessions.failSession, {
-					errorMessage: safeguard.rejectionReason ?? "content_policy_violation",
+					errorCode: ERROR_CODES.safeguardRejected,
+					errorMessage:
+						safeguard.rejectionReason ?? ERROR_CODES.safeguardRejected,
 					sessionId: args.sessionId,
 				});
 				await posthog.capture(ctx, {
@@ -252,7 +255,7 @@ export const handleClarification = internalAction({
 					event: "mirror_content_rejected",
 					properties: {
 						rejectionReason:
-							safeguard.rejectionReason ?? "content_policy_violation",
+							safeguard.rejectionReason ?? ERROR_CODES.safeguardRejected,
 						turnNumber: args.turnNumber,
 					},
 				});

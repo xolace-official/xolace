@@ -1,16 +1,9 @@
-/**
- * Ama's badges (badges §1, the board's `B` and `CATS`), in the server's shape:
- * 11 badges, 195 sparks earned, 145 to spend, a 12-day streak. Titles, lines
- * and sparks are the catalog's. The art is in `fixture-art.ts`, apart, so
- * the model tests can read these without loading images.
- */
 import type { Id } from "@xolace/backend/dataModel";
 import type {
 	AchievementsOverview,
 	AchievementView,
 } from "@/features/achievements/achievements-model";
 
-/** Noon UTC on a day of 2026 (month from 1), so no time zone moves the date. */
 const on = (month: number, day: number) => Date.UTC(2026, month - 1, day, 12);
 
 const NO_ART = { fallback: false, thumbhash: null, url: null };
@@ -23,7 +16,6 @@ const badge = ({ pinned = false, ...row }: Row): AchievementView => ({
 	pinned,
 });
 
-/** A badge still to come: [id, title, line, sparks]. */
 type Locked = readonly [
 	id: string,
 	title: string,
@@ -95,7 +87,6 @@ const S30 = locked([
 	"30 days. This is a rhythm now.",
 	25,
 ]);
-/** The rest of the Streak row, as the server lists it: through the first year. */
 const LATER_STREAK: readonly Locked[] = [
 	[
 		"streak-21",
@@ -236,7 +227,6 @@ const UND_8 = locked([
 	50,
 ]);
 
-/** The five rows in the server's order: earned, the next rungs with their bars, then locked. */
 export const OVERVIEW: AchievementsOverview = {
 	categories: [
 		{
@@ -291,7 +281,6 @@ export const OVERVIEW: AchievementsOverview = {
 	},
 };
 
-/** The freeze shelf: two freezes held, so the card shows its refusal. */
 export const SHELF = {
 	badgeCount: 11,
 	badges: [S10, TALK, UND_1],
@@ -303,7 +292,6 @@ export const SHELF = {
 	streakLapsed: false,
 };
 
-/** The arrival's rows: `unlock.unseen`, as the server sends them. */
 const unseen = (a: AchievementView, n: number) => ({
 	achievementId: a.achievementId,
 	art: NO_ART,
@@ -313,17 +301,12 @@ const unseen = (a: AchievementView, n: number) => ({
 	title: a.title,
 });
 
-/** One badge (arrivals §1): First quote saved. */
 export const ONE = [unseen(QUOTE, 1)];
-/** Two badges: First quote saved, then Three areas unlocked. */
 export const TWO = [unseen(QUOTE, 1), unseen(UND_3, 2)];
-/** Day 7 and day 30: the streak badge earned the same day. */
 export const DAY_7 = [unseen(S7, 3)];
 export const DAY_30 = [unseen(S30, 4)];
-/** Today in the fixture: Monday 9 November 2026 (the week reads Tu We Th Fr Sa Su Mo). */
 export const ARRIVAL_DAY = new Date(Date.UTC(2026, 10, 9, 12));
 
-/** The backfill's summary: what was earned before badges arrived. */
 export const BACKFILL = {
 	badges: 4,
 	firstSight: true,

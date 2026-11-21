@@ -1,5 +1,3 @@
-/** The app's import graph, read with the TypeScript compiler, for the layering tests
- * (`import-cycles.test.ts`). Node-only: never imported by app code. */
 import path from "node:path";
 import ts from "typescript";
 
@@ -14,23 +12,14 @@ const PLATFORM_SUFFIXES = [
 ];
 const TEST_FILE = /\.(test|spec)\.tsx?$/;
 
-/** One import, export-from, `import()` or `require()` in a source file. */
 export type Import = {
-	/** The specifier as written: `convex/react`, `@/lib/haptics`. */
 	specifier: string;
-	/** Source files under `src/` it resolves to on any platform; empty for packages. */
 	targets: string[];
 	typeOnly: boolean;
-	/** A `require()` or `import()` only a dev build runs: behind `__DEV__` (`if`,
-	 * `? :` or `&&`). A release build folds the branch away before Metro collects
-	 * its dependencies, so the target never reaches the release bundle. */
 	devOnly: boolean;
-	/** Named value bindings (`import { useToast } from ...`), without type-only
-	 * ones; `*` for a namespace import (`import * as H from ...`). */
 	names: string[];
 };
 
-/** Source file (absolute) → its imports. Test files are left out. */
 export type ImportGraph = Map<string, Import[]>;
 
 function readConfig(): ts.ParsedCommandLine {
@@ -106,8 +95,6 @@ function devBranch(
 export function buildGraph(): ImportGraph {
 	const config = readConfig();
 	const host = ts.createCompilerHost(config.options);
-	// Resolving per platform also catches an import backed only by
-	// `foo.ios.tsx` + `foo.android.tsx`, which plain resolution drops.
 	const platformOptions = PLATFORM_SUFFIXES.map((moduleSuffixes) => ({
 		...config.options,
 		moduleSuffixes,
@@ -189,7 +176,6 @@ export function buildGraph(): ImportGraph {
 	return graph;
 }
 
-/** Strongly connected components with more than one node (Tarjan). */
 export function findCycles(nodes: string[], next: (n: string) => string[]) {
 	let counter = 0;
 	const index = new Map<string, number>();
@@ -234,7 +220,6 @@ export function findCycles(nodes: string[], next: (n: string) => string[]) {
 	return cycles;
 }
 
-/** `src/`-relative path: `features/today/today-screen.tsx`. */
 export const relative = (file: string) => path.relative(SRC, file);
 
 export const featureOf = (file: string) =>

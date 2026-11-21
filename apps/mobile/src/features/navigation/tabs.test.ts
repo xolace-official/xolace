@@ -8,7 +8,6 @@ const TABS_DIR = path.resolve(
 	"../../app/(protected)/(tabs)"
 );
 
-/** Every tab route: a folder under `(tabs)/`. */
 const tabFolders = readdirSync(TABS_DIR, { withFileTypes: true })
 	.filter((entry) => entry.isDirectory())
 	.map((entry) => entry.name)

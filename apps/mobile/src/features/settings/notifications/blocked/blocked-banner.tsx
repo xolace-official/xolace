@@ -9,7 +9,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 const C = NOTIFY_COPY.banner;
 
-/** The phone blocks notifications (board `.ban`): between the title and the lock card. */
 export function BlockedBanner({
 	onOpenSettings,
 }: {

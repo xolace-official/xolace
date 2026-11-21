@@ -53,6 +53,7 @@ import {
 	planBlock,
 	presenceDisclosed,
 } from "./lib/conversationGating";
+import { XOLACER_BIO_MAX_CHARS, XOLACER_NAME_MAX_CHARS } from "./lib/shared";
 import { MAX_SPECIALTIES, specialtyValidator } from "./lib/specialties";
 import {
 	XOLACE_BROADCAST_CHANNEL_TYPE,
@@ -745,6 +746,11 @@ export const xolacerProfile = query({
 export const suggestionValidator = v.object({
 	displayName: v.string(),
 	photoUrl: v.optional(v.string()),
+	/**
+	 * In the app when the match was made: the session end's card shows it. Optional so any
+	 * caller that builds a suggestion without it still validates.
+	 */
+	present: v.optional(v.boolean()),
 	rating: v.optional(v.number()),
 	ratingCount: v.number(),
 	specialties: v.array(specialtyValidator),
@@ -863,6 +869,7 @@ async function eligibleSuggestions(ctx: QueryCtx, sessionId: Id<"sessions">) {
 		candidates: rankSuggestionCandidates(candidates, sessionId).map((c) => ({
 			displayName: c.xolacer.displayName ?? "Xolacer",
 			photoUrl: c.xolacer.photoUrl,
+			present: c.present,
 			specialties: c.xolacer.specialties ?? [],
 			specialty,
 			xolacerProfileId: c.xolacerProfileId,
@@ -2399,11 +2406,18 @@ export const upsertMyXolacerProfile = mutation({
 			throw new Error("Not a xolacer");
 		}
 
-		if (args.bio !== undefined && args.bio.length > 160) {
-			throw new Error("Bio must be 160 characters or fewer");
+		if (args.bio !== undefined && args.bio.length > XOLACER_BIO_MAX_CHARS) {
+			throw new Error(
+				`Bio must be ${XOLACER_BIO_MAX_CHARS} characters or fewer`
+			);
 		}
-		if (args.displayName !== undefined && args.displayName.length > 40) {
-			throw new Error("Display name must be 40 characters or fewer");
+		if (
+			args.displayName !== undefined &&
+			args.displayName.length > XOLACER_NAME_MAX_CHARS
+		) {
+			throw new Error(
+				`Display name must be ${XOLACER_NAME_MAX_CHARS} characters or fewer`
+			);
 		}
 		if (args.specialties && args.specialties.length > MAX_SPECIALTIES) {
 			throw new Error(`Pick at most ${MAX_SPECIALTIES}`);

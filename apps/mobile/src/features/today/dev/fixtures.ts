@@ -9,16 +9,20 @@ import type { Today } from "../today-data";
 import type { CardMode, TodayPhase } from "../today-model";
 import type { Covers } from "./covers";
 
-/** Today's fake data: the board's Thursday, Ama and a 12-day streak (`P/src/fixtures/today.ts`). */
 export const FIXTURE_WEEKDAY = "Thursday";
+/** An hour inside each phase, for the header's words. */
+export const FIXTURE_HOUR = {
+	dawn: 6,
+	day: 14,
+	evening: 19,
+	late: 23,
+} as const satisfies Record<TodayPhase, number>;
 export const FIXTURE_DAY = "2026-11-19";
 export const FIXTURE_NAME = "Ama";
 export const FIXTURE_STREAK = 12;
-/** The board's month prompt (`P/src/fixtures/return.ts` WELCOME_BACK.page.prompt). */
 export const FIXTURE_MONTH_PROMPT =
 	"What have you been carrying that nobody asks about?";
 
-/** The board's four steps (`P/src/fixtures/kindling.ts`), the first tended. */
 const BOARD_TWIGS: TwigView[] = [
 	{ id: "t1", length: "A MINUTE", state: "done", title: "Name what's heavy" },
 	{
@@ -46,19 +50,15 @@ export const FIXTURE_KINDLING = {
 		id: "k1",
 		twigs: BOARD_TWIGS.map((t) => ({ ...t, state: "done" as const })),
 	},
-	/** One of four tended (`01-evening`). */
 	board: { id: "k1", twigs: BOARD_TWIGS },
-	/** Three of four tended: the last one's tend closes the kindling (`getActive` goes null). */
 	last: {
 		id: "k1",
 		twigs: BOARD_TWIGS.map((t, i) => (i < 3 ? { ...t, state: "done" } : t)),
 	},
-	/** Two of four tended: the board's second step has just been done (`06-kindling-tended`). */
 	tended: {
 		id: "k1",
 		twigs: BOARD_TWIGS.map((t, i) => (i === 1 ? { ...t, state: "done" } : t)),
 	},
-	/** Production sends three steps as often as four. */
 	three: {
 		id: "k3",
 		twigs: [
@@ -93,7 +93,6 @@ const shelfItem = (
 	title,
 });
 
-/** The board's rail (`P/src/fixtures/today.ts` RAIL), as the New shelf sends it. */
 const fixtureRail = (covers: Covers): RailTile[] =>
 	railTiles([
 		shelfItem("voice", "A voice for this", "support", covers.a1),
@@ -120,7 +119,6 @@ const timelineRow = (
 	toneUsed: null,
 });
 
-/** The board's moments (`TODAY_MOMENTS`), as the timeline's first page sends them. */
 const FIXTURE_MOMENTS: MomentView[] = [
 	timelineRow(
 		"m1",
@@ -148,13 +146,13 @@ const FIXTURE_MOMENTS: MomentView[] = [
 	),
 ].map(momentView);
 
-/** The board's word for today. */
 const FIXTURE_WORD = "Slow is still moving.";
+/** A quote long enough to clamp on the word card. */
+export const FIXTURE_LONG_WORD =
+	"We are born alone, we live alone, we die alone. Only through our love and friendship can we create the illusion that we're not alone.";
 
-/** The rail, moments and word: the board's, none at all, or still loading. */
 export type FixtureModules = "board" | "none" | "loading";
 
-/** The rail, moments and word: loading is undefined, none is empty (the word null). */
 export function lowerModules(
 	modules: FixtureModules,
 	covers: Covers
@@ -181,7 +179,6 @@ export function lowerModules(
 	};
 }
 
-/** The Reflect dev state each face of the card opens, so a tap here never reaches the backend. */
 const REFLECT_STATE = {
 	failed: "error",
 	idle: "first-open",
@@ -190,10 +187,8 @@ const REFLECT_STATE = {
 	ready: "mirror",
 	waiting: "streaming",
 } as const satisfies Record<CardMode, string>;
-/** Reflect's error state has no dark twin. */
 const LIGHT_ONLY: readonly CardMode[] = ["failed"];
 
-/** Where the card zooms on fixtures: Reflect's dev state for its face, in Today's theme. */
 export function reflectState(
 	mode: CardMode,
 	phase: TodayPhase,

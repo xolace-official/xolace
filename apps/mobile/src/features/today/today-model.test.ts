@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { todayPhase } from "@/lib/day-phase";
 import { COPY } from "./copy";
 import {
+	campfireSettled,
 	cardA11yHint,
 	cardMode,
 	headerCopy,
@@ -8,11 +10,13 @@ import {
 	localDay,
 	monthPromptOnCard,
 	nextStreakShown,
-	nextWakeHour,
 	parseIntroDay,
 	parseSeenStreak,
 	streakStep,
-	todayPhase,
+	TODAY_HOLD_MS,
+	type TodayFold,
+	todayHolds,
+	todayReady,
 } from "./today-model";
 
 describe("cardA11yHint", () => {
@@ -62,54 +66,68 @@ describe("cardMode", () => {
 	});
 });
 
-describe("todayPhase", () => {
-	it("is late whenever night mode has the night", () => {
-		expect(todayPhase(23, true)).toBe("late");
-	});
-
-	it("keeps the late hours as evening when night mode is off", () => {
-		expect(todayPhase(23, false)).toBe("evening");
-		expect(todayPhase(2, false)).toBe("evening");
-	});
-
-	it("follows the hour by day", () => {
-		expect(todayPhase(10, false)).toBe("day");
-	});
-});
-
-describe("nextWakeHour", () => {
-	it("is the next phase boundary", () => {
-		expect(nextWakeHour(5)).toBe(9);
-		expect(nextWakeHour(9)).toBe(17);
-		expect(nextWakeHour(20)).toBe(22);
-		expect(nextWakeHour(1)).toBe(4);
-	});
-
-	it("wakes at midnight after late begins, for the weekday", () => {
-		expect(nextWakeHour(22)).toBe(24);
-		expect(nextWakeHour(23)).toBe(24);
-	});
-});
-
 describe("headerCopy", () => {
 	it("greets by name, with the weekday and the part of the day", () => {
-		expect(headerCopy("evening", "Thursday", "Ama")).toEqual({
+		expect(headerCopy("evening", 19, "Thursday", "Ama")).toEqual({
 			eyebrow: "Thursday · evening",
 			greeting: "Good evening, Ama",
 		});
 	});
 
 	it("asks late", () => {
-		expect(headerCopy("late", "Thursday", "Ama").greeting).toBe(
+		expect(headerCopy("late", 23, "Thursday", "Ama").greeting).toBe(
 			"Still up, Ama?"
 		);
 	});
 
 	it("drops the name when there is none, or only spaces", () => {
-		expect(headerCopy("dawn", "Monday", null).greeting).toBe("Good morning");
-		expect(headerCopy("late", "Monday", "  ").greeting).toBe("Still up?");
-		expect(headerCopy("day", "Monday", undefined).eyebrow).toBe(
+		expect(headerCopy("dawn", 6, "Monday", null).greeting).toBe("Good morning");
+		expect(headerCopy("late", 23, "Monday", "  ").greeting).toBe("Still up?");
+		expect(headerCopy("day", 14, "Monday", undefined).eyebrow).toBe(
 			"Monday · afternoon"
+		);
+	});
+
+	const at = (hour: number, minute: number) => {
+		const now = new Date(2026, 10, 21, hour, minute);
+		return headerCopy(
+			todayPhase(now.getHours(), false),
+			now.getHours(),
+			"Saturday",
+			"Ama"
+		);
+	};
+
+	it("greets 10:27 as morning", () => {
+		expect(at(10, 27)).toEqual({
+			eyebrow: "Saturday · morning",
+			greeting: "Good morning, Ama",
+		});
+	});
+
+	it.each([
+		[6, 0, "Good morning, Ama", "early"],
+		[9, 0, "Good morning, Ama", "morning"],
+		[11, 59, "Good morning, Ama", "morning"],
+		[12, 0, "Good afternoon, Ama", "afternoon"],
+		[16, 59, "Good afternoon, Ama", "afternoon"],
+		[17, 0, "Good evening, Ama", "evening"],
+	] as const)("at %i:%i says %s", (hour, minute, greeting, part) => {
+		expect(at(hour, minute)).toEqual({
+			eyebrow: `Saturday · ${part}`,
+			greeting,
+		});
+	});
+
+	it("drops the name in the morning too", () => {
+		expect(headerCopy("day", 10, "Saturday", null).greeting).toBe(
+			"Good morning"
+		);
+	});
+
+	it("follows the phase it is given, so night mode keeps late", () => {
+		expect(headerCopy("late", 10, "Saturday", "Ama").greeting).toBe(
+			"Still up, Ama?"
 		);
 	});
 });
@@ -252,5 +270,105 @@ describe("monthPromptOnCard", () => {
 		expect(
 			monthPromptOnCard({ carryUntil: NOW + 1, prompt: "  " }, NOW)
 		).toBeNull();
+	});
+});
+
+describe("todayReady", () => {
+	const drawn = {
+		campfireSettled: true,
+		kindling: null,
+		kindlingEmpty: "plus",
+		phase: "evening",
+		rail: undefined,
+		session: null,
+		summary: { currentStreak: 3, displayName: "Ama" },
+	} satisfies TodayFold;
+
+	it("waits for the greeting's name and the card's face", () => {
+		expect(todayReady(drawn)).toBe(true);
+		expect(todayReady({ ...drawn, summary: undefined })).toBe(false);
+		expect(todayReady({ ...drawn, session: undefined })).toBe(false);
+	});
+
+	it("by day, waits for the kindling and the campfire, not the rail", () => {
+		expect(todayReady({ ...drawn, kindling: undefined })).toBe(false);
+		expect(todayReady({ ...drawn, campfireSettled: false })).toBe(false);
+	});
+
+	it("with no kindling, waits for what the card shows instead", () => {
+		expect(todayReady({ ...drawn, kindlingEmpty: undefined })).toBe(false);
+		expect(todayReady({ ...drawn, kindlingEmpty: "setting-up" })).toBe(true);
+	});
+
+	it("with a live kindling, never waits on the entitlement", () => {
+		const live = { id: "k", twigs: [] };
+		expect(
+			todayReady({ ...drawn, kindling: live, kindlingEmpty: undefined })
+		).toBe(true);
+	});
+
+	it("late, waits for the rail instead: the page's only module", () => {
+		const late = { ...drawn, phase: "late" } satisfies TodayFold;
+		expect(todayReady(late)).toBe(false);
+		expect(
+			todayReady({
+				...late,
+				campfireSettled: false,
+				kindling: undefined,
+				kindlingEmpty: undefined,
+				rail: [],
+			})
+		).toBe(true);
+	});
+});
+
+describe("todayHolds", () => {
+	const loading = { offline: false, ready: false, waitedMs: 0 };
+
+	it("holds while Today's first screen loads, and lets go once it's drawn", () => {
+		expect(todayHolds(loading)).toBe(true);
+		expect(todayHolds({ ...loading, ready: true })).toBe(false);
+	});
+
+	it("lets go when its budget runs out, still loading", () => {
+		expect(todayHolds({ ...loading, waitedMs: TODAY_HOLD_MS - 1 })).toBe(true);
+		expect(todayHolds({ ...loading, waitedMs: TODAY_HOLD_MS })).toBe(false);
+	});
+
+	it("lets go when the card's mode never resolves (RevenueCat or settingUp.get stuck)", () => {
+		const stuck = todayReady({
+			campfireSettled: true,
+			kindling: null,
+			kindlingEmpty: undefined,
+			phase: "evening",
+			rail: undefined,
+			session: null,
+			summary: { currentStreak: 3, displayName: "Ama" },
+		});
+		expect(stuck).toBe(false);
+		expect(todayHolds({ ...loading, ready: stuck })).toBe(true);
+		expect(
+			todayHolds({ ...loading, ready: stuck, waitedMs: TODAY_HOLD_MS })
+		).toBe(false);
+		expect(todayHolds({ ...loading, offline: true, ready: stuck })).toBe(false);
+	});
+
+	it("never holds offline: the reads wait for a socket that isn't coming", () => {
+		expect(todayHolds({ ...loading, offline: true })).toBe(false);
+	});
+});
+
+describe("campfireSettled", () => {
+	it("waits for the weekly card", () => {
+		expect(campfireSettled(undefined, true, true)).toBe(false);
+		expect(campfireSettled("count", undefined, false)).toBe(true);
+		expect(campfireSettled("warming", undefined, false)).toBe(true);
+	});
+
+	it("with no weekly number, waits for the intake's count only on a v2 intake", () => {
+		expect(campfireSettled("hidden", undefined, false)).toBe(false);
+		expect(campfireSettled("hidden", false, false)).toBe(true);
+		expect(campfireSettled("hidden", true, false)).toBe(false);
+		expect(campfireSettled("hidden", true, true)).toBe(true);
 	});
 });

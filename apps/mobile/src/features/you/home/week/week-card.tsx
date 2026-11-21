@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { COPY } from "@/features/you/copy";
@@ -19,33 +19,19 @@ import { InfoButton, InfoTip } from "@/features/you/info-tip";
 import { Surface } from "@/features/you/surface";
 import { tap } from "@/lib/haptics";
 
-/** The ⓘ's explanation sits under the title row. */
 const TIP_TOP = 56;
-/** How far a held day's second line may shrink to stay on one row: the longest needs ~0.88 at
- * default text size on a 375 pt phone. Past that, `detailLine` drops parts (`DROP_*_ABOVE`). */
 const CAPTION_MIN_SCALE = 0.8;
 
-/**
- * This week (you.md §6): production's intensity card with your usual, a held day's readout in
- * place of the title row (same height), and a sentence that says something. Xolace+ pages
- * weeks with the arrows; free users get production's frosted earlier-weeks gate.
- */
 export function WeekCard({ week }: { week: IntensityWeek }) {
 	const { actions } = useYouHome();
 	const { weekHeld } = useYouUi();
 	const { fontScale } = useWindowDimensions();
 	const [info, setInfo] = useState(false);
 	const [held, setHeld] = useState<number | null>(weekHeld);
-	const seen = useRef(false);
-	const { weekSeen } = actions;
-
-	// Production's teaser analytics, once.
+	const seen = useEffectEvent(actions.weekSeen);
 	useEffect(() => {
-		if (!seen.current) {
-			seen.current = true;
-			weekSeen();
-		}
-	}, [weekSeen]);
+		seen();
+	}, []);
 
 	const current = week.offset === 0;
 	const sentence = weekSentence({
@@ -84,10 +70,6 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 						>
 							{readout.value}
 						</AppText>
-						{/* One line, so holding a day never moves the plot. The longest line a day can
-						    say (~330–342 pt at 12.5 pt in the three body faces) is wider than a 375 pt
-						    phone's card (~302 pt): it shrinks to fit, and at larger text sizes drops
-						    parts (`detailLine`), rather than lose its ending. */}
 						{readout.caption ? (
 							<AppText
 								adjustsFontSizeToFit
@@ -124,7 +106,6 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 					</View>
 				)}
 
-				{/* Keyed by week: a new week's bars re-grow from the baseline. */}
 				<WeekPlot
 					days={week.days}
 					initialHeld={weekHeld}

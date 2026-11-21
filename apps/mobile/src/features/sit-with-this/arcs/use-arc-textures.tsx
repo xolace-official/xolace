@@ -14,13 +14,7 @@ import { BLEED, SEAM_PAD } from "./use-arc-lights";
 
 const PR = PixelRatio.get();
 
-/**
- * The arcs' blurred lights, drawn once into textures as card-light does: the
- * edge pill, and the seam's three layers at their relative alphas. Per frame
- * they only move, stretch and fade (`use-arc-lights.ts`).
- */
 export function useArcTextures(W: number, H: number, colors: SitColors) {
-	// The textures are baked at the arcs' half-breath widths and stretched from there.
 	const mid = arcsAt(W, H, 0.5, 0);
 	const pillW = mid.bot.w - L.edge.inset * 2;
 	const seamW = Math.min(mid.top.w, mid.bot.w) - L.seamInset;
@@ -45,8 +39,6 @@ export function useArcTextures(W: number, H: number, colors: SitColors) {
 		{ height: L.edge.h + BLEED * 2, width: pillW + BLEED * 2 },
 		[pillW, colors.edge.join()]
 	);
-	// cipher-seam's layers, laid along the gap: tapering at both ends, no flicker,
-	// flare or sparks; the core at .6. Drawn at the screen's scale for the hairline.
 	const seamTex = useTexture(
 		<Group transform={[{ scale: PR }]}>
 			{L.seam.map((s) => (

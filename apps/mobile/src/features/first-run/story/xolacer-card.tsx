@@ -15,14 +15,12 @@ import { ageOf, type SEng, XS } from "./story-scene";
 
 const PEACH = BEAT_COLORS.xolacers.lit;
 
-/** Xolacers' pile (board `SLOTS`): x, y, rotation, scale, opacity. */
 const SLOTS = [
 	{ o: 1, r: -2, s: 1, x: 0, y: 0 },
 	{ o: 0.82, r: 5, s: 0.95, x: 12, y: 10 },
 	{ o: 0.55, r: -7, s: 0.9, x: -10, y: 18 },
 ];
 
-/** The board's `face()`: a drawn head and shoulders, made up. */
 function Face({ j }: { j: number }) {
 	const n = j + 1;
 	const [bg, hair, skin, shoulders] = useTokenColors([
@@ -56,7 +54,6 @@ const CARD_TOKENS = [
 	"first-run-card-shadow",
 ] as const;
 
-/** A Xolacer's card at its slot, dragged, flying off or settling in (board `c.xc`). */
 export function XoCard({ eng, j }: { eng: SharedValue<SEng>; j: number }) {
 	const x = XOLACERS[j];
 	const [card1, card2, cardShadow] = useTokenColors(CARD_TOKENS);

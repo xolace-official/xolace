@@ -18,13 +18,11 @@ import { EASE, LAYOUT, REDUCED_MS, T1, T2 } from "../session-look";
 import { appear, clamp01 } from "../timeline";
 
 const C = LAYOUT.cta;
-/** `.cta`'s background and colour change over .3 s. */
 const FILL = { duration: 300, ...PLAY_AS_CHOSEN };
 const LABEL_MAX = 1.4;
 const LABELS = [COPY.skip, COPY.continue, COPY.done] as const;
 
 type Props = {
-	/** 0 Skip for now, 1 Continue, 2 I'm done for now. */
 	label: 0 | 1 | 2;
 	c1: SharedValue<number>;
 	c2: SharedValue<number>;
@@ -33,12 +31,6 @@ type Props = {
 	onAnother: () => void;
 };
 
-/**
- * The pinned buttons (board `.cta`, `.cta2`): one 56 pt pill. Before an answer
- * it's "Skip for now" on the well; answered (or late) "Continue" in ink; in
- * moment 2 it slides from 34 up to 84 (.45 s, the sheet curve) as "I'm done for
- * now", and "Start another" fades in under it. The labels cross-roll.
- */
 export function SessionFooter({
 	label,
 	c1,
@@ -49,7 +41,6 @@ export function SessionFooter({
 }: Props) {
 	const well = useTokenColor("surface-secondary");
 	const ink = useTokenColor("foreground");
-	// Taps and VoiceOver reach the button only once it has started to appear.
 	const [shown, setShown] = useState(false);
 	useAnimatedReaction(
 		() => c2.get() >= 0 || c1.get() >= T1.cta.at,
@@ -148,7 +139,6 @@ export function SessionFooter({
 
 type LabelProps = { text: string; on: boolean; first: boolean; onInk: boolean };
 
-/** `.cta span`: the shown label at rest; the others 8 pt below and clear (.25 s opacity, .3 s move). */
 function Label({ text, on, first, onInk }: LabelProps) {
 	const k = useSharedValue(on ? 1 : 0);
 	useEffect(() => {

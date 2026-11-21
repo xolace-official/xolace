@@ -1,6 +1,10 @@
-import type { RootScreen } from "@/lib/root-screen";
+import type { NativeStackNavigationOptions } from "expo-router";
+import {
+	fitSheet,
+	type RootScreen,
+	type ScreenContext,
+} from "@/lib/root-screen";
 
-/** A chat's header, the thread's and the channel's: who's in the title slot, a minimal back. */
 const THREAD_OPTIONS = {
 	headerBackButtonDisplayMode: "minimal",
 	headerShadowVisible: false,
@@ -8,10 +12,17 @@ const THREAD_OPTIONS = {
 	title: "",
 } as const;
 
-/** Connect's stack entries outside the tab: a thread, the Xolace channel and a Xolacer's
- * profile. */
+const editOptions = (context: ScreenContext): NativeStackNavigationOptions => ({
+	...fitSheet(context),
+	headerShown: true,
+	sheetAllowedDetents: [1],
+});
+
 export const connectScreens: readonly RootScreen[] = [
 	{ name: "chat/[conversationId]", options: THREAD_OPTIONS },
 	{ name: "xolace-channel", options: THREAD_OPTIONS },
 	{ name: "xolacer/[profileId]" },
+	{ name: "xolacer-setup" },
+	{ name: "xolacer-edit", options: editOptions },
+	{ name: "age-gate", options: fitSheet },
 ];

@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
 	useAnimatedRef,
@@ -18,19 +18,11 @@ import { BadgesBar } from "@/features/achievements/badges/list/badges-bar";
 import { BadgesList } from "@/features/achievements/badges/list/badges-list";
 import { type Pose, REST_POSE } from "@/features/achievements/coin/pose";
 
-/** The list sinks to .94 behind a held badge. */
 const RECEDE = 0.06;
-/** A deep link (`/achievements?open=streak-10`) opens once the screen has settled in. */
 const DEEP_LINK_MS = 450;
 
-/** What to open on arrival: a deep link's badge, or a dev state's held frame. */
 export type OpenOnArrival = { id: string; opts?: OpenOpts; afterMs?: number };
 
-/**
- * Achievements (badges §2): production's screen, kept as it is, and a badge
- * page that opens in place over it: the badge flies out of its slot and can be
- * held, turned and put back.
- */
 export function BadgesScreen({ open }: { open?: OpenOnArrival }) {
 	const { state, actions } = useBadgesScreen();
 	const window = useWindowDimensions();
@@ -41,30 +33,32 @@ export function BadgesScreen({ open }: { open?: OpenOnArrival }) {
 	const loaded = state.view !== undefined;
 	const known = open ? state.view?.byId.has(open.id) : undefined;
 
-	// A visit starts and ends with nothing out, even with another copy of the
-	// screen under this one (a link opened over it): the store is module-wide.
 	useEffect(() => {
 		resetHeld();
 		return resetHeld;
 	}, []);
 
+	const openId = open?.id;
+	const delay = open?.afterMs ?? DEEP_LINK_MS;
+	const missing = useEffectEvent(() => actions.missing());
+	const openNow = useEffectEvent(() => {
+		if (open) {
+			openBadge(open.id, window, { below: true, ...open.opts });
+		}
+	});
+	// A deep link opens its badge once the list has loaded.
 	useEffect(() => {
-		if (!(open && loaded)) {
+		if (!(openId && loaded)) {
 			return;
 		}
 		if (!known) {
-			actions.missing();
+			missing();
 			return;
 		}
-		const id = setTimeout(
-			() => openBadge(open.id, window, { below: true, ...open.opts }),
-			open.afterMs ?? DEEP_LINK_MS
-		);
+		const id = setTimeout(openNow, delay);
 		return () => clearTimeout(id);
-		// One open per link (its id), once the overview is in.
-	}, [open?.id, loaded, known]);
+	}, [openId, loaded, known, delay]);
 
-	// A badge cleared without seating (the screen reset) leaves the list at rest.
 	useEffect(() => {
 		if (!out) {
 			pose.set(REST_POSE);
@@ -79,7 +73,6 @@ export function BadgesScreen({ open }: { open?: OpenOnArrival }) {
 
 	return (
 		<View className="flex-1 bg-background">
-			{/* While a badge is out, an edge swipe puts it back instead of leaving. */}
 			<Stack.Screen options={{ gestureEnabled: !out }} />
 			<Animated.View
 				accessibilityElementsHidden={out !== null}

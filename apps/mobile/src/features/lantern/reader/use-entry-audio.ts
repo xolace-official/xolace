@@ -1,8 +1,3 @@
-/**
- * The reader's narration (#411), production's `useEntryAudio`: the Listen pill starts it and the
- * dock follows. A free reader hears the server's 30 s preview, then Keep listening opens Xolace+.
- * Hearing the full asset to the end finishes the entry.
- */
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -18,22 +13,15 @@ import { usePushOnce } from "@/lib/use-push-once";
 
 const SKIP_S = 15;
 
-/** What the dock and the Listen pill show; it changes rarely (not with the time). */
 export type ReaderAudio = {
-	/** The dock is up. */
 	started: boolean;
 	playing: boolean;
-	/** A free reader's 30 s preview. */
 	preview: boolean;
-	/** The preview ran out: Keep listening takes the transport's place. */
 	previewEnded: boolean;
-	/** The narration couldn't be fetched. */
 	failed: boolean;
-	/** Xolace+ and the full asset: the transcript is there. */
 	transcript: boolean;
 };
 
-/** Where the narration is, in seconds. It ticks while playing: only the dock's time reads it. */
 export type ReaderClock = { currentTime: number; duration: number };
 
 export type ReaderAudioActions = {
@@ -52,8 +40,6 @@ export function useEntryAudio(
 	const convex = useConvex();
 	const posthog = usePostHog();
 	const openPaywall = usePaywall((s) => s.open);
-	// Keyed on server entitlement so buying Plus re-mints the full asset. Nothing mints until it
-	// resolves, so a Plus reader never mints the preview first.
 	const entitlement = useQuery(api.premium.getEntitlement);
 	const isPlus = entitlement?.isPlus ?? false;
 	const p = usePlayback(
@@ -61,15 +47,14 @@ export function useEntryAudio(
 		() =>
 			hasAudio
 				? entitlement === undefined
-					? new Promise<never>(() => undefined) // the resolved key re-mints
+					? new Promise<never>(() => undefined)
 					: convex.query(api.library.audio.getEntryAudio, { entryId })
 				: Promise.resolve(null),
 		(t) => ({ artist: "Lantern", artworkUrl: t.coverUrl, title: t.title })
 	);
 	const [started, setStarted] = useState(false);
-	const played = useRef(false); // once per open, not per resume
+	const played = useRef(false);
 
-	// Latched per URL so a re-mint clears it; didJustFinish is one status tick wide.
 	const [endedUrl, setEndedUrl] = useState<string>();
 	if (p.didJustFinish && p.track?.preview && endedUrl !== p.track.url) {
 		setEndedUrl(p.track.url);
@@ -86,7 +71,6 @@ export function useEntryAudio(
 		});
 	}, [endedUrl, posthog, slug]);
 
-	// Hearing the full asset to the end finishes the entry (#410, #412).
 	const record = useMutation(api.library.reads.record);
 	const [listened, setListened] = useState(false);
 	if (p.didJustFinish && p.track && !p.track.preview && !listened) {
@@ -97,7 +81,6 @@ export function useEntryAudio(
 			trackLibrary(posthog, "library_audio_completed", { slug });
 		}
 	}, [listened, posthog, slug]);
-	// Audio can end while backgrounded and the token lapsed (#472): wait for auth.
 	const { isAuthenticated } = useConvexAuth();
 	const sentFinish = useRef(false);
 	useEffect(() => {
@@ -112,8 +95,6 @@ export function useEntryAudio(
 	}, [listened, isAuthenticated, record, entryId]);
 
 	const preview = p.track?.preview ?? false;
-	// The actions keep one identity for the reader's life and read the playback as it is when
-	// tapped: the reader's context doesn't change with every status tick.
 	const once = usePushOnce();
 	const live = useRef({ isPlus, p, previewEnded });
 	useLayoutEffect(() => {
@@ -142,12 +123,11 @@ export function useEntryAudio(
 			now.seekTo(now.currentTime + by * SKIP_S);
 		},
 		toggle: () => {
-			// Listen, play and pause: a light impact (handoff §12).
 			tap();
 			setStarted(true);
 			const now = live.current;
 			if (now.previewEnded) {
-				return; // the dock shows the upsell
+				return;
 			}
 			if (!played.current) {
 				played.current = true;

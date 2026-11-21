@@ -1,8 +1,3 @@
-/**
- * The reader and its sheets on fixtures, under their providers through the same `{ state,
- * actions }` as the app. Taps change nothing and reach nothing, except the Aa sheet's, which
- * change it on screen; the narration is a still frame.
- */
 import { type ReactNode, useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -45,7 +40,6 @@ export const SIGNALS: ReaderState = {
 	position: null,
 	saved: false,
 };
-/** A still frame of the narration: what it shows and where it is. */
 type FixtureAudio = ReaderAudio & ReaderClock;
 const IDLE: FixtureAudio = {
 	currentTime: 0,
@@ -57,7 +51,6 @@ const IDLE: FixtureAudio = {
 	started: false,
 	transcript: false,
 };
-/** The board's dock: 1:12 into a 7 minute listen, Xolace+. */
 export const LISTENING: FixtureAudio = {
 	...IDLE,
 	currentTime: 72,
@@ -66,7 +59,6 @@ export const LISTENING: FixtureAudio = {
 	started: true,
 	transcript: true,
 };
-/** A free reader's 30 s preview, spent. */
 export const PREVIEW_ENDED: FixtureAudio = {
 	...IDLE,
 	currentTime: 30,
@@ -133,7 +125,6 @@ export function FixtureReader({
 	);
 }
 
-/** The Aa sheet; its controls change it here, as they would the store. */
 export function FixtureAppearance({
 	initial = CLASSIC,
 }: {
@@ -184,8 +175,6 @@ export const FixtureTranscript = () => (
 	</TranscriptProvider>
 );
 
-/** The sheets are form sheets in the app; a dev state opens them pushed, so they clear the
- * status bar themselves. */
 function AsSheet({ children }: { children: ReactNode }) {
 	const { top } = useSafeAreaInsets();
 	return (

@@ -17,12 +17,9 @@ import { EASE } from "../peers-ease";
 import { DRAW, STAR, YOU } from "../peers-look";
 import { CARD_OF, type Line, starAt } from "./mark-geo";
 
-/** The glow is baked at 2× into the line's own box, with room for its blur. */
 const BAKE = 2;
 const PAD = 12;
-/** The draw-on reveals the baked glow through a stroke wide enough to cover it and its blur. */
 const REVEAL_W = 26;
-/** `.lines.dot .lk` fades .6 s. */
 const DOT_FADE_MS = 600;
 
 type Props = {
@@ -47,12 +44,6 @@ function boxOf(k: number) {
 	return { h: Math.max(...ys) + PAD - y, w: Math.max(...xs) + PAD - x, x, y };
 }
 
-/**
- * One line from you to star k (board `.lg` under `.lk`): a blurred glow, baked
- * once (normal and hot), revealed along the curve as the line draws, under a
- * crisp core stroked with `end`. The stroke is a gradient from peach at you to
- * the star's colour. No close match: a dotted core, no glow, no draw.
- */
 export function MarkLine({
 	k,
 	line,

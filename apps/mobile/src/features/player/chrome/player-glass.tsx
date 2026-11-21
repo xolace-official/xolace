@@ -6,19 +6,12 @@ import { useOSReduceTransparency } from "@/lib/os-reduce-transparency";
 
 const GLASS = isLiquidGlassAvailable();
 
-/**
- * Production's close glass (`CLOSE_GLASS`): clear, dark, interactive, over the artwork whatever
- * the theme. Without Liquid Glass the view gets production's 15% ink fill; Reduce Transparency
- * makes it a solid `--color-player-glass` with a 0.5 pt white ring (§7). Layout comes as a style:
- * through Uniwind a GlassView drew no glass.
- */
 export function PlayerGlass({
 	style,
 	className,
 	children,
 }: {
 	style: StyleProp<ViewStyle>;
-	/** For the fallbacks only (padding, alignment). */
 	className?: string;
 	children: ReactNode;
 }) {

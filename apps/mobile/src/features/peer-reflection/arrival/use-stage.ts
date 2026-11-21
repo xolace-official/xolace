@@ -1,5 +1,5 @@
 import { useIsFocused } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { AccessibilityInfo } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { useAppActive } from "@/components/shared/use-app-active";
@@ -14,26 +14,15 @@ import { CARD_STAR } from "../peers-look";
 import { wordsIn } from "./arrival-time";
 import { useArrival } from "./use-arrival";
 
-/** Dev states: a moment held or played on fixtures. */
 export type PeersScene = {
-	/** Hold the arrival at this many ms; `Infinity` holds it arrived. */
 	hold?: number;
-	/** As Reduce Motion draws it, whatever the setting. */
 	reduced?: boolean;
-	/** Press this card's "I've felt this too" once the screen settles. */
 	tap?: number;
-	/** Scroll to the end once the screen settles. */
 	scrollEnd?: boolean;
 };
 
-/** A dev scene's press waits for the screen to settle (the board's jumps: 60–90 ms). */
 const SCENE_MS = 120;
 
-/**
- * You're not alone's moments, around the provider's data: the arrival clock,
- * the mark's values, the face and the haptics. React hears only the moments
- * that change what's drawn: a card landing, Done, reading, a press.
- */
 export function useStage(
 	{ state, actions }: PeerReflection,
 	scene: PeersScene | undefined,
@@ -57,6 +46,21 @@ export function useStage(
 	const [ui, setUi] = useState(false);
 	const title = titleOf(set);
 
+	const sceneRan = useRef(false);
+	const playScene = () => {
+		if (!scene || sceneRan.current) {
+			return;
+		}
+		sceneRan.current = true;
+		if (scene.tap !== undefined) {
+			const i = scene.tap;
+			later(() => press(i), SCENE_MS);
+		}
+		if (scene.scrollEnd) {
+			later(onSceneScroll, SCENE_MS);
+		}
+	};
+
 	const { arrive, end } = useArrival({
 		events: {
 			onLand: (c) => {
@@ -76,6 +80,7 @@ export function useStage(
 					face.alone();
 					AccessibilityInfo.announceForAccessibility(announcementOf(set, 0));
 				}
+				playScene();
 			},
 		},
 		hold: scene?.hold,
@@ -84,11 +89,11 @@ export function useStage(
 		words: wordsIn(title.rows),
 	});
 
-	// A card lit or put out moves its line and star: at once on the visit's start,
-	// over its own time after.
 	const seen = useRef<Map<string, { on: boolean; gone: boolean }>>(new Map());
 	const lit = cards.map((c) => `${c.on ? 1 : 0}${c.gone ? 1 : 0}`).join();
-	useEffect(() => {
+	// A card lights or goes out from a press, and also from the server (a rate-limit flip-back,
+	// an optimistic rollback), so the stars follow `lit` rather than the press.
+	const syncStars = useEffectEvent(() => {
 		cards.forEach((c, i) => {
 			const k = CARD_STAR[i];
 			const was = seen.current.get(c.id);
@@ -101,6 +106,11 @@ export function useStage(
 			}
 			seen.current.set(c.id, { gone: c.gone !== null, on });
 		});
+	});
+	useEffect(() => {
+		if (lit) {
+			syncStars();
+		}
 	}, [lit]);
 
 	const press = (i: number) => {
@@ -125,22 +135,6 @@ export function useStage(
 		playAffirmativePress();
 		actions.done();
 	};
-
-	// Dev states: once the screen has settled, press or scroll as the scene says.
-	const sceneRan = useRef(false);
-	useEffect(() => {
-		if (!ui || sceneRan.current || !scene) {
-			return;
-		}
-		sceneRan.current = true;
-		if (scene.tap !== undefined) {
-			const i = scene.tap;
-			later(() => press(i), SCENE_MS);
-		}
-		if (scene.scrollEnd) {
-			later(onSceneScroll, SCENE_MS);
-		}
-	});
 
 	return { arrive, done, end, face, mark, press, reduced, title, ui };
 }

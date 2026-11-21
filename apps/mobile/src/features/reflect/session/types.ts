@@ -1,3 +1,4 @@
+import type { SessionErrorCode } from "@xolace/backend/shared";
 export type ReflectionStateName =
 	| "idle"
 	| "typing"
@@ -14,7 +15,6 @@ export type EntryType = "typed" | "scaffold" | "hybrid" | "voice";
 
 export type FeedbackType = "not_quite" | "say_more";
 
-/** The chip picked in the "What didn't land?" sheet. */
 export type MissReason =
 	| "wrong_emotion"
 	| "too_surface_level"
@@ -38,22 +38,31 @@ export type ReflectionAction =
 	| { type: "CLARIFY_TEXT_CHANGE"; text: string }
 	| { type: "RESET" }
 	| { type: "ACCOUNT_SWITCHED"; entryText: string }
-	| { type: "SESSION_ERROR"; message: string }
+	| { type: "SESSION_ERROR"; message: string; code?: SessionErrorCode }
 	| { type: "SESSION_RESUMED"; screen: ReflectionStateName }
 	| { type: "VOICE_START" }
 	| { type: "VOICE_TRANSCRIPT"; text: string }
-	/** Plus dictation: a finished take, appended after whatever is written now. */
 	| { type: "VOICE_APPEND"; text: string }
 	| { type: "BACK_TO_MIRROR" }
 	| { type: "CLEAR_TEXTURES" };
+
+/** When writing started and how long the typing nudge held it, for the submit's telemetry. */
+export type TypingClock = {
+	startedAt: number | null;
+	froze: boolean;
+	frozeAt: number | null;
+	frozeMs: number | undefined;
+};
 
 export interface ReflectionState {
 	clarifyText: string;
 	entryText: string;
 	entryType: EntryType;
+	errorCode: SessionErrorCode | null;
 	errorMessage: string;
 	lastFeedbackType: FeedbackType | null;
 	missReason: MissReason | null;
 	screen: ReflectionStateName;
 	selectedTextures: string[];
+	typing: TypingClock;
 }

@@ -8,19 +8,12 @@ import { goHome } from "@/lib/landing";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const CHEVRON: IconName = { android: "arrow_back", ios: "chevron.left" };
-const GLYPH = 17;
+// Matches the native header back button (iOS bar button chevron), so a screen that draws its own
+// chrome looks the same as one with a native header.
+const GLYPH = 22;
 
-/**
- * Back, or home when a deep link left nothing behind.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export const goBack = () => (router.canGoBack() ? router.back() : goHome());
 
-/**
- * A floating glass back button for pushed screens that draw their own top.
- * Callers place it with `style` (position, top from insets) or `className`.
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
 export function BackButton({
 	tint,
 	style,
@@ -30,16 +23,12 @@ export function BackButton({
 	onPress = goBack,
 	haptic,
 }: {
-	/** A colour string for the chevron (`useTokenColor`); the theme's ink by default. */
 	tint?: string;
 	style?: StyleProp<ViewStyle>;
 	className?: string;
 	label?: string;
-	/** Another glyph for the same button (a close ×). */
 	icon?: IconName;
-	/** A screen's own way back (a step back, a dismiss); `goBack` by default. */
 	onPress?: () => void;
-	/** Plays on press: a named haptic from `@/lib/haptics`. */
 	haptic?: () => void;
 }) {
 	const foreground = useTokenColor("foreground");
@@ -55,7 +44,7 @@ export function BackButton({
 					color={tint ?? foreground}
 					name={icon}
 					size={GLYPH}
-					weight="semibold"
+					weight="regular"
 				/>
 			</PressScale>
 		</GlassGroup>

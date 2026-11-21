@@ -4,12 +4,6 @@ import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
 
-/**
- * "Reach me on…"'s pieces in Settings v2's language (P/src/features/reach/reach-parts.tsx): pill
- * buttons and the small accent tag. The strings stay inline while reach-me-on is an old folder;
- * S4 moves them into a copy file with the rest.
- */
-
 export type PillTone = "primary" | "secondary" | "danger";
 
 const PILL: Record<PillTone, { bg: string; text: string }> = {
@@ -18,8 +12,6 @@ const PILL: Record<PillTone, { bg: string; text: string }> = {
 	secondary: { bg: "bg-surface-secondary", text: "text-foreground" },
 };
 
-/** A 44 pt pill (grows with larger text). One haptic, the selection tick as P's; disabled, it
- * dims to 45% and says so. */
 export function Pill({
 	label,
 	tone = "secondary",
@@ -57,7 +49,6 @@ export function Pill({
 	);
 }
 
-/** A small accent tag on a card: First, Xolace+. */
 export function CardTag({ label }: { label: string }) {
 	return (
 		<View className="rounded-full bg-accent/14 px-2.5 py-1">

@@ -1,8 +1,3 @@
-/**
- * Trusted Bridge's data: production's flow. The intro once (`bridgeIntroSeen`), who it's for,
- * a draft from `ai.bridge.requestBridgeDraft` (a template when it can't, saying why), the share
- * sheet, and `paths.completeStep` when it came from a path step.
- */
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useAction, useMutation, useQuery } from "convex/react";
@@ -50,7 +45,6 @@ export function useBridge(
 	const [text, setText] = useState("");
 	const [written, setWritten] = useState<string | null>(null);
 	const [shared, setShared] = useState(false);
-	// The newest request: Back is reachable mid-load, so an older answer is dropped.
 	const requestId = useRef(0);
 
 	const generate = async () => {
@@ -74,7 +68,6 @@ export function useBridge(
 			if (id !== requestId.current) {
 				return;
 			}
-			// Still something to send, and told why it isn't theirs yet.
 			setText(COPY.draft.fallback);
 			setWritten(null);
 			setStatus(failedStatus(convexErrorCode(error)));
@@ -89,7 +82,7 @@ export function useBridge(
 		try {
 			result = await Share.share({ message: text });
 		} catch {
-			return; // the sheet was dismissed
+			return;
 		}
 		// Only a finished share reveals Done (Android always reports sharedAction).
 		if (result.action !== Share.sharedAction) {
@@ -132,7 +125,7 @@ export function useBridge(
 			getPlus: () => openPaywall("bridge_draft"),
 			selectRelationship: (next) => {
 				setRelationship((prev) => (prev === next ? null : next));
-				setAddressTerm(null); // the terms differ per relationship
+				setAddressTerm(null);
 			},
 			setAddressTerm: (term) =>
 				setAddressTerm(term && term.length > 0 ? term : null),
@@ -151,7 +144,7 @@ export function useBridge(
 				posthog.capture("bridge_opened", {
 					recipient_relationship: relationship,
 				});
-				setShared(false); // a fresh draft, not shared yet
+				setShared(false);
 				setStep("draft");
 				generate().catch(() => undefined);
 			},

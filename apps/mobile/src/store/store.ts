@@ -1,9 +1,8 @@
-/** Global Zustand store, hydrated synchronously at creation from expo-sqlite/kv-store. */
-
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { create } from "zustand";
 import { createJSONStorage, devtools, persist } from "zustand/middleware";
 import type { TextureSetId } from "@/features/reflect/texture-sets";
+import { LATEST_RELEASE } from "@/lib/release-notes";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import {
 	type AccountFlagsSlice,
@@ -15,14 +14,17 @@ import {
 	type PlusOfferSlice,
 	plusOfferPersistedKeys,
 } from "./plus-offer-slice";
+import {
+	createRatingsSlice,
+	type RatingsSlice,
+	ratingsPersistedKeys,
+} from "./ratings-slice";
 
 type ThemeSlice = {
 	theme: "system" | "light" | "dark";
 	setTheme: (t: "system" | "light" | "dark") => void;
-	/** The active color palette ID (e.g. 'default', 'lavender'). */
 	colorThemeId: string;
 	setColorThemeId: (id: string) => void;
-	/** Theme stashed before 3am Mode activates — restored when exiting the night window. */
 	previousTheme: string | null;
 	setPreviousTheme: (t: string | null) => void;
 };
@@ -30,27 +32,14 @@ type ThemeSlice = {
 type OnboardingSlice = {
 	introSeen: boolean;
 	setIntroSeen: (v: boolean) => void;
-	/** First run is playing someone into their seat after sign-in: the root guard keeps first run
-	 * open until it lets go (src/features/navigation/root-gate.ts). Transient. */
 	seatHeld: boolean;
 	setSeatHeld: (v: boolean) => void;
-	/** A sign-in landed (`setActive`) but its user row isn't there yet (`users.getOrCreate`). Every
-	 * root reader of a `requireAuth` query waits on it: before the row exists those queries throw
-	 * `user_not_found`, and the bootstrap boundary would swap the seat for a loader. Transient. */
 	accountPending: boolean;
 	setAccountPending: (v: boolean) => void;
-	/** Home's reflect card has left idle: the composer is open (typing or a live mic), or a
-	 * submit is on its way and has no session yet. Transient; the badge unlock moment and
-	 * streak-held wait on it, since either would close the keyboard over a half-written
-	 * reflection. */
 	homeComposing: boolean;
 	setHomeComposing: (v: boolean) => void;
-	/** True while any home sheet is open or armed to open. Transient; the reflect tour hides
-	 * its coach marks while set. */
 	homeSheetBlocking: boolean;
 	setHomeSheetBlocking: (v: boolean) => void;
-	/** A home sheet is on screen right now. Transient; unlike homeSheetBlocking it drops while
-	 * a follow-up is merely pending. */
 	homeSheetOpen: boolean;
 	setHomeSheetOpen: (v: boolean) => void;
 };
@@ -63,64 +52,27 @@ type PendingEventPrompt = {
 };
 
 type TogglesSlice = {
-	/** When true, SessionModeProvider auto-activates 3am Mode between 10pm–4am. */
 	nightModeEnabled: boolean;
 	setNightModeEnabled: (v: boolean) => void;
-	/** One-time flag — once true, bridge first-run intro modal never shows again. */
 	bridgeIntroSeen: boolean;
 	setBridgeIntroSeen: (v: boolean) => void;
-	/** One-time flag — once true, the Plus dictation upsell never shows again on this device
-	 * (#559). */
 	dictationUpsellSeen: boolean;
 	setDictationUpsellSeen: (v: boolean) => void;
-	/** One-time flag — once true, vent first-run intro never shows again. */
 	ventIntroSeen: boolean;
 	setVentIntroSeen: (v: boolean) => void;
-	/** One-time flag — once true, the Xolacer primer never gates a request again. */
 	xolacerPrimerSeen: boolean;
 	setXolacerPrimerSeen: (v: boolean) => void;
-	/** One-time flag — once true, the Music family welcome never shows again. */
 	musicIntroSeen: boolean;
 	setMusicIntroSeen: (v: boolean) => void;
-	/** One-time flag — once true, the Support audio family welcome never shows again. */
 	supportAudioIntroSeen: boolean;
 	setSupportAudioIntroSeen: (v: boolean) => void;
-	/** One-time flag — once true, the Lantern (library) welcome never shows again. */
 	libraryIntroSeen: boolean;
 	setLibraryIntroSeen: (v: boolean) => void;
-	/** Dev tools only (honoured under `__DEV__`): treat this account as zero-session for
-	 * Starter suggestions (#465). */
-	devStarterEligible: boolean;
-	/** Last resolved `xolacerChat.status().enabled` — lets a returning chat user connect before
-	 * the live query answers (#342). */
 	chatEnabledCached: boolean;
 	setChatEnabledCached: (v: boolean) => void;
-	/** One-time flag — once true, the "shake to send feedback" hint toast never shows again. */
 	shakeHintSeen: boolean;
 	setShakeHintSeen: (v: boolean) => void;
-	/** `lastSessionAt` value the Return Welcome greeting was last shown against. Keys "once per
-	 * return episode". */
-	returnWelcomeSeenAt: number | null;
-	setReturnWelcomeSeenAt: (n: number) => void;
-	/** Id of the newest What's New entry the user has opened. Drives the menu's unseen badge. */
-	lastSeenVersion: string | null;
-	setLastSeenVersion: (v: string) => void;
-	/** Menu item keys whose "new" glow has been acknowledged (item opened once). */
-	seenMenuItems: string[];
-	markMenuItemSeen: (key: string) => void;
-	/** Highest streak day each account (by Clerk user id) has seen the calendar reveal for. */
-	acknowledgedStreaks: Record<string, number>;
-	/** Pre-per-account acknowledged day; stands in for accounts without an entry until the
-	 * first write zeroes it. */
-	lastAcknowledgedStreak: number;
-	setLastAcknowledgedStreak: (n: number, owner: string) => void;
-	/** Awareness event slugs the user has already seen, with timestamps for pruning. */
 	seenEventIds: { slug: string; seenAt: number }[];
-	addToSeenEventIds: (slug: string) => void;
-	/** Drops entries older than 13 months. Called on hook mount, not during render. */
-	pruneSeenEventIds: () => void;
-	/** Prompt the next reflect session opens on: a monthly event's sessionPrompt (7 days) or a
-	 * Library entry's "Reflect on this" (#413). */
 	pendingEventPrompt: PendingEventPrompt | null;
 	setPendingEventPrompt: (prompt: PendingEventPrompt | null) => void;
 };
@@ -128,25 +80,20 @@ type TogglesSlice = {
 type PreferencesSlice = {
 	textureSetId: TextureSetId;
 	setTextureSetId: (id: TextureSetId) => void;
-	/** The Lantern reader's reading mode and base text size (#408). Per device. */
 	readingMode: ReadingModeKey;
 	setReadingMode: (m: ReadingModeKey) => void;
 	readerTextSize: number;
 	setReaderTextSize: (n: number) => void;
-	/** "Read by the fire" (#413): the reader's dimmed ambience, independent of the reading mode. */
 	readByFire: boolean;
 	setReadByFire: (on: boolean) => void;
-	/** Profile number cards the person chose not to see. Per device. */
 	hiddenProfileCards: ProfileCardId[];
 	toggleProfileCard: (id: ProfileCardId) => void;
 };
 
-/** The Lantern reader's reading modes (src/features/lantern/reader/reading-modes.ts). */
 export type ReadingModeKey = "classic" | "clear" | "fire";
 
 export type ProfileCardId = "calendar" | "rank" | "week";
 
-/** Ephemeral, not persisted. Tracks store version check state. */
 type UpdateCheckSlice = {
 	isVersionChecked: boolean;
 	setIsVersionChecked: (v: boolean) => void;
@@ -154,7 +101,6 @@ type UpdateCheckSlice = {
 	setIsNewVersionAvailable: (v: boolean) => void;
 };
 
-/** Ephemeral, not persisted. Set when user taps a notification to open the app. */
 type LastNotificationSlice = {
 	lastNotification: {
 		content: string;
@@ -166,33 +112,10 @@ type LastNotificationSlice = {
 	clearLastNotification: () => void;
 };
 
-/** Ephemeral. A kept quote reply to start a session from (#316); raw user text, so never a
- * route param. */
 type ReplySeedSlice = {
 	replySeed: string | null;
 	setReplySeed: (reply: string) => void;
 	clearReplySeed: () => void;
-};
-
-/** Intake v2's first answer (#707), held for the account that gave it. */
-export type IntakeFirstAnswer = { text: string; userId: string };
-
-/** Ephemeral. Something outside the reflect screen (#462) asking it to open the card; see
- * useReflectBridge. */
-type ComposerOpenSlice = {
-	/** The reflect screen has loaded and its card has finished arriving. */
-	reflectSettled: boolean;
-	setReflectSettled: (v: boolean) => void;
-	composerOpenRequested: boolean;
-	/** Words to open the card with, e.g. intake v2's first answer (#707). Raw user text. */
-	composerOpenText: string | null;
-	requestComposerOpen: (text?: string) => void;
-	clearComposerOpenRequest: () => void;
-	/** Intake v2's first answer (#707), for the Mirror's "Pick up where you left off". Memory
-	 * only: the user's own words never touch disk, so a cold kill drops the offer. Keyed by
-	 * Clerk user, so a sign-out and a second account never see the first one's words. */
-	intakeFirstAnswer: IntakeFirstAnswer | null;
-	setIntakeFirstAnswer: (answer: IntakeFirstAnswer | null) => void;
 };
 
 export type AppState = ThemeSlice &
@@ -200,36 +123,23 @@ export type AppState = ThemeSlice &
 	TogglesSlice &
 	AccountFlagsSlice &
 	PlusOfferSlice &
+	RatingsSlice &
 	PreferencesSlice &
 	UpdateCheckSlice &
 	LastNotificationSlice &
-	ReplySeedSlice &
-	ComposerOpenSlice;
+	ReplySeedSlice;
 
 export const useAppStore = create<AppState>()(
 	devtools(
 		persist(
 			(set) => ({
 				accountPending: false,
-				acknowledgedStreaks: {},
-				addToSeenEventIds: (slug) =>
-					set((s) =>
-						s.seenEventIds.some((e) => e.slug === slug)
-							? {}
-							: {
-									seenEventIds: [
-										...s.seenEventIds,
-										{ seenAt: Date.now(), slug },
-									],
-								}
-					),
 
 				bridgeIntroSeen: false,
 				chatEnabledCached: false,
 
 				colorThemeId: "default",
 
-				devStarterEligible: false,
 				dictationUpsellSeen: false,
 
 				homeComposing: false,
@@ -238,15 +148,7 @@ export const useAppStore = create<AppState>()(
 
 				introSeen: false,
 
-				lastAcknowledgedStreak: 0,
-				lastSeenVersion: null,
 				libraryIntroSeen: false,
-				markMenuItemSeen: (key) =>
-					set((s) =>
-						s.seenMenuItems.includes(key)
-							? {}
-							: { seenMenuItems: [...s.seenMenuItems, key] }
-					),
 				musicIntroSeen: false,
 
 				nightModeEnabled: true,
@@ -254,24 +156,11 @@ export const useAppStore = create<AppState>()(
 				pendingEventPrompt: null,
 
 				previousTheme: null,
-				pruneSeenEventIds: () =>
-					set((s) => {
-						const threshold = new Date();
-						threshold.setMonth(threshold.getMonth() - 13);
-						return {
-							seenEventIds: s.seenEventIds.filter(
-								(e) => e.seenAt >= threshold.getTime()
-							),
-						};
-					}),
-
-				returnWelcomeSeenAt: null,
 
 				seatHeld: false,
 
 				seenEventIds: [],
 
-				seenMenuItems: [],
 				setAccountPending: (v) => set({ accountPending: v }),
 				setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
 				setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
@@ -281,18 +170,11 @@ export const useAppStore = create<AppState>()(
 				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
-				setLastAcknowledgedStreak: (n, owner) =>
-					set((s) => ({
-						acknowledgedStreaks: { ...s.acknowledgedStreaks, [owner]: n },
-						lastAcknowledgedStreak: 0,
-					})),
-				setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
 				setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
 				setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
 				setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
 				setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
 				setPreviousTheme: (t) => set({ previousTheme: t }),
-				setReturnWelcomeSeenAt: (n) => set({ returnWelcomeSeenAt: n }),
 				setSeatHeld: (v) => set({ seatHeld: v }),
 				setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
 				setSupportAudioIntroSeen: (v) => set({ supportAudioIntroSeen: v }),
@@ -310,14 +192,11 @@ export const useAppStore = create<AppState>()(
 
 				...createPlusOfferSlice(set),
 
-				clearComposerOpenRequest: () =>
-					set({ composerOpenRequested: false, composerOpenText: null }),
+				...createRatingsSlice(set),
+
 				clearLastNotification: () => set({ lastNotification: null }),
 				clearReplySeed: () => set({ replySeed: null }),
-				composerOpenRequested: false,
-				composerOpenText: null,
 				hiddenProfileCards: [],
-				intakeFirstAnswer: null,
 				isNewVersionAvailable: false,
 
 				isVersionChecked: false,
@@ -327,19 +206,13 @@ export const useAppStore = create<AppState>()(
 				readerTextSize: 18,
 				readingMode: "classic",
 
-				reflectSettled: false,
-
 				replySeed: null,
-				requestComposerOpen: (text) =>
-					set({ composerOpenRequested: true, composerOpenText: text ?? null }),
-				setIntakeFirstAnswer: (answer) => set({ intakeFirstAnswer: answer }),
 				setIsNewVersionAvailable: (v) => set({ isNewVersionAvailable: v }),
 				setIsVersionChecked: (v) => set({ isVersionChecked: v }),
 				setLastNotification: (n) => set({ lastNotification: n }),
 				setReadByFire: (on) => set({ readByFire: on }),
 				setReaderTextSize: (n) => set({ readerTextSize: n }),
 				setReadingMode: (m) => set({ readingMode: m }),
-				setReflectSettled: (v) => set({ reflectSettled: v }),
 				setReplySeed: (reply) => set({ replySeed: reply }),
 				setTextureSetId: (id) => set({ textureSetId: id }),
 
@@ -353,17 +226,16 @@ export const useAppStore = create<AppState>()(
 			}),
 			{
 				name: "xolace-app",
+				onRehydrateStorage: () => (state) => {
+					state?.noteReleaseRan(LATEST_RELEASE.id);
+				},
 				partialize: (s) => ({
-					acknowledgedStreaks: s.acknowledgedStreaks,
 					bridgeIntroSeen: s.bridgeIntroSeen,
 					chatEnabledCached: s.chatEnabledCached,
 					colorThemeId: s.colorThemeId,
-					devStarterEligible: s.devStarterEligible,
 					dictationUpsellSeen: s.dictationUpsellSeen,
 					hiddenProfileCards: s.hiddenProfileCards,
 					introSeen: s.introSeen,
-					lastAcknowledgedStreak: s.lastAcknowledgedStreak,
-					lastSeenVersion: s.lastSeenVersion,
 					libraryIntroSeen: s.libraryIntroSeen,
 					musicIntroSeen: s.musicIntroSeen,
 					nightModeEnabled: s.nightModeEnabled,
@@ -372,9 +244,7 @@ export const useAppStore = create<AppState>()(
 					readByFire: s.readByFire,
 					readerTextSize: s.readerTextSize,
 					readingMode: s.readingMode,
-					returnWelcomeSeenAt: s.returnWelcomeSeenAt,
 					seenEventIds: s.seenEventIds,
-					seenMenuItems: s.seenMenuItems,
 					shakeHintSeen: s.shakeHintSeen,
 					supportAudioIntroSeen: s.supportAudioIntroSeen,
 					textureSetId: s.textureSetId,
@@ -383,6 +253,7 @@ export const useAppStore = create<AppState>()(
 					xolacerPrimerSeen: s.xolacerPrimerSeen,
 					...accountFlagsPersistedKeys(s),
 					...plusOfferPersistedKeys(s),
+					...ratingsPersistedKeys(s),
 				}),
 				storage: createJSONStorage(() => zustandJSONStorage),
 			}

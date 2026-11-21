@@ -1,4 +1,3 @@
-// The previews' line icons, drawn on a 24 box at the board's weights.
 import type { ReactNode } from "react";
 import Svg, { Circle, Path } from "react-native-svg";
 

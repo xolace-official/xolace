@@ -1,13 +1,3 @@
-/**
- * Builds the theme CSS and the Metro theme list from the registry
- * (src/design/themes.ts). Pure: scripts/gen-themes.ts writes the files, and
- * build.test.ts checks the committed ones are what this builds.
- *
- * Each variant is built in three layers: SHARED (production's values that are
- * the same in most themes) → the theme's own values → DERIVED (the redesign's
- * extras a theme doesn't set, worked out from its own colours). It throws if a
- * variant misses a variable or sets one nobody declared.
- */
 import { FONT_PAIRS, FONT_ROLES } from "../../src/design/font-pairs";
 import {
 	type Palette,
@@ -18,7 +8,6 @@ import {
 } from "../../src/design/themes";
 import { alpha, mix } from "./color";
 
-/** HeroUI Native's variables (node_modules/heroui-native/src/styles/variables.css). */
 export const HEROUI = [
 	"background",
 	"foreground",
@@ -59,15 +48,10 @@ export const HEROUI = [
 	"radius",
 ] as const;
 
-/** Production's own extras, from before the generator. */
 const PRODUCTION = [
-	"resonance",
-	"resonance-foreground",
 	"ember",
 	"frost-text",
 	"offer-ink",
-	"event",
-	"event-foreground",
 	"tone-poetic",
 	"tone-gentle",
 	"tone-direct",
@@ -82,7 +66,6 @@ const PRODUCTION = [
 	"browse-music-foreground",
 	"browse-topics",
 	"browse-topics-foreground",
-	// Playful's lip and stroke; off everywhere else (playful-components.css reads them).
 	"playful-lip",
 	"playful-lip-chip",
 	"playful-stroke",
@@ -96,7 +79,6 @@ const PRODUCTION = [
 	"surface-stroke-color",
 ] as const;
 
-/** The redesign's extras: colours two or more screens need that HeroUI has no name for. */
 const XOLACE = [
 	"subtle",
 	"accent-ink",
@@ -137,7 +119,6 @@ const PLAYFUL_OFF: Palette = {
 	"warning-lip": "transparent",
 };
 
-/** Production's base light/dark values for the variables most themes share. */
 const SHARED: Record<ThemeMode, Palette> = {
 	dark: {
 		backdrop: "oklch(0% 0 0 / 20%)",
@@ -147,16 +128,12 @@ const SHARED: Record<ThemeMode, Palette> = {
 		"browse-music-foreground": "oklch(72% 0.12 200)",
 		"browse-topics": "oklch(76% 0.13 130 / 14%)",
 		"browse-topics-foreground": "oklch(76% 0.13 130)",
-		event: "oklch(76% 0.12 350)",
-		"event-foreground": "oklch(15% 0.01 350)",
 		"field-border": "transparent",
 		"field-border-width": "0px",
 		"field-placeholder": "var(--muted)",
 		"frost-text": "oklch(72% 0.12 240)",
 		"offer-ink": "oklch(18% 0.02 285)",
 		radius: "0.625rem",
-		resonance: "oklch(0.796 0.0347 167.72 / 15%)",
-		"resonance-foreground": "oklch(0.796 0.0347 167.72)",
 		"tone-direct": "oklch(72% 0.15 225)",
 		"tone-direct-text": "var(--tone-direct)",
 		"tone-gentle": "oklch(72% 0.17 15)",
@@ -175,16 +152,12 @@ const SHARED: Record<ThemeMode, Palette> = {
 		"browse-music-foreground": "oklch(68% 0.12 200)",
 		"browse-topics": "oklch(72% 0.13 130 / 16%)",
 		"browse-topics-foreground": "oklch(72% 0.13 130)",
-		event: "oklch(60% 0.15 350)",
-		"event-foreground": "oklch(99% 0.005 350)",
 		"field-border": "transparent",
 		"field-border-width": "0px",
 		"field-placeholder": "var(--muted)",
 		"frost-text": "oklch(52% 0.12 240)",
 		"offer-ink": "oklch(18% 0.02 285)",
 		radius: "0.625rem",
-		resonance: "oklch(0.796 0.0347 167.72 / 15%)",
-		"resonance-foreground": "oklch(0.796 0.0347 167.72)",
 		"tone-direct": "oklch(68% 0.15 225)",
 		"tone-direct-text": "oklch(46% 0.15 225)",
 		"tone-gentle": "oklch(68% 0.17 15)",
@@ -203,26 +176,6 @@ const LIGHT_WASH = 0.12;
 const DARK_WASH = 0.18;
 const SUBTLE_FADE = 0.12;
 
-/**
- * How a theme gets the redesign's extras it doesn't set. Tuned so Default's own
- * values come out close to these rules; the other themes haven't been reviewed
- * by a designer with them yet.
- *
- * - subtle: muted, 12% of the way to the background (the third text step).
- * - *-ink (coloured text on the page): light, the colour 25% toward black;
- *   dark, 20% toward the foreground.
- * - *-wash (a tinted ground): light, 12% of the colour in the card; dark, 18% in the page.
- * - heavy-wash / heavy-ink: one calm violet in every theme (the "Got heavier"
- *   answer), so a heavy answer never takes a theme's accent (red in Velvet,
- *   green in Emerald). Light #E6DEFF / #4B32C2 (6.4:1), dark #2A2440 / #C9BAFF
- *   (8.4:1). Opaque, so it can sit on stacked cards.
- * - frost: the theme's frost-text.
- * - glass: the card at 66% (light), the second surface at 62% (dark).
- * - glass-edge: white at 95% / 14%.
- * - tab-on: accent at 12% / 16%.
- * - eink: ember, 20% toward the foreground in light; ember in dark.
- * - mk: ember at 26% / 22%.
- */
 function derive(mode: ThemeMode, v: (name: string) => string): Palette {
 	const light = mode === "light";
 	const ink = (c: string) =>
@@ -260,7 +213,6 @@ function derive(mode: ThemeMode, v: (name: string) => string): Palette {
 
 const VAR_REF = /^var\(--([a-z0-9-]+)\)$/;
 
-/** One variant's full palette: SHARED, then the theme's own, then DERIVED for what's left. */
 export function buildVariant(
 	name: string,
 	mode: ThemeMode,
@@ -309,7 +261,6 @@ function themeOf(id: string): ThemeEntry {
 	return theme;
 }
 
-/** Every variant's palette, by Uniwind theme name. */
 export function buildPalettes(): Record<string, Palette> {
 	const out: Record<string, Palette> = {};
 	for (const variant of VARIANTS) {
@@ -325,7 +276,6 @@ export function buildPalettes(): Record<string, Palette> {
 const THEMES_CSS_HEADER =
 	"/* Generated by scripts/gen-themes.ts from src/design/themes.ts. Don't edit; run `bun run themes`. */";
 
-/** src/themes/themes.generated.css: one `@variant` per theme and mode. */
 export function renderThemesCss(): string {
 	const palettes = buildPalettes();
 	const blocks = VARIANTS.map((variant) => {
@@ -340,7 +290,6 @@ export function renderThemesCss(): string {
 	return `${THEMES_CSS_HEADER}\n@layer theme {\n\t:root {\n${blocks.join("\n\n")}\n\t}\n}\n`;
 }
 
-/** What Metro registers (`extraThemes`): every variant except Uniwind's own light and dark. */
 export function renderThemeNames(): string {
 	const names = VARIANTS.map((v) => v.name).filter(
 		(n) => n !== "light" && n !== "dark"

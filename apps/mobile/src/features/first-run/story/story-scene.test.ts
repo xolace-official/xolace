@@ -22,7 +22,6 @@ import {
 
 const FRAME = 16;
 
-/** A story with its clock started at `now`. */
 function story(now = 1000, seat = false): SEng {
 	const e = freshStory(false, 0, -1, seat);
 	e.now = now;
@@ -34,7 +33,6 @@ function story(now = 1000, seat = false): SEng {
 	return e;
 }
 
-/** Runs frames for `ms`, collecting every event bit raised. */
 function run(e: SEng, ms: number) {
 	let ev = 0;
 	for (let t = 0; t < ms; t += FRAME) {
@@ -104,7 +102,6 @@ describe("signing in", () => {
 		expect(e.authProv).toBe(PROV.google);
 		const ev = run(e, 20_000);
 		expect(ageAuth(e)).toBe(AUTH.back - 1);
-		// The spinner keeps turning from the tap.
 		expect(ageSpin(e)).toBeGreaterThan(19_000);
 		expect(ev & (EV.seated | EV.intake)).toBe(0);
 	});

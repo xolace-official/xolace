@@ -1,5 +1,3 @@
-/** The Steadiness screen on fixtures: the real screen under providers the fixtures fill. Its own
- * UI (the toggle, picking parts, opening rows, peeking) still answers taps. */
 import {
 	fixtureSteadiness,
 	fixtureUnlit,
@@ -27,7 +25,6 @@ export function FixtureSteadiness({
 	start,
 }: {
 	plus?: boolean;
-	/** Free view, but the store says Xolace+ (just bought; the server hasn't caught up). */
 	bought?: boolean;
 	score?: ScoreFixture;
 	unlit?: boolean;

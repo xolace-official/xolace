@@ -4,10 +4,7 @@ import { useCSSVariable } from "uniwind";
 import { type HeatmapCell, type Slot, useHeatmap } from "./context";
 
 export interface HeatmapCellsProps {
-	/** Per-cell override on top of the ramp (a frozen day, today). `undefined` keeps the ramp's
-	 * paint. */
 	cellStyle?: (cell: HeatmapCell) => HeatmapCellStyle | undefined;
-	/** Corner radius of a cell. Falls back to the chart's. */
 	cornerRadius?: number;
 }
 
@@ -19,8 +16,6 @@ export interface HeatmapCellStyle {
 	strokeWidth?: number;
 }
 
-/** The grid, every row of every column. Each cell is built lit and dimmed up front; a hold
- * picks one, so only the cells entering and leaving the hold get a new element. */
 export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 	const chart = useHeatmap("HeatmapChart.Cells");
 	const { grid, data, ramp, opacities, levelOf, activeCell, inactiveOpacity } =
@@ -28,8 +23,6 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 	const radius = cornerRadius ?? chart.cornerRadius;
 	const step = grid.size + grid.gap;
 
-	// Manual on purpose: the compiler folds `cells` into the `activeCell` pick's cache
-	// block, which would rebuild every element on every held cell.
 	const cells = useMemo(
 		() =>
 			data.flatMap((column, columnIndex) =>
@@ -45,7 +38,6 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 						row,
 					});
 					const opacity = override?.fillOpacity ?? opacities[level]!;
-					// Only the fill dims; an override's outline stays.
 					const paint = (fillOpacity: number) => (
 						<Rect
 							fill={override?.fill ?? ramp[level]}
@@ -63,7 +55,6 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 						/>
 					);
 					const lit = paint(opacity);
-					// At an inactive opacity of 1 dimming is a no-op, so a hold re-renders nothing.
 					const dim =
 						inactiveOpacity === 1 ? lit : paint(opacity * inactiveOpacity);
 					return { column: columnIndex, dim, lit, row };
@@ -95,17 +86,12 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 }
 HeatmapCells.slot = "cells" as Slot;
 
-/* Rules */
-
 export interface HeatmapSeparatorProps {
 	color?: string;
-	/** Dash pattern, e.g. `"2,4"`. Omit for a solid rule. */
 	dashArray?: string;
-	/** `quarter` draws a rule every thirteen columns; a number draws one every that many. */
 	every?: "quarter" | number;
 }
 
-/** Vertical rules grouping the columns — quarters, months, sprints. */
 export function HeatmapSeparator({
 	every = "quarter",
 	color,

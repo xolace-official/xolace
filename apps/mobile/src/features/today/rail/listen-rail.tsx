@@ -13,23 +13,18 @@ import { useChimes } from "./use-chimes";
 
 const RISE_SLOT = 2;
 
-/**
- * "Something to listen to": the hub's New shelf, hung from a hairline like chimes. Scroll
- * the rail and they swing. A tap opens the track in the player; hold to preview.
- */
 export function ListenRail() {
 	const { state, actions } = useToday();
-	const { live, reduced, intro } = useTodayFrame();
+	const { live, reduced, intro, waiting } = useTodayFrame();
 	const tiles = state.rail ?? [];
 	const { angles, onScroll } = useChimes(tiles.length, reduced);
-	// Hidden while loading and with nothing new, as production's strip (never padded).
 	if (tiles.length === 0) {
 		return null;
 	}
 
 	return (
 		<EaseView
-			{...todayRiseProps(RISE_SLOT, intro, reduced)}
+			{...todayRiseProps(RISE_SLOT, intro, reduced, waiting)}
 			style={{ marginTop: MODULE_GAP }}
 		>
 			<View className="mx-4">

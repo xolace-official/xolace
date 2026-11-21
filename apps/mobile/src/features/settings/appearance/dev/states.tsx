@@ -1,5 +1,3 @@
-/** Settings › Appearance on fixtures: `xolace://dev/settings/<id>` (handoff settings.md §9–§10). */
-
 import { themeVariant } from "@/design/themes";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureAppearance } from "@/features/settings/appearance/dev/fixture-appearance";
@@ -7,11 +5,11 @@ import {
 	APPEARANCE_CALMED,
 	APPEARANCE_DARK_ROSE,
 	APPEARANCE_FREE,
+	APPEARANCE_PLUS_LOADING,
 	APPEARANCE_REPLAY,
 	APPEARANCE_TOP,
 } from "@/features/settings/appearance/dev/fixtures";
 
-/** The real route's header (`settings/_layout.tsx`). */
 const OPTIONS = { title: "Appearance" };
 const ROSE_DARK = themeVariant("rose", "dark");
 
@@ -34,6 +32,12 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureAppearance state={APPEARANCE_FREE} />,
 		title: "Appearance, free with the Plus themes locked (render 09)",
+	},
+	{
+		id: "appearance-plus-loading",
+		options: OPTIONS,
+		Screen: () => <FixtureAppearance state={APPEARANCE_PLUS_LOADING} />,
+		title: "Appearance, Rosé while Xolace+ is still loading: nothing locked",
 	},
 	{
 		id: "appearance-dark-rose",

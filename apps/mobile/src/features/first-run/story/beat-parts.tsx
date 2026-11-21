@@ -14,7 +14,6 @@ import { BEAT_COLORS, css, ink } from "../first-run-palette";
 import { LabelIcon } from "./label-icon";
 import { beatPose, bIf, type SEng, seatOpen, v2in, WE } from "./story-scene";
 
-/** A piece of beat i arriving at `at` over `dur`, rising `dy` (board `v2in`). */
 export function useIn(
 	eng: SharedValue<SEng>,
 	i: number,
@@ -28,12 +27,6 @@ export function useIn(
 	});
 }
 
-/**
- * A beat: present while current, rising away 20 pt as the next arrives, lifting 24 pt as the seat
- * opens. Its label, aside and tag; the sentence is drawn by the words canvas, so the section carries
- * it for VoiceOver.
- */
-/** Hides a beat from VoiceOver and TalkBack unless it's the one on screen and the seat is shut. */
 export function BeatLayer({
 	hidden,
 	children,
@@ -113,7 +106,6 @@ export function BeatSection({
 					style={[{ backgroundColor: lit, opacity: 0.6 }, rule]}
 				/>
 			) : null}
-			{/* The aside and its tag flow as one column, so a larger text size pushes the tag down. */}
 			<View
 				className={cn(
 					"absolute right-10 left-8",
@@ -157,7 +149,6 @@ export function BeatSection({
 	);
 }
 
-/** A figure arriving on a spring (cover) or rising in (Mirror, Vent). */
 export function Figure({
 	eng,
 	i,

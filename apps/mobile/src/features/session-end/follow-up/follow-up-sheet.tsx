@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,7 +8,6 @@ import { PressScale } from "@/components/shared/press-scale";
 import { COPY } from "../copy";
 import { useFollowUpSheet } from "./follow-up-data";
 
-/** Board `.sh`: 26 / 20; `.shh` 0 16 0 22, gap 12; `.nn` 36 tall, 14 in; `.shs` 6 / 22 / 10; `.sr` 50, 22 in. */
 const SH = {
 	bottom: 20,
 	gap: 12,
@@ -22,31 +21,18 @@ const SH = {
 	top: 26,
 } as const;
 
-/**
- * The heavier follow-up (handoff §5.6), a native form sheet sized to fit:
- * production's question and rows for the answer's depth, "Not now", and one tap
- * answers it. A row saves, closes, and moment 2 follows; Not now or a swipe
- * down closes it without an answer. Opened with nothing to ask, it closes.
- */
 export function FollowUpSheet() {
 	const insets = useSafeAreaInsets();
 	const { state, actions } = useFollowUpSheet();
 	const answered = useRef(false);
-	const answer = useRef(actions.answer);
 	const { open } = state;
 
-	useEffect(() => {
-		answer.current = actions.answer;
+	const dismissed = useEffectEvent(() => {
+		if (!answered.current) {
+			actions.answer(null);
+		}
 	});
-	// Gone any other way (a swipe down): as Not now.
-	useEffect(
-		() => () => {
-			if (!answered.current) {
-				answer.current(null);
-			}
-		},
-		[]
-	);
+	useEffect(() => () => dismissed(), []);
 	useEffect(() => {
 		if (!(open || answered.current)) {
 			answered.current = true;

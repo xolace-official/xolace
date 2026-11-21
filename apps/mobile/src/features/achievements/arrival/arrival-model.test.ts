@@ -1,7 +1,7 @@
+import { isStreakMilestone } from "@xolace/backend/shared";
 import { describe, expect, it } from "vitest";
 import {
 	arrivalPlan,
-	isStreakMilestone,
 	lastSevenDays,
 	mayArrive,
 	milestoneDayOf,
@@ -88,8 +88,6 @@ describe("arrivalPlan", () => {
 
 	it("claims no freeze and lights no week until the server says (#811 review)", () => {
 		const p = plan({ unseen: DAY_7 });
-		// A milestone adds a streak saver, not a freeze, and only below its cap;
-		// the rung may arrive late and a frozen day isn't one showed up.
 		expect(p?.kind === "badges" && p.milestone).toMatchObject({
 			freeze: null,
 			week: null,
@@ -174,7 +172,7 @@ describe("mayArrive (the quiet-moment gate, #693)", () => {
 		"/talk",
 		"/session-end",
 		"/chat/conversation_1",
-		"/follow-up",
+		"/check-in",
 		"/player",
 	])("never interrupts %s", (pathname) => {
 		expect(mayArrive({ homeBusy: false, pathname, presented: false })).toBe(

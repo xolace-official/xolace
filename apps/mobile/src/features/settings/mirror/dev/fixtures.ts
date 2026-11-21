@@ -1,4 +1,3 @@
-/** Mirror on fixtures: the board's account (Xolace+, Gentle, Auto, Ember) and its states. */
 import type { MirrorSettings } from "@/features/settings/mirror/mirror-data";
 
 const ignore = () => undefined;
@@ -15,7 +14,6 @@ export const MIRROR_ACTIONS: MirrorSettings["actions"] = {
 	stop: ignore,
 };
 
-/** Render 12: Gentle, Auto, on Xolace+. */
 export const MIRROR_GENTLE: MirrorSettings["state"] = {
 	companion: "Ember",
 	playing: null,
@@ -26,14 +24,12 @@ export const MIRROR_GENTLE: MirrorSettings["state"] = {
 	voice: "auto",
 };
 
-/** Render 13: Poetic. */
 export const MIRROR_POETIC: MirrorSettings["state"] = {
 	...MIRROR_GENTLE,
 	saved: { tone: "poetic", voice: "auto" },
 	tone: "poetic",
 };
 
-/** Render 14: Poetic, Wren chosen and playing (the ring held, no sound). */
 export const MIRROR_WREN_PLAYING: MirrorSettings["state"] = {
 	...MIRROR_POETIC,
 	playing: "wren",
@@ -41,7 +37,6 @@ export const MIRROR_WREN_PLAYING: MirrorSettings["state"] = {
 	voice: "wren",
 };
 
-/** Render 15 and the locked voice: a free account (Poetic, Auto, no Talk). */
 export const MIRROR_FREE: MirrorSettings["state"] = {
 	...MIRROR_GENTLE,
 	plus: "free",
@@ -50,7 +45,6 @@ export const MIRROR_FREE: MirrorSettings["state"] = {
 	tone: "poetic",
 };
 
-/** A free account just tapped Sage: it plays, and the line offers Xolace+. */
 export const MIRROR_FREE_SAGE: MirrorSettings["state"] = {
 	...MIRROR_FREE,
 	playing: "sage",

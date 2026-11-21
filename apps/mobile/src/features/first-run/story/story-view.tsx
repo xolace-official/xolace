@@ -20,12 +20,10 @@ import { StoryWords } from "./story-words";
 import { useStoryEngine } from "./use-story-engine";
 import { useStoryGesture } from "./use-story-gesture";
 
-/** Dev states: a beat (or the seat) held at an age, signing in held at an age. */
 export type StoryScene = {
 	beat?: number;
 	at?: number;
 	auth?: AuthProvider;
-	/** Signing in, held at this age on the board's clock (1100 back, 1800 seated). */
 	aa?: number;
 	zoom?: number;
 };
@@ -41,18 +39,11 @@ const BEAT_PARTS = [
 type Props = {
 	stage: Stage;
 	faces: FirstRunFaces;
-	/** Opened on the seat (the account link, or a returning visitor). */
 	seat: boolean;
-	/** Holds the clock at its first frame while the promise's hand-off is on screen. */
 	gate: SharedValue<number>;
 	statusBar: boolean;
 };
 
-/**
- * The story and the seat: six beats on a drawn glow, each written word by word with one thing to
- * touch, then the seat by Flux's fire. One engine on the UI thread; React hears of a beat change,
- * the seat, the seated moment and a few haptics.
- */
 export function StoryView({ stage, faces, seat, gate, statusBar }: Props) {
 	const {
 		act,
@@ -66,7 +57,6 @@ export function StoryView({ stage, faces, seat, gate, statusBar }: Props) {
 		signing,
 		step,
 	} = useStoryEngine(seat, gate);
-	/** Only the beat on screen reads out, and none behind the open seat. */
 	const away = (i: number) => i !== beat || open;
 	const gesture = useStoryGesture(eng, stage.dx, stage.dy);
 	const frame = {

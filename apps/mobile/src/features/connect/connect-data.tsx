@@ -5,38 +5,28 @@ import type { RosterView } from "./roster/roster";
 import type { RosterCard } from "./roster/roster-model";
 import { useConnect } from "./use-connect";
 
-/** Where Connect's routed params point it (a notification, a Kindling twig, a decline). */
 export type ConnectRoute = {
 	specialty?: string;
 	view?: string;
-	/** The tap's timestamp: a second tap with the same params still lands. */
 	navToken?: string;
-	/** The Kindling twig that sent us, carried to the profile. */
 	stepId?: string;
 };
 
 export type ConnectState =
-	/** The segment still follows the route (a push to Xolacers shows Xolacers while it loads). */
 	| { phase: "loading"; segment: Segment }
 	/** The chat kill switch is off. */
 	| { phase: "disabled" }
 	| {
 			phase: "ready";
 			segment: Segment;
-			/** The channel, then the active chats. */
 			rows: ChatRowView[];
 			archivedCount: number;
-			/** No active pair chat: none yet, or every one archived. */
 			empty: "none" | "archived" | null;
 			roster: RosterView;
-			/** A Xolacer whose profile isn't published yet. */
 			setupBanner: boolean;
-			/** A published Xolacer's way to their own profile; paused draws a moon. */
 			myProfile: { paused: boolean } | null;
 	  };
 
-/** Everything Connect reads and does. Convex and Stream fill it in the app (`ConnectData`),
- * fixtures in its dev states. */
 export type ConnectScreenData = {
 	state: ConnectState;
 	deleting: DeleteConfirm;

@@ -15,19 +15,16 @@ import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { LIT_MS } from "@/features/vent/vent-model";
 import { amber, VENT_COLORS } from "@/features/vent/vent-palette";
 
-/** The board's keyframe: at 30% of its light the word is lit, then it cools for the rest. */
 const CATCH = 0.3;
 const EASE = Easing.bezier(0.2, 0.8, 0.2, 1);
 const RISE = 6;
 const GLOW_RADIUS = 13;
 const GLOW = [0.9, 0.65, 0] as const;
-/** v2, Reduce Motion: the words fade in together. */
 const REDUCED_IN_MS = 300;
 const NO_OFFSET = { height: 0, width: 0 } as const;
 
 type Props = {
 	word: string;
-	/** When this word starts to light, from when the voice starts; null until it does. */
 	startMs: number | null;
 	reduced: boolean;
 	fontSize: number;
@@ -35,12 +32,6 @@ type Props = {
 	onLayout: (b: LayoutRectangle) => void;
 };
 
-/**
- * One word catching (native-cook matchstick-strike-button's heat, ember-glow-story's rise):
- * from nothing, amber, 6 pt low and glowing → lit (#F0B860, in place, glow 0.65) at 30% → cream,
- * no glow, over 900 ms. The board eases each keyframe interval, so the two legs are eased
- * separately. The blur is dropped (iOS text has no animated blur); colour, glow and rise stay.
- */
 export function LitWord({
 	word,
 	startMs,

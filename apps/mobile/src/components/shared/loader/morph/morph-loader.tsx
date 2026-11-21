@@ -5,8 +5,6 @@ import { Easing } from "react-native-reanimated";
 import Loader from "../index";
 import type { LoaderKeyframes } from "../types";
 
-/** Square morphing to a circle and back across a full rotation, colour-shifting between accent
- * and foreground. */
 const styles = StyleSheet.create({
 	block: { height: 44, width: 44 },
 	container: { alignItems: "center", justifyContent: "center" },

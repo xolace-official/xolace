@@ -1,3 +1,4 @@
+import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import { toExercise } from "./catalogue";
 import {
@@ -13,6 +14,7 @@ import {
 	canSwap,
 	closeLabel,
 	isStandalone,
+	isSwapRefused,
 	sitFrom,
 	sitResult,
 	sitSource,
@@ -35,10 +37,13 @@ describe("the screen around the beats", () => {
 		expect(closeLabel("reflect", "pre")).toBe("Leave Sit with this");
 		expect(closeLabel("today", "pre")).toBe("Back to Today");
 		expect(closeLabel("today", "close")).toBe("Leave Sit with this");
+		expect(closeLabel("letter", "pre")).toBe("Back to your letter");
+		expect(closeLabel("letter", "play")).toBe("Leave Sit with this");
 	});
 
 	it("reads where it was opened, and runs on its own outside a reflection", () => {
 		expect(sitFrom("today")).toBe("today");
+		expect(sitFrom("letter")).toBe("letter");
 		expect(sitFrom("kindling")).toBe("kindling");
 		expect(sitFrom(undefined)).toBe("reflect");
 		expect(sitFrom("anything")).toBe("reflect");
@@ -114,6 +119,17 @@ describe("where Sit reads its exercise", () => {
 		});
 	});
 
+	it("plays Three breaths from a letter's care, with no session", () => {
+		expect(sitSource("letter", ids)).toEqual({
+			sessionId: null,
+			standalone: "reset",
+		});
+		expect(sitResult("letter", null, "alone")).toEqual({
+			exercise: "alone",
+			slots: {},
+		});
+	});
+
 	it("composes the result from the read its source uses", () => {
 		const forSession = { exercise: "matched", slots: { mirror_line: "Mine." } };
 		expect(sitResult("reflect", forSession, "alone")).toBe(forSession);
@@ -123,5 +139,36 @@ describe("where Sit reads its exercise", () => {
 		});
 		expect(sitResult("today", undefined, undefined)).toBeUndefined();
 		expect(sitResult("today", undefined, null)).toBeNull();
+	});
+});
+
+const PRODUCTION_MESSAGE =
+	"[CONVEX M(exercises:recordSwap)] [Request ID: abc123] Server Error";
+
+describe("a swap the server refuses", () => {
+	it("reads the code when production scrubs the message", () => {
+		const limit = new ConvexError({ code: "swap_limit_reached" });
+		limit.message = PRODUCTION_MESSAGE;
+		const notAllowed = new ConvexError({ code: "swap_not_allowed" });
+		notAllowed.message = PRODUCTION_MESSAGE;
+		expect(isSwapRefused(limit)).toBe(true);
+		expect(isSwapRefused(notAllowed)).toBe(true);
+	});
+
+	it("still reads a server from before the codes", () => {
+		expect(
+			isSwapRefused(new Error("Uncaught Error: Maximum swaps reached"))
+		).toBe(true);
+		expect(
+			isSwapRefused(new Error("Exercise not allowed for this session"))
+		).toBe(true);
+	});
+
+	it("leaves any other failure to the failed toast", () => {
+		expect(isSwapRefused(new Error(PRODUCTION_MESSAGE))).toBe(false);
+		expect(isSwapRefused(new ConvexError({ code: "session_not_found" }))).toBe(
+			false
+		);
+		expect(isSwapRefused("offline")).toBe(false);
 	});
 });

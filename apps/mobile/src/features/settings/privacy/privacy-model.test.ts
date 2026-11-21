@@ -1,3 +1,4 @@
+import { retentionShortens } from "@xolace/backend/shared";
 import { describe, expect, it } from "vitest";
 import { DELETE_COPY } from "@/features/settings/privacy/copy";
 import {
@@ -17,7 +18,6 @@ import {
 	retentionAlert,
 	retentionPick,
 	sheetKind,
-	shortens,
 	shownRetention,
 } from "@/features/settings/privacy/privacy-model";
 
@@ -35,7 +35,7 @@ describe("retentionPick", () => {
 	});
 
 	it("counts first when the period gets shorter", () => {
-		expect(shortens("indefinite", "1_year")).toBe(true);
+		expect(retentionShortens("indefinite", "1_year")).toBe(true);
 		expect(retentionPick("indefinite", "6_months")).toBe("count");
 		expect(retentionPick("1_year", "6_months")).toBe("count");
 	});
@@ -117,19 +117,26 @@ describe("deleteSheet", () => {
 	});
 
 	it("keeps production's Telegram line on the account sheet", () => {
-		expect(deleteSheet("account", false, "ios").stays).toContain(
+		expect(deleteSheet("account", "free", "ios").stays).toContain(
 			"If you linked Telegram, Xolace deletes the messages it still can, but Telegram keeps the rest of that chat’s history."
 		);
 	});
 
 	it("adds the billing line on Xolace+ only, in the store's words", () => {
-		expect(deleteSheet("account", true, "ios").stays.at(-1)).toBe(
+		expect(deleteSheet("account", "plus", "ios").stays.at(-1)).toBe(
 			DELETE_COPY.plusBilling.ios
 		);
-		expect(deleteSheet("account", true, "android").stays.at(-1)).toBe(
+		expect(deleteSheet("account", "plus", "android").stays.at(-1)).toBe(
 			DELETE_COPY.plusBilling.android
 		);
-		expect(deleteSheet("account", false, "ios").stays).toHaveLength(2);
-		expect(deleteSheet("data", true, "ios")).toBe(DELETE_COPY.sheets.data);
+		expect(deleteSheet("account", "free", "ios").stays).toHaveLength(2);
+		expect(deleteSheet("data", "plus", "ios")).toBe(DELETE_COPY.sheets.data);
+	});
+
+	it("keeps the billing line while Xolace+ loads, so a Plus user is never told less", () => {
+		expect(deleteSheet("account", "loading", "ios").stays.at(-1)).toBe(
+			DELETE_COPY.plusBilling.ios
+		);
+		expect(deleteSheet("data", "loading", "ios")).toBe(DELETE_COPY.sheets.data);
 	});
 });

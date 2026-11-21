@@ -4,7 +4,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 import { easeOutFn, seg, sparkFn } from "../today-motion";
 import { BEAT, NODE } from "./kindling-model";
 
-/** A ring going out from the node as the light arrives: 1 → 3, .7 → 0. */
 export function Ping({
 	at,
 	beat,
@@ -34,7 +33,6 @@ export function Ping({
 	);
 }
 
-/** One of five sparks lifting off the tended node. */
 export function Spark({
 	s,
 	beat,

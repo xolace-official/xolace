@@ -1,51 +1,22 @@
-import MaskedViewClass from "@react-native-masked-view/masked-view";
+import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient as MaskGradient } from "expo-linear-gradient";
-import type { ComponentType, ReactElement } from "react";
-import {
-	type ColorValue,
-	Platform,
-	StyleSheet,
-	View,
-	type ViewProps,
-} from "react-native";
+import { type ColorValue, Platform, StyleSheet, View } from "react-native";
 import { BlurView, LinearGradient } from "@/components/shared/styled";
 import { useScheme } from "@/design/scheme";
 
-// The package's class typings predate React 19's JSX types; the component itself is fine.
-const MaskedView = MaskedViewClass as unknown as ComponentType<
-	ViewProps & { maskElement: ReactElement }
->;
-
-/**
- * BandBlur: blur plus page tint under chrome a screen draws itself, solid down to `solid`.
- * TopFade (top-fade.tsx) for a plain page fade with no blur.
- *
- * A soft scroll edge (Talk's thread, You's docked bar; the prototype's Today band). Production's
- * old header blur recipe: one native blur under an
- * eased alpha mask, with the page tint over it. Here the band is solid at full
- * strength down to `solid`, then both fade to nothing. One blur costs a third of
- * the three-level version it replaced, with no visible difference under the tint.
- * Android gets the tint only: a BlurView under a MaskedView is unreliable there.
- */
 const INTENSITY = 40;
-/** The old header blur's eased mask across the fade: 1 → .8 → .4 → 0. */
 const MASK_STOPS = [
 	[0, 1],
 	[0.31, 0.8],
 	[0.62, 0.4],
 	[1, 0],
 ] as const;
-/** Gradient stops across the fade; enough that the smoothstep reads as a curve. */
 const SAMPLES = 16;
-/** The page tint over the blur where it is solid (Android: no blur, so a firmer tint). */
 const TINT = Platform.OS === "android" ? 0.96 : 0.92;
 
 type Props = {
-	/** Full strength from the top down to here (pt). */
 	solid: number;
-	/** Total height; the blur and tint reach zero here. */
 	height: number;
-	/** Page colour, `#RRGGBB`. */
 	page: string;
 };
 
@@ -85,8 +56,6 @@ export function BandBlur({ solid, height, page }: Props) {
 			pointerEvents="none"
 		>
 			{Platform.OS === "ios" && (
-				// MaskedView takes no className, and its mask stays the plain gradient: the mask element
-				// is rendered off-screen by the native view, so it keeps a plain style.
 				<MaskedView
 					maskElement={
 						<MaskGradient

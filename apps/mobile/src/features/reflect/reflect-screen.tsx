@@ -11,6 +11,7 @@ import Animated, {
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { useClock, useLive } from "@/lib/motion/clock";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useQualityGate } from "@/lib/motion/use-quality-gate";
 import { AmbientLight } from "./chrome/ambient-light";
 import { ReflectHeader } from "./chrome/reflect-header";
 import { ReflectSky } from "./chrome/reflect-sky";
@@ -26,9 +27,7 @@ import { WaitStage } from "./wait/wait-stage";
 import { WriteStage } from "./write/write-stage";
 
 const TAU = Math.PI * 2;
-/** The light's breath (card-light): 4.8 s. */
 const BREATH_S = 4.8;
-/** Board `.bglow`: the dim takes .6 s. */
 const DIM_MS = 600;
 
 type StageView = "write" | "wait" | "mirror" | "next" | "heard";
@@ -47,18 +46,17 @@ const VIEWS: Record<StageView, () => JSX.Element> = {
 	wait: WaitStage,
 	write: WriteStage,
 };
+// The gate measures once per app run; its verdict holds for every later Reflect.
+let gateRan = false;
+let lowDevice = false;
 
-/**
- * Reflect, zoomed open from Today's card. The chrome draws at once; the stage follows when the
- * session has read (`ready`). The session lives on the server, so closing at any stage keeps it,
- * and Today's card says where it is.
- */
 export function ReflectScreen() {
 	const { state } = useReflect();
 	const { stage, heavy, late, ready } = state;
 	const reduced = useEffectiveReducedMotion();
 	const live = useLive(reduced);
-	const [low, setLow] = useState(false);
+	const [firstReflect] = useState(() => !gateRan);
+	const [lowBefore] = useState(() => lowDevice);
 
 	const clock = useClock(live);
 	const breath = useDerivedValue(
@@ -71,7 +69,6 @@ export function ReflectScreen() {
 
 	useStageGestures();
 
-	// Dimmed to 5% while it thinks and when the mirror is heavy (board `.bglow.dim`).
 	const dimmed =
 		stage === "wait" || stage === "land" || (heavy && stage === "mirror");
 	useEffect(() => {
@@ -80,10 +77,6 @@ export function ReflectScreen() {
 		);
 	}, [dimmed, dim]);
 
-	// Opened onto any stage but Write (a ready mirror, a wait still going, Where next), the screen
-	// mounts its sky and header first and the stage a frame later, so the zoom from Today's card
-	// starts on the first frame instead of waiting on the mirror's animated words. Write mounts at
-	// once: its field takes focus as Reflect opens.
 	const [stageUp, setStageUp] = useState(() => VIEW_OF[stage] === "write");
 	useEffect(() => {
 		if (stageUp || !ready) {
@@ -93,6 +86,21 @@ export function ReflectScreen() {
 		return () => cancelAnimationFrame(id);
 	}, [stageUp, ready]);
 
+	const view = VIEW_OF[stage];
+	const gating = firstReflect && stageUp && ready && view === "wait" && live;
+	const gateLow = useQualityGate(gating);
+	const low = lowBefore || gateLow;
+	useEffect(() => {
+		if (gating) {
+			gateRan = true;
+		}
+	}, [gating]);
+	useEffect(() => {
+		if (gateLow) {
+			lowDevice = true;
+		}
+	}, [gateLow]);
+
 	const draw: ReflectDraw = {
 		late,
 		liftFrom,
@@ -100,9 +108,7 @@ export function ReflectScreen() {
 		live,
 		low,
 		reduced,
-		setLow,
 	};
-	const view = VIEW_OF[stage];
 	const Stage = VIEWS[view];
 	const fade = reduced ? REDUCED_FADE_MS : STAGE_FADE_MS;
 
@@ -111,8 +117,6 @@ export function ReflectScreen() {
 			<View className="flex-1 bg-background">
 				<ReflectSky late={late} />
 				<AmbientLight late={late} light={draw.light} />
-				{/* First in the tree, so VoiceOver and TalkBack read ✕, the stage's name and help
-				    before the stage; `z-10` keeps it drawn over the stage. */}
 				<ReflectHeader />
 				{stageUp && ready ? (
 					<Animated.View

@@ -9,29 +9,27 @@ import type { Follow } from "@/features/settings/follow/follow-data";
 import {
 	canSendFeedback,
 	feedbackMailto,
-	reviewUrl,
 	SENT_CLOSE_MS,
 	type SendPhase,
 	sendErrorMessage,
 } from "@/features/settings/follow/follow-model";
+import { reviewUrl } from "@/lib/store-review";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
-/** Production let a link that fails to open (no mail account) pass silently. */
 const openLink = (url: string) => {
 	Linking.openURL(url).catch(() => undefined);
 };
 
-/** Follow & Support on Convex (`feedback.*`), PostHog and the phone's links. */
 export function useFollow(): Follow {
 	const [open, setOpen] = useState(false);
 	const [draft, setDraft] = useState("");
 	const [phase, setPhase] = useState<SendPhase>("idle");
 	const [error, setError] = useState<string | null>(null);
-	// Production asks only while its dialog is up.
 	const canSubmit = useQuery(api.feedback.canSubmitGeneral, open ? {} : "skip");
 	const submit = useMutation(api.feedback.submit);
 	const posthog = usePostHog();
 	const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const sending = useRef(false);
+	const sending = useSingleFlight();
 
 	const clearTimer = () => {
 		if (closeTimer.current) {
@@ -41,7 +39,6 @@ export function useFollow(): Follow {
 	};
 	useEffect(() => clearTimer, []);
 
-	// Closing forgets the note, as production's dialog did by unmounting its form.
 	const close = () => {
 		clearTimer();
 		setOpen(false);
@@ -52,33 +49,33 @@ export function useFollow(): Follow {
 
 	const send = async () => {
 		const text = draft.trim();
-		if (sending.current || !canSendFeedback({ canSubmit, draft, phase })) {
+		if (!canSendFeedback({ canSubmit, draft, phase })) {
 			return;
 		}
-		sending.current = true;
-		setPhase("busy");
-		setError(null);
-		try {
-			await submit({ text, type: "general" });
-			setPhase("sent");
-			posthog.capture("feedback_submitted", {
-				has_option: false,
-				has_text: true,
-				type: "general",
-			});
-			clearTimer();
-			closeTimer.current = setTimeout(close, SENT_CLOSE_MS);
-		} catch (e) {
-			setPhase("idle");
-			setError(sendErrorMessage(e));
-		}
-		sending.current = false;
+		await sending.run(async () => {
+			setPhase("busy");
+			setError(null);
+			try {
+				await submit({ text, type: "general" });
+				setPhase("sent");
+				posthog.capture("feedback_submitted", {
+					has_option: false,
+					has_text: true,
+					type: "general",
+				});
+				clearTimer();
+				closeTimer.current = setTimeout(close, SENT_CLOSE_MS);
+			} catch (e) {
+				setPhase("idle");
+				setError(sendErrorMessage(e));
+			}
+		});
 	};
 
 	return {
 		actions: {
 			closeFeedback: () => {
-				if (!sending.current) {
+				if (!sending.isBusy()) {
 					close();
 				}
 			},

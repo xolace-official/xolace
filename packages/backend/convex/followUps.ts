@@ -38,6 +38,7 @@ import {
 	shouldEmitReturn,
 	shouldReshowShownCard,
 	shouldSupersede,
+	WAITING_CARD_LIFETIME_MS,
 } from "./lib/followUpCadence";
 import { hasPremium } from "./lib/premium";
 import { domainOf } from "./lib/understandingVocab";
@@ -536,7 +537,10 @@ export const markReturn = mutation({
 				now: Date.now(),
 			})
 		) {
-			await ctx.db.patch("follow_up_cards", card._id, { status: "ready" });
+			await ctx.db.patch("follow_up_cards", card._id, {
+				readyAt: Date.now(),
+				status: "ready",
+			});
 			// Stop the nudge/expiry cadence — the user is back.
 			try {
 				await workflow.cancel(ctx, card.workflowId);
@@ -546,6 +550,7 @@ export const markReturn = mutation({
 		}
 		return null;
 	},
+	returns: v.null(),
 });
 
 // =============================================================
@@ -558,6 +563,9 @@ export const markReturn = mutation({
  * answered, e.g. backgrounded the app mid-check-in — only re-surfaces once its
  * re-show cooldown has elapsed, so it doesn't nag on every launch. Gating here
  * (server) keeps the client render pure — it never has to read the clock.
+ *
+ * @deprecated Shipped builds' v1 check-in only. The app reads
+ * `followUps/waiting.getWaitingCard` since S4 (`DEPRECATIONS.md`).
  */
 export const getReadyCard = query({
 	args: {},
@@ -598,6 +606,10 @@ export const getReadyCard = query({
  * first surface, and re-stamps `shownAt` when an unresolved `shown` card
  * re-surfaces after its cooldown (client-gated) — so the next re-show cooldown
  * is measured from the latest viewing. Any terminal status is left untouched.
+ *
+ * The first showing also stamps `firstShownAt` (never re-stamped) and
+ * schedules the silent 3-day expiry (`followUps/waiting`). A card shown before
+ * that stamp existed starts its 3 days on its next showing.
  */
 export const markShown = mutation({
 	args: { cardId: v.id("follow_up_cards") },
@@ -610,12 +622,23 @@ export const markShown = mutation({
 		if (card.status !== "ready" && card.status !== "shown") {
 			return null;
 		}
+		const now = Date.now();
+		const firstShowing = card.firstShownAt === undefined;
 		await ctx.db.patch("follow_up_cards", args.cardId, {
-			shownAt: Date.now(),
+			shownAt: now,
 			status: "shown",
+			...(firstShowing ? { firstShownAt: now } : {}),
 		});
+		if (firstShowing) {
+			await ctx.scheduler.runAfter(
+				WAITING_CARD_LIFETIME_MS,
+				internal.followUps.waiting.expireShownCard,
+				{ cardId: args.cardId }
+			);
+		}
 		return null;
 	},
+	returns: v.null(),
 });
 
 /** Resolve a card with the user's response (chip tap or backdrop dismiss). */
@@ -642,6 +665,11 @@ const PROFILE_FOLLOWUP_LIMIT = 5;
 // Hard ceiling so a client-supplied limit can never request unbounded rows.
 const MAX_FOLLOWUP_LIMIT = 50;
 
+/**
+ * @deprecated No current client calls it: You's Follow-ups read `listForProfilePage` (#666).
+ */
+// DEPRECATED(remove-after: app >= first version with the paged Follow-ups, #666): store builds
+// from before it still call this for the profile's Follow-ups section.
 export const listForProfile = query({
 	args: { limit: v.optional(v.number()) },
 	handler: async (ctx, args) => {

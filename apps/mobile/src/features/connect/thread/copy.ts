@@ -3,7 +3,6 @@ import type { Run } from "./thread-model";
 const t = (text: string): Run => ({ text });
 const bold = (text: string): Run => ({ bold: true, text });
 
-/** The thread's words: the prototype's where it drew them, production's lifecycle copy. */
 export const THREAD = {
 	appearsOnAccept: "Messages will appear here once your request is accepted.",
 	bar: {
@@ -78,6 +77,7 @@ export const THREAD = {
 	help: "Get help now",
 	hereNow: "here now",
 	lastHere: (ago: string) => `last here ${ago}`,
+	loading: "Loading your conversation",
 	menu: {
 		block: "Block",
 		changeRating: "Change your rating",

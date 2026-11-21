@@ -4,7 +4,6 @@ import { usePhasedBreath } from "@/design/ease-breath";
 import { useTodayFrame } from "../today-frame";
 import { BARS, EQ } from "./rail-model";
 
-/** wv: bars breathe .35 ↔ 1 on 0.8 s, each a beat apart. */
 export function Wave({ running }: { running: boolean }) {
 	return (
 		<View
@@ -39,14 +38,8 @@ export function Meter({ running }: { running: boolean }) {
 	);
 }
 
-/** Bars grow from their foot. */
 const FOOT = { x: 0.5, y: 1 };
 
-/**
- * ease-in-out, alternate: scaleY between `low` and 1 every `period` s, starting `d` s into the
- * cycle (a negative CSS delay), so the bars are out of step from the first frame. Native loop
- * (react-native-ease); stops at `low` when Today isn't live.
- */
 function Bar({
 	running,
 	h,

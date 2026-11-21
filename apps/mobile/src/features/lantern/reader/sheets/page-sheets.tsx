@@ -23,18 +23,14 @@ import {
 import { useTokenColor } from "@/lib/use-token-color";
 
 const LINK = { android: "open_in_new", ios: "arrow.up.right" } as const;
-/** The sources sheet fits its content up to production's cap, then scrolls (large text, many
- * sources). */
 const SOURCES_MAX = 0.7;
 
-/** A sheet on the reading page, as production's are: its background follows the mode. */
 function OnPage({
 	page,
 	fill = false,
 	children,
 }: {
 	page: ReaderPage;
-	/** A fixed-height sheet that scrolls (the transcript); the others fit their content. */
 	fill?: boolean;
 	children: ReactNode;
 }) {
@@ -46,7 +42,6 @@ function OnPage({
 }
 
 function PageFill({ fill, children }: { fill: boolean; children: ReactNode }) {
-	// From the hook: the class misses the scoped page (#401).
 	const bg = useTokenColor("background");
 	return (
 		<>
@@ -62,7 +57,6 @@ function PageFill({ fill, children }: { fill: boolean; children: ReactNode }) {
 	);
 }
 
-/** View sources (production's `entry-credits.tsx`): what this was adapted from, then the licence. */
 export function SourcesSheet() {
 	const { state, actions } = useSources();
 	const { page, sources } = state;
@@ -112,7 +106,6 @@ export function SourcesSheet() {
 	);
 }
 
-/** "NHS – Insomnia · Author": the page title opens the page when there is one. */
 function SourceRow({
 	source: s,
 	onOpen,
@@ -164,7 +157,6 @@ function SourceRow({
 	);
 }
 
-/** The transcript (Xolace+, never in the preview): the narration as plain, selectable text. */
 export function TranscriptSheet() {
 	const { page, text } = useTranscript().state;
 	return (

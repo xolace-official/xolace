@@ -3,6 +3,11 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 export interface WorkspacePackage {
+	/**
+	 * Whether the `lint` script is exactly `biome check .`, which Biome on the
+	 * changed files already covers (check:changed then skips the package-wide run).
+	 */
+	biomeOnlyLint: boolean;
 	/** Directory relative to the repo root, POSIX separators, no trailing slash. */
 	dir: string;
 	/** Package name from its package.json, e.g. `@xolace/web`. */
@@ -15,6 +20,7 @@ interface PackageJson {
 	dependencies?: Record<string, string>;
 	devDependencies?: Record<string, string>;
 	name?: string;
+	scripts?: Record<string, string>;
 	workspaces?: string[] | { packages?: string[] };
 }
 
@@ -64,6 +70,7 @@ export const listWorkspacePackages = (root: string): WorkspacePackage[] => {
 			const manifest = readPackageJson(manifestPath);
 			const deps = { ...manifest.dependencies, ...manifest.devDependencies };
 			packages.push({
+				biomeOnlyLint: manifest.scripts?.lint?.trim() === "biome check .",
 				dir,
 				name: manifest.name ?? dir,
 				usesVitest: "vitest" in deps,

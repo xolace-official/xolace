@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 
 const SEGMENTS = [1, 2, 3] as const;
 
-/** Answer, what was heard, the name: the three stops the user sees. */
 const segmentOf = (step: IntakeV2Step): number => {
 	if (step === "heard" || step === "safety") {
 		return 2;

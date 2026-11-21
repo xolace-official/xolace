@@ -16,7 +16,6 @@ const pkg = (specifier: string, names: string[] = []): Import => ({
 	typeOnly: false,
 });
 
-/** A local import of another `src/` file, with its named bindings. */
 const local = (rel: string, names: string[]): Import => ({
 	devOnly: false,
 	names,
@@ -50,9 +49,6 @@ describe("replacedPiecesInNewCode", () => {
 			"features/today/hero/hero.tsx": [
 				local("components/shared/segmented-control.tsx", ["SegmentedControl"]),
 			],
-			"features/today/screens.ts": [
-				local("lib/root-screen.ts", ["legacyFitSheet", "NO_GESTURE"]),
-			],
 			"features/today/use-today.ts": [pkg("heroui-native", ["useToast"])],
 		});
 		expect(replacedPiecesInNewCode(graph)).toEqual([
@@ -61,7 +57,6 @@ describe("replacedPiecesInNewCode", () => {
 			"design/press.ts -> heroui-native PressableFeedback",
 			"design/press.ts -> heroui-native useToast",
 			"features/today/hero/hero.tsx -> components/shared/segmented-control.tsx SegmentedControl",
-			"features/today/screens.ts -> lib/root-screen.ts legacyFitSheet",
 			"features/today/use-today.ts -> heroui-native useToast",
 		]);
 	});
@@ -73,9 +68,9 @@ describe("replacedPiecesInNewCode", () => {
 				pkg("heroui-native", ["useToast"]),
 			],
 			"features/browse/screens.ts": [
-				local("lib/root-screen.ts", ["legacyFitSheet"]),
+				local("lib/navigation-options.tsx", ["useLargeHeaderOptions"]),
 			],
-			"features/quotes/screen.tsx": [
+			"features/intake/screen.tsx": [
 				pkg("heroui-native", ["PressableFeedback"]),
 			],
 			"features/today/hero/hero.tsx": [

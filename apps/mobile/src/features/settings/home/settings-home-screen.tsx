@@ -6,15 +6,9 @@ import { HOME_COPY as C, HOME_ICONS as I } from "@/features/settings/home/copy";
 import { PlusCard } from "@/features/settings/home/plus/plus-card";
 import { useSettingsHomeScreen } from "@/features/settings/home/settings-home-data";
 
-/** Open rows sit on the page, so their titles line up with the 20 pt row padding. */
 const ROW_INSET = 20;
 const TITLE_GAP = 12;
 
-/**
- * Settings (board "Settings v2", P/design/handoff/settings.md): production's open rows and
- * wording, an accent tile behind each icon, hairlines from the label, and one Plus card.
- * Nothing animates in.
- */
 export function SettingsHomeScreen() {
 	const { state, actions } = useSettingsHomeScreen();
 	return (
@@ -67,6 +61,11 @@ export function SettingsHomeScreen() {
 					icon={I.follow}
 					label={C.rows.follow}
 					onPress={() => actions.open("follow")}
+				/>
+				<OpenRow
+					icon={I.whatsNew}
+					label={C.rows.whatsNew}
+					onPress={actions.openWhatsNew}
 				/>
 				<OpenRow
 					chevron={false}

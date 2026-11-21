@@ -17,7 +17,6 @@ const MIC: IconName = { android: "mic", ios: "mic.fill" };
 const MIC_OFF: IconName = { android: "mic_off", ios: "mic.slash.fill" };
 const FROM_SCALE = 0.6;
 
-/** Mute, 44 pt glass left of the field; it scales in from 0.6 at 300 ms (§6). */
 export function MuteButton({
 	motion,
 	top,
@@ -27,7 +26,6 @@ export function MuteButton({
 	onMute,
 }: {
 	motion: TalkMotion;
-	/** The composer's top with the keyboard down. */
 	top: number;
 	lift: SharedValue<number>;
 	before: boolean;

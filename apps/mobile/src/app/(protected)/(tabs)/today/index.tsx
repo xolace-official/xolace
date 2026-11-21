@@ -1,21 +1,39 @@
 import { View } from "react-native";
-import { ComingBack } from "@/features/follow-up/coming-back/coming-back";
+import { ComingBackHost } from "@/features/coming-back/coming-back-host";
+import { ReturnPill } from "@/features/coming-back/pill/return-pill";
+import { ReturnPillData } from "@/features/coming-back/return-pill-data";
 import { FindingCard } from "@/features/intake/finding-card";
-import { TodayData } from "@/features/today/today-data";
+import {
+	useLaunchHold,
+	useLaunchRevealed,
+} from "@/features/launch/launch-store";
+import { TodayData, useToday } from "@/features/today/today-data";
 import { TodayScreen } from "@/features/today/today-screen";
+import { useTodayHolds } from "@/features/today/use-today-hold";
 
-/**
- * The Today tab, the app's landing: Today on its data, with the intake's day-3 question
- * composed in, and what greets someone coming back (check-in, return welcome, streak held,
- * the in-app banner) over it.
- */
 export default function TodayRoute() {
+	const revealed = useLaunchRevealed();
 	return (
 		<View className="flex-1">
 			<TodayData>
-				<TodayScreen finding={<FindingCard />} />
+				<HoldForToday />
+				<TodayScreen
+					finding={<FindingCard />}
+					pill={(fallback) => (
+						<ReturnPillData>
+							<ReturnPill fallback={fallback} />
+						</ReturnPillData>
+					)}
+					revealed={revealed}
+				/>
 			</TodayData>
-			<ComingBack />
+			<ComingBackHost />
 		</View>
 	);
+}
+
+function HoldForToday() {
+	const { state } = useToday();
+	useLaunchHold(useTodayHolds(state.ready), "today");
+	return null;
 }

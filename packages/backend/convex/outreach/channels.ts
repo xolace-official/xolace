@@ -61,7 +61,9 @@ export function countryFromRegion(
 
 /**
  * Which intents each channel takes. Telegram carries only the ones a person
- * can answer or act on in the chat; everything else is push-only.
+ * can answer, act on or read in the chat (the daily quote arrives whole, as a
+ * blockquote); everything else is push-only. Free or Plus is the channel's
+ * own config, never the intent's.
  */
 const CHANNEL_INTENTS: Record<OutreachChannel, ReadonlySet<OutreachIntent>> = {
 	push: new Set<OutreachIntent>([
@@ -72,11 +74,13 @@ const CHANNEL_INTENTS: Record<OutreachChannel, ReadonlySet<OutreachIntent>> = {
 		"kindling_ready",
 		"domain_unlock",
 		"achievement",
+		"daily_quote",
 	]),
 	telegram: new Set<OutreachIntent>([
 		"nudge",
 		"gentle_return",
 		"pattern_nudge",
+		"daily_quote",
 	]),
 };
 

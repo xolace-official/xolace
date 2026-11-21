@@ -8,41 +8,43 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
-import { DISPLAY_MAX_SCALE, type TypeVariant } from "@/design/type";
+import {
+	DISPLAY_MAX_SCALE,
+	type TypeVariant,
+	type Weight,
+} from "@/design/type";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-/** native-cook's Roller: 260 ms per change. */
 const ROLL_MS = 260;
+export const QUICK_ROLL_MS = 420;
 
 type Props = {
 	value: number;
 	variant: TypeVariant;
-	/** Static text classes (size, tracking, colour, `tabular-nums`). */
+	weight?: Weight;
 	className?: string;
 	style?: TextStyle;
 	lineHeight: number;
 	durationMs?: number;
+	rollIn?: boolean;
+	maxScale?: number;
 };
 
-/**
- * Digits that roll to a new value (from 0 on mount), on the UI thread, in plain
- * views: a SwiftUI-hosted number (`RollingNumber`) is left at a stale frame
- * inside a transformed parent. Reduce Motion: they just change. The digits grow
- * with Dynamic Type up to the display cap, and so does each line. Achievements'
- * sparks and You's streak and freezes (in the collapsing header, hence plain views).
- */
 export function RollDigits({
 	value,
 	variant,
+	weight,
 	className,
 	style,
 	lineHeight,
 	durationMs = ROLL_MS,
+	rollIn = true,
+	maxScale = DISPLAY_MAX_SCALE,
 }: Props) {
 	const chars = String(value).split("");
 	const { fontScale } = useWindowDimensions();
-	const line = lineHeight * Math.min(fontScale, DISPLAY_MAX_SCALE);
+	const line = lineHeight * Math.min(fontScale, maxScale);
 	return (
 		<View
 			accessibilityLabel={String(value)}
@@ -54,12 +56,14 @@ export function RollDigits({
 					className={className}
 					digit={Number(c)}
 					durationMs={durationMs}
-					// A digit keeps its place while the number keeps its length.
 					key={`${chars.length}-${i}`}
 					line={line}
 					lineHeight={lineHeight}
+					maxScale={maxScale}
+					rollIn={rollIn}
 					style={style}
 					variant={variant}
+					weight={weight}
 				/>
 			))}
 		</View>
@@ -70,18 +74,23 @@ function Digit({
 	digit,
 	line,
 	durationMs,
+	rollIn,
+	maxScale,
 	...text
 }: {
 	digit: number;
 	line: number;
 	durationMs: number;
+	rollIn: boolean;
+	maxScale: number;
 	variant: TypeVariant;
+	weight?: Weight;
 	className?: string;
 	style?: TextStyle;
 	lineHeight: number;
 }) {
 	const reduced = useEffectiveReducedMotion();
-	const at = useSharedValue(reduced ? digit : 0);
+	const at = useSharedValue(reduced || !rollIn ? digit : 0);
 	useEffect(() => {
 		at.set(
 			reduced
@@ -102,12 +111,12 @@ function Digit({
 			accessibilityElementsHidden
 			importantForAccessibility="no-hide-descendants"
 		>
-			{/* The widest digit sizes the column, so the number doesn't jitter as it rolls. */}
 			<AppText
 				className={text.className}
-				maxFontSizeMultiplier={DISPLAY_MAX_SCALE}
+				maxFontSizeMultiplier={maxScale}
 				style={[face, { opacity: 0 }]}
 				variant={text.variant}
+				weight={text.weight}
 			>
 				8
 			</AppText>
@@ -127,9 +136,10 @@ function Digit({
 					<AppText
 						className={text.className}
 						key={d}
-						maxFontSizeMultiplier={DISPLAY_MAX_SCALE}
+						maxFontSizeMultiplier={maxScale}
 						style={face}
 						variant={text.variant}
+						weight={text.weight}
 					>
 						{d}
 					</AppText>

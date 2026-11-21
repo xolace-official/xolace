@@ -3,7 +3,6 @@ import { BEATS } from "../copy";
 import { BOARD, lerp, mixRGB, type Stage, TAU } from "../first-run-motion";
 import { BEAT_COLORS, css, type RGB, STORY_COLORS } from "../first-run-palette";
 
-/** Every beat's glow colours in story order, and the seat's ember. */
 const PAL = BEATS.map((b) => BEAT_COLORS[b.id]);
 const SEAT_PAL = STORY_COLORS.seat;
 const WHITE: RGB = [255, 255, 255];
@@ -21,10 +20,6 @@ export type GlowPose = {
 	a: number;
 };
 
-/**
- * The story's glow at a moment (board `glowCss`): radial `300 × 270` at `(234 + drift, 890 − 80·surge)`
- * breathing ±3.5% every 2.2 s, crossing colours on a beat change, gathering to the fire for the seat.
- */
 export function glowPose(
 	t: number,
 	rm: boolean,
@@ -53,10 +48,6 @@ export function glowPose(
 	};
 }
 
-/**
- * Draws the glow on the ground. The glow sits at the bottom edge, so its y keeps the board's
- * distance from the bottom; the seat's fire (y 520) keeps its distance from the top.
- */
 export function drawGlow(
 	c: SkCanvas,
 	s: Stage,

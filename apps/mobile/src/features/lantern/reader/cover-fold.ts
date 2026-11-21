@@ -8,9 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AX_FONT_SCALE } from "@/features/lantern/lantern-style";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** Production's `reader-screen.tsx` geometry (handoff §5.1). */
 export const FOLD = {
-	/** At accessibility text sizes the cover is a band above the bar. */
 	band: 72,
 	barRow: 52,
 	coverShare: 0.52,
@@ -26,9 +24,7 @@ export const FOLD = {
 export type Fold = {
 	barH: number;
 	coverH: number;
-	/** The scroll at which the sheet meets the bar. */
 	fold: number;
-	/** Parallax travel before the photo pins. */
 	imageStop: number;
 	drift: number;
 	ax: boolean;
@@ -47,7 +43,6 @@ export function useFold(): Fold {
 		ax,
 		barH,
 		coverH,
-		// Reduce Motion: no parallax.
 		drift: reduced ? 1 : FOLD.drift,
 		fold: coverH - FOLD.sheetOverlap - barH,
 		imageStop: (coverH - barH) / 2,
@@ -56,10 +51,6 @@ export function useFold(): Fold {
 	};
 }
 
-/**
- * Every scroll-driven style, transform and opacity only, on the UI thread. Nothing changes
- * layout per frame and React never hears about the scroll.
- */
 export function useFoldStyles(
 	y: SharedValue<number>,
 	f: Fold,
@@ -67,7 +58,6 @@ export function useFoldStyles(
 ) {
 	const reduced = useEffectiveReducedMotion();
 	const { coverH, fold, imageStop, drift } = f;
-	// Both copies of the photo. Pulled down, it grows from its top edge.
 	const photo = useAnimatedStyle(() => {
 		const v = y.get();
 		if (v < 0) {

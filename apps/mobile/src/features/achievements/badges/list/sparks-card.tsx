@@ -30,14 +30,12 @@ const ROLL_MS = 1000;
 const BAR_MS = 600;
 const NUMBER_LINE = 40;
 
-/** The top card (production's `sparks-card.tsx`): latest badge, sparks earned, then the next rung. */
 export function SparksCard({ sparks }: { sparks: SparksView }) {
 	const window = useWindowDimensions();
 	const { latest, nextUp } = sparks;
 	const out = useHeld((s) => s.out?.opts.latest === true && s.out.slot);
 	const tip = usePressTip(LATEST / 2, LATEST / 2, LATEST / 2);
 	return (
-		// The board: 20 pt sides, 24 corners, 20 padding.
 		<View className="mx-5 rounded-card bg-surface p-5">
 			<View className="flex-row items-center gap-4">
 				{latest ? (
@@ -127,7 +125,6 @@ export function SparksCard({ sparks }: { sparks: SparksView }) {
 	);
 }
 
-/** The next-up bar fills over 600 ms once per visit (a transform, not a width). */
 function FillBar({ share, label }: { share: number; label: string }) {
 	const reduced = useEffectiveReducedMotion();
 	const fill = useSharedValue(reduced ? share : 0);
@@ -149,7 +146,6 @@ function FillBar({ share, label }: { share: number; label: string }) {
 		<View
 			accessibilityLabel={label}
 			accessibilityRole="progressbar"
-			// The bar is 6 pt.
 			className="mt-2 h-1.5 overflow-hidden rounded-full bg-separator"
 		>
 			<Animated.View

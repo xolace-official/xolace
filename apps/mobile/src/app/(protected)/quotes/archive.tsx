@@ -1,5 +1,5 @@
-import { ArchiveScreen } from "@/features/quotes/components/archive/archive-screen";
+import { ReturnTo } from "@/lib/return-to";
 
 export default function QuotesArchiveRoute() {
-	return <ArchiveScreen />;
+	return <ReturnTo href="/quotes?view=kept" />;
 }

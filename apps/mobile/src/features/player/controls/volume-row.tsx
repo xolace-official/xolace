@@ -15,14 +15,11 @@ import { fromCover, INK, P } from "../player-metrics";
 const THUMB = 16;
 const HIT_H = 22;
 const STEP = 0.1;
-/** While dragging, the level reaches the audio in 2% steps; the release sets it exactly. */
 const LIVE_STEP = 50;
 const PERCENT = 100;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
-/** Production's VolumeRow, restyled to the board: the app's own level, never the phone's. The
- * thumb moves on the UI thread. */
 export function VolumeRow() {
 	const { state, actions } = usePlayer();
 	const quiet = useTokenColor("player-ink");
@@ -31,7 +28,6 @@ export function VolumeRow() {
 	const w = useSharedValue(0);
 	const sent = useSharedValue(Math.round(state.volume * LIVE_STEP));
 	const dragging = useSharedValue(false);
-	// The level changed elsewhere (a fixture, the next track): follow it, except under a finger.
 	useEffect(() => {
 		if (!dragging.get()) {
 			v.set(state.volume);

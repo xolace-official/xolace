@@ -1,7 +1,3 @@
-/**
- * Lantern's dev fixtures, from the board (`HUBS`, `FOR_YOU`, `AUDIENCES` and the subjects its
- * entries carry), in the shapes Convex serves: `getHome`, `getHub`, `getSubjects`, `listSaved`.
- */
 import type { Id } from "@xolace/backend/dataModel";
 import { photo } from "@/features/lantern/dev/covers";
 import { card, type EntrySlug, SLUGS } from "@/features/lantern/dev/entries";
@@ -9,7 +5,6 @@ import type { HomeView } from "@/features/lantern/home/home-data";
 import type { HubTrack, HubView } from "@/features/lantern/hub/hub-data";
 import type { CardItem, Subject } from "@/features/lantern/lantern-model";
 
-/** A listen placed among a hub's reads: the board's `track:awake`. */
 const AWAKE: HubTrack = {
 	_id: "dev-awake" as Id<"audio_tracks">,
 	attribution: "Sage",
@@ -102,7 +97,6 @@ const hubBase = (h: HubSeed) => ({
 	title: h.title,
 });
 
-/** A hub's own screen. `fresh`: a first visit, nothing read. */
 export function hub(slug = "nights", fresh = false): HubView {
 	const h = HUB_SEEDS.find((s) => s.slug === slug) ?? HUB_SEEDS[0];
 	return {
@@ -125,7 +119,6 @@ const FOR_YOU: readonly [EntrySlug, HomeView["forYou"][number]["reason"]][] = [
 
 const AUDIENCES = ["student", "parent", "carer", "worker"];
 
-/** The home. `first`: a first visit (no Continue, Reading as… unanswered). */
 export function home(first = false): HomeView {
 	const night = card("thoughts-at-night", first);
 	return {
@@ -144,7 +137,6 @@ export function home(first = false): HomeView {
 	};
 }
 
-/** Every subject the entries carry, with how many each. */
 export const SUBJECTS: readonly Subject[] = [
 	["anxiety", 3],
 	["asking-for-help", 1],
@@ -166,9 +158,7 @@ export const SUBJECTS: readonly Subject[] = [
 	["work", 1],
 ].map(([slug, count]) => ({ count: count as number, slug: slug as string }));
 
-/** Every entry of a kind, as `listEntries` returns it. */
 export const ofKind = (kind: CardItem["kind"]) =>
 	SLUGS.map((s) => card(s)).filter((e) => e.kind === kind);
 
-/** Saved, newest first: the returning reader's two. */
 export const SAVED: readonly CardItem[] = [card("panic"), card("winter")];

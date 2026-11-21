@@ -15,26 +15,13 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type Props = Omit<ComponentProps<typeof Pressable>, "style"> & {
-	/**
-	 * Static styling goes in `className`; `style` is for values computed at
-	 * runtime and beats `className`. A function style (`({ pressed }) => …`)
-	 * isn't accepted: the animated scale owns the style slot.
-	 */
 	style?: StyleProp<ViewStyle>;
-	/** Cards press to .98, everything else to .96 (the Press curve). */
 	card?: boolean;
-	/** A specific press scale, when a board names one (Explore's topic tiles: .97). */
 	scaleTo?: number;
-	/** Plays on press: a named haptic from `@/lib/haptics` or a Pulsar preset. */
 	haptic?: () => void;
 	ref?: Ref<View>;
 };
 
-/**
- * Every tappable thing in the redesign: scales on the Press curve (150 ms), and
- * optionally ticks. With reduced motion it doesn't scale at all. New code uses
- * this, not heroui's `PressableFeedback` (apps/mobile/AGENTS.md, "Shared kit").
- */
 export function PressScale({
 	card,
 	scaleTo,

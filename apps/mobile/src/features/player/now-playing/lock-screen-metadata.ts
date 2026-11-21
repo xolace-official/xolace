@@ -1,4 +1,3 @@
-// Local copy so this stays a pure, RN-free module.
 const FAMILY_LABEL = { music: "Music", support: "Support audio" } as const;
 
 type TrackLike = {
@@ -8,7 +7,6 @@ type TrackLike = {
 	thumbUrl?: string;
 };
 
-/** Maps a bound track to the lock-screen media card fields (#367). */
 export function getLockScreenMetadata(track: TrackLike) {
 	return {
 		artist: track.narrators?.length

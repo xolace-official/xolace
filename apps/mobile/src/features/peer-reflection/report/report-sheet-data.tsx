@@ -2,13 +2,8 @@ import { createContext, type ReactNode, use } from "react";
 import type { ReportReason } from "../copy";
 import { useReportSheetData } from "./use-report-sheet";
 
-/**
- * What the report sheet does: send a reason, or cancel. Convex in the app
- * (`ReportSheetData`), nothing in its dev state.
- */
 export type ReportSheet = {
 	actions: {
-		/** Closes the sheet first, then sends; the card folds once the report is in. */
 		pick: (reason: ReportReason) => void;
 		cancel: () => void;
 	};
@@ -34,7 +29,6 @@ export function useReportSheet(): ReportSheet {
 	return sheet;
 }
 
-/** The app's adapter. */
 export function ReportSheetData({ children }: { children: ReactNode }) {
 	const value = useReportSheetData();
 	return <ReportSheetProvider value={value}>{children}</ReportSheetProvider>;

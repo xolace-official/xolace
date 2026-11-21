@@ -8,20 +8,14 @@ import { useConnectColors } from "../connect-colors";
 
 const FLAME_START = { x: 0.3, y: 0.2 };
 const FLAME_END = { x: 0.9, y: 1 };
-/** The flame glyph as a share of the circle (20 on 48). */
 const FLAME_GLYPH = 0.42;
 const PRESENCE_DOT = 0.27;
 const MIN_DOT = 11;
 const FLAME = { android: "local_fire_department", ios: "flame.fill" } as const;
 
-/** First letter of the name, for the art avatar. */
 const initialOf = (name: string) =>
 	name.trim().charAt(0).toLocaleUpperCase() || "?";
 
-/**
- * A Xolacer: their photo, or their initial on their own art (the prototype's avatars). `muted`
- * is a closed chat or a full Xolacer; presence is the dot.
- */
 export function XolacerAvatar({
 	id,
 	name,
@@ -30,7 +24,6 @@ export function XolacerAvatar({
 	online,
 	muted,
 }: {
-	/** Picks their art: the same person always wears the same pair. */
 	id: string;
 	name: string;
 	photoUrl?: string;
@@ -74,7 +67,6 @@ export function XolacerAvatar({
 	);
 }
 
-/** The Xolace channel's mark: the camp's flame on its warm gradient. */
 export function XolaceMark({ size = 48 }: { size?: number }) {
 	const { flame } = useConnectColors();
 	const onArt = useTokenColor("on-art");

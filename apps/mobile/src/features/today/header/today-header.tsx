@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { View } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -15,28 +16,20 @@ import { useScrolledPast, useTodayFrame } from "../today-frame";
 import { Greeting } from "./greeting";
 import { StreakChip } from "./streak-chip";
 
-/** The top row and greeting fade over the first 120 pt of scroll. */
 const FADE_OVER = 120;
 const LIFEBUOY = 20;
-/**
- * Where the return pill sits under the greeting (board `.tpill`: 14 below, 36 tall). The
- * pill shows what coming back left waiting, which needs `followUps.getWaitingCard`
- * (B1); until it lands the slot stays empty, as the prototype's is with nothing
- * waiting. The Reflect card's margin gives the room back, so Today doesn't move. A streak
- * one saver can bring back asks there meanwhile (`RekindlePill`).
- */
 export const PILL_SLOT = 14 + 36;
 
-/** Eyebrow and the glass group (streak + lifebuoy), then the greeting. */
 export function TodayHeader({
 	flameClock,
+	pill,
 }: {
 	flameClock: SharedValue<number>;
+	pill?: (fallback: ReactNode) => ReactNode;
 }) {
 	const danger = useTokenColor("danger");
 	const { state, actions } = useToday();
-	const { intro, reduced, scrollY, live } = useTodayFrame();
-	// The chip's flame stops once the row has faded out under the band.
+	const { intro, reduced, scrollY, live, waiting } = useTodayFrame();
 	const faded = useScrolledPast(scrollY, FADE_OVER);
 	const fade = useAnimatedStyle(() => ({
 		opacity: Math.max(0, 1 - scrollY.get() / FADE_OVER),
@@ -81,8 +74,17 @@ export function TodayHeader({
 					</PressScale>
 				</GlassGroup>
 			</View>
-			<Greeting intro={intro} reduced={reduced} text={state.greeting} />
-			<RekindlePill height={PILL_SLOT} />
+			<Greeting
+				intro={intro}
+				reduced={reduced}
+				text={state.greeting}
+				waiting={waiting}
+			/>
+			{pill ? (
+				pill(<RekindlePill height={PILL_SLOT} />)
+			) : (
+				<RekindlePill height={PILL_SLOT} />
+			)}
 		</Animated.View>
 	);
 }

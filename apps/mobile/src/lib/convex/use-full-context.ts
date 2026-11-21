@@ -3,15 +3,12 @@ import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { AppState } from "react-native";
 
-/** Device-local "YYYY-MM-DD" — the timezone `streaks.state.settle` stores. */
 function localDay(): string {
 	const now = new Date();
 	const pad = (n: number) => String(n).padStart(2, "0");
 	return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** Today's local day, rolled at midnight and re-checked on foreground (timers sleep in
- * background). */
 function useLocalDay(): string {
 	const [day, setDay] = useState(localDay);
 	useEffect(() => {
@@ -34,8 +31,6 @@ function useLocalDay(): string {
 	return day;
 }
 
-/** `users.getFullContext` keyed by local day so the subscription rolls at midnight. Holds the
- * previous result while loading; `skip` drops it. */
 export function useFullContext(skip = false) {
 	const day = useLocalDay();
 	const result = useQuery(api.users.getFullContext, skip ? "skip" : { day });

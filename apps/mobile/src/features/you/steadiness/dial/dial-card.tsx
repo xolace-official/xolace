@@ -13,8 +13,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 const S = COPY.steadinessScreen;
 const INFO = { android: "info", ios: "info.circle" } as const;
 
-/** The glass dial card: the gauge, then what Xolace noticed (Xolace+) or how far from lighting
- * it is; ⓘ opens the face sheet. */
 export function DialCard({ running }: { running: boolean }) {
 	const { state, actions } = useSteadinessScreen();
 	const subtle = useTokenColor("subtle");

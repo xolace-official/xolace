@@ -1,18 +1,10 @@
-/**
- * Streak milestone cadence (#435): 7, 30, 100, then every 100 after. Drives
- * streak-saver earning only; badge pushes replaced the milestone push (#700).
- */
-export const STREAK_MILESTONES = [7, 30, 100] as const;
-/** Past the last fixed milestone, one lands every this many days. */
-export const STREAK_MILESTONE_EVERY = 100;
+import {
+	isStreakMilestone,
+	STREAK_MILESTONE_EVERY,
+	STREAK_MILESTONES,
+} from "../lib/shared";
 
-export function isStreakMilestone(streak: number): boolean {
-	const last = STREAK_MILESTONES[STREAK_MILESTONES.length - 1];
-	return (
-		(STREAK_MILESTONES as readonly number[]).includes(streak) ||
-		(streak > last && streak % STREAK_MILESTONE_EVERY === 0)
-	);
-}
+export { isStreakMilestone, STREAK_MILESTONE_EVERY, STREAK_MILESTONES };
 
 /**
  * Template-only copy for a streak milestone (#439) — no model call. The streak

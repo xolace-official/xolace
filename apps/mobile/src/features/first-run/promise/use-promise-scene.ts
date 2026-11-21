@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { DRIFT, type PEng } from "./promise-scene";
 
-/** Dev states: the opening, the hand-off or a named card held at an age (ms). */
 export type PromiseScene = {
 	at?: number;
 	handoffAt?: number;
@@ -10,11 +9,9 @@ export type PromiseScene = {
 	namedAt?: number;
 };
 
-/** A held opening's marquee has drifted this far, at most. */
 const HELD_DRIFT_MS = 6000;
 const MS = 1000;
 
-/** A dev state's held moment, written into the engine once it mounts. */
 export function usePromiseScene(
 	eng: SharedValue<PEng>,
 	scene: PromiseScene | undefined

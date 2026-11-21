@@ -1,7 +1,6 @@
 import { Easing, FadeInDown } from "react-native-reanimated";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 
-/** The board's `rise` for the detail card and an opened row: up 6 pt and in, 240 ms. */
 const RISE_MS = 240;
 const RISE_PT = 6;
 

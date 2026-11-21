@@ -14,25 +14,16 @@ import { easeInOutFn } from "../today-motion";
 import { EMBER, EMBERS, STAR, STARS } from "./sky-model";
 import type { SkyMotion } from "./use-sky-motion";
 
-/**
- * Stars and embers in one atlas draw (firefly-swarm's glow sprite): a white
- * dot with a soft halo, tinted and faded per sprite through the colour buffer.
- * The transforms and colours are buffers mutated in place: nothing allocates
- * per frame.
- */
 const SPRITE = 64;
 const HALF = SPRITE / 2;
 const COUNT = STARS.length + EMBERS.length;
 const SRC = rect(0, 0, SPRITE, SPRITE);
 const SPRITES = Array.from({ length: COUNT }, () => SRC);
-/** The dot is this share of the sprite's radius; the rest is glow. */
 const DOT_SHARE = 0.16;
 const TAU = Math.PI * 2;
-/** flyD as two keyframe tracks, built once. */
 const DRIFT_X = EMBER.path.map((k) => [k[0], k[1]] as const);
 const DRIFT_Y = EMBER.path.map((k) => [k[0], k[2]] as const);
 
-/** firefly-swarm's flash: a quick rise, an exponential fade, an ember between. Fit to the board's keyframes. */
 function flash(p: number, floor: number) {
 	"worklet";
 	const f = p - Math.floor(p);
@@ -46,7 +37,7 @@ function flash(p: number, floor: number) {
 type Props = {
 	motion: SkyMotion;
 	clock: SharedValue<number>;
-	sx: number /** Half the sprites (quality gate). */;
+	sx: number;
 	low: boolean;
 };
 

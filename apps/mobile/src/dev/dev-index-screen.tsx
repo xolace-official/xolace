@@ -37,7 +37,6 @@ function StateRow({
 	);
 }
 
-/** A states file, or a state in it, the registry left out, and the fix. */
 function ProblemRow({ problem, last }: { problem: DevProblem; last: boolean }) {
 	return (
 		<View

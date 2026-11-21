@@ -10,8 +10,6 @@ import { useCanPost } from "./use-can-post";
 const LOCK = { android: "lock", ios: "lock.fill" } as const;
 const LOCK_RADIUS = 28;
 
-/** The broadcaster's composer, or for everyone else the prototype's lock note: Xolace talks to
- * the camp, not back. */
 export function ChannelComposer() {
 	const muted = useTokenColor("muted");
 	if (useCanPost()) {

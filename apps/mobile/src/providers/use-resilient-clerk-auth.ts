@@ -4,8 +4,6 @@ import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 
 type ClerkGetToken = ReturnType<typeof useAuth>["getToken"];
 
-/** On a prod cold start Clerk reports `isSignedIn` a few seconds before `getToken` can succeed;
- * 6s still bails fast when signed out. */
 const RETRY_WINDOW_MS = 6000;
 const RETRY_DELAY_MS = 300;
 
@@ -28,16 +26,11 @@ export function requestConvexReauth() {
 	epochListeners.forEach((listener) => listener());
 }
 
-/** The reported `sessionId` tagged with the re-auth nonce; epoch 0 reports Clerk's value
- * untouched. */
 export const sessionIdWithEpoch = (
 	sessionId: string | null | undefined,
 	epoch: number
 ) => (epoch > 0 && sessionId ? `${sessionId}#${epoch}` : sessionId);
 
-/** `useAuth` for `ConvexProviderWithClerk` that retries `getToken` while Clerk claims a
- * session: Convex never retries its init fetch. `useCallback([])` is a documented React
- * Compiler exception. */
 export function useResilientClerkAuth() {
 	const auth = useAuth();
 	const epoch = useSyncExternalStore(
@@ -57,8 +50,6 @@ export function useResilientClerkAuth() {
 		let attempt = 0;
 		let lastError: unknown = null;
 
-		// Retry only while Clerk still claims a session: a failure then is the boot race, not a
-		// sign-out.
 		while (true) {
 			attempt++;
 			try {
@@ -79,7 +70,6 @@ export function useResilientClerkAuth() {
 			await sleep(RETRY_DELAY_MS);
 		}
 
-		// Exhausted while still signed in: a genuine failure, rare and actionable, so surface it.
 		if (isSignedInRef.current === true) {
 			const err =
 				lastError instanceof Error
@@ -92,7 +82,6 @@ export function useResilientClerkAuth() {
 				"error"
 			);
 		}
-		// Match Clerk's native contract: null means unauthenticated.
 		return null;
 	}, []);
 

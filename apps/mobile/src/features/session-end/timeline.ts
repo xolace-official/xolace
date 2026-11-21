@@ -1,19 +1,10 @@
 import { EASE, REDUCED_MS } from "./session-look";
 
-/**
- * The board's CSS animations as pure worklets of one clock (ms since the moment began), the way
- * Peers' arrival works: every piece reads the same value, so they stay in step to the frame, a
- * Review pace slows them all, and nothing runs once the clock stops.
- */
 export const clamp01 = (x: number) => {
 	"worklet";
 	return Math.min(1, Math.max(0, x));
 };
 
-/**
- * One entrance at `at` for `ms`: `p` its linear progress, `opacity` on CSS `ease`. Under Reduce
- * Motion every entrance is a 200 ms fade at the same time (board `.rm`: `fadeOnly .2s`).
- */
 export function appear(
 	clock: number,
 	at: number,
@@ -29,7 +20,6 @@ export function appear(
 	return { opacity: EASE.css(p), p };
 }
 
-/** `riseIn`: 14 pt up and in, .5 s, cubic-bezier(.2, .8, .2, 1) (opacity on the same curve). */
 export function riseIn(
 	clock: number,
 	at: number,
@@ -51,7 +41,6 @@ export function riseIn(
 	};
 }
 
-/** `rise` (the card and the next card): 28 pt on the curve, opaque by 40%. */
 export function cardRise(
 	clock: number,
 	at: number,

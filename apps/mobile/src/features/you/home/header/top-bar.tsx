@@ -17,31 +17,18 @@ import { useYouHome } from "@/features/you/home/you-data";
 import { useOSReduceTransparency } from "@/lib/os-reduce-transparency";
 import { useTokenColor } from "@/lib/use-token-color";
 
-// Collapse px over which the top bar goes from clear to solid (production).
 const BAR_FADE_RANGE = [8, 40];
-// The name shows once the hero is nearly gone (production).
 const TITLE_FADE_RANGE = [0.75, 1];
-/** Once docked, the band reaches under the pills. */
 const DOCK_RANGE = [0.97, 1];
-/** How far the bar's fade runs below what it covers. */
 const EDGE = 28;
-/** The band starts this far above the bar's foot, so the pills sit in it. */
 const OVERLAP = 14;
-/** Solid down to here under the pills. */
 const UNDER_PILLS = 6;
 
-/**
- * Production's top bar, pinned under the native header's buttons: it lives inside the header
- * (the library's hooks only work there) and rides back down by the collapsed distance. A soft
- * scroll edge rather than a slab: the page fades and blurs under it, and once docked it reaches
- * under the pills. Reduce Transparency: a solid bar. The title is the avatar and the name.
- */
 export function TopBar({ height }: { height: number }) {
 	const insets = useSafeAreaInsets();
 	const page = useTokenColor("background");
 	const solid = useOSReduceTransparency();
 	const scrollY = useHeaderScrollY();
-	// The header stops at the collapse range, but the raw value can run past it (a long jump).
 	const { collapseRangeSV, tabBarHeight } = useCollapsingTabsContext();
 	const progress = useCollapseProgress();
 	const { avatar, hero } = useYouHome().state;
@@ -55,7 +42,6 @@ export function TopBar({ height }: { height: number }) {
 		),
 		transform: [{ translateY: Math.min(scrollY.get(), collapseRangeSV.get()) }],
 	}));
-	// Under the pills only once docked, so the open header's tabs never sit under a band.
 	const dockStyle = useAnimatedStyle(() => ({
 		opacity: interpolate(
 			progress.get(),
@@ -115,7 +101,6 @@ export function TopBar({ height }: { height: number }) {
 				accessibilityElementsHidden
 				className="absolute right-20 left-20 flex-row items-center justify-center gap-2"
 				importantForAccessibility="no-hide-descendants"
-				// The native header's band below the status bar.
 				style={[{ height: height - insets.top, top: insets.top }, titleStyle]}
 			>
 				{avatar ? (

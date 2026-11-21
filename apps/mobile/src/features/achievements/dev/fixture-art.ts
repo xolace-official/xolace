@@ -1,8 +1,3 @@
-/**
- * The fixtures' art: production's badge images, bundled for dev states only (a
- * release build never reaches this file). The adapters swap it in for the
- * server's URL.
- */
 const ART: Record<string, number> = {
 	"first-exercise": require("@/assets/images/badges/fixtures/first-exercise.webp"),
 	"first-kindling": require("@/assets/images/badges/fixtures/first-kindling.webp"),
@@ -32,7 +27,6 @@ const ART: Record<string, number> = {
 	"understanding-8": require("@/assets/images/badges/fixtures/understanding-8.webp"),
 };
 
-/** Rungs without their own file here borrow a sibling's: they draw grey in every state. */
 const BORROWED: Record<string, string> = {
 	"asked-for-chat": "first-xolacer-chat",
 	"read-10": "read-5",
@@ -44,6 +38,5 @@ const BORROWED: Record<string, string> = {
 	"showing-up-1000": "showing-up-100",
 };
 
-/** A fixture badge's bundled art, for the adapters to swap in for the server's URL. */
 export const fixtureArt = (id: string): number | null =>
 	ART[id] ?? ART[BORROWED[id] ?? ""] ?? ART["streak-30"] ?? null;

@@ -12,11 +12,6 @@ import { Surface } from "@/features/you/surface";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/**
- * A card waiting on someone: the day of the moment and the card's own question. The answer
- * is given in production's check-in (`/follow-up`), which asks per tier and follows up per
- * answer; a card no check-in is coming for only closes.
- */
 export function WaitingCard({
 	card,
 	look,
@@ -51,8 +46,6 @@ export function WaitingCard({
 				>
 					{look.from}
 				</AppText>
-				{/* The card's own line is the question ("…how's it sitting now?"), written per
-				    moment; the board's fixed ask over it read twice. */}
 				<AppText
 					className="mt-1 text-[17px] leading-[22px] tracking-[-0.17px]"
 					numberOfLines={4}
@@ -84,7 +77,6 @@ export function WaitingCard({
 	);
 }
 
-/** Coming up, or Earlier: the card's line, when, and (Earlier) the answer in accent. */
 export function FollowUpRow({
 	card,
 	look,

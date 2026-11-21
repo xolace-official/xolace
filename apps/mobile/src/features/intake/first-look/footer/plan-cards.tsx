@@ -1,5 +1,3 @@
-// The plans the store sells, side by side, with one ember frame that slides to the picked one.
-// Names, prices and tags come from the store (`purchases/plans.ts`).
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, {
@@ -28,7 +26,6 @@ export function PlanCards({ reduced }: { reduced: boolean }) {
 	const [w, setW] = useState(0);
 	const half = sellable.length > 1 ? (w - GAP) / 2 : w;
 	const x = sellable.indexOf(state.plan) > 0 ? half + GAP : 0;
-	// The first measure places the frame; later picks slide it.
 	const tx = useSharedValue(-1);
 	useEffect(() => {
 		if (w === 0) {

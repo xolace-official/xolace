@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { type LayoutChangeEvent, View } from "react-native";
 import {
 	Tabs,
@@ -14,20 +14,12 @@ import { WeekCard } from "@/features/you/home/week/week-card";
 import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useScrollCommand } from "./use-scroll-command";
 
-/** The room left under the pills when Your days scrolls up. */
 const UNDER_PILLS = 12;
-/** Just past the collapse range, so the header stays docked. */
 const PAST_DOCK = 2;
-/** After the container's own restore of this tab's offset (the tap may have switched tabs). */
-const SCROLL_AFTER_MS = 220;
 const TAB_BAR_ROOM = 110;
 
-/**
- * Insights (you.md §5): Steadiness, Your days, the chips, Your patterns, Among the fires, This
- * week, then the one Xolace+ row for free users. Production's gates; the words card is gone.
- * Hidden cards stay hidden.
- */
 export function InsightsTab({ minHeader }: { minHeader: number }) {
 	const insets = useSafeAreaInsets();
 	const reduced = useEffectiveReducedMotion();
@@ -36,36 +28,18 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 	const { scrollRef } = useTabPageContext();
 	const { collapseRangeSV, tabBarHeight } = useCollapsingTabsContext();
 	const cardY = useRef({ days: 0, top: 0, week: 0 });
-	// A ref, not a dep: `scrollTo` is never cleared, so a dep would scroll again on each change.
-	const tabBar = useRef(tabBarHeight);
-	useEffect(() => {
-		tabBar.current = tabBarHeight;
-	}, [tabBarHeight]);
 	const measure = (card: "days" | "week") => (e: LayoutChangeEvent) => {
 		cardY.current[card] = e.nativeEvent.layout.y;
 	};
 
-	// The header's week asks for Your days (a dev state for another card): scroll it up under
-	// the pills, docked (a jump under Reduce Motion).
-	useEffect(() => {
-		if (!scrollTo) {
-			return;
-		}
-		// The collapse range, the cards' y and the tab bar's height are read when it fires (the
-		// header and cards may still be laying out); the native header's height is the one now.
-		const timer = setTimeout(() => {
-			const dock = collapseRangeSV.get() + PAST_DOCK;
-			const y = Math.max(
-				dock,
-				cardY.current[scrollTo.target] -
-					minHeader -
-					tabBar.current -
-					UNDER_PILLS
-			);
-			scrollRef.current?.scrollTo({ animated: !reduced, y });
-		}, SCROLL_AFTER_MS);
-		return () => clearTimeout(timer);
-	}, [scrollTo, collapseRangeSV, minHeader, scrollRef, reduced]);
+	useScrollCommand(scrollTo, (target) => {
+		const dock = collapseRangeSV.get() + PAST_DOCK;
+		const y = Math.max(
+			dock,
+			cardY.current[target] - minHeader - tabBarHeight - UNDER_PILLS
+		);
+		scrollRef.current?.scrollTo({ animated: !reduced, y });
+	});
 
 	return (
 		<Tabs.ScrollView

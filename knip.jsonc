@@ -12,8 +12,6 @@
         // The redesign's shared kit (F5) lands before the screens that use it.
         // Each file is an entry until its first screen PR imports it: delete its
         // line then. These lines only shrink. Their exports carry `@public`.
-        "src/components/shared/media-row.tsx",
-        "src/components/shared/rolling-number.tsx",
         "src/lib/keyboard/keyboard-spacer.tsx",
         "src/lib/keyboard/use-keyboard-shown.ts"
       ],
@@ -31,17 +29,12 @@
       "ignoreDependencies": [
         // Peer dependencies of stream-chat-react-native-core (stream-chat-expo).
         "@op-engineering/op-sqlite",
-        "@react-native-community/netinfo",
         "react-native-teleport",
         // Turned on with EXPO_ATLAS=1; never imported.
         "expo-atlas",
         // Native module with no JS import. Removing it changes the native
         // fingerprint, so it goes out with the next store build.
-        "react-native-purchases-ui",
-        // The store review prompt left with the old session end (S3); its new
-        // place is undecided. A native module: removing it changes the
-        // fingerprint, so it goes with the next store build if nothing asks.
-        "expo-store-review"
+        "react-native-purchases-ui"
       ]
     }
   }

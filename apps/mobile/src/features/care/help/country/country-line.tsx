@@ -5,7 +5,6 @@ import { COPY } from "@/features/care/help/copy";
 import { useHelpScreen } from "@/features/care/help/help-data";
 import { HELP_OPTIONS } from "@/features/care/help/help-model";
 
-/** "Showing resources for [Ghana ▾]": every country the list covers, then "Somewhere else". */
 export function CountryLine() {
 	const { state, actions } = useHelpScreen();
 	return (

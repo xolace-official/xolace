@@ -20,11 +20,6 @@ const PAUSE = { android: "pause", ios: "pause.fill" } as const;
 const WAVE = { android: "graphic_eq", ios: "waveform" } as const;
 const FAMILY = { music: "Music", support: "Support audio" } as const;
 
-/**
- * A listen placed among a hub's reads (handoff §4, v2): numbered in the hub's order, its own card,
- * with play right on it. Play starts it here, no navigation; the card itself opens the full
- * player. A free listener sees locks, and either opens Xolace+.
- */
 export function ListenCard({
 	track,
 	index,
@@ -33,7 +28,6 @@ export function ListenCard({
 	index: number;
 }) {
 	const { state, actions } = useHubScreen();
-	// The bars stop while the hub is hidden (a read pushed over it).
 	const focused = useIsFocused();
 	const [audio, foreground, background, muted, separator] = useTokenColors([
 		"browse-audio-foreground",
@@ -49,7 +43,6 @@ export function ListenCard({
 	const by = [FAMILY[track.family], track.attribution]
 		.filter(Boolean)
 		.join(" · ");
-	// Playing here: pause. Otherwise play; the route decides between resume, load and paywall.
 	const onPlay = () => (playing ? actions.toggle() : actions.play(track));
 	return (
 		<View
@@ -95,7 +88,6 @@ export function ListenCard({
 							uri={track.thumbUrl}
 						/>
 						{playing ? (
-							// The bars mount only on the card that's playing, and loop only while it's seen.
 							<View className="absolute inset-0 items-center justify-center bg-cover-scrim/32">
 								<Equaliser playing={focused} />
 							</View>

@@ -1,4 +1,3 @@
-/** A hub's data hook: `getHub`, its rows' save and share, and the open counted once. */
 import { api } from "@xolace/backend/api";
 import { useQuery } from "convex/react";
 import { useIsPreview } from "expo-router";
@@ -28,7 +27,6 @@ export function useHub(slug: string, listen: HubListen): Hub {
 		actions: {
 			...entryActions,
 			open,
-			// Play and pause: a light impact (handoff §12). Locked, the paywall's own tap alone.
 			play: (track) => {
 				if (!listen.locked) {
 					tap();

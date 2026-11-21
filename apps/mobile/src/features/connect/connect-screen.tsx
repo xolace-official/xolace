@@ -1,4 +1,5 @@
-import { View } from "react-native";
+import type { ReactNode } from "react";
+import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Segmented } from "@/components/shared/segmented";
 import { useConnectScreen } from "./connect-data";
@@ -14,28 +15,28 @@ import type { Segment } from "./list/chats-model";
 import { ListSkeleton } from "./list/list-skeleton";
 import { Roster } from "./roster/roster";
 
-/** The page's bottom room, above the tab bar. */
 const BOTTOM = 140;
 
-/**
- * Connect: the one place a human answers. Chats and Xolacers behind one native segment, under
- * the stack's large title, which folds on scroll. Letters (S20) adds its card between the title
- * and the segment. One list scrolls the page: the chats are its rows; the roster, the skeleton
- * and the notes under the chats are its footer.
- */
-export function ConnectScreen() {
+export function ConnectScreen({ letters = null }: { letters?: ReactNode }) {
 	const { state, actions, deleting } = useConnectScreen();
 
 	if (state.phase === "disabled") {
 		return (
-			<View className="flex-1 items-center justify-center gap-2 bg-background px-8">
-				<AppText center variant="headline">
-					{COPY.disabled.title}
-				</AppText>
-				<AppText center color="muted" variant="callout">
-					{COPY.disabled.body}
-				</AppText>
-			</View>
+			<ScrollView
+				className="flex-1 bg-background"
+				contentContainerClassName="grow"
+				contentInsetAdjustmentBehavior="automatic"
+			>
+				{letters ? <View className="px-4 pt-2">{letters}</View> : null}
+				<View className="flex-1 items-center justify-center gap-2 px-8 py-10">
+					<AppText center variant="headline">
+						{COPY.disabled.title}
+					</AppText>
+					<AppText center color="muted" variant="callout">
+						{COPY.disabled.body}
+					</AppText>
+				</View>
+			</ScrollView>
 		);
 	}
 
@@ -67,7 +68,7 @@ export function ConnectScreen() {
 				bottom={BOTTOM}
 				footer={
 					ready === null ? (
-						<ListSkeleton />
+						<ListSkeleton label={COPY.loading.chats} />
 					) : chats ? (
 						<ChatsFooter
 							archived={{
@@ -88,7 +89,7 @@ export function ConnectScreen() {
 				}
 				header={
 					<View className="gap-3.5 px-4 pt-2 pb-3.5">
-						{/* Letters (S20): its Connect card goes here, above the segment. */}
+						{letters}
 						<Segmented
 							onChange={(v: Segment) => actions.setSegment(v)}
 							options={COPY.segments}

@@ -2,7 +2,6 @@ import type { PurchasesStoreProduct } from "react-native-purchases";
 
 const MICROS_PER_UNIT = 1_000_000;
 
-/** The paywall renders intro prices per month, so only P1M phases fit. */
 const MONTHLY_PERIOD = /^P1M$/i;
 
 const UNIT_BY_ISO: Record<string, string> = {
@@ -12,15 +11,10 @@ const UNIT_BY_ISO: Record<string, string> = {
 	Y: "year",
 };
 
-/** A paid intro discount the user is eligible for, ready to render. */
 export type IntroOffer = {
-	/** Localized intro price per period, e.g. "$4.99". */
 	price: string;
-	/** Localized full price it renews at, e.g. "$9.99". */
 	fullPrice: string;
-	/** The intro's length, e.g. "2 months" or "month". */
 	term: string;
-	/** Whole-number percent off, worked out from the two prices (never hardcoded). */
 	percentOff: number;
 };
 
@@ -50,7 +44,6 @@ function introPhaseOf(product: PurchasesStoreProduct): IntroPhase | null {
 	};
 }
 
-/** "2 months" from P1M over 2 cycles; a lone period reads "month". */
 function introTerm(period: string, cycles: number): string | null {
 	const match = /^P(\d+)([DWMY])$/i.exec(period);
 	if (!match) {
@@ -61,8 +54,6 @@ function introTerm(period: string, cycles: number): string | null {
 	return total === 1 ? unit : `${total} ${unit}s`;
 }
 
-/** What the paywall shows for a discounted intro, or null for the plain price (a pay-up-front
- * P3M intro also falls back). */
 export function introOfferOf(
 	product: PurchasesStoreProduct | null | undefined,
 	isEligible: boolean

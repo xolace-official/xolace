@@ -49,47 +49,28 @@ describe("store partialize", () => {
 		expect(persisted).toContain("libraryIntroSeen");
 	});
 
-	// Resolved-once must survive a relaunch, or the bubble reappears (#460).
-	it("starterSuggestionsSeen is persisted", () => {
-		const persisted = persistedKeys();
-		expect(persisted).toContain("starterSuggestionsSeen");
-	});
-
-	// The whole point of the cooldown is that a "no" survives a relaunch.
 	it("plus offer cadence state is persisted", () => {
 		const persisted = persistedKeys();
 		expect(persisted).toContain("plusOfferLastDismissedAt");
 		expect(persisted).toContain("plusOfferDismissalCount");
 		expect(persisted).toContain("plusOfferFullStopAt");
-		// "Never two sessions in a row" is only enforceable if the id survives a
-		// relaunch — the app is routinely closed between one session and the next.
 		expect(persisted).toContain("plusOfferShownSessionId");
 	});
 });
 
 describe("account flags", () => {
-	const noFlags = {
-		accountFlags: {},
-		copingAskSeen: false,
-		findingCardDismissed: false,
-		notifNudgeDismissed: false,
-		starterSuggestionsSeen: false,
-	};
+	const noFlags = { accountFlags: {}, findingCardDismissed: false };
 	const has = (owner: string, flag: Parameters<typeof hasAccountFlag>[2]) =>
 		hasAccountFlag(useAppStore.getState(), owner, flag);
 
 	it("one account's flag doesn't silence a second account on the device", () => {
 		useAppStore.setState(noFlags);
-		useAppStore.getState().markAccountFlag("user_a", "copingAskSeen");
-		useAppStore.getState().markAccountFlag("user_a", "starterSuggestionsSeen");
+		useAppStore.getState().markAccountFlag("user_a", "findingCardDismissed");
 
-		expect(has("user_a", "copingAskSeen")).toBe(true);
-		expect(has("user_a", "starterSuggestionsSeen")).toBe(true);
-		expect(has("user_b", "copingAskSeen")).toBe(false);
-		expect(has("user_b", "starterSuggestionsSeen")).toBe(false);
+		expect(has("user_a", "findingCardDismissed")).toBe(true);
+		expect(has("user_b", "findingCardDismissed")).toBe(false);
 	});
 
-	// A flag added after the per-account move has no device-wide stand-in.
 	it("the Telegram offer's Not now is kept per account", () => {
 		useAppStore.setState(noFlags);
 		useAppStore.getState().markAccountFlag("user_a", "telegramOfferDismissed");
@@ -100,37 +81,29 @@ describe("account flags", () => {
 	});
 
 	it("a device-wide mark from before the update stands in until it's claimed", () => {
-		useAppStore.setState({ ...noFlags, notifNudgeDismissed: true });
-		expect(has("user_a", "notifNudgeDismissed")).toBe(true);
+		useAppStore.setState({ ...noFlags, findingCardDismissed: true });
+		expect(has("user_a", "findingCardDismissed")).toBe(true);
 	});
 
 	it("the first account signed in claims the old marks, freeing later accounts", () => {
-		useAppStore.setState({
-			...noFlags,
-			findingCardDismissed: true,
-			starterSuggestionsSeen: true,
-		});
+		useAppStore.setState({ ...noFlags, findingCardDismissed: true });
 		const { claimLegacyAccountFlags } = useAppStore.getState();
 		claimLegacyAccountFlags("user_a");
 		claimLegacyAccountFlags("user_b");
 
 		expect(has("user_a", "findingCardDismissed")).toBe(true);
-		expect(has("user_a", "starterSuggestionsSeen")).toBe(true);
-		expect(has("user_a", "copingAskSeen")).toBe(false);
 		expect(has("user_b", "findingCardDismissed")).toBe(false);
-		expect(has("user_b", "starterSuggestionsSeen")).toBe(false);
 	});
 
 	it("claiming keeps what the account already had", () => {
 		useAppStore.setState({
-			...noFlags,
-			accountFlags: { user_a: ["copingAskSeen"] },
-			notifNudgeDismissed: true,
+			accountFlags: { user_a: ["telegramOfferDismissed"] },
+			findingCardDismissed: true,
 		});
 		useAppStore.getState().claimLegacyAccountFlags("user_a");
 		expect(useAppStore.getState().accountFlags.user_a).toEqual([
-			"copingAskSeen",
-			"notifNudgeDismissed",
+			"telegramOfferDismissed",
+			"findingCardDismissed",
 		]);
 	});
 
@@ -138,31 +111,24 @@ describe("account flags", () => {
 		useAppStore.setState({
 			...noFlags,
 			accountFlags: {
-				user_a: ["copingAskSeen", "notifNudgeDismissed"],
-				user_b: ["copingAskSeen"],
+				user_a: ["findingCardDismissed", "telegramOfferDismissed"],
+				user_b: ["findingCardDismissed"],
 			},
 		});
 		const { clearAccountFlags } = useAppStore.getState();
 
-		clearAccountFlags("user_a", ["copingAskSeen"]);
-		expect(has("user_a", "copingAskSeen")).toBe(false);
-		expect(has("user_a", "notifNudgeDismissed")).toBe(true);
+		clearAccountFlags("user_a", ["findingCardDismissed"]);
+		expect(has("user_a", "findingCardDismissed")).toBe(false);
+		expect(has("user_a", "telegramOfferDismissed")).toBe(true);
 
 		clearAccountFlags("user_a");
-		expect(has("user_a", "notifNudgeDismissed")).toBe(false);
-		expect(has("user_b", "copingAskSeen")).toBe(true);
+		expect(has("user_a", "telegramOfferDismissed")).toBe(false);
+		expect(has("user_b", "findingCardDismissed")).toBe(true);
 	});
 
-	// Unclaimed old marks have to survive too: the update can land while signed out.
 	it("flags and unclaimed old marks are persisted", () => {
 		expect(persistedKeys()).toEqual(
-			expect.arrayContaining([
-				"accountFlags",
-				"copingAskSeen",
-				"findingCardDismissed",
-				"notifNudgeDismissed",
-				"starterSuggestionsSeen",
-			])
+			expect.arrayContaining(["accountFlags", "findingCardDismissed"])
 		);
 	});
 });
@@ -197,5 +163,17 @@ describe("recordPlusOfferDismissal", () => {
 		useAppStore.getState().recordPlusOfferDismissal("session_close");
 		expect(useAppStore.getState().plusOfferDismissalCount).toBe(1);
 		expect(useAppStore.getState().plusOfferFullStopAt).toBeNull();
+	});
+});
+
+describe("the release this build carries", () => {
+	it("keeps the first moment a release ran, and starts again for the next one", () => {
+		const s = () => useAppStore.getState();
+		s().setRatings({ firstRan: { at: 1, id: "1.17.0" } });
+		s().noteReleaseRan("1.17.0");
+		expect(s().ratings.firstRan).toEqual({ at: 1, id: "1.17.0" });
+		s().noteReleaseRan("1.18.0");
+		expect(s().ratings.firstRan?.id).toBe("1.18.0");
+		expect(s().ratings.firstRan?.at).toBeGreaterThan(1);
 	});
 });

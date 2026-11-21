@@ -7,27 +7,25 @@ import Animated, {
 	ReduceMotion,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PressScale } from "@/components/shared/press-scale";
+import { DiscoverySkeleton } from "@/components/shared/skeleton-shapes";
 import { cn } from "@/lib/cn";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { COPY } from "../copy";
 import { RosterCard } from "./roster-card";
 import type { RosterCard as Card, FilterChip } from "./roster-model";
 
-/** Filtering reflows the cards over 240 ms. */
 const REFLOW_MS = 240;
 const EXIT_MS = 160;
-/** The chip row runs to the screen's edges, its first chip on the page's 16 pt gutter. */
 const GUTTER = 16;
 
 export type RosterView = {
 	filters: FilterChip[];
 	filter: string | null;
-	/** Undefined while the directory loads. */
 	cards: Card[] | undefined;
 };
 
-/** Xolacers: each card leads with the person's own words; presence is a word. */
 export function Roster({
 	roster,
 	onFilter,
@@ -42,14 +40,12 @@ export function Roster({
 
 	if (cards !== undefined && cards.length === 0 && filter === null) {
 		return (
-			<View className="items-center gap-2 px-6 py-16">
-				<AppText center variant="headline">
-					{COPY.roster.emptyTitle}
-				</AppText>
-				<AppText center className="max-w-70" color="muted" variant="callout">
-					{COPY.roster.emptyBody}
-				</AppText>
-			</View>
+			<EmptyState
+				body={COPY.roster.emptyBody}
+				className="py-16"
+				face
+				title={COPY.roster.emptyTitle}
+			/>
 		);
 	}
 
@@ -75,7 +71,6 @@ export function Roster({
 								)}
 								haptic={Presets.System.selection}
 								key={f.slug ?? "everyone"}
-								// Tapping the chosen tag again goes back to everyone.
 								onPress={() => onFilter(on ? null : f.slug)}
 							>
 								<AppText
@@ -90,6 +85,10 @@ export function Roster({
 						);
 					})}
 				</ScrollView>
+			) : null}
+
+			{cards === undefined ? (
+				<DiscoverySkeleton label={COPY.loading.xolacers} />
 			) : null}
 
 			{(cards ?? []).map((card) => (
@@ -118,9 +117,15 @@ export function Roster({
 			))}
 
 			{cards !== undefined && cards.length === 0 ? (
-				<AppText center className="py-8" color="muted" variant="callout">
-					{COPY.roster.noMatch}
-				</AppText>
+				<EmptyState
+					action={{
+						label: COPY.roster.noMatchBrowse,
+						onPress: () => onFilter(null),
+					}}
+					body={COPY.roster.noMatchBody}
+					className="pt-7.5"
+					title={COPY.roster.noMatchTitle}
+				/>
 			) : null}
 		</View>
 	);

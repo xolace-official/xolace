@@ -11,9 +11,10 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
   should ask): `bunx convex dev --configure` → "create a new dev deployment".
 - Dev sync: `bun run dev:server` from the root (`convex dev`, against *your* dev
   deployment only).
-- Check: `bun run check:changed` from the root; `bun run check-types` here.
+- Check: `bun run check:changed` from the root; `bun run check-types` here (incremental:
+  a no-change rerun takes seconds; `rm -rf node_modules/.cache/tsc` forces a cold one).
 - Tests: `bun run test` here. Live evals spend Anthropic credits and run only on
-  request: `bun run test:evals` (or `:intensity` / `:talk`), with
+  request: `bun run test:evals` (or `:intensity` / `:talk` / `:letters`), with
   `ANTHROPIC_API_KEY` set.
 - Never: `convex deploy`, `convex dev` against a shared/prod deployment,
   `convex env set` on prod. Only the release pipeline deploys Convex (below).
@@ -45,9 +46,20 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
 ## Public surface
 
 - `@xolace/backend/api` (`convex/_generated/api`) and `@xolace/backend/dataModel`.
-- Temporary `@xolace/backend/convex/*` for the mobile move, restricted by Biome to
-  `_generated` + an allowlist of client-safe `lib/*` modules. Server-only code
-  (`"use node"`, `ai/providers`, `jobs`) is never on the allowlist.
+- `@xolace/backend/shared` (`convex/lib/shared.ts`): the limits, error codes and
+  small pure helpers a client must agree with the server on. It has no runtime
+  imports and reads no env (`lib/shared.test.ts` enforces this and snapshots the
+  values). The owning server module imports from it and keeps its old name as an
+  alias. A shipped binary keeps the value it was built with, so changing one is a
+  store-gap change: say in the PR which way it may move.
+- Refusals a client reacts to throw `ConvexError({ code, message })` with a code
+  from `ERROR_CODES`; production replaces a plain `Error`'s message with
+  "Server Error". Keep the old text in `message` for clients that still match on it.
+- Temporary `@xolace/backend/convex/*` for the mobile move: `_generated` plus the
+  client-safe modules listed in `apps/mobile/src/features/backend-imports.ts`. The
+  mobile import-graph test fails on any other value import, and on any listed
+  module that reaches server-only code at runtime (`"use node"`, `process.env`,
+  `ai/providers`, `jobs`, the ElevenLabs ids in `lib/elevenLabsVoices.ts`).
 
 ## Rules
 
@@ -91,3 +103,15 @@ The backend deploys before app-store review clears, so the *old* app runs agains
   `outreach/telegram/bot:configureBot` is run by hand, never on deploy. Your worktree's
   dev deployment has no bot unless you make one. Runbook: `docs/setup/telegram.md`.
 - Codegen drift fails CI: commit `convex/_generated` changes with the code.
+- Quote backgrounds (`convex/quoteBackgrounds/`, B18) are a catalogue per deployment:
+  until `bun run quote-backgrounds:upload` has run there, `catalogue.list` is empty and
+  the app shows only what it draws in code. The art goes through
+  `quote-backgrounds:process` first; both scripts' headers say how.
+- The daily quote push (`convex/dailyQuotes/push.ts`, B19) is swept every 15 minutes
+  from `daily_quote_pushes`, one row per person who has it on, keyed by the next
+  local slot. Change `notifications.dailyQuote` or the time zone only through
+  `updateNotificationPrefs`, which keeps that row in step.
+- Explore's "For the hour" (`browse/explore.getForHour`, B6) reads `audio_tracks.bestAt`
+  (dawn/day/evening/late). Set it in the Kindling manifest or with
+  `browse/explore:setBestAt`; there is no admin screen. Until three tracks carry a
+  phase, the shelf fills from the New pool.

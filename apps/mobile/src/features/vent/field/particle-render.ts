@@ -20,10 +20,6 @@ import {
 	SPEED,
 } from "@/features/vent/field/particle-config";
 
-/**
- * Production's `particle-render.ts`, as the board's script ports it (`orbit`, `drawSparse`,
- * `drawField`). The burn is in `particle-burn.ts`. v2 additions are marked.
- */
 const FLASH_BLUR = 26;
 
 export type Stage = { cx: number; cy: number; w: number; h: number };
@@ -35,7 +31,6 @@ const clamp01 = (v: number) => {
 
 export { clamp01 };
 
-/** Orbit position of particle i at time t (ms): unit sphere direction turned about Y, with a bob. */
 export function orbit(i: number, t: number) {
 	"worklet";
 	const rot = t * 0.0003 * SPEED[i] + PHASE0[i];
@@ -48,7 +43,6 @@ export function orbit(i: number, t: number) {
 	};
 }
 
-/** The intro's sparse drift: 26 dim ash particles at 0.42 × the shorter side, turning at 0.3. */
 export function drawSparse(b: Batch, st: Stage, t: number) {
 	"worklet";
 	const r = Math.min(st.w, st.h) * 0.42;
@@ -67,21 +61,16 @@ export function drawSparse(b: Batch, st: Stage, t: number) {
 }
 
 export type FieldOpts = {
-	/** Orbit clock (the integrated spin). */
 	t: number;
-	/** ms since the field started to gather. */
 	et: number;
 	r: number;
 	w: number;
-	/** v2: 0–1 through the last 15 s. */
 	end: number;
 	rm: boolean;
 	fromSparse: boolean;
-	/** v2, Reduce Motion's burn: the whole field's alpha. */
 	fade: number;
 };
 
-/** The field: entry (~2 s), one settle pulse, then the turn. Radius and warmth arrive smoothed. */
 export function drawField(b: Batch, st: Stage, o: FieldOpts) {
 	"worklet";
 	const ed = Math.max(st.w, st.h) * 0.7 * (o.fromSparse ? FROM_SPARSE : 1);
@@ -97,7 +86,6 @@ export function drawField(b: Batch, st: Stage, o: FieldOpts) {
 		let y = st.cy + p.y * r * sc;
 		let a = 1;
 		if (o.rm) {
-			// v2: Reduce Motion. The field holds still and fades in.
 			a = clamp01(o.et / RM_ENTER_MS);
 		} else {
 			const raw = (o.et - DELAY[i]) / ASSEMBLY_MS;
@@ -114,7 +102,6 @@ export function drawField(b: Batch, st: Stage, o: FieldOpts) {
 		const cen = 1 - Math.min(1, Math.sqrt(p.x * p.x + p.y * p.y));
 		const tw = o.rm ? 1 : 1 + 0.15 * Math.sin(o.t * 0.004 + PHASE0[i] * 7);
 		let warm = o.w * (0.35 + 1.25 * cen);
-		// v2: in the last 15 s the rim warms inward, the opposite way to the voice.
 		if (o.end > 0) {
 			warm = Math.max(warm, o.end * (1.15 - 1.3 * cen));
 			a *= 1 + 0.35 * o.end * (1 - cen);
@@ -123,7 +110,6 @@ export function drawField(b: Batch, st: Stage, o: FieldOpts) {
 	}
 }
 
-/** The gather: the radius eases (cubic in) from where it was to 8 pt, warmth to 1. */
 export function drawGather(
 	b: Batch,
 	st: Stage,
@@ -152,7 +138,6 @@ export function drawGather(
 	}
 }
 
-/** Production's flash: a cream disc, blur 26, radius 70 + te × 0.4, fading over 140 ms. */
 export function drawFlash(
 	canvas: SkCanvas,
 	st: Stage,

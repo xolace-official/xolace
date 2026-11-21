@@ -11,27 +11,19 @@ import { EASE, LAYOUT, REDUCED_MS, T1 } from "../session-look";
 import { clamp01 } from "../timeline";
 
 const C = LAYOUT.chip;
-/** The chip's label caps at 1.25×, as the titles do. */
 const CHIP_MAX = 1.25;
 const FLAME = { android: "local_fire_department", ios: "flame.fill" } as const;
 
 type Props = {
 	top: number;
-	/** The streak before and after this session (equal when it didn't tick over). */
 	from: number;
 	to: number;
 	clock: SharedValue<number>;
 	reduced: boolean;
 };
 
-/**
- * Board `.dchip`: "Day 12 → 13". It pops in at .15 s (scale .6 → 1, .45 s),
- * and the digits roll up through an 18 pt window at .6 s (.5 s, cubic-bezier(.3,
- * 1.3, .5, 1)) as the day ticks over. Reduce Motion: a 200 ms fade, no roll.
- */
 export function DayChip({ top, from, to, clock, reduced }: Props) {
 	const ember = useTokenColor("ember");
-	// The digits' window grows with Dynamic Type (capped as the label is), so the roll never clips.
 	const win = C.window * Math.min(useWindowDimensions().fontScale, CHIP_MAX);
 	const pop = useAnimatedStyle(() => {
 		const c = clock.get();
@@ -54,7 +46,6 @@ export function DayChip({ top, from, to, clock, reduced }: Props) {
 			: 1;
 		return { transform: [{ translateY: -win * e }] };
 	});
-	// RN scales the line height with the font, so the window matches it.
 	const style = { fontSize: C.size, lineHeight: C.window } as const;
 	const digits = (n: number, className?: string) => (
 		<AppText

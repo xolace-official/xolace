@@ -6,11 +6,8 @@ import { NOTIFY_ICONS } from "@/features/settings/notifications/copy";
 import { cn } from "@/lib/cn";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** The lock card's pill: "Held until 8 am · quiet hours", "Gentle reminders are off". Part of the
- * pictured lock screen, so it stays at its size with larger text. */
 const PICTURE_SCALE = 1;
 
-/** Over a held reminder, the pill sits across its top edge; with no reminder, where the board has it. */
 export function Pill({
 	text,
 	moon,

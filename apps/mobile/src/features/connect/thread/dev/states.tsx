@@ -1,5 +1,3 @@
-/** A thread on fixtures: `xolace://dev/connect/<id>`. The profile's states are in
- * `xolacer/dev/states.tsx`. */
 import type { DevState } from "@/dev/dev-state";
 import type { DevMessage } from "./dev-messages";
 import { FixtureThread } from "./fixture-thread";
@@ -12,7 +10,6 @@ import {
 	RESTING,
 } from "./thread-fixtures";
 
-/** The thread sets its own title; the stack gives it the minimal back button. */
 const THREAD = {
 	headerBackButtonDisplayMode: "minimal" as const,
 	headerLargeTitle: false,
@@ -22,10 +19,8 @@ const THREAD = {
 };
 const DAY_MIN = 1440;
 const DAY_MS = DAY_MIN * 60_000;
-/** A name long enough to truncate, away for days: the header at its widest. */
 const AWAY = { ...OPEN, counterpartName: "Oluwaseun Adebayo-Williamson" };
 
-/** The prototype's evening, then a longer week before it. */
 const TONIGHT: DevMessage[] = [
 	{
 		ago: 9,

@@ -30,6 +30,12 @@
     "active": true
   },
   {
+    "entrySlug": "the-girl-who-prayed-for-a-numb-heart",
+    "audioPath": "audios/stories/the-girl-who-prayed-for-a-numb-heart.mp3",
+    "transcriptPath": "audios/stories/the-girl-who-prayed-for-a-numb-heart.txt",
+    "active": true
+  },
+  {
     "entrySlug": "depression-what-it-is",
     "audioPath": "audios/explainer/depression-what-it-is.mp3",
     "transcriptPath": "audios/explainer/depression-what-it-is.txt",

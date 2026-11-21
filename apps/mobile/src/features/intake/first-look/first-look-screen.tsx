@@ -1,6 +1,3 @@
-// Xolace+, the first look (S18): intake's last step, after the name. Both columns in one table
-// from the first frame; the Plus column lights row by row, each Plus row opens a live preview
-// (Talk opens by itself), and picking a voice recolours Flux. The footer sells or lets them go.
 import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -17,7 +14,6 @@ import { FirstLookTable } from "./table/first-look-table";
 import { type SceneHold, useFirstLookScene } from "./use-first-look-scene";
 import { useRowScroll } from "./use-row-scroll";
 
-/** Room between the scroll's clipped top and the header: more than Flux's hop. */
 const CLIP_ROOM = 8;
 const FADE_H = 10;
 
@@ -39,7 +35,6 @@ export function FirstLookScreen({ hold }: { hold?: SceneHold }) {
 		}
 	};
 
-	// Clipped under the status bar, so nothing scrolls behind the clock or the island.
 	const top = insets.top - 2 - CLIP_ROOM;
 	return (
 		<View
@@ -77,7 +72,6 @@ export function FirstLookScreen({ hold }: { hold?: SceneHold }) {
 	);
 }
 
-/** A short fade in the page colour at the clipped top, shown once the middle scrolls. */
 function TopFade({
 	scrollY,
 	top,

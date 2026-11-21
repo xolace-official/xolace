@@ -104,6 +104,12 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 	"admin/imports:retry": { itemId: "1import_items", number: 1 },
 	"admin/imports:setSkipped": { itemIds: [], number: 1, skipped: true },
 	"admin/imports:uploaded": { number: 1 },
+	"admin/letters:decide": { decision: "dismiss", reviewId: "1letter_reviews" },
+	"admin/letters:liftPause": { pauseRef: "1letter_profiles" },
+	"admin/letters:listPauses": {},
+	"admin/letters:listQueue": { paginationOpts: { cursor: null, numItems: 1 } },
+	"admin/letters:openReview": { reviewId: "1letter_reviews" },
+	"admin/letters:pauseSender": { reviewId: "1letter_reviews" },
 	"admin/library:bodies": {},
 	"admin/library:create": {
 		kind: "advice",

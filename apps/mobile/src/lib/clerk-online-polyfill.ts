@@ -7,6 +7,4 @@ try {
 			get: () => true,
 		});
 	}
-} catch {
-	// `navigator.onLine` is non-configurable in this runtime — nothing to do.
-}
+} catch {}

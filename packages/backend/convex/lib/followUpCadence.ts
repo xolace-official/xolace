@@ -220,6 +220,47 @@ export function shouldReshowShownCard(args: {
 }
 
 /**
+ * How long a card waits for an answer once the person is back (Coming back
+ * v2): from its first `markShown`, a shown card expires silently after this.
+ * Runs after the tier timers, never alongside them: those only act on a
+ * `pending` card.
+ */
+export const WAITING_CARD_LIFETIME_MS = 3 * DAY;
+
+/**
+ * When a card's wait began: its first showing, else (a ready card) when the
+ * person came back. Cards from before these stamps existed fall back to
+ * `shownAt` and `createdAt`.
+ */
+export function waitingSince(card: {
+	createdAt: number;
+	firstShownAt?: number;
+	readyAt?: number;
+	shownAt?: number;
+	status: string;
+}): number {
+	if (card.status === "shown") {
+		return card.firstShownAt ?? card.shownAt ?? card.createdAt;
+	}
+	return card.readyAt ?? card.createdAt;
+}
+
+/**
+ * Is this card still waiting on the person? Ready or shown, and under
+ * `WAITING_CARD_LIFETIME_MS` since its wait began. The 2-hour re-show
+ * cooldown plays no part.
+ */
+export function isCardWaiting(
+	card: Parameters<typeof waitingSince>[0],
+	now: number
+): boolean {
+	if (card.status !== "ready" && card.status !== "shown") {
+		return false;
+	}
+	return now - waitingSince(card) < WAITING_CARD_LIFETIME_MS;
+}
+
+/**
  * Should a reopen surface this card? Only for a still-pending card, and only
  * once enough time has passed since the card was created (≈ session completion
  * time). This stops the card from resolving while the user is still in the app

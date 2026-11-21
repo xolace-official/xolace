@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { View } from "react-native";
 import Animated, {
 	cancelAnimation,
@@ -9,39 +9,54 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
-import { AppText } from "@/components/shared/app-text";
 import { Flux } from "@/components/shared/flux";
-import { Image, LinearGradient } from "@/components/shared/styled";
-import { useThemeFaces } from "@/design/fonts";
+import { LinearGradient } from "@/components/shared/styled";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
 import type { SessionColors } from "../session-colors";
-import type { ListenerCard } from "../session-end-data";
+import type { NextCards, NextParts } from "../session-end-data";
 import type { NextKey } from "../session-end-model";
 import { LAYOUT } from "../session-look";
 import { clamp01 } from "../timeline";
+import { InsightLead, XolacerLead } from "./next-extras";
 
 const N = LAYOUT.next;
 const A = LAYOUT.avatar;
 const SHIMMER_MS = 1400;
-/** The board's waveform glyph (`.gs`, 24 × 24, stroke 2.2). */
 const WAVE = "M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2";
 const WAVE_BOX = 24;
 const WAVE_STROKE = 2.2;
-/** `.av`: three Flux poses for the kindling, each fitted by height in a 40 pt circle. */
 const AVATAR_POSES = ["sitting", "whisper", "bundle"] as const;
-const INITIAL = { line: 22, size: 17 } as const;
 
 type Props = {
 	k: NextKey;
 	colors: SessionColors;
-	listener: ListenerCard | null;
+	cards: NextCards;
+	parts: NextParts;
+	letterTile: ReactNode;
+	reduced: boolean;
 };
 
-/** The next card's left: the kindling avatars, a listener, the listen tile, or the loading tile. */
-export function NextArt({ k, colors, listener }: Props) {
-	if (k === "listener" && listener) {
-		return <ListenerArt listener={listener} />;
+export function NextArt({
+	k,
+	colors,
+	cards,
+	parts,
+	letterTile,
+	reduced,
+}: Props) {
+	if (k === "listener" && cards.listener) {
+		return <XolacerLead listener={cards.listener} parts={parts} />;
+	}
+	const part =
+		k === "unlock" ? cards.unlock?.[0] : k === "upsell" ? cards.upsell : null;
+	if ((k === "unlock" || k === "upsell") && part) {
+		return (
+			<InsightLead domain={part} kind={k} parts={parts} reduced={reduced} />
+		);
+	}
+	if (k === "letterRead" || k === "letterWrite") {
+		return letterTile;
 	}
 	if (k === "listen") {
 		const [bg, fg] = colors.listen;
@@ -82,38 +97,6 @@ export function NextArt({ k, colors, listener }: Props) {
 	return <KindlingAvatars fills={colors.kindling} />;
 }
 
-/** A listener: their photo, or their initial on the violet wash as the board draws it. */
-function ListenerArt({ listener }: { listener: ListenerCard }) {
-	const faces = useThemeFaces();
-	return (
-		<View
-			className="items-center justify-center overflow-hidden rounded-full bg-accent-wash"
-			style={{ height: N.icon, width: N.icon }}
-		>
-			{listener.photoUrl ? (
-				<Image
-					className="absolute inset-0"
-					contentFit="cover"
-					source={{ uri: listener.photoUrl }}
-				/>
-			) : (
-				<AppText
-					color="accentInk"
-					maxFontSizeMultiplier={1}
-					style={{
-						fontFamily: faces["display-bold"],
-						fontSize: INITIAL.size,
-						lineHeight: INITIAL.line,
-					}}
-					variant="headline"
-				>
-					{listener.name.slice(0, 1).toUpperCase()}
-				</AppText>
-			)}
-		</View>
-	);
-}
-
 function KindlingAvatars({ fills }: { fills: string[] }) {
 	const ring = useTokenColor("surface");
 	return (
@@ -146,7 +129,6 @@ function KindlingAvatars({ fills }: { fills: string[] }) {
 	);
 }
 
-/** `.sk`: a bar the well colour with a lighter band sweeping through it (1.4 s, linear); still under Reduce Motion. */
 export function Shimmer({
 	reduced,
 	width,

@@ -1,8 +1,3 @@
-/**
- * The reader's dev fixtures: three of the board's reads (`LanternAlive.dc.html`'s `E`) as
- * `getEntry` serves them, their bodies as the GFM the curators write, and the sources and licence
- * lines the board shows (`SOURCES`, `LIC`). The publisher of the verbatim story is a placeholder.
- */
 import { card, type EntrySlug } from "@/features/lantern/dev/entries";
 import type { ReaderEntry } from "@/features/lantern/reader/reader-model";
 
@@ -78,7 +73,6 @@ function read(
 	};
 }
 
-/** An adapted explainer with a narration: the board's main read. */
 export const NIGHT: ReaderEntry = read("thoughts-at-night", {
 	markdown: NIGHT_BODY,
 	reflectPrompt: "Which thought comes back most at night?",
@@ -99,12 +93,10 @@ export const NIGHT: ReaderEntry = read("thoughts-at-night", {
 	],
 });
 
-/** Six sources, for a sources sheet taller than its cap. */
 export const MANY_SOURCES: ReaderEntry["sources"] = [1, 2, 3].flatMap((n) =>
 	NIGHT.sources.map((s) => ({ ...s, pageTitle: `${s.pageTitle} (${n})` }))
 );
 
-/** A story written for Lantern, with a curator's content note. */
 export const WINTER: ReaderEntry = read("winter", {
 	contentNote: "Talks about the death of a parent.",
 	markdown: WINTER_BODY,
@@ -112,7 +104,6 @@ export const WINTER: ReaderEntry = read("winter", {
 	storyDescriptor: "A daughter’s story",
 });
 
-/** A story published as they wrote it: the publisher's credit and licence. */
 export const FINE: ReaderEntry = read("fine", {
 	markdown: FINE_BODY,
 	reuse: "verbatim",

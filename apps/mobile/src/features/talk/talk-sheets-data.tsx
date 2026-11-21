@@ -4,11 +4,6 @@ import type { Directness } from "@/lib/talk/use-talk-style";
 import type { WeekLeft } from "./talk-model";
 import { useTalkSheetsData } from "./use-talk-sheets";
 
-/**
- * What Talk's two sheets read and do: How {name} talks (pace and directness, saved the
- * moment they change) and What's kept (this week's time). Convex in the app
- * (`TalkSheetsData`), fixtures in the dev states.
- */
 export type TalkSheets = {
 	state: {
 		name: string;
@@ -42,7 +37,6 @@ export function useTalkSheets(): TalkSheets {
 	return sheets;
 }
 
-/** The app's adapter. */
 export function TalkSheetsData({ children }: { children: ReactNode }) {
 	const value = useTalkSheetsData();
 	return <TalkSheetsProvider value={value}>{children}</TalkSheetsProvider>;

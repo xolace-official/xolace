@@ -14,10 +14,6 @@ import {
 import { TONES } from "@/features/settings/mirror/copy";
 import type { MirrorTone } from "@/features/settings/mirror/mirror-model";
 
-/**
- * The card's light: five stacked layers, one per tone, whose opacities crossfade on the UI
- * thread (350 ms; at once with Reduce Motion). No React commit per frame.
- */
 const FADE = { duration: 350, ...PLAY_AS_CHOSEN };
 
 function Layer(p: {

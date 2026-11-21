@@ -21,8 +21,6 @@ import {
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
 
-// Production's HalfGauge: 17 ticks from 180° over −180°, radius 120, 30 long, 9 wide, the
-// centre 18 pt below the card's top edge, in a 150 pt window.
 const W = 290;
 const HALF_H = 150;
 const TICKS = 17;
@@ -31,10 +29,8 @@ const LEN = 30;
 const WIDTH = 9;
 const CX = W / 2;
 const CY = 18;
-/** Your usual reaches a quarter of a tick further out. */
 const MARK_OUT = LEN * 0.25;
 const PATH = tickPath(TICKS, 180, -180, RADIUS, LEN, CX, CY);
-/** From one part to the next; the first fill waits for the rings. */
 const REFILL_MS = 600;
 const FIRST_DELAY_MS = 500;
 const NUMBER_LINE = 46;
@@ -44,10 +40,6 @@ const markIndex = (usual: number) => {
 	return Math.max(0, Math.round((usual / 100) * TICKS) - 1);
 };
 
-/**
- * The half gauge. Kept mounted from part to part: the ticks run from the old value to the new
- * on one shared value, the number rolls, your usual's mark moves.
- */
 export function HalfGauge({
 	value,
 	usual,
@@ -55,7 +47,6 @@ export function HalfGauge({
 	label,
 }: {
 	value: number;
-	/** Null until the part settles: no mark (production's `mark={baseline === null ? null : …}`). */
 	usual: number | null;
 	color: string;
 	label: string;
@@ -65,7 +56,6 @@ export function HalfGauge({
 	const reduced = useEffectiveReducedMotion();
 	const dv = useSharedValue(reduced ? value : 0);
 	const du = useSharedValue(usual ?? 0);
-	// Whether the mark showed last time: a mark that appears starts at its place, not from 0.
 	const marked = useRef(usual !== null);
 	const progress = useDerivedValue(() => dv.get() / 100);
 	const { end, opacity } = useSnappedEnd(progress, TICKS, TICKS);
@@ -161,7 +151,6 @@ export function HalfGauge({
 	);
 }
 
-/** Free: the gauge unfilled, a lock where the number goes. Never a hint of direction. */
 export function LockedGauge() {
 	const subtle = useTokenColor("subtle");
 	const track = useTrack();

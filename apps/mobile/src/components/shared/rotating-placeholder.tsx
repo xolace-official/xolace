@@ -11,40 +11,24 @@ import {
 } from "@/design/ease";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** A new line every 5 s; each swap takes 0.5 s. */
 const EVERY_MS = 5000;
 const SWAP_MS = 500;
 const RISE = 6;
 const BLUR = 3;
-/** The soft copy's glyphs under their halo: a 3 pt blur, approximated (the board: ink at 22%, halo at 69%). */
 const SOFT_GLYPHS = 0.35;
 
-/*
- * The swap (riseFn over 0.5 s, a = rise(t)): the sharp copy fades in as a², the blurred copy
- * as the bell 2a(1 − a). Ease plays one curve per property, so the bell is two nested views
- * whose opacities each go one way, 2a/(1 + a) × (1 − a²). The curves are fitted beziers
- * (design/review/ease-step4/curve-fits.ts): a² within 1.0% of the travel, 2a/(1 + a) within 0.5%.
- */
 const SWAP_A2: CubicBezier = [0.23, 0.138, 0.074, 1.046];
 const SWAP_SOFT: CubicBezier = [0.134, 0.999, 0.206, 0.985];
 const RISE_EASE: CubicBezier = EASING.easeOut;
 
 type Props = {
 	items: readonly string[];
-	/** The rotation runs (the screen live, the field on screen and empty); stopped, the line holds. */
 	running: boolean;
 	reduced: boolean;
 };
 
-/**
- * A text field's placeholder that offers a way in every 5 s (rotating-suggestions-input,
- * slowed): the next line comes up 6 pt out of a 3 pt blur over 0.5 s. All lines are laid out
- * once; a JS timer moves to the next line every 5 s (one small render) and the swap plays
- * natively (react-native-ease). Stopping holds the line that's up.
- */
 export function RotatingPlaceholder({ items, running, reduced }: Props) {
 	const subtle = useTokenColor("subtle");
-	// The swaps so far: line `swaps % count` is up. 0 is the first line, shown at rest.
 	const [swaps, setSwaps] = useState(0);
 	const count = items.length;
 	useEffect(() => {
@@ -63,7 +47,6 @@ export function RotatingPlaceholder({ items, running, reduced }: Props) {
 						arrive={up && swaps > 0}
 						first={i === 0}
 						ink={subtle}
-						// A line replays its swap by remounting, once each time it comes up.
 						key={up ? `${text}-${swaps}` : text}
 						reduced={reduced}
 						text={text}
@@ -79,7 +62,6 @@ type LineProps = {
 	text: string;
 	first: boolean;
 	up: boolean;
-	/** It just came up: play the swap (the very first line shows at rest). */
 	arrive: boolean;
 	reduced: boolean;
 	ink: string;
@@ -97,7 +79,6 @@ function swap(easing: CubicBezier): EaseProps["transition"] {
 }
 
 function Line({ text, first, up, arrive, reduced, ink }: LineProps) {
-	// Sharp copy. Reduced: a 200 ms fade, no rise and no blurred copy. Hidden: off at once.
 	let sharp: EaseProps;
 	if (!up) {
 		sharp = { animate: HIDDEN, transition: NONE };

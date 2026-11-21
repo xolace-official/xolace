@@ -16,11 +16,6 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 const F = LS.forYou;
 const RANGE = [0, F.flat, 1];
 
-/**
- * Production's centre-focus carousel (handoff §2.3): cards snap to the centre and shrink away from
- * it, from one UI-thread scroll value. Changed: a dim layer, not an animated blur per card.
- * Reduce Motion: a plain snapping row.
- */
 export function ForYouCarousel() {
 	const { state, actions } = useHomeScreen();
 	const { width } = useWindowDimensions();
@@ -78,7 +73,6 @@ function Card({
 	reduced,
 	onShare,
 }: CardProps) {
-	// With the centring padding, card i is centred exactly at scrollX = i × step.
 	const step = itemW + F.gap;
 	const scale = useAnimatedStyle(() => {
 		if (reduced) {

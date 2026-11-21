@@ -27,12 +27,6 @@ const schedule = (run: () => void, ms: number) => {
 	return () => clearTimeout(id);
 };
 
-/**
- * Clerk sign-in behind the seat's two buttons (#204), on `sign-in-flow.ts`: the seat holds
- * (`seatHeld`) from the session landing through the seated moment, and the root readers wait
- * (`accountPending`) until the user row exists. `release()` lets go when the moment ends; leaving
- * first run or the app going to the background lets go too.
- */
 export function useSignIn() {
 	const { isSignedIn, signOut } = useAuth();
 	const { startAppleAuthenticationFlow } = useSignInWithApple();
@@ -75,7 +69,6 @@ export function useSignIn() {
 			hold: seat,
 			isSignedIn: () => !!isSignedIn,
 			signedIn: (p, isNewUser) =>
-				// Lands on the anonymous id; usePostHogIdentity merges it on app open.
 				posthog.capture("user_signed_in", {
 					auth_provider: p,
 					is_new_user: isNewUser,

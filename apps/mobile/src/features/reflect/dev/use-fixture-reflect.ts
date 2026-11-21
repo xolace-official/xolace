@@ -1,10 +1,10 @@
+import { REFINEMENT_MAX_TURNS } from "@xolace/backend/shared";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { COPY } from "../copy";
 import type { Reflect, ReflectUi } from "../reflect-data";
 import {
 	LAND_MS,
-	MAX_TURNS,
 	mirrorSentences,
 	pairPhrases,
 	resourceRows,
@@ -22,9 +22,7 @@ import {
 } from "./fixtures";
 
 type S = Reflect["state"];
-/** The fixture's own state: Reflect's, less what it works out from the texts. */
 export type FixtureState = Omit<S, "yourWords" | "mirror" | "resources"> & {
-	/** How the simulated server answers a send. */
 	answer: Answer;
 	sent: string;
 	mirrorText: string;
@@ -70,7 +68,7 @@ const FIXTURE_DEFAULTS: FixtureState = {
 	spaceNameOpen: false,
 	stage: "write",
 	streak: STREAK,
-	take: { note: null, remainingMs: null, writing: false },
+	take: { note: null, remainingMs: null, scribe: false, writing: false },
 	takeN: 0,
 	text: "",
 	turns: 0,
@@ -82,11 +80,6 @@ const FIXTURE_DEFAULTS: FixtureState = {
 const S_MS = 1000;
 const REWRITE_MS = 1100;
 
-/**
- * The prototype's simulated server (`reflect-store.ts`, `reflect-wait.ts`) as Reflect's second
- * adapter: a send waits as `answer` says, then lands the fixture mirror. Nothing reaches the
- * backend; navigation is left out, so a dev state stays on screen.
- */
 export function useFixtureReflect(initial: Partial<FixtureState>): Reflect {
 	const [f, setF] = useState<FixtureState>({ ...FIXTURE_DEFAULTS, ...initial });
 	const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -130,7 +123,7 @@ export function useFixtureReflect(initial: Partial<FixtureState>): Reflect {
 	const refine = () => {
 		patch({ nq: false, rewriting: true, sayMore: false, sel: -1 });
 		after(REWRITE_MS, () => ({
-			atCap: f.turns + 1 >= MAX_TURNS,
+			atCap: f.turns + 1 >= REFINEMENT_MAX_TURNS,
 			landN: f.landN + 1,
 			mv: 2,
 			nqReason: null,

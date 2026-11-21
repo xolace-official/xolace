@@ -3,7 +3,6 @@ import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
 
-/** Board `.pill`: 40 high, 14/600. */
 const PILL = 40;
 
 export type CardAction = { label: string; go: () => void };
@@ -32,10 +31,6 @@ function Pill({ action, primary }: { action: CardAction; primary: boolean }) {
 	);
 }
 
-/**
- * The honest card under the circle (board `.slow`, Private Mind's stall card S26b): slow,
- * offline, or the send failed. The words are always kept; there is always a way on.
- */
 export function SlowCard({
 	body,
 	primary,

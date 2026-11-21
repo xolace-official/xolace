@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { arcsAt } from "@/design/breath-arc";
 
-/** The old `use-dual-breath-animation.ts`, transcribed: each value lerped rest → peak by p. */
 function production(W: number, H: number, p: number) {
 	const lerp = (a: number, b: number) => a + (b - a) * p;
 	const topH = lerp(0.6 * H, 0.32 * H);

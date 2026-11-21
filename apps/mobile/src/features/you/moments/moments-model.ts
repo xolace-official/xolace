@@ -1,15 +1,8 @@
-/**
- * Moments' rules, pure: what a card and a moment show from what `sessions.listForTimeline` and
- * `sessions.getSessionDetails` send, and how the list is grouped by day. `now` is passed in.
- */
 import { MOMENTS_COPY, MONTHS, WEEKDAYS } from "@/features/you/moments/copy";
 import { convexErrorCode } from "@/lib/convex-error-code";
 
-/** The tones a mirror is written in that get a chip; "adaptive" is the server's own pick and has
- * no name to show. */
 export type Tone = keyof typeof MOMENTS_COPY.tones;
 
-/** The fields of a `listForTimeline` row the list reads. */
 export type MomentRow = {
 	_id: string;
 	createdAt: number;
@@ -21,8 +14,6 @@ export type MomentRow = {
 	toneUsed: string | null;
 };
 
-/** The fields of `getSessionDetails` a moment reads: the session's own document, so its
- * optional fields may be missing (a session that never got past its first screen). */
 export type MomentSession = {
 	createdAt: number;
 	entryType: string;
@@ -38,7 +29,6 @@ export type MomentSession = {
 export type MomentCard = {
 	id: string;
 	quote: string;
-	/** "Overwhelmed · sat with this". */
 	line: string;
 	tone: Tone | null;
 };
@@ -48,15 +38,11 @@ export type ListItem =
 	| { kind: "moment"; id: string; moment: MomentCard; index: number };
 
 export type MomentView = {
-	/** "Today", or "Tuesday, 4 November". */
 	date: string;
-	/** "9:12 pm · sat with this". */
 	meta: string;
-	/** What you wrote; null for a talk (its thread is under the mirror) or when nothing was kept. */
 	said: string | null;
 	mirror: string | null;
 	tone: Tone | null;
-	/** The feeling, in your words' case: "overwhelmed". */
 	words: string[];
 	talk: boolean;
 	companionName: string | null;
@@ -71,13 +57,11 @@ export const toneOf = (tone: string | null | undefined): Tone | null =>
 
 const spaced = (label: string) => label.replace(/-/g, " ").trim();
 
-/** "Self-doubt" from "self-doubt"; null when the session has no feeling. */
 export function feelingOf(granular: string | null, primary: string | null) {
 	const label = spaced(granular ?? primary ?? "");
 	return label ? label.charAt(0).toUpperCase() + label.slice(1) : null;
 }
 
-/** How the session went, in the line's lower case; null when it chose nothing. */
 export function pathOf(path: string | null | undefined, entryType: string) {
 	if (entryType === "talk") {
 		return MOMENTS_COPY.paths.talk;
@@ -95,14 +79,12 @@ const lineOf = (row: MomentRow) =>
 		.filter(Boolean)
 		.join(" · ");
 
-/** Production's `removeEmDash`: the mirror never shows an em dash. */
 const cleanText = (text: string) =>
 	text
 		.replace(/\s*—\s*/g, ", ")
 		.replace(/ {2}/g, " ")
 		.trim();
 
-/** Whole local days from `then` to `now`. */
 const daysAgo = (then: Date, now: Date) => {
 	const a = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
 	const b = Date.UTC(then.getFullYear(), then.getMonth(), then.getDate());
@@ -112,7 +94,6 @@ const daysAgo = (then: Date, now: Date) => {
 const dayMonth = (d: Date, now: Date) =>
 	`${d.getDate()} ${MONTHS[d.getMonth()]}${d.getFullYear() === now.getFullYear() ? "" : ` ${d.getFullYear()}`}`;
 
-/** A section's day: Today, Yesterday, a weekday this week, else "4 November". */
 export function whenOf(at: number, now: Date) {
 	const d = new Date(at);
 	const ago = daysAgo(d, now);
@@ -125,7 +106,6 @@ export function whenOf(at: number, now: Date) {
 	return ago < WEEK_DAYS ? WEEKDAYS[d.getDay()] : dayMonth(d, now);
 }
 
-/** A moment's header date: Today, Yesterday, else "Tuesday, 4 November". */
 export function dateOf(at: number, now: Date) {
 	const d = new Date(at);
 	const ago = daysAgo(d, now);
@@ -138,7 +118,6 @@ export function dateOf(at: number, now: Date) {
 	return `${WEEKDAYS[d.getDay()]}, ${dayMonth(d, now)}`;
 }
 
-/** "9:12 pm". */
 export function timeOf(at: number) {
 	const d = new Date(at);
 	const h = d.getHours() % NOON || NOON;
@@ -153,7 +132,6 @@ export const cardOf = (row: MomentRow): MomentCard => ({
 	tone: toneOf(row.toneUsed),
 });
 
-/** Newest first, a day's label before each run of that day. `index` counts cards only. */
 export function itemsOf(rows: readonly MomentRow[], now: Date): ListItem[] {
 	const items: ListItem[] = [];
 	let last = "";
@@ -170,8 +148,6 @@ export function itemsOf(rows: readonly MomentRow[], now: Date): ListItem[] {
 	return items;
 }
 
-/** The feeling words, lower case, the finer one first: ["overwhelmed", "stress"]. With no
- * feeling, "reflection" (production's "💭 Reflection" row), so a moment never ends blank. */
 export function wordsOf(granular: string | null, primary: string | null) {
 	const words = [granular, primary]
 		.map((w) => (w ? spaced(w).toLowerCase() : ""))
@@ -181,18 +157,11 @@ export function wordsOf(granular: string | null, primary: string | null) {
 		: [MOMENTS_COPY.reflection.toLowerCase()];
 }
 
-/** The codes a session read throws when it isn't yours to see: deleted (retention, a wipe), or
- * another person's (`requireSessionOwnership`). */
 const MISSING_CODES: ReadonlySet<string> = new Set([
 	"session_not_found",
 	"session_forbidden",
 ]);
 
-/**
- * A moment that isn't there: the session's reads threw that it's gone or not yours, or the id in
- * the link isn't a session's (`v.id` rejects it; the message names it outside production, which
- * keeps only "Server Error"). Anything else is a real failure.
- */
 export function isMissingMoment(error: unknown) {
 	const code = convexErrorCode(error);
 	if (code !== undefined) {
@@ -203,16 +172,9 @@ export function isMissingMoment(error: unknown) {
 	);
 }
 
-/** A first sentence shorter than this is likely an abbreviation's ("Dr."), not a sentence. */
 const SEED_MIN_WORDS = 3;
 const SEED_MIN_CHARS = 12;
 
-/**
- * What "Reflect on this again" seeds Reflect's question with: the first sentence of what you
- * wrote, so it fits as a prompt (Reflect shows it as `You wrote: “…”`). When that "sentence" is
- * too short to be one (cut at "Dr."), the first line instead. A talk, or a moment with no words
- * kept, opens Reflect unseeded.
- */
 export function reflectSeed(said: string | null): string | null {
 	const text = said?.trim();
 	if (!text) {

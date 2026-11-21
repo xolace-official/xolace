@@ -18,16 +18,8 @@ import { playSoftPress } from "@/lib/haptics";
 import { useAccountFlag } from "@/store/use-account-flag";
 
 const FADE_MS = 320;
-/** How long the thank-you line holds before the card goes. */
 const THANKS_MS = 2400;
 
-/**
- * "How did you find Xolace?" on Today from a v2 user's third day (composed in by the Today
- * route; it moved here from Discovery with S1) (#711): one tap, with
- * the series pair on the same card after short video (Back returns to the source). "Not
- * now" puts it away for good for this account; an answer saves through
- * `intake.deferred.record` and the card thanks them and goes.
- */
 export function FindingCard() {
 	const missing = useQuery(api.intake.deferred.missing);
 	const completedAt = useFullContext()?.intake?.completedAt;
@@ -37,7 +29,6 @@ export function FindingCard() {
 	const [thanked, setThanked] = useState(false);
 	const [picks, setPicks] = useState<FindingPicks>({});
 
-	// Latched: saving drops acquisitionSource from `missing`, and the thanks must stay.
 	if (
 		!(showing || thanked) &&
 		missing !== undefined &&

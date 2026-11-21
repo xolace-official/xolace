@@ -25,7 +25,6 @@ describe("bareLinks", () => {
 	});
 
 	it("links a file name on a real top-level domain, as Stream's tap does", () => {
-		// `.md` is Moldova's: Stream makes "readme.md" tappable, so VoiceOver gets it too.
 		expect(bareLinks("See readme.md")).toEqual([
 			{ url: "http://readme.md", words: "readme.md" },
 		]);

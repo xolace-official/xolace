@@ -8,7 +8,6 @@ import { loopProps } from "@/design/ease-loops";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/** Production's sweep: 1.9 s across, a band 60% of the line wide. */
 const SWEEP_MS = 1900;
 const BAND = 0.6;
 const START = { x: 0, y: 0.5 } as const;
@@ -27,10 +26,6 @@ function Line({ text, hidden = false }: { text: string; hidden?: boolean }) {
 	);
 }
 
-/**
- * A line with light sweeping across it while the draft is written. The sweep is an Ease loop
- * (one native animation); with reduced motion the line rests in its muted ink.
- */
 export function ShimmerText({ text }: { text: string }) {
 	const reduced = useEffectiveReducedMotion();
 	const [muted, foreground] = useTokenColors(["muted", "foreground"]);

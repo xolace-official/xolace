@@ -15,8 +15,6 @@ import type { Playhead } from "../scrub/use-playhead";
 
 const REDUCED = { duration: REDUCED_FADE_MS, ...PLAY_AS_CHOSEN };
 
-/** The 288 pt cover. Paused, it eases to .88; a scrub holds it full size. Reduce Motion keeps
- * it still. */
 export function PlayerCover({
 	head,
 	reduced,
@@ -65,7 +63,6 @@ export function PlayerCover({
 				}}
 				uri={state.track?.coverUrl}
 			/>
-			{/* The board's 0.5 pt white ring at 8%. */}
 			<View
 				className="absolute inset-0 border-[0.5px] border-player-ink/8"
 				style={{ borderCurve: "continuous", borderRadius: P.coverRadius }}

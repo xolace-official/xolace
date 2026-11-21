@@ -17,6 +17,10 @@ import {
 	rateLimiter,
 } from "../lib/rateLimits";
 import {
+	BRIDGE_ADDRESS_TERM_MAX_CHARS,
+	BRIDGE_NAME_MAX_CHARS,
+} from "../lib/shared";
+import {
 	ARTICULATOR_MODEL,
 	extractTextFromResponse,
 	getAnthropicClient,
@@ -25,9 +29,9 @@ import {
 
 // These strings are interpolated straight into the prompt, so they are both a
 // token-spend surface and an injection surface. Real values are short.
-const MAX_RECIPIENT_NAME = 60;
+const MAX_RECIPIENT_NAME = BRIDGE_NAME_MAX_CHARS;
 const MAX_RELATIONSHIP = 40;
-const MAX_ADDRESS_TERM = 40;
+const MAX_ADDRESS_TERM = BRIDGE_ADDRESS_TERM_MAX_CHARS;
 
 // Relationships the user is typically safe being fully raw with.
 // Anyone else gets a measured-disclosure instruction — over-sharing to a

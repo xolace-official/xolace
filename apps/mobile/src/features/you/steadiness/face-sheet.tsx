@@ -21,15 +21,9 @@ const ROWS: { key: keyof typeof F.rows; pose: Pose }[] = [
 	{ key: "waiting", pose: PRESETS.waiting },
 ];
 
-/**
- * What the face in the dial is telling you: production's FaceInfoSheet unchanged, a form sheet
- * sized to its rows (the `steadiness-face-info` route), each row with a small live face showing
- * that motion. They unmount, clocks and all, when the sheet closes.
- */
 export function FaceSheet() {
 	const router = useRouter();
 	return (
-		// A plain View so the sheet can fit its content. Top padding clears the grabber.
 		<View className="gap-5 px-6 pt-8 pb-8">
 			<View className="gap-2">
 				<AppText

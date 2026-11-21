@@ -29,11 +29,6 @@ type Props = {
 	onKeep: () => void;
 };
 
-/**
- * Board `.row`: "Leave it" (ink) and "Not this time" (well), and in the same 46 pt the status once
- * answered: a glowing dot and "Left for someone." as your star lands, or "Kept just for you." Nothing
- * moves. While the card is held, "Leave it" rolls to "Keep holding…", then "Let go".
- */
 export function ShareRow({
 	hold,
 	share,

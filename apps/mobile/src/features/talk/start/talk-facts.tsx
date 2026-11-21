@@ -42,7 +42,6 @@ function Fact({
 	);
 }
 
-/** The three short facts (handoff §2.5); the long version is in What's kept. */
 export function TalkFacts({ name, week }: { name: string; week: WeekLeft }) {
 	const { facts } = TALK_COPY.start;
 	return (
@@ -64,7 +63,6 @@ export function TalkFacts({ name, week }: { name: string; week: WeekLeft }) {
 	);
 }
 
-/** "Pace Normal · Directness In between ›", which opens How {name} talks (§2.4). */
 export function PaceLine({
 	state,
 	onPress,
@@ -109,8 +107,6 @@ export function PaceLine({
 	);
 }
 
-/** Under Start: the mic line on the first talk, the low-time line, then What's kept (§2.6).
- * A talk that couldn't start says why here instead. */
 export function Footnote({
 	week,
 	micAsk,

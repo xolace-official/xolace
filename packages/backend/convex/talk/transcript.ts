@@ -1,4 +1,5 @@
 import { type OpenAIMessage, textOf } from "../ai/talk/openaiCompat";
+import { hasSpokenContent } from "../lib/shared";
 
 export type TalkLine = { role: "person" | "companion"; text: string };
 
@@ -11,8 +12,7 @@ export const MAX_TALK_INPUT = 20_000;
  * ElevenLabs transcribes noise it can't make out as "..." : a person line
  * with no letters or digits (any script) said nothing.
  */
-const said = (l: TalkLine) =>
-	l.role !== "person" || /[\p{L}\p{N}]/u.test(l.text);
+const said = (l: TalkLine) => l.role !== "person" || hasSpokenContent(l.text);
 
 /**
  * The talk as ElevenLabs resends it every turn: both sides' spoken text in

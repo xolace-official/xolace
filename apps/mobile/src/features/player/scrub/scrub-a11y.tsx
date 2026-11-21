@@ -6,10 +6,6 @@ import { positionVo } from "../player-format";
 
 const STEP_S = 15;
 
-/**
- * The scrubber for VoiceOver: adjustable, ±15 s, "3 minutes 6 seconds of 8 minutes 12 seconds".
- * Only this wrapper renders on the clock's tick; the bars inside are the same element.
- */
 export function ScrubA11y({
 	style,
 	children,
@@ -24,7 +20,6 @@ export function ScrubA11y({
 			accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
 			accessibilityLabel={PLAYER_COPY.position}
 			accessibilityRole="adjustable"
-			// Where the playhead is, not the stale clock while a seek lands (as `PlayheadSync`).
 			accessibilityValue={{
 				text: positionVo(actions.settled(position), duration),
 			}}

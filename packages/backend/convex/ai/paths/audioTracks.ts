@@ -10,6 +10,7 @@ import {
 import { formatOf } from "../../audio/formats";
 import { measurePeaksLater } from "../../audio/trackPeaks";
 import {
+	explorePhaseValidator,
 	licenceValidator,
 	trackLoudnessValidator,
 	trackSoundValidator,
@@ -25,6 +26,9 @@ import { indexSignature, trackNamespaces } from "./trackSearch";
 export const r2 = new R2(components.r2);
 
 const sharedFields = {
+	// Explore's "For the hour" (B6). Optional in a record: one without it keeps
+	// the stored tags (an admin import never carries them).
+	bestAt: v.optional(v.array(explorePhaseValidator)),
 	durationSec: v.number(),
 	key: v.string(),
 	loudness: v.optional(trackLoudnessValidator),
@@ -173,7 +177,8 @@ const upsertTrackResult = v.object({
  * unchanged-sha256 duplicate really is safe to delete.
  *
  * The row is replaced, so `editedBy` drops (the file is now the latest
- * word); `featured` is curated outside files and kept.
+ * word); `featured` is curated outside files and kept, and so is `bestAt`
+ * when the record doesn't set it.
  */
 export async function upsertTrackRecord(
 	ctx: MutationCtx,
@@ -252,6 +257,7 @@ export async function upsertTrackRecord(
 
 	const kept = {
 		active: existing.active,
+		bestAt: track.bestAt ?? existing.bestAt,
 		featured: existing.featured,
 		retiredAt: existing.retiredAt,
 		searchText,

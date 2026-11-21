@@ -5,10 +5,8 @@ import { AppText } from "@/components/shared/app-text";
 import { COPY } from "@/features/lantern/copy";
 import { minutesLeft } from "@/features/lantern/reader/reader-model";
 
-/** Capped like the rest of the bar, so it stays one row. */
 const BAR_MAX_SCALE = 1.5;
 
-/** "4 min left", once past the fold. React hears only when the number changes. */
 export function MinutesLeft({
 	readMin,
 	y,

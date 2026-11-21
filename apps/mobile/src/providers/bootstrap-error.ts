@@ -1,4 +1,3 @@
-/** Codes requireAuth throws while the Convex user row and Clerk disagree. */
 const TRANSIENT_CODES = ["user_not_found", "account_inactive"];
 
 /** True for requireAuth's settling codes (row missing or inactive). Typed code only: bare

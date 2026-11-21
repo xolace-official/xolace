@@ -7,13 +7,6 @@ import {
 	vec,
 } from "@shopify/react-native-skia";
 
-/**
- * firefly-swarm's glow atlas (`makeAtlas`), baked once: white on clear, tinted
- * per star when drawn (`Atlas` with modulate). Cell 0 is the soft halo (board
- * `.hl`: α .75 → 0, the .75 is the tint's), cell 1 the core's disc, cell 2 the
- * core's white centre (board `.co`: white at (.4, .36) to the star's colour at
- * .85 of r .7), clipped to the disc.
- */
 export const SPRITE = 96;
 export const CELL = { disc: 1, halo: 0, light: 2 } as const;
 
@@ -54,12 +47,10 @@ export function useSprites() {
 	);
 }
 
-/** The atlas's source rects, one per cell. */
 export const CELL_RECTS = Array.from({ length: CELLS }, (_, i) =>
 	Skia.XYWHRect(i * SPRITE, 0, SPRITE, SPRITE)
 );
 
-/** A colour string → [r, g, b] in 0–1, for a worklet to tint with. */
 export function rgb(c: string): [number, number, number] {
 	const f = Skia.Color(c);
 	return [f[0], f[1], f[2]];

@@ -14,7 +14,6 @@ const land = toExercise(LET_IT_LAND, REFLECT_SLOTS);
 
 describe("durations", () => {
 	it("writes a line in first, then holds it at least the catalogue's time", () => {
-		// 11 words: (11 − 1)·120 + 700 = 1900, then max(4000, 1200 + 11·320) = 4720.
 		expect(durOf(land.beats[0])).toBe(1900 + 4720);
 	});
 

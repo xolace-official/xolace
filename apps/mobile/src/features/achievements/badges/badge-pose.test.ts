@@ -50,7 +50,6 @@ function engine(over: Partial<Engine> = {}): Engine {
 	};
 }
 
-/** Steps the engine `ms` forward in frames, collecting its events. */
 function run(e: Engine, ms: number) {
 	const evs: number[] = [];
 	let pose = poseAt(e, 0);

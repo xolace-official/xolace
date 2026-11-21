@@ -208,7 +208,6 @@ describe("syncTend (Today's path trailing the server)", () => {
 		const step = syncTend(start, "k1", ["done", "done", "pending"]);
 		expect(step).toMatchObject({ changed: false, reset: false });
 		expect(step?.next.shown).toEqual(["done", "pending", "pending"]);
-		// Then it's the one to celebrate, and it doesn't sync twice.
 		expect(
 			newlyTended(step?.next.shown ?? [], ["done", "done", "pending"])
 		).toBe(1);
@@ -308,7 +307,6 @@ describe("keepKindling (the last snapshot once the server closes it)", () => {
 			"done",
 			"done",
 		]);
-		// It closed while Today was behind the kindling screen; it stays through the blur.
 		expect(kept?.seen).toBe(false);
 		expect(keepKindling(kept ?? null, null, undefined, false)).toBeUndefined();
 	});

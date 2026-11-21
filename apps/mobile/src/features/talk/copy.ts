@@ -1,9 +1,3 @@
-/**
- * Everything Talk says (handoff `talk.md` §2–§4, §9): the start screen, its two sheets,
- * and the talk. The companion goes by the space name, so lines that name it take it.
- * What's kept is production's consent card, word for word (`PRIVACY_LINE` is rule 12:
- * literally true when it ships).
- */
 import { TALK_TIME_RESETS } from "@/lib/talk/talk-time";
 
 export const TALK_COPY = {
@@ -29,6 +23,7 @@ export const TALK_COPY = {
 				: "Unable to open that. Please try it yourself.",
 		clock: (presence: string, clock: string) => `${presence} · ${clock} left`,
 		ended: "Ended. Your mirror waits in Moments",
+		endFailed: "The talk couldn't end just now. Try again in a moment.",
 		endMirror: "End and make my mirror",
 		help: "Get help now",
 		helpMore: "More help, in your country",
@@ -78,14 +73,16 @@ export const TALK_COPY = {
 		lookValue: (label: string, n: number, of: number) =>
 			`${label}, ${n} of ${of}`,
 		micOff: "Microphone is off. Turn it on in Settings to talk.",
+		notReopenable:
+			"This talk can't be picked up again right now. Its mirror is in Moments.",
 		openSettings: "Open Settings",
 		options: "Talk options",
 		pace: "Pace",
 		paceLabel: (pace: string, directness: string) =>
 			`Pace ${pace}, Directness ${directness}`,
-		/** Under the weekly minimum, on the button. */
 		resets: TALK_TIME_RESETS,
 		sub: "Speak or type. When you finish, the talk becomes your mirror.",
+		timeUsed: `There isn't enough talk time left this week. ${TALK_TIME_RESETS}.`,
 		title: (name: string) => `Talk it through\nwith ${name}`,
 		voice: (name: string) => `${name} voice`,
 		voiceHint: (trait: string) => `${trait}. Plays a sample.`,

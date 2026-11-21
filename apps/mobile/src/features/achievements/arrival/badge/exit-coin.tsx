@@ -14,7 +14,6 @@ import {
 } from "@/features/achievements/arrival/arrival-motion";
 import { easeIO, seg } from "@/features/achievements/motion-math";
 
-/** Next: the old badge goes 280 pt left, turning away (rotateY → −π) to .85, fading 180–440 ms. */
 const AWAY = 280;
 const SHRINK = 0.15;
 const FADE_FROM = 180;

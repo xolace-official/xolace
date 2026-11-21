@@ -65,7 +65,6 @@ describe("profileView", () => {
 		const v = profileView(declined, NOW);
 		expect(v.cta.kind).toBe("cooldown");
 		expect(v.cta.kind === "cooldown" && v.cta.note).toContain("in 2 days");
-		// The CTA already says why; a second "not right now" note would read as a second no.
 		expect(v.note).toBeNull();
 	});
 
@@ -133,8 +132,6 @@ describe("xolacerState", () => {
 		expect(xolacerState({ ...base, profile: null })).toEqual({ phase: "gone" });
 	});
 
-	// The dev state `xolacer-talked`: a resting conversation. The block dialog says messages
-	// stay, as the app's does.
 	it("says messages stay once the two of you have spoken", () => {
 		const s = xolacerState({ ...base, profile: withConvo(convo("resting")) });
 		expect(s.phase === "ready" && s.blocking.history).toBe(true);

@@ -30,7 +30,6 @@ const useLoader = (): LoaderContextValue => {
 	return context;
 };
 
-/** Root component. Provides progress SharedValue (0–1) to children via context. */
 const LoaderRoot = React.forwardRef<ViewInstance, LoaderProps>(
 	(
 		{
@@ -89,7 +88,6 @@ const LoaderRoot = React.forwardRef<ViewInstance, LoaderProps>(
 
 LoaderRoot.displayName = "Loader";
 
-/** Animated.View driven by loader progress and keyframes. Keys 0-1 or 0-100. */
 const LoaderKeyframeView = React.forwardRef<
 	Animated.View,
 	LoaderKeyframeViewProps

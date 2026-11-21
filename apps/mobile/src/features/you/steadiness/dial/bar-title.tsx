@@ -13,19 +13,12 @@ import { Surface } from "@/features/you/surface";
 import { playSoftPress } from "@/lib/haptics";
 
 const S = COPY.steadinessScreen;
-/** The chip (steadiness.md §4.2): 104 × 36, radius 18, a 24 pt face, the number at 17. */
 const CHIP_W = 104;
 const CHIP_H = 36;
 const CHIP_FACE = 24;
-/** It rises 14 pt from scale .6 into the title's place. */
 const RISE = 14;
 const FROM_SCALE = 0.6;
 
-/**
- * The bar: "Steadiness", until the dial's number goes under it; then the dial lands there as a
- * chip, the face and the number (native-cook's health-age-dial). Tap it to go back up. `chip`
- * runs 0 → 1 on the UI thread; `docked` is React's copy of the crossing.
- */
 export function BarTitle({
 	chip,
 	docked,

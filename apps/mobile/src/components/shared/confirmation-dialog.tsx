@@ -15,7 +15,6 @@ type Props = {
 	isLoading?: boolean;
 };
 
-/** Confirmation dialog with destructive styling and a loading state on the confirm button. */
 export const ConfirmationDialog = ({
 	isOpen,
 	onOpenChange,
@@ -57,8 +56,6 @@ export const ConfirmationDialog = ({
 						<Button
 							isDisabled={isLoading}
 							onPress={() => {
-								// Backing out stays soft; committing carries weight on the last
-								// touch before an irreversible action.
 								playAffirmativePress();
 								onConfirm();
 							}}

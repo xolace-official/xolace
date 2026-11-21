@@ -4,7 +4,6 @@ import type { TextColor } from "@/components/shared/app-text-face";
 import { cn } from "@/lib/cn";
 import type { ChipTone } from "../list/chats-model";
 
-/** Colour only for what needs you; everything else stays neutral (the prototype's chips). */
 const TONE: Record<ChipTone | "accent", { bg: string; fg: TextColor }> = {
 	accent: { bg: "bg-accent-wash", fg: "accentInk" },
 	neutral: { bg: "bg-surface-secondary", fg: "muted" },
@@ -12,7 +11,6 @@ const TONE: Record<ChipTone | "accent", { bg: string; fg: TextColor }> = {
 	waiting: { bg: "bg-ember-wash", fg: "emberInk" },
 };
 
-/** A small status chip beside a name: Talking, Waiting, Resting, New Xolacer. */
 export function StatusChip({
 	label,
 	tone,
@@ -41,7 +39,6 @@ export function StatusChip({
 	);
 }
 
-/** A specialty a Xolacer listens to. */
 export function Tag({ label }: { label: string }) {
 	return (
 		<View className="min-h-7 justify-center rounded-[14px] bg-surface-secondary px-2.75">
@@ -52,7 +49,6 @@ export function Tag({ label }: { label: string }) {
 	);
 }
 
-/** The unread count: an accent pill. Decorative, as the row already says the count. */
 export function UnreadPill({ label }: { label: string }) {
 	return (
 		<View

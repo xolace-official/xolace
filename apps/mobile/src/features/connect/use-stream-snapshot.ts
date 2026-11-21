@@ -1,9 +1,3 @@
-/**
- * What Stream's client holds for the listed channels: each one's unread count and last message,
- * re-read on every client event. Passive: it never opens the socket or watches a channel; the
- * counts exist once `useChatWarmup` has watched them (production's row badges, one subscription
- * for the whole list instead of one per row).
- */
 import { useCallback, useState, useSyncExternalStore } from "react";
 import type { Channel, StreamChat } from "stream-chat";
 import { useStreamStatus } from "@/lib/stream-chat/stream-chat-provider";

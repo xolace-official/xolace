@@ -37,17 +37,11 @@ type Props = {
 	unsure: boolean;
 	late: boolean;
 	colors: SessionColors;
-	/** The face's light and shadow (dusk on a dark theme). */
 	lightColors: SessionColors;
 	reduced: boolean;
 	onUnsure: () => void;
 };
 
-/**
- * Moment 1, "How do you feel now?" (board `.w1`): the day, the heading, the
- * question, and one slider under the face. Late, only the night line. Moving
- * to moment 2, it all goes with a 10 pt drop over .22 s.
- */
 export function MomentOne(p: Props) {
 	const { W, y, fit, c1, c2, slider, step, unsure, late, colors, reduced } = p;
 	const answered = step !== null || unsure;

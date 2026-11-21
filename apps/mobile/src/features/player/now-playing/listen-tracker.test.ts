@@ -4,8 +4,6 @@ import { sendListen, startListen, tickListen } from "./listen-tracker";
 const TICK_SEC = 0.5;
 const TICK_MS = TICK_SEC * 1000;
 
-/** A player reporting status the way expo-audio does: a tick every half second while playing,
- * plus one on every play/pause/finish/lap change. Counts the listens it would log. */
 function player(durationSec: number) {
 	let tracker = startListen();
 	let now = 0;
@@ -27,7 +25,6 @@ function player(durationSec: number) {
 		listens += next.logNow ? 1 : 0;
 	};
 	return {
-		/** The natural end, reported on its own tick with playing off. */
 		finish() {
 			now += TICK_MS;
 			currentTime = durationSec;
@@ -35,7 +32,6 @@ function player(durationSec: number) {
 			didJustFinish = true;
 			tick();
 		},
-		/** A loop wrap: time jumps back to the start, then the lap count follows. */
 		lap() {
 			now += TICK_MS;
 			currentTime = TICK_SEC;
@@ -43,7 +39,6 @@ function player(durationSec: number) {
 			laps += 1;
 			tick();
 		},
-		/** One late tick covering `sec` of playback, as a locked screen can deliver. */
 		lateTick(sec: number) {
 			now += sec * 1000;
 			currentTime += sec;
@@ -56,7 +51,6 @@ function player(durationSec: number) {
 			playing = false;
 			tick();
 		},
-		/** Play on from here to `toSec`. */
 		play(toSec: number) {
 			playing = true;
 			didJustFinish = false;
@@ -67,7 +61,6 @@ function player(durationSec: number) {
 				tick();
 			}
 		},
-		/** Back to the start for another play, as the play button does after a finish. */
 		replay() {
 			currentTime = 0;
 			this.play(0);

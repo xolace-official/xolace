@@ -1,9 +1,10 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { api } from "@xolace/backend/api";
+import { COMPANION_FALLBACK_NAME } from "@xolace/backend/shared";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Linking, Platform } from "react-native";
 import { toast } from "@/components/shared/toast";
 import { useRevenueCat } from "@/features/purchases/revenuecat-context";
@@ -22,20 +23,16 @@ import {
 } from "@/features/settings/account/copy";
 import { saveFailed } from "@/features/settings/use-save-failed";
 import { getGrantedPushToken } from "@/lib/push-token";
-import { COMPANION_FALLBACK_NAME } from "@/lib/talk/use-companion-name";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
+import { useSingleFlight } from "@/lib/use-single-flight";
 
-/** How long sign-out will wait on the push-token detach before going ahead. */
 const PUSH_DETACH_TIMEOUT_MS = 2500;
 
-/** The store's own subscriptions page, when RevenueCat has no `managementURL` (a grant). */
 const STORE_SUBSCRIPTIONS =
 	Platform.OS === "android"
 		? "https://play.google.com/store/account/subscriptions"
 		: "https://apps.apple.com/account/subscriptions";
 
-/** Production's `performLogout`: PostHog first, then the push token, then Clerk. True once
- * Clerk has signed out. */
 function useSignOut() {
 	const { signOut } = useClerk();
 	const removeToken = useMutation(api.notifications.removeToken);
@@ -55,21 +52,18 @@ function useSignOut() {
 			await signOut();
 			return true;
 		} catch {
-			// Network errors, as production: nothing to say.
 			return false;
 		}
 	};
 }
 
-/** Settings › Account on Clerk, Convex and RevenueCat (production's `useAccountSettings`). */
 export function useAccount(): Account {
 	const { user } = useUser();
 	const preferences = useQuery(api.preferences.get);
-	// getSummary, not preferences: it fills in the seeded name for older profiles.
 	const summary = useQuery(api.profile.getSummary);
 	const updatePreferences = usePreferenceMutation();
 	const updateDisplayName = useMutation(api.profile.updateDisplayName);
-	const { isPlus, isLoading: plusLoading } = usePlusEntitlement();
+	const { status: plusStatus } = usePlusEntitlement();
 	const { customerInfo, restorePurchases } = useRevenueCat();
 	const signOut = useSignOut();
 
@@ -78,9 +72,10 @@ export function useAccount(): Account {
 		draft: string;
 	} | null>(null);
 	const [serverError, setServerError] = useState<string | null>(null);
-	const [restoring, setRestoring] = useState(false);
 	const [logOutOpen, setLogOutOpen] = useState(false);
-	const busy = useRef({ loggingOut: false, restoring: false, saving: false });
+	const saving = useSingleFlight();
+	const loggingOut = useSingleFlight();
+	const restoring = useSingleFlight();
 
 	const name = summary?.displayName;
 	const space =
@@ -91,34 +86,30 @@ export function useAccount(): Account {
 		setServerError(null);
 	};
 
-	const saveName = async (trimmed: string) => {
-		busy.current.saving = true;
-		try {
-			await updateDisplayName({ displayName: trimmed });
-			close();
-		} catch (error) {
-			setServerError(errorText(error));
-		} finally {
-			busy.current.saving = false;
-		}
-	};
-
-	const logOut = async () => {
-		busy.current.loggingOut = true;
-		try {
-			if (await signOut()) {
-				toast(C.signedOut);
+	const saveName = (trimmed: string) =>
+		saving.run(async () => {
+			try {
+				await updateDisplayName({ displayName: trimmed });
+				close();
+			} catch (error) {
+				setServerError(errorText(error));
 			}
-		} catch {
-			toast(C.logOutFailed.title, {
-				description: C.logOutFailed.description,
-				variant: "danger",
-			});
-		} finally {
-			busy.current.loggingOut = false;
+		});
+
+	const logOut = () =>
+		loggingOut.run(async () => {
+			try {
+				if (await signOut()) {
+					toast(C.signedOut);
+				}
+			} catch {
+				toast(C.logOutFailed.title, {
+					description: C.logOutFailed.description,
+					variant: "danger",
+				});
+			}
 			setLogOutOpen(false);
-		}
-	};
+		});
 
 	return {
 		actions: {
@@ -138,9 +129,7 @@ export function useAccount(): Account {
 				}
 			},
 			logOut: () => {
-				if (!busy.current.loggingOut) {
-					logOut().catch(() => undefined);
-				}
+				logOut().catch(() => undefined);
 			},
 			manageSubscription: () => {
 				Linking.openURL(
@@ -153,33 +142,24 @@ export function useAccount(): Account {
 				updatePreferences({ spaceName: null }).catch(saveFailed);
 			},
 			restore: () => {
-				if (busy.current.restoring) {
-					return;
-				}
-				busy.current.restoring = true;
-				setRestoring(true);
-				// Production's restore: it says what it found in its own toast.
-				restorePurchases()
-					.catch(() => undefined)
-					.finally(() => {
-						busy.current.restoring = false;
-						setRestoring(false);
-					});
+				restoring
+					.run(async () => {
+						await restorePurchases();
+					})
+					.catch(() => undefined);
 			},
 			save: (trimmed) => {
-				if (!editing || busy.current.saving) {
+				if (!editing || saving.isBusy()) {
 					return;
 				}
 				if (editing.kind === "space") {
 					close();
-					// Unchanged (an unnamed space saved on "Ember") writes nothing.
 					if (
 						space !== undefined &&
 						spaceUnchanged(space, trimmed, COMPANION_FALLBACK_NAME)
 					) {
 						return;
 					}
-					// Optimistic, as production's preference writes are.
 					updatePreferences({ spaceName: trimmed }).catch(saveFailed);
 					return;
 				}
@@ -198,8 +178,8 @@ export function useAccount(): Account {
 			},
 			logOutOpen,
 			name,
-			plus: plusLoading ? undefined : isPlus,
-			restoring,
+			plus: plusStatus === "loading" ? undefined : plusStatus === "plus",
+			restoring: restoring.busy,
 			signIn: user
 				? signInOf(user.externalAccounts.map((a) => a.provider ?? ""))
 				: undefined,

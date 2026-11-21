@@ -15,13 +15,11 @@ import { cn } from "@/lib/cn";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const RADIUS = 14;
-/** The active ring: 1.5 pt, 2.5 pt out, in the theme's own accent. */
 const RING = 1.5;
 const RING_OUT = 2.5;
 const RING_AT = -(RING + RING_OUT);
 const LOCK = 22;
 
-/** A tiny Reflect screen in the scoped theme's tokens. */
 function Preview({ on, locked }: { on: boolean; locked: boolean }) {
 	const ink = useTokenColor("foreground");
 	return (
@@ -83,10 +81,6 @@ function Preview({ on, locked }: { on: boolean; locked: boolean }) {
 	);
 }
 
-/**
- * One theme as production's little Reflect preview, drawn in its own theme (a ScopedTheme from
- * the registry) in the mode the app shows now. Plain Views: no glow, scale or snap.
- */
 export function ThemeCard({
 	card,
 	scheme,

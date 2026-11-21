@@ -11,24 +11,19 @@ import type {
 	ReadingPrefsActions,
 } from "@/features/lantern/reader/use-reading-prefs";
 
-/** The Aa sheet: the reader's appearance, changed live under it. */
 export type Appearance = { state: ReadingPrefs; actions: ReadingPrefsActions };
 
-/** View sources: what an adapted read came from, on the reading page. */
 export type Sources = {
 	state: {
 		page: ReaderPage;
-		/** undefined while it loads. */
 		sources: ReaderEntry["sources"] | undefined;
 	};
 	actions: { openLink: (url: string) => void };
 };
 
-/** The narration as text (Xolace+, never in the preview), on the reading page. */
 export type Transcript = {
 	state: {
 		page: ReaderPage;
-		/** undefined while it loads, null when there's none yet. */
 		text: string | null | undefined;
 	};
 };
@@ -59,7 +54,6 @@ export const useSources = sources.useValue;
 export const TranscriptProvider = transcript.Provider;
 export const useTranscript = transcript.useValue;
 
-/** The apps' adapters: the store for the Aa sheet, Convex for the other two. */
 export function AppearanceData({ children }: { children: ReactNode }) {
 	return (
 		<AppearanceProvider value={useAppearanceSheet()}>

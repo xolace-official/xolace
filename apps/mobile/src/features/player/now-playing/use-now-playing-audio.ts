@@ -1,6 +1,6 @@
 import type { Id } from "@xolace/backend/dataModel";
 import { usePostHog } from "posthog-react-native";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
 	consumePlayOnLoad,
 	nowPlayingPlayback,
@@ -21,35 +21,54 @@ import { useTrackPlayback } from "./use-track-playback";
 const TICK_MS = 1000;
 const MS_PER_S = 1000;
 
-/**
- * The host's runner: plays `slug`, publishes its playback for every reader, starts it when it
- * was asked to play with the load, and runs the sleep timer (§4). A timed choice counts down
- * while it plays, fades the gain over its last 30 s (never the volume slider) and pauses at 0;
- * End of track stops at this play's natural end, even on Repeat. No haptic or sound when it
- * ends: someone may be asleep.
- */
-export function useNowPlayingAudio(slug: string, stepId?: Id<"path_steps">) {
+export function useNowPlayingAudio(
+	slug: string,
+	stepId?: Id<"path_steps">,
+	preview = false
+) {
 	const timer = useSleepTimerState();
 	const p = useTrackPlayback(slug, {
 		gain: sleepGain(timer),
+		preview,
 		stepId,
 		stopAtEnd: timer.choice === "end",
 	});
 	const posthog = usePostHog();
-	// Every render: `p` is rebuilt from the latest status each time.
 	useEffect(() => publishPlayback(p));
 	useEffect(() => () => publishPlayback(null), []);
 
-	// Asked to play with the load: once minted, play (a toggle before it's loaded queues).
+	const startAt = useRef<{ at: number; play: boolean } | null>(null);
 	useEffect(() => {
-		if (p.track && consumePlayOnLoad(slug)) {
-			togglePlayback(p, posthog);
+		if (!p.track) {
+			return;
 		}
-		// On the mint only: `p` is rebuilt every render.
+		const { asked, at } = consumePlayOnLoad(slug);
+		if (at > 0) {
+			startAt.current = { at, play: asked };
+			return;
+		}
+		if (!asked) {
+			return;
+		}
+		togglePlayback(p, posthog);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [p.track, slug]);
+	useEffect(() => {
+		const start = startAt.current;
+		if (start === null || !p.isLoaded) {
+			return;
+		}
+		startAt.current = null;
+		p.seekTo(start.at)
+			.then(() => {
+				if (start.play) {
+					togglePlayback(nowPlayingPlayback(), posthog);
+				}
+			})
+			.catch((e) => console.error("[useNowPlayingAudio] resume failed:", e));
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [p.isLoaded]);
 
-	// Any play forgets "Paused by the sleep timer": the lock screen's and headphones' too.
 	useEffect(() => {
 		if (p.isPlaying) {
 			clearSlept();
@@ -61,7 +80,6 @@ export function useNowPlayingAudio(slug: string, stepId?: Id<"path_steps">) {
 		if (!(timed && p.isPlaying)) {
 			return;
 		}
-		// Real play time since the last count: from this play's start, then each fire.
 		let last = Date.now();
 		const count = () => {
 			const now = Date.now();
@@ -79,7 +97,6 @@ export function useNowPlayingAudio(slug: string, stepId?: Id<"path_steps">) {
 		}, TICK_MS);
 		return () => {
 			clearInterval(id);
-			// The part-second played since the last fire counts too (a pause, a new track).
 			const { next, pause } = count();
 			if (!pause) {
 				setSleepTimer(next);

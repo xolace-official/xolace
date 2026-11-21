@@ -8,7 +8,6 @@ import { ROW } from "./chat-row";
 import type { PairRowView } from "./chats-model";
 import { type RowActions, rowA11yActions } from "./row-actions";
 
-/** The page's side gutter: the row's width before its slot is measured. */
 const GUTTER = 16;
 const A11Y_LABELS = {
 	archive: COPY.menu.archive,
@@ -17,13 +16,6 @@ const A11Y_LABELS = {
 	unarchive: COPY.menu.unarchive,
 };
 
-/**
- * A chat row's press: tap opens the thread, a hold opens the system context menu with
- * production's actions: Close for a Xolacer's open chat, Archive or Unarchive, and Delete
- * request on a declined or expired one. @expo/ui's SwiftUI `ContextMenu` around the RN row,
- * so the lift, blur and haptic are the system's. Not expo-router's `Link.Menu` (the
- * prototype's): its trigger hides the row from VoiceOver.
- */
 export function RowPress({
 	row,
 	actions,
@@ -33,8 +25,6 @@ export function RowPress({
 	actions: RowActions;
 	children: ReactNode;
 }) {
-	// The SwiftUI host sizes its RN child by content, so a long line would widen the row past
-	// the screen: the row takes the width its slot measures instead.
 	const screen = useWindowDimensions().width;
 	const [measured, setMeasured] = useState<number | null>(null);
 	const width = measured ?? screen - GUTTER * 2;

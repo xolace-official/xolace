@@ -14,7 +14,6 @@ const SAFETY: Reading = {
 	safeguardLevel: "crisis",
 };
 
-/** A read the test answers by hand, on its own schedule. */
 const deferred = () => {
 	let resolve: (reading: Reading) => void = () => undefined;
 	let reject: (error: Error) => void = () => undefined;

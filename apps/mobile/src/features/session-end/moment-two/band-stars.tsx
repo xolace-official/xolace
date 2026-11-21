@@ -37,7 +37,6 @@ export function BandStar({
 }) {
 	const F = DRAW.faint;
 	const L = DRAW.lit;
-	// `.in`: pops in to faint, then brightens to lit (its own delay); the halo brightens at the landing.
 	const group = useAnimatedStyle(() => {
 		const p = starPop(c2.get(), k, reduced);
 		const l = starLit(cs.get(), k, reduced);
@@ -129,7 +128,6 @@ export function BandStar({
 
 const ME_BOX = (DRAW.me.halo + DRAW.me.haloBlur * 3) * 2;
 
-/** `.me`: your star, landing (scale .2 → 1, .55 s on the pop curve; α .3 s) and breathing α .82 ↔ 1. */
 export function YouStar({
 	x,
 	y,

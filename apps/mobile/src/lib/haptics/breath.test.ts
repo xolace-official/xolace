@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type BreathComposers, breathPlayer } from "./breath";
 
-/** Every call the breath player makes, by composer. */
 const calls: string[] = [];
 
 vi.mock("react-native-pulsar", () => ({

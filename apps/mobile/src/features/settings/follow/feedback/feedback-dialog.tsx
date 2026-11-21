@@ -1,3 +1,4 @@
+import { FEEDBACK_MAX_CHARS } from "@xolace/backend/shared";
 import { useState } from "react";
 import { TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -5,28 +6,18 @@ import { SettingsDialog } from "@/components/settings-kit/settings-dialog";
 import { AppText } from "@/components/shared/app-text";
 import { FOLLOW_COPY } from "@/features/settings/follow/copy";
 import { useFollowScreen } from "@/features/settings/follow/follow-data";
-import {
-	FEEDBACK_MAX,
-	feedbackView,
-} from "@/features/settings/follow/follow-model";
+import { feedbackView } from "@/features/settings/follow/follow-model";
 import { cn } from "@/lib/cn";
 import { useKeyboardShown } from "@/lib/keyboard/use-keyboard-shown";
 
 const D = FOLLOW_COPY.dialog;
 
-/** The board's dialog: 200 pt down, 14 pt above its buttons. */
 const TOP = 200;
 const GAP = 14;
-/** What the dialog draws around the field: padding, title, line, buttons. */
 const CHROME = 150;
-/** A phone keyboard with its suggestion bar, generously. */
 const KEYBOARD = 380;
 const EDGE = 12;
 
-/**
- * Where the card sits: the board's 200 pt, or higher while the keyboard is up on a phone too
- * short to keep it clear (production lifted its dialog over the keyboard the same way).
- */
 function useDialogTop(body: number) {
 	const shown = useKeyboardShown();
 	const { height } = useWindowDimensions();
@@ -38,10 +29,6 @@ function useDialogTop(body: number) {
 	return Math.max(top + EDGE, Math.min(TOP, clear));
 }
 
-/**
- * Production's feedback dialog, kept: one note up to 1000 characters, once a day. Send shows
- * Sending..., then Sent., and the dialog closes 1.5 s later.
- */
 export function FeedbackDialog() {
 	const { state, actions } = useFollowScreen();
 	const f = state.feedback;
@@ -71,7 +58,7 @@ export function FeedbackDialog() {
 						f.draft ? "border-accent" : "border-transparent"
 					)}
 					editable={view.editable}
-					maxLength={FEEDBACK_MAX}
+					maxLength={FEEDBACK_MAX_CHARS}
 					multiline
 					onChangeText={actions.setDraft}
 					placeholder={D.placeholder}

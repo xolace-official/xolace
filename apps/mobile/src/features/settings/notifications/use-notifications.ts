@@ -11,6 +11,8 @@ import type {
 } from "@/features/settings/notifications/notifications-data";
 import {
 	chatChoice,
+	dailyQuoteChoice,
+	dailyQuoteOf,
 	gentleChoice,
 	gentleRemindersOn,
 	nextNotificationPrefs,
@@ -18,16 +20,12 @@ import {
 	quietWith,
 	toQuiet,
 } from "@/features/settings/notifications/notifications-model";
+import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 import { saveFailed } from "@/features/settings/use-save-failed";
-import {
-	getGrantedPushToken,
-	getPushPermissionState,
-	requestPushToken,
-} from "@/lib/push-token";
+import { deviceTimezone, preparePushDelivery } from "@/lib/push-delivery";
+import { getGrantedPushToken, getPushPermissionState } from "@/lib/push-token";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
-/** Re-reads the OS permission on every foreground, so returning from Settings settles the
- * switches: it can be revoked there without any preference knowing. */
 function useOsBlocked() {
 	const [osBlocked, setOsBlocked] = useState(false);
 	useEffect(() => {
@@ -52,9 +50,10 @@ function useOsBlocked() {
 	return [osBlocked, setOsBlocked] as const;
 }
 
-/** Settings › Notifications on Convex, the push token and the OS permission (production's
- * `useNotificationSettings`, same calls in the same order). */
-export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
+export function useNotifications(
+	reachMeOn: ReachMeOn | null,
+	letters: ComposedSwitch
+): Notifications {
 	const preferences = useQuery(api.preferences.get);
 	const updatePreferences = usePreferenceMutation();
 	const registerToken = useMutation(api.notifications.registerToken);
@@ -64,76 +63,75 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 
 	const notifications = preferences?.notifications;
 
-	// A blocked OS makes both switches read off, so flipping one runs the enable path.
 	const gentleReminders = !osBlocked && gentleRemindersOn(notifications);
 	const chatNotifications =
 		!osBlocked && chatNotificationsAllowed(notifications);
+	const dailyQuote = dailyQuoteOf(notifications);
+	const dailyQuoteOn = !osBlocked && dailyQuote.on;
+	const delivering = gentleReminders || chatNotifications || dailyQuoteOn;
 
 	const syncTimezone = async () => {
-		try {
-			const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-			if (timezone) {
-				await updatePreferences({ notificationTimezone: timezone });
-			}
-		} catch {
-			// Non-blocking
+		const timezone = deviceTimezone();
+		if (!timezone) {
+			return;
 		}
+		try {
+			await updatePreferences({ notificationTimezone: timezone });
+		} catch {}
 	};
 
-	/** Moves both switches at once. Only turning on from a non-delivering state
-	 * consults the OS; nothing is written when the permission route runs out. */
+	const readyToDeliver = async (autoEnable = true) => {
+		const readiness = await preparePushDelivery(delivering, (pushToken) =>
+			registerToken(autoEnable ? { pushToken } : { autoEnable, pushToken })
+		);
+		if (readiness === "blocked") {
+			setOsBlocked(true);
+			setAlertOpen(true);
+			return false;
+		}
+		setOsBlocked(false);
+		if (readiness === "registered") {
+			await syncTimezone();
+		}
+		return readiness !== "unavailable";
+	};
+
+	const dropToken = async () => {
+		try {
+			const token = await getGrantedPushToken();
+			if (token) {
+				await removeToken({ pushToken: token });
+			}
+		} catch {}
+	};
+
 	const applyToggles = async (next: { gentle: boolean; chat: boolean }) => {
 		const turningOn =
 			(next.gentle && !gentleReminders) || (next.chat && !chatNotifications);
-		const alreadyDelivering = gentleReminders || chatNotifications;
-
-		if (turningOn) {
-			const permission = await getPushPermissionState();
-			if (permission === "blocked") {
-				setOsBlocked(true);
-				setAlertOpen(true);
-				return;
-			}
-			setOsBlocked(false);
-
-			// The token is dropped when both families go quiet, so re-register here.
-			if (permission === "undetermined" || !alreadyDelivering) {
-				const token = await requestPushToken();
-				if (!token) {
-					return;
-				}
-				try {
-					await registerToken({ pushToken: token });
-				} catch {
-					// Nothing is written, so the switch stays where it was.
-					return;
-				}
-				await syncTimezone();
-			}
+		if (turningOn && !(await readyToDeliver())) {
+			return;
 		}
+		updatePreferences({
+			notifications: nextNotificationPrefs(next),
+		}).catch(saveFailed);
+		if (!(next.gentle || next.chat || dailyQuoteChoice(notifications))) {
+			await dropToken();
+		}
+	};
 
-		// Lands after registerToken, whose first-grant auto-enable would otherwise
-		// switch on a family the user didn't ask for.
-		updatePreferences({ notifications: nextNotificationPrefs(next) }).catch(
-			saveFailed
-		);
-
-		if (!(next.gentle || next.chat)) {
-			try {
-				// Scoped to this installation; another device's token must stay.
-				const token = await getGrantedPushToken();
-				if (token) {
-					await removeToken({ pushToken: token });
-				}
-			} catch {
-				// Best-effort
-			}
+	const applyDailyQuote = async (on: boolean) => {
+		if (on && !dailyQuoteOn && !(await readyToDeliver(false))) {
+			return;
+		}
+		updatePreferences({
+			notificationDailyQuote: { enabled: on, slot: dailyQuote.slot },
+		}).catch(saveFailed);
+		if (!(on || gentleReminders || chatNotifications)) {
+			await dropToken();
 		}
 	};
 
 	const window = notifications?.quietWindow ?? null;
-	// Until preferences load, a switch would write its default over the saved choice (Gentle
-	// reminders carrying `chat: true` over a saved chat-off), so taps wait. Production didn't.
 	const loading = preferences === undefined;
 
 	return {
@@ -148,11 +146,33 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 				if (loading) {
 					return;
 				}
-				// Each setter carries the other family's stored choice, never its displayed
-				// value, which reads off whenever the master or the OS blocks delivery.
 				applyToggles({ chat: on, gentle: gentleChoice(notifications) }).catch(
 					() => undefined
 				);
+			},
+			setDailyQuote: (on) => {
+				if (loading) {
+					return;
+				}
+				applyDailyQuote(on).catch(() => undefined);
+			},
+			setDailyQuoteSlot: (slot) => {
+				updatePreferences({
+					notificationDailyQuote: {
+						enabled: dailyQuoteChoice(notifications),
+						slot,
+					},
+				}).catch(saveFailed);
+			},
+			setLetters: (on) => {
+				if (loading || letters === null) {
+					return;
+				}
+				if (on && osBlocked) {
+					setAlertOpen(true);
+					return;
+				}
+				letters.set(on);
 			},
 			setQuiet: (on) => {
 				if (loading) {
@@ -183,6 +203,8 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 			alertOpen,
 			blocked: osBlocked,
 			chat: chatNotifications,
+			dailyQuote: { ...dailyQuote, on: dailyQuoteOn },
+			letters: loading || letters === null ? null : !osBlocked && letters.on,
 			loading,
 			quiet: toQuiet(window),
 			reach: notifications?.reach ?? "warm",

@@ -1,9 +1,3 @@
-/**
- * The font files src/design/fonts.ts loads, by `useFonts` key. One import per
- * face (the per-weight entry points), so a theme's pair loads without pulling
- * in every weight of its family. font-pairs.test.ts checks every face the
- * pairs, fixed faces and legacy list name has an entry here.
- */
 import { AtkinsonHyperlegibleNext_400Regular } from "@expo-google-fonts/atkinson-hyperlegible-next/400Regular";
 import { AtkinsonHyperlegibleNext_700Bold } from "@expo-google-fonts/atkinson-hyperlegible-next/700Bold";
 import { BricolageGrotesque_600SemiBold } from "@expo-google-fonts/bricolage-grotesque/600SemiBold";

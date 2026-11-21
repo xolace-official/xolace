@@ -23,14 +23,7 @@ import { playSoftPress } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
 
-/**
- * The sample card (board `.sc`): one made-up entry answered in the shown tone, each tone with
- * its own light and type. A printed object: the same in light and dark, except Direct, which
- * goes dark in dark mode. The Hear chip plays the chosen voice; on Auto there is none.
- */
-/** The board's height; larger text grows the card past it (measured, so the light fills it). */
 const HEIGHT = 318;
-/** mx-4 on the card. */
 const GUTTER = 16;
 
 const CHIP: Record<CardInk["chip"], string> = {
@@ -50,7 +43,6 @@ export function MirrorCard({
 	onHear,
 }: {
 	shown: MirrorTone;
-	/** The chosen voice, or null on Auto (no Hear chip). */
 	voice: VoiceSlug | null;
 	playing: boolean;
 	onHear: () => void;

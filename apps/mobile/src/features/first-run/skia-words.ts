@@ -9,13 +9,6 @@ import {
 import { DEFAULT_FONT_PAIR, FONT_PAIRS } from "@/design/font-pairs";
 import { FONT_SOURCES } from "@/design/font-sources";
 
-/**
- * Words drawn in one Skia canvas (gleam-line-intro): each word is a glyph run laid out once on
- * the JS thread, then drawn per frame from a worklet with its own opacity, rise, blur, colour
- * and glow. No view per word; an invisible accessible view carries the same words.
- */
-
-/** Default's faces: first run comes before anyone picks a theme. */
 const PAIR = FONT_PAIRS[DEFAULT_FONT_PAIR];
 
 /** Typefaces load from their asset (Skia can't see expo-font's faces on Android). */
@@ -29,16 +22,12 @@ function useFace(name: string): SkTypeface | null {
 }
 
 export type FirstRunFaces = {
-	/** Bricolage Grotesque 800: the promise and the week's count. */
 	heavy: SkTypeface | null;
-	/** Bricolage Grotesque 700: the story's sentences. */
 	bold: SkTypeface | null;
-	/** Figtree 400 and 600: the promise's lines. */
 	body: SkTypeface | null;
 	bodySemi: SkTypeface | null;
 };
 
-/** First run's typefaces, cached for the session so the story's first frame has them. */
 export function useFirstRunFaces(): FirstRunFaces {
 	return {
 		body: useFace(PAIR.normal),
@@ -51,7 +40,6 @@ export function useFirstRunFaces(): FirstRunFaces {
 export type Run = {
 	glyphs: number[];
 	pos: { x: number; y: number }[];
-	/** Baseline origin, in the canvas. */
 	x: number;
 	y: number;
 	w: number;
@@ -60,10 +48,6 @@ export type Run = {
 
 type LayoutWord = { t: string; br?: boolean };
 
-/**
- * Lays words out as the boards' inline-block spans: `gap` after each word, `lineH` per line, the
- * baseline centred in the line box as React Native does, and `track` pt between glyphs.
- */
 export function layoutWords(
 	font: SkFont,
 	words: readonly LayoutWord[],
@@ -99,26 +83,20 @@ export function layoutWords(
 	});
 }
 
-/** Width of a phrase in a font, for centring. */
 export function textWidth(font: SkFont, t: string, track = 0) {
 	const g = font.getGlyphIDs(t);
 	return font.getGlyphWidths(g).reduce((a, b) => a + b + track, -track);
 }
 
 export type WordPose = {
-	/** 0..1 */
 	op: number;
-	/** pt down */
 	dy: number;
-	/** CSS blur px */
 	blur: number;
 	color: string;
-	/** A text-shadow `0 0 r color`; r 0 for none. */
 	glowR: number;
 	glow: string;
 };
 
-/** One word at its pose. Filters are made only when a word is blurred or glowing. */
 export function drawRun(c: SkCanvas, run: Run, p: WordPose, alpha = 1) {
 	"worklet";
 	const op = p.op * alpha;
@@ -146,10 +124,6 @@ export function drawRun(c: SkCanvas, run: Run, p: WordPose, alpha = 1) {
 	c.drawGlyphs(run.glyphs, run.pos, run.x, run.y + p.dy, run.font, paint);
 }
 
-/**
- * A picture with nothing in it reaches the canvas as empty and later ones never show, so every
- * picture starts with one pixel at 1/255.
- */
 export function seedPicture(c: SkCanvas) {
 	"worklet";
 	const p = Skia.Paint();
@@ -157,7 +131,6 @@ export function seedPicture(c: SkCanvas) {
 	c.drawRect(Skia.XYWHRect(0, 0, 1, 1), p);
 }
 
-/** A spark: a blurred glow under a dot (the hand-off, the story and the seat). */
 export function drawSpark(
 	c: SkCanvas,
 	x: number,

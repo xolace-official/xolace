@@ -16,7 +16,6 @@ const GLASS = {
 	width: P.glass,
 } as const;
 
-/** The 44 pt glass chevron, top left. */
 export function CloseButton({ top }: { top: number }) {
 	const { actions } = usePlayer();
 	const ink = useTokenColor("player-ink");

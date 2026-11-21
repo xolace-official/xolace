@@ -12,17 +12,13 @@ type PlanPrice = { price: string; detail: string };
 type Props = {
 	annual: PlanPrice;
 	monthly: PlanPrice;
-	/** Whole-number percent saved by choosing annual over monthly, e.g. 58. */
 	discountPercent: number | null;
-	/** Whether the selected package carries a free week. Same gate as the CTA label. */
 	hasFreeTrial: boolean;
-	/** Monthly's intro discount when this user can take it; null shows the plain price. */
 	monthlyIntro: IntroOffer | null;
 	selected: PlanId;
 	onSelect: (plan: PlanId) => void;
 };
 
-/** Segmented control (Monthly / Yearly) plus one price card for the selected plan. */
 export function PaywallPeriodPicker({
 	annual,
 	monthly,

@@ -8,21 +8,10 @@ import { toast } from "@/components/shared/toast";
 import { usePathSession } from "@/lib/path-session/use-path-session";
 import { toExercise } from "../catalogue";
 import { COPY } from "../copy";
-import { swapChoices } from "../sit-model";
+import { isSwapRefused, swapChoices } from "../sit-model";
 import type { SwapSheet } from "./swap-data";
 import { useSwapOptions } from "./use-swap-options";
 
-/** The server's refusals that mean the sheet is out of date: close it and let the queries catch up. */
-const STALE = ["Maximum swaps reached", "Exercise not allowed"];
-
-/**
- * The swap sheet on Convex: production's `exercises.getSwapOptions` (reset and
- * the next best) and `exercises.recordSwap`, unchanged; the options' names and
- * lengths from the catalogue (`use-swap-options.ts`, warm from Sit). A swap
- * closes the sheet and the exercise behind it restarts on the new one, as
- * production's remount did. The sheet only ever closes itself, once: a second
- * tap, or a save landing after a swipe-down, never pops Sit.
- */
 export function useSwapSheetData(): SwapSheet {
 	const navigation = useNavigation();
 	const posthog = usePostHog();
@@ -58,8 +47,7 @@ export function useSwapSheetData(): SwapSheet {
 			posthog.capture("exercise_swapped", { swaps_used: result.swapsUsed });
 			close();
 		} catch (err) {
-			const msg = err instanceof Error ? err.message : "";
-			if (STALE.some((s) => msg.includes(s))) {
+			if (isSwapRefused(err)) {
 				close();
 				return;
 			}

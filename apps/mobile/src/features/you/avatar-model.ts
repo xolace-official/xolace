@@ -1,13 +1,11 @@
-/** The curated avatars (`avatars.listAvatars`): which one is someone's, and which are locked. */
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
+import type { PlusStatus } from "@/features/purchases/plus-status";
 
 export type AvatarOption = FunctionReturnType<
 	typeof api.avatars.listAvatars
 >[number];
 
-/** Avatar for a stored key: the matching row, else the catalog default, else the first row.
- * Null until the catalog loads, or when it's empty. */
 export function resolveAvatar(
 	avatars: readonly AvatarOption[] | undefined,
 	avatarId: string | null | undefined
@@ -23,6 +21,14 @@ export function resolveAvatar(
 	);
 }
 
-/** Xolace+ avatars are locked for free users (the server refuses them too). */
-export const isLocked = (avatar: AvatarOption, isPlus: boolean) =>
-	avatar.tier === "premium" && !isPlus;
+export type AvatarTap = "pick" | "locked" | "wait";
+
+export function avatarTap(avatar: AvatarOption, plus: PlusStatus): AvatarTap {
+	if (avatar.tier !== "premium" || plus === "plus") {
+		return "pick";
+	}
+	return plus === "free" ? "locked" : "wait";
+}
+
+export const isLocked = (avatar: AvatarOption, plus: PlusStatus) =>
+	avatarTap(avatar, plus) === "locked";

@@ -15,7 +15,6 @@ function response(
 	return { notification: { request: { content: { body, data }, identifier } } };
 }
 
-/** A fake emitter that lets a test choose cold-start or warm delivery ordering. */
 function source(launch: TapResponse | null) {
 	let listener: ((r: TapResponse) => void) | null = null;
 	let cached = launch;
@@ -47,8 +46,6 @@ function source(launch: TapResponse | null) {
 	return src;
 }
 
-/** The cold-start bug: the launch tap fires before `(protected)` subscribes, so only `getLast`
- * still holds it. */
 describe("subscribeToNotificationTaps", () => {
 	it("delivers the launch tap the listener never fires for (cold start)", () => {
 		const onTap = vi.fn();
@@ -57,7 +54,6 @@ describe("subscribeToNotificationTaps", () => {
 			type: "chat_message",
 		});
 
-		// The defining property of a cold start: nothing is ever emitted.
 		subscribeToNotificationTaps(source(launch), onTap);
 
 		expect(onTap).toHaveBeenCalledTimes(1);
@@ -125,7 +121,6 @@ describe("subscribeToNotificationTaps", () => {
 	});
 });
 
-/** Where a tap usually comes in: a tab, nothing in progress. */
 const ON_TABS = "/today";
 
 describe("notificationTapPlan", () => {
@@ -143,7 +138,6 @@ describe("notificationTapPlan", () => {
 				pathname: "/chat/[conversationId]",
 			},
 		});
-		// Conversation notifications carry no analytics row.
 		expect(plan.logId).toBeUndefined();
 	});
 
@@ -174,13 +168,29 @@ describe("notificationTapPlan", () => {
 					.navigation
 			).toBeUndefined();
 		}
-		// The Connect-tab types never read the id, so they still route.
 		expect(
 			notificationTapPlan({ type: "chat_expired" }, null, 1000, ON_TABS)
 				.navigation
 		).toEqual({
 			action: "navigate",
 			href: { params: { t: "1000", view: "xolacers" }, pathname: "/connect" },
+		});
+	});
+
+	it("opens Quotes on the daily quote push's quote", () => {
+		expect(
+			notificationTapPlan(
+				{ logId: "log1", quoteId: "q1", screen: "quotes", type: "daily_quote" },
+				"“Rest is part of it.”",
+				1,
+				ON_TABS
+			)
+		).toEqual({
+			logId: "log1",
+			navigation: {
+				action: "push",
+				href: { params: { quote: "q1" }, pathname: "/(protected)/quotes" },
+			},
 		});
 	});
 
@@ -191,8 +201,6 @@ describe("notificationTapPlan", () => {
 			action: "push",
 			href: "/(protected)/quotes",
 		});
-		// Back to Reflect, never `navigate` or `push`: over the tabs or a thread
-		// those stack a second copy of it.
 		for (const type of [
 			"gentle_return",
 			"pattern_nudge",
@@ -213,6 +221,61 @@ describe("notificationTapPlan", () => {
 			action: "push",
 			href: "/(protected)/kindling",
 		});
+	});
+
+	it("opens a letter placed with you in the reader, by id", () => {
+		expect(
+			notificationTapPlan(
+				{ letterId: "lt1", type: "letter_for_you" },
+				"Someone wrote you a letter",
+				1,
+				ON_TABS
+			)
+		).toEqual({
+			navigation: {
+				action: "push",
+				href: {
+					params: { from: "push", id: "lt1" },
+					pathname: "/letters/read/[id]",
+				},
+			},
+		});
+	});
+
+	it("drops a letter tap with no usable id", () => {
+		for (const letterId of [undefined, "", 7]) {
+			expect(
+				notificationTapPlan(
+					{ letterId, type: "letter_for_you" },
+					null,
+					1,
+					ON_TABS
+				).navigation
+			).toBeUndefined();
+		}
+	});
+
+	it("opens the Letters screen when yours is received or acknowledged, without stacking a copy", () => {
+		for (const type of ["letter_received", "letter_acknowledged"]) {
+			expect(
+				notificationTapPlan({ type }, null, 1, ON_TABS).navigation
+			).toEqual({ action: "navigate", href: "/(protected)/letters" });
+		}
+	});
+
+	it("opens letters over a held screen, since those stack rather than dismiss", () => {
+		expect(
+			notificationTapPlan(
+				{ letterId: "lt1", type: "letter_for_you" },
+				null,
+				1,
+				"/voice-vent"
+			).navigation?.action
+		).toBe("push");
+		expect(
+			notificationTapPlan({ type: "letter_received" }, null, 1, "/talk")
+				.navigation
+		).toEqual({ action: "navigate", href: "/(protected)/letters" });
 	});
 
 	it("routes domain_unlock to Steadiness through the old path's shim", () => {
@@ -314,7 +377,6 @@ describe("notificationTapPlan", () => {
 			"/voice-vent",
 			"/talk",
 			"/crisis-resources",
-			// Reflect is pushed over the tabs: home would pop a reflection in progress.
 			"/reflect",
 			"/chat/c1",
 			"/xolace-channel",

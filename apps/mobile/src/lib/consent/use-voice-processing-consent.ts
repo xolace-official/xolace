@@ -5,16 +5,12 @@ import {
 	VOICE_PROCESSING_CONSENT_VERSION,
 } from "@/lib/consent/voice-processing-consent";
 
-/** Gate before any audio goes to ElevenLabs: `ensureConsent` resolves once consent is on
- * record; send nothing before then. */
 export function useVoiceProcessingConsent() {
 	const current = useQuery(api.consent.getCurrentStatus, {
 		consentType: "voice_processing",
 	});
 	const grant = useMutation(api.consent.grant);
 
-	// A still-loading query grants again; the log is append-only, so a
-	// duplicate grant is harmless.
 	const ensureConsent = async () => {
 		if (hasCurrentVoiceConsent(current)) {
 			return;

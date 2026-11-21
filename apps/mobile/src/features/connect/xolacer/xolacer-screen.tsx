@@ -1,8 +1,8 @@
 import { Stack } from "expo-router";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { ProfileSkeleton } from "@/components/shared/skeleton-shapes";
 import { useHeaderOptions } from "@/lib/header-options";
-import { AgeGateSheet } from "../age-gate/age-gate-sheet";
 import { PROFILE } from "./copy";
 import { ProfileFacts } from "./facts";
 import { ProfileAura, ProfileHero } from "./hero";
@@ -11,11 +11,8 @@ import { ProfileCta } from "./profile-cta";
 import { XolacerBlockDialog, XolacerToolbar } from "./xolacer-chrome";
 import { useXolacerScreen } from "./xolacer-data";
 
-/** A Xolacer: the facts in front of you before you ask, including what they'll see of you. The
- * page scrolls under the header; the call to action stays at the bottom. */
 export function XolacerScreen() {
-	const { state, actions, ageGate } = useXolacerScreen();
-	// See-through on iOS, so the glow runs under it; opaque on Android.
+	const { state, actions } = useXolacerScreen();
 	const header = (
 		<Stack.Screen options={{ ...useHeaderOptions("small"), title: "" }} />
 	);
@@ -24,7 +21,9 @@ export function XolacerScreen() {
 		return (
 			<>
 				{header}
-				<ProfileSkeleton />
+				<View className="flex-1 bg-background pt-safe-offset-14 pb-safe-or-4">
+					<ProfileSkeleton label={PROFILE.loading} />
+				</View>
 			</>
 		);
 	}
@@ -64,22 +63,6 @@ export function XolacerScreen() {
 				onConfirm={state.primer === "gate" ? actions.confirmPrimer : undefined}
 			/>
 			<XolacerBlockDialog />
-			<AgeGateSheet gate={ageGate} />
-		</View>
-	);
-}
-
-function ProfileSkeleton() {
-	return (
-		<View
-			accessibilityElementsHidden
-			className="flex-1 items-center gap-4 bg-background px-6 pt-28"
-			importantForAccessibility="no-hide-descendants"
-		>
-			<View className="size-29 rounded-full bg-surface-secondary" />
-			<View className="h-7 w-36 rounded-full bg-surface-secondary" />
-			<View className="h-4 w-52 rounded-full bg-surface-secondary" />
-			<View className="mt-3 h-28 w-full rounded-[22px] bg-surface-secondary" />
 		</View>
 	);
 }

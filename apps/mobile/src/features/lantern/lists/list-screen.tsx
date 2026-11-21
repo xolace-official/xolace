@@ -2,19 +2,18 @@ import { LegendList } from "@legendapp/list/react-native";
 import { Stack } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { StoryCall } from "@/features/lantern/home/story-call";
 import { LS } from "@/features/lantern/lantern-style";
 import { EntryRow } from "@/features/lantern/lists/entry-row";
 import { useList } from "@/features/lantern/lists/list-data";
 import { RowsSkeleton } from "@/features/lantern/lists/rows-skeleton";
 import { useHeaderOptions } from "@/lib/header-options";
 
-/** A row before it's measured: 12 + 78 + 12, or a little more when the meta wraps. */
 const ROW_ESTIMATE = 106;
 const LOAD_AHEAD = 0.5;
 
 /**
- * A kind, a subject or Saved (handoff §3.2, §3.4): a small title and production's rows, recycled
- * (`LegendList`), or a quiet line when there's nothing. The list is the screen's first
+ * The list is the screen's first
  * descendant, so the native bar folds over it.
  */
 export function ListScreen() {
@@ -47,7 +46,11 @@ export function ListScreen() {
 					)
 				}
 				ListFooterComponent={
-					state.loadingMore ? <ActivityIndicator className="py-6" /> : null
+					state.loadingMore ? (
+						<ActivityIndicator className="py-6" />
+					) : state.storyCall && state.items && state.items.length > 0 ? (
+						<StoryCall onWrite={actions.writeStory} />
+					) : null
 				}
 				onEndReached={state.canLoadMore ? actions.loadMore : undefined}
 				onEndReachedThreshold={LOAD_AHEAD}

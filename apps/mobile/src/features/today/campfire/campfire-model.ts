@@ -5,20 +5,11 @@ import { COPY } from "../copy";
 type CohortCard = FunctionReturnType<typeof api.cohort.getWeeklyCohortCard>;
 type CampfireStats = FunctionReturnType<typeof api.intake.campfireStats>;
 
-/** What the campfire says, or nothing. */
 export type CampfireView =
-	/** "38 campers sat with anxiety by the fire this week." */
 	| { kind: "count"; count: number; emotion: string }
-	/** "Others have sat with anxiety by this fire too." (an honest number isn't there yet) */
 	| { kind: "warming"; emotion: string }
-	/** The v2 intake's count, until the cohort has a number of its own (#712). */
 	| { kind: "stats"; count: number; lighterPercent: number | null };
 
-/**
- * The cohort's card (`cohort.getWeeklyCohortCard`) as the campfire draws it. Hidden falls
- * back to the v2 intake's campfire count, as production's Discovery did; nothing while
- * either is loading or when neither has an honest number.
- */
 export function campfireView(
 	card: CohortCard | undefined,
 	stats: CampfireStats | null,
@@ -47,10 +38,8 @@ export function campfireView(
 	return null;
 }
 
-/** "self-doubt" reads as "self doubt", as production's cohort card writes it. */
 const emotionWords = (emotion: string) => emotion.replace(/-/g, " ");
 
-/** The sentence after the rolling number, and the whole line for VoiceOver. */
 export function campfireLine(view: CampfireView): {
 	count: number | null;
 	rest: string;

@@ -19,11 +19,6 @@ const H = 54;
 const PRESSED_MS = 160;
 const SPIN_DEG_PER_MS = 0.4;
 
-/**
- * "Continue with Apple" (a solid light button, as Apple asks on a dark ground) and "Continue with
- * Google" (outlined). Tapped, the label gives way to a spinner until the account is back; the
- * other button dims. They grow with Dynamic Type.
- */
 export function SeatButton({
 	eng,
 	provider,
@@ -33,7 +28,6 @@ export function SeatButton({
 }: {
 	eng: SharedValue<SEng>;
 	provider: AuthProvider;
-	/** This button's sheet is up: VoiceOver hears it as busy. */
 	busy: boolean;
 	disabled: boolean;
 	onPress: () => void;

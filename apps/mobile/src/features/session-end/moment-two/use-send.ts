@@ -10,33 +10,22 @@ import type { SessionFace } from "../face/use-session-face";
 import { HOLD, REDUCED_MS, TS } from "../session-look";
 import type { SessionClocks } from "../use-session-clocks";
 
-/** The share's answer: none yet, left for someone, or kept. */
 export type Share = "" | "yes" | "no";
-/** 0 resting, 1 held, 2 ready. */
 export type Hold = 0 | 1 | 2;
 
 type Args = {
 	face: SessionFace;
 	clocks: SessionClocks;
 	reduced: boolean;
-	/** Saves the answer (the provider's `share`). */
 	onShare: (contributed: boolean) => void;
 };
 
 const WARM_MS = 400;
 
-/**
- * Moment 2's share (board `cDown`, `cUp`, `send`, `keep`): hold the card (soft
- * press, then propel at 700 ms), tap "Leave it" or let go when ready, and the
- * words leave. Saved at the tap. The landing at 1.5 s (Reduce Motion .35 s) is
- * when React hears it again: the landing haptic, your star, the face's `star` +
- * hop, VoiceOver's "Left for someone." Between, it's the `cs` clock.
- */
 export function useSend({ face, clocks, reduced, onShare }: Args) {
 	const [share, setShare] = useState<Share>("");
 	const [hold, setHold] = useState<Hold>(0);
 	const holdSv = useSharedValue(0);
-	/** The empty place: warm while held or sending; gone once your star lands or after Not this time. */
 	const warm = useSharedValue(0);
 	const gone = useSharedValue(0);
 	const answered = useRef(false);
@@ -67,10 +56,8 @@ export function useSend({ face, clocks, reduced, onShare }: Args) {
 		}
 	};
 
-	/** Your star in place: the empty place goes, the face looks at it and hops. */
 	const land = () => {
 		gone.set(fade(1, reduced ? REDUCED_MS : TS.slotOut));
-		// The handoff's `bloom`; the prototype's haptics match maps it to production's dewdrop.
 		Presets.dewdrop();
 		const landAt = reduced ? TS.reducedLand : TS.land;
 		face.briefly(
@@ -92,7 +79,6 @@ export function useSend({ face, clocks, reduced, onShare }: Args) {
 		holdSv.set(0);
 		setShare("yes");
 		onShare(true);
-		// The tap's tick; a ready release already played propel.
 		if (how === "tap") {
 			Presets.System.selection();
 		}
@@ -115,7 +101,6 @@ export function useSend({ face, clocks, reduced, onShare }: Args) {
 		AccessibilityInfo.announceForAccessibility(COPY.share.kept);
 	};
 
-	/** A dev state: the card held, then ready at 700 ms, held until you leave. */
 	const holdNow = () => {
 		holdSv.set(1);
 		onHold(1);
@@ -125,7 +110,6 @@ export function useSend({ face, clocks, reduced, onShare }: Args) {
 		});
 	};
 
-	/** A dev state: already sent, settled (`cs` at its end). */
 	const sent = (from: number) => {
 		answered.current = true;
 		setShare("yes");
@@ -135,7 +119,6 @@ export function useSend({ face, clocks, reduced, onShare }: Args) {
 		face.to(SESSION_FACE.watch);
 	};
 
-	/** A dev state: kept, settled. */
 	const kept = () => {
 		answered.current = true;
 		setShare("no");

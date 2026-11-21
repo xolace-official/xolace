@@ -30,22 +30,12 @@ function withAvatar(
 	return "md" in icon && icon.md ? { ...avatar, md: icon.md } : avatar;
 }
 
-/**
- * Today · Explore · Connect · You (`TABS`) on NativeTabs: Liquid Glass on iOS 26,
- * minimizing on scroll down. The landing ("/" hands over to Today); Reflect and the
- * other root screens are pushed over it.
- */
 export default function AppTabs() {
 	const accent = useThemeColor("accent");
 	const background = useThemeColor("background");
-	// Stream's total across every conversation, the same number as the app icon. Null reads as
-	// nothing.
 	const unread = useUnreadBadge();
 	const showPlayer = useMiniPlayerShown();
 	const avatarIcon = useYouTabIcon();
-	// iOS 26 has Liquid Glass: its own bar, and a slot that docks the player. Elsewhere (iOS
-	// below 26, Android) the bar is the theme's background, opaque at the scroll edge too, and
-	// the player floats above it.
 	const glass = isLiquidGlassAvailable();
 
 	return (
