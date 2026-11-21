@@ -575,6 +575,9 @@
 	--color-badge-shadow-day: rgba(40, 24, 60, 0.35);
 	--color-badge-band: rgba(255, 255, 255, 0.55);
 	--color-badge-band-clear: rgba(255, 255, 255, 0);
+	/* The badge share card: printed on the family's dusk, the same in every theme. */
+	--color-badge-card-ink: #fbf6ee;
+	--color-badge-card-muted: rgba(251, 246, 238, 0.74);
 
 	--color-arrival-fire-dusk: #17111a;
 	--color-arrival-fire-day: #fff6ea;

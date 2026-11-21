@@ -20,6 +20,10 @@ type Props = {
 	lit: boolean;
 	size: number;
 	accessibilityLabel?: string;
+	/** Fires once the lit art has drawn (a capture waits for it). */
+	onLoad?: () => void;
+	/** No fade-in, for a capture that must not catch it half-drawn. */
+	instant?: boolean;
 };
 
 export function BadgeArt({
@@ -28,6 +32,8 @@ export function BadgeArt({
 	lit,
 	size,
 	accessibilityLabel,
+	onLoad,
+	instant = false,
 }: Props) {
 	const box = { height: size, width: size };
 	const a11y = accessibilityLabel
@@ -47,10 +53,11 @@ export function BadgeArt({
 			<Image
 				{...a11y}
 				contentFit="contain"
+				onLoad={onLoad}
 				placeholder={thumbhash ? { thumbhash } : undefined}
 				source={typeof source === "string" ? { uri: source } : source}
 				style={box}
-				transition={FADE_IN_MS}
+				transition={instant ? 0 : FADE_IN_MS}
 			/>
 		);
 	}

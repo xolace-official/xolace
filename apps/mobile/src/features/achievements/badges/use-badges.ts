@@ -1,8 +1,7 @@
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
-import { Share } from "react-native";
+import { router } from "expo-router";
 import { toast } from "@/components/shared/toast";
-import { longDate } from "@/features/achievements/achievements-model";
 import type { Badges } from "@/features/achievements/badges/badges-data";
 import {
 	type BadgeView,
@@ -12,6 +11,7 @@ import {
 	pinRefused,
 } from "@/features/achievements/badges/badges-model";
 import { COPY } from "@/features/achievements/copy";
+import { canShareBadge } from "@/features/achievements/share/badge-card-model";
 import { convexErrorCode } from "@/lib/convex-error-code";
 import {
 	playAffirmativePress,
@@ -71,13 +71,12 @@ export function useBadges(): Badges {
 		});
 	};
 
+	// Opens the card's preview; the image (or, failing that, the old text) goes from there.
 	const share = (b: BadgeView) => {
-		if (b.earnedAt === undefined) {
+		if (!canShareBadge(b)) {
 			return;
 		}
-		Share.share({
-			message: COPY.badge.shareMessage(b.title, longDate(b.earnedAt)),
-		}).catch(() => undefined);
+		router.push({ params: { id: b.id }, pathname: "/badge-share" });
 	};
 
 	const freeze = shelf ? freezeView(shelf) : undefined;

@@ -45,6 +45,22 @@ export const COPY = {
 		unlockedOn: (date: string) => `Unlocked on ${date}`,
 		unpinHint: "Takes it off your profile",
 	},
+	card: {
+		after: " achievement",
+		before: "I unlocked the ",
+		byline: (name: string) => `— ${name}`,
+		cantMake: "Couldn't make the card. Try again.",
+		image: (title: string, date: string, name: string | null) =>
+			`Share card: I unlocked the ${title} achievement. Unlocked on ${date}.${name ? ` ${name}.` : ""} Xolace, xolaceinc.com`,
+		includeName: "Include my name",
+		includeNameHint: (name: string) => `Adds “${name}” to the card`,
+		loading: "Loading the card",
+		noShare: "Sharing isn't available on this phone.",
+		share: "Share",
+		site: "xolaceinc.com",
+		title: "Share this badge",
+		unlockedOn: (date: string) => `Unlocked on ${date}`,
+	},
 	freeze: {
 		buy: (price: number) => `Buy a freeze · ${price}`,
 		holds: (freezes: number, cap: number) =>

@@ -1,3 +1,4 @@
+import { achievementsScreens } from "@/features/achievements/screens";
 import { browseScreens } from "@/features/browse/screens";
 import { careScreens } from "@/features/care/screens";
 import { comingBackScreens } from "@/features/coming-back/screens";
@@ -22,6 +23,7 @@ import { youScreens } from "@/features/you/screens";
 import type { RootScreen } from "@/lib/root-screen";
 
 export const ROOT_SCREENS: readonly RootScreen[] = [
+	...achievementsScreens,
 	...browseScreens,
 	...careScreens,
 	...comingBackScreens,
