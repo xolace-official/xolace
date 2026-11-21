@@ -34,7 +34,7 @@ export function inWindow(window: string, i: number): boolean {
  * playing tile is its own decoder on top of the full-screen loop, phones cap how many run at once,
  * and the rest show their first-frame poster, which is the same picture standing still.
  */
-export const TILES_PLAY: "in-view" | "chosen" =
+const TILES_PLAY: "in-view" | "chosen" =
 	Platform.OS === "android" ? "chosen" : "in-view";
 
 export const tilePlays = (o: {
