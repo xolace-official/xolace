@@ -6,8 +6,8 @@ import { requireAuth } from "../lib/auth";
 import {
 	channelConfig,
 	countryFromRegion,
-	DEFAULT_CHANNEL_ORDER,
 	putChannelFirst,
+	routingOrder,
 } from "./channels";
 import { channelUnavailable, loadNotifications } from "./router";
 import { telegramConfigured } from "./telegram/bot";
@@ -161,14 +161,17 @@ export const listChannels = query({
 	handler: async (ctx) => {
 		const { profile } = await requireAuth(ctx);
 		const notifications = await loadNotifications(ctx, profile._id);
-		const order = notifications?.channelOrder ?? DEFAULT_CHANNEL_ORDER;
 		const offered = new Set<OutreachChannel>(
 			(await telegramConfigured(ctx))
 				? ALL_CHANNELS
 				: ALL_CHANNELS.filter((c) => c !== "telegram")
 		);
 		const shown = [
-			...new Set([...order, ...ALL_CHANNELS].filter((c) => offered.has(c))),
+			...new Set(
+				[...routingOrder(notifications), ...ALL_CHANNELS].filter((c) =>
+					offered.has(c)
+				)
+			),
 		];
 		// As the router reads it: absent preferences are off too.
 		const pushOn = notifications?.enabled === true;
@@ -177,7 +180,7 @@ export const listChannels = query({
 			entries.push(await channelEntry(ctx, channel, profile, pushOn));
 		}
 		// First = the channel routing would try first: the first in the
-		// person's order that is linked and open to them now.
+		// routing order that is linked and open to them now.
 		const first = entries.find((e) => e.status === "linked" && e.available);
 		return entries.map((e) => ({ ...e, isFirst: e === first }));
 	},

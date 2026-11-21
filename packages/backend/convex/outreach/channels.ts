@@ -23,7 +23,29 @@ export const CHANNEL_DEFAULTS: Record<
 };
 
 /** Absent `channelOrder` on the preferences. */
-export const DEFAULT_CHANNEL_ORDER: readonly OutreachChannel[] = ["push"];
+const DEFAULT_CHANNEL_ORDER: readonly OutreachChannel[] = ["push"];
+
+/**
+ * Channels signing up links, so routing tries them even when the stored
+ * order predates them. None yet; email joins here (#912).
+ */
+const SIGN_UP_LINKED_CHANNELS: readonly OutreachChannel[] = [];
+
+/**
+ * The channels routing tries, in order: the person's stored order (absent =
+ * the default), then any channel linked at sign-up it doesn't list. The one
+ * place routing reads `channelOrder`; whether a channel is actually linked
+ * and open is the router's channel gate, not this.
+ */
+export function routingOrder(
+	notifications:
+		| Pick<Doc<"preferences">["notifications"], "channelOrder">
+		| undefined,
+	signUpLinked: readonly OutreachChannel[] = SIGN_UP_LINKED_CHANNELS
+): OutreachChannel[] {
+	const stored = notifications?.channelOrder ?? DEFAULT_CHANNEL_ORDER;
+	return [...stored, ...signUpLinked.filter((c) => !stored.includes(c))];
+}
 
 /**
  * Move `channel` to the front of the person's order (absent = [push]),

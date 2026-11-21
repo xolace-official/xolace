@@ -4,7 +4,7 @@ import type { MutationCtx } from "../_generated/server";
 import { adminMutation } from "../lib/adminAuth";
 import { hasPremium } from "../lib/premium";
 import { rateLimiter } from "../lib/rateLimits";
-import { DEFAULT_CHANNEL_ORDER } from "../outreach/channels";
+import { routingOrder } from "../outreach/channels";
 import {
 	channelIneligibility,
 	ESCALATION_HOLD_MS,
@@ -195,10 +195,9 @@ async function channelEntries(
 	telegramBucketFull: boolean
 ): Promise<ChannelEntry[]> {
 	const notifications = await loadNotifications(ctx, profile._id);
-	const order = notifications?.channelOrder ?? DEFAULT_CHANNEL_ORDER;
 	const shown = [
 		...new Set([
-			...order,
+			...routingOrder(notifications),
 			// A link outside the order still shows, after it.
 			...(telegramIdentities.length > 0 ? (["telegram"] as const) : []),
 		]),

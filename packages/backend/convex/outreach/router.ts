@@ -9,7 +9,7 @@ import {
 	achievementToggle,
 	channelConfig,
 	channelTakesIntent,
-	DEFAULT_CHANNEL_ORDER,
+	routingOrder,
 } from "./channels";
 import { telegramConfigured } from "./telegram/bot";
 import { identitiesOf } from "./telegram/lifecycle";
@@ -431,7 +431,7 @@ async function consumeChannelBucket(
 }
 
 /**
- * Gate 7: walk the person's channel order and take the first eligible
+ * Gate 7: walk the person's routing order and take the first eligible
  * channel, consuming its bucket. `exclude` skips channels already tried (the
  * fallback).
  */
@@ -442,9 +442,8 @@ export async function pickChannel(
 	notifications: Notifications | undefined,
 	exclude: readonly OutreachChannel[] = []
 ): Promise<OutreachChannel | null> {
-	const order = notifications?.channelOrder ?? DEFAULT_CHANNEL_ORDER;
 	const seen = new Set<OutreachChannel>(exclude);
-	for (const channel of order) {
+	for (const channel of routingOrder(notifications)) {
 		if (seen.has(channel)) {
 			continue;
 		}
@@ -527,8 +526,7 @@ export async function suppressionFor(
 	if (gates.held) {
 		return gates.held;
 	}
-	const order = gates.notifications?.channelOrder ?? DEFAULT_CHANNEL_ORDER;
-	for (const channel of order) {
+	for (const channel of routingOrder(gates.notifications)) {
 		const reason = await channelIneligibility(
 			ctx,
 			channel,
