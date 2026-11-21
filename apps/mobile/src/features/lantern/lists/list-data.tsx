@@ -15,8 +15,10 @@ export type EntryList = {
 		empty: string;
 		canLoadMore: boolean;
 		loadingMore: boolean;
+		/** The Stories list ends with the call for stories. */
+		storyCall: boolean;
 	};
-	actions: EntryActions & { loadMore: () => void };
+	actions: EntryActions & { loadMore: () => void; writeStory: () => void };
 };
 
 const ListContext = createContext<EntryList | null>(null);

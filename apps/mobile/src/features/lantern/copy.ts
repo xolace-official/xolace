@@ -124,6 +124,31 @@ export const COPY = {
 	},
 	shareMessage: (title: string, url: string) =>
 		`I just read “${title}” on Xolace and thought you might like it too. Worth a few minutes:\n${url}`,
+	storyCall: {
+		button: "Write to us",
+		buttonLabel: (email: string) =>
+			`Write to us at ${email}. Opens your mail app`,
+		copied: "Email address copied",
+		email: "lantern@xolaceinc.com",
+		kicker: "Share your light",
+		line: "Lantern grows from people who’ve been there. If you’ve lived something you’d like to share, write to us. It goes straight to the founders, and nothing is published without your yes.",
+		mail: {
+			body: [
+				"What I’d like to share:",
+				"",
+				"",
+				"",
+				"Would you like your name on it, or to stay anonymous?",
+				"",
+				"",
+				"",
+				"If things feel heavy right now, the Help screen in the Xolace app has people you can reach.",
+			].join("\n"),
+			subject: "My story for Lantern",
+		},
+		noMail: (email: string) => `Write to us at ${email}`,
+		title: "Have a story that could help someone?",
+	},
 	title: "Lantern",
 	welcome: {
 		hold: "Hold to begin",
