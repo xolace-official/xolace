@@ -1,6 +1,9 @@
 {
-  "platforms": ["apple"],
+  "platforms": ["apple", "android"],
   "apple": {
     "modules": ["QuoteVideoModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.quotevideo.QuoteVideoModule"]
   }
 }
