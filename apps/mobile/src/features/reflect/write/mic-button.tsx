@@ -17,53 +17,63 @@ import { LAYOUT } from "../layout";
 import { SPEAK } from "../motion";
 import { useReflect } from "../reflect-data";
 import { useReflectDraw } from "../reflect-draw";
+import {
+	afterRelease,
+	dragPhase,
+	type MicPhase,
+	type MicRelease,
+	releaseOf,
+} from "./mic-gesture";
 import { MicGlow, MicRing } from "./mic-glow";
 import { HELD, POWER } from "./mic-motion";
 
 const HOLD_MS = 180;
-const ARM_AT = -40;
-const DISARM_AT = -28;
 const MIC = LAYOUT.bar.mic;
 const ICON = 22;
+const STOP_ICON = 18;
 const MIC_ICON = { android: "mic", ios: "mic" } as const;
+const STOP = { android: "stop", ios: "stop.fill" } as const;
 
 type Props = {
-	onTap: () => void;
-	onArmed: (armed: boolean) => void;
+	phase: MicPhase;
+	onPhase: (phase: MicPhase) => void;
+	onRelease: (kind: MicRelease) => void;
 };
 
-export function MicButton({ onTap, onArmed }: Props) {
+export function MicButton({ phase, onPhase, onRelease }: Props) {
 	const { state, actions } = useReflect();
 	const { reduced } = useReflectDraw();
 	const { listening } = state;
+	const locked = phase === "locked";
 	const ink = useTokenColor("foreground");
 
 	const timer = useSharedValue(0);
-	const holding = useSharedValue(0);
-	const armed = useSharedValue(0);
+	const at = useSharedValue<MicPhase>(phase);
 	const held = useSharedValue(0);
 	const power = useSharedValue(0);
 	const glowX = useSharedValue(0);
+	const stopShown = useSharedValue(0);
+
+	useEffect(() => {
+		if (phase === "idle" || phase === "locked") {
+			at.set(phase);
+		}
+		stopShown.set(withTiming(phase === "locked" ? 1 : 0, HELD));
+	}, [phase, at, stopShown]);
 
 	useEffect(() => {
 		power.set(withTiming(listening ? 1 : 0, POWER));
-		held.set(withTiming(listening && !reduced ? 1 : 0, HELD));
-	}, [listening, reduced, power, held]);
-
-	const stop = (keep: boolean) => {
-		onArmed(false);
-		if (keep) {
-			actions.stopSpeaking();
-		} else {
-			actions.cancelSpeaking();
-		}
-	};
+		held.set(withTiming(listening && !locked && !reduced ? 1 : 0, HELD));
+	}, [listening, locked, reduced, power, held]);
 
 	const pan = usePanGesture({
 		minDistance: 0,
 		onBegin: (e) => {
 			glowX.set(e.x - MIC / 2);
 			timer.set(0);
+			if (at.get() === "locked") {
+				return;
+			}
 			timer.set(
 				withDelay(
 					HOLD_MS,
@@ -71,11 +81,12 @@ export function MicButton({ onTap, onArmed }: Props) {
 						if (!done) {
 							return;
 						}
-						holding.set(1);
+						at.set("holding");
 						if (!reduced) {
 							held.set(withTiming(1, HELD));
 						}
 						power.set(withTiming(1, POWER));
+						scheduleOnRN(onPhase, "holding");
 						scheduleOnRN(actions.startSpeaking);
 					})
 				)
@@ -83,28 +94,21 @@ export function MicButton({ onTap, onArmed }: Props) {
 		},
 		onFinalize: () => {
 			cancelAnimation(timer);
-			if (holding.get() === 1) {
-				scheduleOnRN(stop, armed.get() !== 1);
-			} else {
-				scheduleOnRN(onTap);
-			}
-			holding.set(0);
-			armed.set(0);
+			const from = at.get();
+			const next = afterRelease(from);
+			at.set(next);
+			scheduleOnRN(onRelease, releaseOf(from));
 			held.set(withTiming(0, HELD));
-			power.set(withTiming(0, POWER));
+			power.set(withTiming(next === "locked" ? 1 : 0, POWER));
 		},
 		onUpdate: (e) => {
 			const x = Math.max(-MIC / 2, Math.min(MIC / 2, e.x - MIC / 2));
 			glowX.set(withSpring(x, { ...SPEAK.glowSpring, ...PLAY_AS_CHOSEN }));
-			if (holding.get() !== 1) {
-				return;
-			}
-			if (armed.get() === 0 && e.translationY < ARM_AT) {
-				armed.set(1);
-				scheduleOnRN(onArmed, true);
-			} else if (armed.get() === 1 && e.translationY > DISARM_AT) {
-				armed.set(0);
-				scheduleOnRN(onArmed, false);
+			const from = at.get();
+			const next = dragPhase(from, e.translationX, e.translationY);
+			if (next !== from) {
+				at.set(next);
+				scheduleOnRN(onPhase, next);
 			}
 		},
 	});
@@ -112,18 +116,26 @@ export function MicButton({ onTap, onArmed }: Props) {
 	const micStyle = useAnimatedStyle(() => ({
 		transform: [{ scale: 1 + (SPEAK.heldScale - 1) * held.get() }],
 	}));
+	const micIconStyle = useAnimatedStyle(() => ({
+		opacity: 1 - stopShown.get(),
+	}));
+	const stopIconStyle = useAnimatedStyle(() => ({ opacity: stopShown.get() }));
 
 	return (
 		<GestureDetector gesture={pan}>
 			<Animated.View
 				accessibilityActions={[{ name: "activate" }]}
-				accessibilityHint={COPY.write.speakHint}
-				accessibilityLabel={COPY.write.speakLabel}
+				accessibilityHint={locked ? COPY.write.stopHint : COPY.write.speakHint}
+				accessibilityLabel={
+					locked ? COPY.write.stopLabel : COPY.write.speakLabel
+				}
 				accessibilityRole="button"
 				accessibilityState={{ busy: listening }}
 				accessible
 				onAccessibilityAction={() => {
-					if (listening) {
+					if (locked) {
+						onRelease("stop");
+					} else if (listening) {
 						actions.stopSpeaking();
 					} else {
 						actions.startSpeaking();
@@ -134,7 +146,12 @@ export function MicButton({ onTap, onArmed }: Props) {
 				<MicGlow power={power} x={glowX} />
 				<MicRing />
 				<Animated.View className="flex-1 items-center justify-center rounded-full border border-separator bg-surface">
-					<Icon color={ink} name={MIC_ICON} size={ICON} />
+					<Animated.View className="absolute" style={micIconStyle}>
+						<Icon color={ink} name={MIC_ICON} size={ICON} />
+					</Animated.View>
+					<Animated.View className="absolute" style={stopIconStyle}>
+						<Icon color={ink} name={STOP} size={STOP_ICON} />
+					</Animated.View>
 				</Animated.View>
 			</Animated.View>
 		</GestureDetector>
