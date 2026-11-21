@@ -12,6 +12,7 @@ import { type FixtureKindling, useFixtureKindling } from "./fixture-kindling";
 import {
 	FIXTURE_CAMPFIRE,
 	FIXTURE_DAY,
+	FIXTURE_HOUR,
 	FIXTURE_MONTH_PROMPT,
 	FIXTURE_NAME,
 	FIXTURE_STREAK,
@@ -96,6 +97,7 @@ function FixtureToday({
 
 	const { eyebrow, greeting } = headerCopy(
 		phase,
+		FIXTURE_HOUR[phase],
 		FIXTURE_WEEKDAY,
 		offline ? null : FIXTURE_NAME
 	);

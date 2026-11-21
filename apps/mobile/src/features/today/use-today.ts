@@ -113,6 +113,7 @@ export function useTodayData(): Today {
 	const weekday = now.toLocaleDateString(undefined, { weekday: "long" });
 	const { eyebrow, greeting } = headerCopy(
 		phase,
+		now.getHours(),
 		weekday,
 		summary?.displayName
 	);

@@ -10,6 +10,13 @@ import type { CardMode, TodayPhase } from "../today-model";
 import type { Covers } from "./covers";
 
 export const FIXTURE_WEEKDAY = "Thursday";
+/** An hour inside each phase, for the header's words. */
+export const FIXTURE_HOUR = {
+	dawn: 6,
+	day: 14,
+	evening: 19,
+	late: 23,
+} as const satisfies Record<TodayPhase, number>;
 export const FIXTURE_DAY = "2026-11-19";
 export const FIXTURE_NAME = "Ama";
 export const FIXTURE_STREAK = 12;
