@@ -1,4 +1,4 @@
-import { useVideoPlayer, VideoView } from "expo-video";
+import { type SurfaceType, useVideoPlayer, VideoView } from "expo-video";
 import { StyleSheet, View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
@@ -26,11 +26,18 @@ export function BackgroundLayer({
 	background: b,
 	play,
 	onReady,
+	surfaceType,
 }: {
 	background: QuoteBackground;
 	play: boolean;
 	/** Called once the layer has drawn, unless `readyOn` is "now". */
 	onReady?: () => void;
+	/**
+	 * Android only. A loop in a small card (the share preview) wants "textureView": the
+	 * default SurfaceView sits behind the window and cuts through the poster drawn under
+	 * it, so the card shows black until frames arrive. Full-screen loops keep the default.
+	 */
+	surfaceType?: SurfaceType;
 }) {
 	const { night } = useQuoteInk();
 	const ready = readyOn(b, play);
@@ -69,13 +76,26 @@ export function BackgroundLayer({
 				/>
 			)}
 			{loop && b.videoUrl && (
-				<LoopVideo key={b.key} onReady={onReady} url={b.videoUrl} />
+				<LoopVideo
+					key={b.key}
+					onReady={onReady}
+					surfaceType={surfaceType}
+					url={b.videoUrl}
+				/>
 			)}
 		</View>
 	);
 }
 
-function LoopVideo({ url, onReady }: { url: string; onReady?: () => void }) {
+function LoopVideo({
+	url,
+	onReady,
+	surfaceType,
+}: {
+	url: string;
+	onReady?: () => void;
+	surfaceType?: SurfaceType;
+}) {
 	const shown = useSharedValue(0);
 	const player = useVideoPlayer({ uri: url, useCaching: true }, (p) => {
 		p.loop = true;
@@ -98,6 +118,7 @@ function LoopVideo({ url, onReady }: { url: string; onReady?: () => void }) {
 				}}
 				player={player}
 				style={StyleSheet.absoluteFill}
+				surfaceType={surfaceType}
 			/>
 		</Animated.View>
 	);
