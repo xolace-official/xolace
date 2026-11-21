@@ -11,7 +11,7 @@ type QuoteVideoNative = NativeModule<Record<string, never>> & {
 	): Promise<ExportQuoteVideoResult>;
 };
 
-/** iOS only (AVFoundation). Null where the native module isn't built in: Android, an older binary. */
+/** AVFoundation on iOS, Media3 Transformer on Android. Null where the native module isn't built in: a binary from before it. */
 const native = requireOptionalNativeModule<QuoteVideoNative>("QuoteVideo");
 
 export const quoteVideoAvailable = native !== null;

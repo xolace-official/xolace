@@ -4,7 +4,7 @@ export type ShareKind = "video" | "still";
 
 /**
  * What a share makes: a video only on a loop, when asked for, and where the phone's build has
- * the video module (iOS from the build that added it). Everywhere else, the still.
+ * the video module (iOS and Android, from the builds that added it). Everywhere else, the still.
  */
 export function shareKindOf(
 	background: Pick<QuoteBackground, "kind" | "videoUrl">,

@@ -1,0 +1,24 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.quotevideo'
+version = '0.1.0'
+
+android {
+  namespace "expo.modules.quotevideo"
+  defaultConfig {
+    versionCode 1
+    versionName '0.1.0'
+  }
+}
+
+dependencies {
+  // Matches expo-video and expo-audio (1.9.1): every media3 artifact in the app must share one
+  // version, or the player and the transformer disagree at runtime. Bump with them.
+  def media3 = "1.9.1"
+  implementation "androidx.media3:media3-common:$media3"
+  implementation "androidx.media3:media3-effect:$media3"
+  implementation "androidx.media3:media3-transformer:$media3"
+}
