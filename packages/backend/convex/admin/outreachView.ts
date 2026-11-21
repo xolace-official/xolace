@@ -24,6 +24,8 @@ import {
 	channelErrorKindValidator,
 	deliveryStatusValidator,
 	ineligibilityReasonValidator,
+	type OutreachChannel,
+	type OutreachIntent,
 	outreachChannelValidator,
 	outreachIntentValidator,
 	outreachOutcomeValidator,
@@ -72,7 +74,7 @@ const channelEntryValidator = v.object({
 	linkedAt: v.optional(v.number()),
 	revokedAt: v.optional(v.number()),
 	revokedReason: v.optional(revokedReasonValidator),
-	/** `app` for push, which has no link. */
+	/** `app` for push, which has no link; email is `active` from sign-up. */
 	status: v.union(
 		v.literal("app"),
 		v.literal("active"),
@@ -188,6 +190,16 @@ async function aiReplyUsage(
 	return { cap, used };
 }
 
+/**
+ * An intent each channel takes, so eligibility speaks to the channel alone:
+ * email takes only its own intents.
+ */
+const PROBE_INTENT: Record<OutreachChannel, OutreachIntent> = {
+	email: "welcome",
+	push: "nudge",
+	telegram: "nudge",
+};
+
 async function channelEntries(
 	ctx: MutationCtx,
 	profile: Doc<"emotional_profiles">,
@@ -204,11 +216,10 @@ async function channelEntries(
 	];
 	const entries: ChannelEntry[] = [];
 	for (const channel of shown) {
-		// Both channels take a nudge, so it asks only about the channel.
 		let reason = await channelIneligibility(
 			ctx,
 			channel,
-			{ emotionalProfileId: profile._id, intent: "nudge" },
+			{ emotionalProfileId: profile._id, intent: PROBE_INTENT[channel] },
 			profile,
 			notifications
 		);
@@ -221,6 +232,11 @@ async function channelEntries(
 		};
 		if (channel === "push") {
 			entries.push({ channel, status: "app", ...eligibility });
+			continue;
+		}
+		if (channel === "email") {
+			// Linked at sign-up; the address stays in Clerk (ADR 0004).
+			entries.push({ channel, status: "active", ...eligibility });
 			continue;
 		}
 		const link =

@@ -6,9 +6,9 @@ import { startDelivery } from "./deliver";
 import { quietWindowEndsAt } from "./quietWindow";
 import {
 	consumeTypeBucket,
-	isAcuteNudge,
 	personGates,
 	pickChannel,
+	quietWindowApplies,
 } from "./router";
 import {
 	followUpTierValidator,
@@ -48,10 +48,11 @@ type EnqueueResult = Infer<typeof enqueueResult>;
  * decides *whether* and *where*, in one transaction, gates in order:
  *
  * 1. dedupe on `dedupeKey`; 2. account deleted; 3. escalation and dormancy;
- * 4. the per-intent toggle; 5. the per-type rate bucket; 6. the quiet window
- * (`sendAt` = its end; an acute nudge ignores it); 7. the first eligible
- * channel in the person's order; 8. none → `no_channel`; 9. write the outreach
- * and its delivery, queued on that channel's workpool.
+ * 4. the per-intent toggle; 5. the per-type rate bucket; 6. the first
+ * eligible channel in the person's routing order; 7. none → `no_channel`;
+ * 8. the quiet window (`sendAt` = its end; an acute nudge and email ignore
+ * it); 9. write the outreach and its delivery, queued on that channel's
+ * workpool.
  *
  * Every outcome is recorded on `outreach`, suppressions included.
  */
@@ -124,14 +125,14 @@ export const enqueue = internalMutation({
 			return await suppress("rate_limit");
 		}
 
-		const sendAt = isAcuteNudge(args)
-			? null
-			: quietWindowEndsAt(notifications, now);
-
 		const channel = await pickChannel(ctx, args, profile, notifications);
 		if (!channel) {
 			return await suppress("no_channel");
 		}
+
+		const sendAt = quietWindowApplies(args, channel)
+			? quietWindowEndsAt(notifications, now)
+			: null;
 
 		const outreachId = await record({ kind: "queued", sendAt });
 		await startDelivery(ctx, {

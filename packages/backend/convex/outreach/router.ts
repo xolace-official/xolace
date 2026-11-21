@@ -53,6 +53,14 @@ const DORMANCY_INTENTS: ReadonlySet<OutreachIntent> = new Set([
 	"kindling_ready",
 ]);
 
+/**
+ * Intents the 72 h escalation hold never holds: the welcome goes once, about
+ * half an hour after sign-up, and says nothing about how anyone is doing.
+ */
+const ESCALATION_EXEMPT_INTENTS: ReadonlySet<OutreachIntent> = new Set([
+	"welcome",
+]);
+
 type Notifications = Doc<"preferences">["notifications"];
 
 /**
@@ -218,6 +226,9 @@ export async function escalationOrDormancy(
 	if (DORMANCY_INTENTS.has(input.intent) && isDormant(profile, now)) {
 		return "user_inactive";
 	}
+	if (ESCALATION_EXEMPT_INTENTS.has(input.intent)) {
+		return null;
+	}
 
 	// An escalation-derived card's own nudge passes both holds.
 	const nudgedCard =
@@ -256,9 +267,10 @@ export function intentAllowed(
 	notifications: Notifications | undefined
 ): boolean {
 	if (!notifications) {
-		// No preferences row: nothing was ever opted into. Kindling has no
-		// toggle of its own; push's global switch still decides for it.
-		return intent === "kindling_ready";
+		// No preferences row: nothing was ever opted into. Kindling and the
+		// welcome have no toggle of their own; for Kindling, push's global
+		// switch still decides.
+		return intent === "kindling_ready" || intent === "welcome";
 	}
 	switch (intent) {
 		case "nudge":
@@ -272,6 +284,7 @@ export function intentAllowed(
 		case "achievement":
 			return achievementToggle(notifications);
 		case "kindling_ready":
+		case "welcome":
 			return true;
 		case "daily_quote":
 			return dailyQuoteAllowed(notifications);
@@ -294,13 +307,15 @@ function dailyQuoteAllowed(notifications: Notifications): boolean {
 /**
  * Gate 5's buckets, moved unchanged from `notifications.schedule` (#764).
  * Intents with a bucket of their own; the rest share `notification`. Counted
- * across channels.
+ * across channels. Null: no bucket (the welcome is deduped instead).
  */
 export function typeBucket(
 	intent: OutreachIntent,
 	tier: FollowUpTier | undefined
 ) {
 	switch (intent) {
+		case "welcome":
+			return null;
 		case "nudge":
 			return tier === "acute" ? "followUpAcute" : "followUpNudge";
 		case "achievement":
@@ -320,16 +335,29 @@ export async function consumeTypeBucket(
 	ctx: MutationCtx,
 	input: RouteInput
 ): Promise<boolean> {
-	const { ok } = await rateLimiter.limit(
-		ctx,
-		typeBucket(input.intent, input.tier),
-		{ key: input.emotionalProfileId }
-	);
+	const bucket = typeBucket(input.intent, input.tier);
+	if (bucket === null) {
+		return true;
+	}
+	const { ok } = await rateLimiter.limit(ctx, bucket, {
+		key: input.emotionalProfileId,
+	});
 	return ok;
 }
 
 export function isAcuteNudge(input: Pick<RouteInput, "intent" | "tier">) {
 	return input.intent === "nudge" && input.tier === "acute";
+}
+
+/**
+ * Whether the quiet window defers this outreach on this channel: never on
+ * email, which lands silently in an inbox, nor for an acute nudge.
+ */
+export function quietWindowApplies(
+	input: Pick<RouteInput, "intent" | "tier">,
+	channel: OutreachChannel
+): boolean {
+	return channel !== "email" && !isAcuteNudge(input);
 }
 
 /**
@@ -401,6 +429,11 @@ export async function channelIneligibility(
 			return null;
 		}
 		return notifications?.enabled ? null : "push_off";
+	}
+
+	if (channel === "email") {
+		// Linked at sign-up, for everyone: the address is Clerk's (ADR 0004).
+		return null;
 	}
 
 	const identities = await identitiesOf(ctx, input.emotionalProfileId, channel);

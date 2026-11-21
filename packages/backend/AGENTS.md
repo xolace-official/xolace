@@ -102,6 +102,11 @@ The backend deploys before app-store review clears, so the *old* app runs agains
 - Telegram (`convex/outreach/telegram/`): `TELEGRAM_BOT_TOKEN` is per deployment and
   `outreach/telegram/bot:configureBot` is run by hand, never on deploy. Your worktree's
   dev deployment has no bot unless you make one. Runbook: `docs/setup/telegram.md`.
+- Email (`convex/outreach/email/`) ships switched off and in test mode: without
+  `EMAIL_TEST_MODE=false` every email goes to `delivered@resend.dev`. No address is
+  ever stored on a Xolace row; the adapter reads it from Clerk at send time (ADR 0004).
+  `listChannels` must never return `email` (old app builds don't know it). Runbook:
+  `docs/setup/email.md`.
 - Codegen drift fails CI: commit `convex/_generated` changes with the code.
 - Quote backgrounds (`convex/quoteBackgrounds/`, B18) are a catalogue per deployment:
   until `bun run quote-backgrounds:upload` has run there, `catalogue.list` is empty and

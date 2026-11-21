@@ -16,16 +16,24 @@ export const outreachIntentValidator = v.union(
 	v.literal("domain_unlock"),
 	v.literal("achievement"),
 	/** Today's quote at the person's chosen time, or the backoff's last line (B19). */
-	v.literal("daily_quote")
+	v.literal("daily_quote"),
+	/** The one email every new user gets after signing up (#912). Email only. */
+	v.literal("welcome")
 );
 export type OutreachIntent = Infer<typeof outreachIntentValidator>;
 
 /** A place outreach can land. */
 export const outreachChannelValidator = v.union(
 	v.literal("push"),
-	v.literal("telegram")
+	v.literal("telegram"),
+	/** Linked at sign-up; the address stays in Clerk (ADR 0004). */
+	v.literal("email")
 );
 export type OutreachChannel = Infer<typeof outreachChannelValidator>;
+
+/** An email template, rendered by `email/render` (#914). One per email intent. */
+export const emailTemplateValidator = v.union(v.literal("welcome"));
+export type EmailTemplate = Infer<typeof emailTemplateValidator>;
 
 export const followUpTierValidator = v.union(
 	v.literal("acute"),

@@ -78,7 +78,7 @@ describe("viewUserOutreach", () => {
 		});
 	});
 
-	it("returns push alone, eligible, for a user with nothing linked", async () => {
+	it("returns push and email, linked at sign-up, for a user with nothing linked", async () => {
 		const user = await freshUser();
 
 		const result = await view(user);
@@ -90,6 +90,12 @@ describe("viewUserOutreach", () => {
 					eligible: false,
 					ineligibleReason: "push_off",
 					status: "app",
+				},
+				{
+					channel: "email",
+					eligible: false,
+					ineligibleReason: "not_configured",
+					status: "active",
 				},
 			],
 			outreach: [],
@@ -203,6 +209,12 @@ describe("a linked Telegram user", () => {
 				status: "active",
 			},
 			{ channel: "push", eligible: true, status: "app" },
+			{
+				channel: "email",
+				eligible: false,
+				ineligibleReason: "not_configured",
+				status: "active",
+			},
 		]);
 	});
 

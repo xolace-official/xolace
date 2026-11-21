@@ -12,6 +12,10 @@
  * The only differences allowed (#760): suppressions leave `notification_log`
  * (ADR 0001); quiet-window deferral, escalation suppression and the global
  * toggle are exercised in enqueue.test.ts and cutover.test.ts.
+ *
+ * `welcome` (#914) has no push and no `schedule` type: its row checks it goes
+ * by email alone, with no bucket, and leaves push and `notification_log`
+ * untouched. Its gates are in email/email.test.ts.
  */
 import workpoolTest from "@convex-dev/workpool/test";
 import type { FunctionArgs } from "convex/server";
@@ -20,7 +24,7 @@ import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/c
 import { api, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { seedSession } from "../test/fixtures.helpers";
-import { asNewUser, type SeededUser } from "../test/harness.helpers";
+import { asAdmin, asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, noopJob, revenuecatMock } from "../test/mocks.helpers";
 
 type Sent = {
@@ -34,12 +38,19 @@ type Sent = {
 	};
 };
 const pushes = vi.hoisted(() => [] as Sent[]);
+const emails = vi.hoisted(() => [] as { subject: string }[]);
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../revenuecat", () => revenuecatMock(false));
 vi.mock("../lib/pushNotifications", () => ({
 	sendPushToProfile: async (_ctx: unknown, args: Sent) => {
 		pushes.push(args);
+	},
+}));
+vi.mock("./email/resend", () => ({
+	queueEmail: async (_ctx: unknown, email: { subject: string }) => {
+		emails.push(email);
+		return `email_${emails.length}`;
 	},
 }));
 vi.mock("../streamSetup", async (orig) => ({
@@ -55,8 +66,13 @@ beforeEach(() => {
 	vi.useFakeTimers();
 	vi.setSystemTime(Date.UTC(2026, 10, 13, 12, 0));
 	pushes.length = 0;
+	emails.length = 0;
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+	vi.useRealTimers();
+	vi.unstubAllEnvs();
+	vi.unstubAllGlobals();
+});
 
 async function reachable(): Promise<SeededUser> {
 	const user = await asNewUser();
@@ -259,6 +275,45 @@ describe.each(ROWS)("$name", (row) => {
 		// One log row per push; suppressions are recorded on `outreach` only.
 		expect(layer.log).toHaveLength(row.perDay);
 		expect(layer.log.every((r) => r.outreachId)).toBe(true);
+	});
+});
+
+describe("welcome", () => {
+	it("goes by email alone, every time, with no push and no log row", async () => {
+		vi.stubEnv("RESEND_API_KEY", "re_test_key");
+		vi.stubEnv("CLERK_SECRET_KEY", "sk_test_key");
+		vi.stubGlobal("fetch", async () =>
+			Response.json({
+				email_addresses: [
+					{
+						email_address: "sam@example.com",
+						id: "idn_1",
+						verification: { status: "verified" },
+					},
+				],
+				primary_email_address_id: "idn_1",
+			})
+		);
+		const user = await reachable();
+		workpoolTest.register(user.root, "outreachEmail");
+		await asAdmin(9, user.root).mutation(
+			api.admin.outreachChannels.setChannelConfig,
+			{ channel: "email", enabled: true, plan: "free" }
+		);
+
+		for (let i = 0; i < TRIES; i++) {
+			await user.root.mutation(internal.outreach.enqueue.enqueue, {
+				content: { body: "Welcome to Xolace.", title: "Welcome to Xolace" },
+				emotionalProfileId: user.profileId,
+				intent: "welcome",
+				provenance: { triggerReason: "signed_up" },
+			});
+		}
+		const { log, payloads } = await observe(user);
+
+		expect(emails).toHaveLength(TRIES);
+		expect(payloads).toEqual([]);
+		expect(log).toEqual([]);
 	});
 });
 

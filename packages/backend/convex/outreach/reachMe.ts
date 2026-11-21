@@ -38,10 +38,18 @@ const channelStatusValidator = v.union(
 	v.literal("not_linked")
 );
 
+/**
+ * The channels "Reach me on…" can show: never email, which comes with the
+ * account and which shipped app builds don't know (#914). Narrower than
+ * `outreachChannelValidator` on purpose, so the return validator refuses it.
+ */
+const reachChannelValidator = v.union(v.literal("push"), v.literal("telegram"));
+type ReachChannel = Infer<typeof reachChannelValidator>;
+
 const channelEntryValidator = v.object({
 	/** Open to this person now: switched on and on their plan. */
 	available: v.boolean(),
-	channel: outreachChannelValidator,
+	channel: reachChannelValidator,
 	/** The Telegram `@username` (without the `@`), shown only to its owner. */
 	displayHandle: v.optional(v.string()),
 	/**
@@ -61,7 +69,7 @@ const channelEntryValidator = v.object({
 type ChannelEntry = Infer<typeof channelEntryValidator>;
 
 /** Every channel a deployment can offer, in the default display order. */
-const ALL_CHANNELS: readonly OutreachChannel[] = ["push", "telegram"];
+const ALL_CHANNELS: readonly ReachChannel[] = ["push", "telegram"];
 
 /** A live link's status: Plus-only and not Plus wins, then paused. */
 function linkStatus(
@@ -100,7 +108,7 @@ async function everLinkedTelegram(
 
 async function channelEntry(
 	ctx: QueryCtx,
-	channel: OutreachChannel,
+	channel: ReachChannel,
 	profile: Doc<"emotional_profiles">,
 	pushOn: boolean
 ): Promise<ChannelEntry> {
@@ -161,16 +169,14 @@ export const listChannels = query({
 	handler: async (ctx) => {
 		const { profile } = await requireAuth(ctx);
 		const notifications = await loadNotifications(ctx, profile._id);
-		const offered = new Set<OutreachChannel>(
-			(await telegramConfigured(ctx))
-				? ALL_CHANNELS
-				: ALL_CHANNELS.filter((c) => c !== "telegram")
-		);
+		const offered = (await telegramConfigured(ctx))
+			? ALL_CHANNELS
+			: ALL_CHANNELS.filter((c) => c !== "telegram");
+		const isOffered = (c: OutreachChannel): c is ReachChannel =>
+			(offered as readonly OutreachChannel[]).includes(c);
 		const shown = [
 			...new Set(
-				[...routingOrder(notifications), ...ALL_CHANNELS].filter((c) =>
-					offered.has(c)
-				)
+				[...routingOrder(notifications), ...ALL_CHANNELS].filter(isOffered)
 			),
 		];
 		// As the router reads it: absent preferences are off too.
@@ -230,9 +236,12 @@ export const refreshCountry = mutation({
 	returns: v.null(),
 });
 
-/** Push is the app itself: it can't be paused or unlinked here. */
+/**
+ * Push is the app itself, and email comes with the account: neither can be
+ * paused or unlinked here.
+ */
 function linkableChannel(channel: OutreachChannel): "telegram" {
-	if (channel === "push") {
+	if (channel === "push" || channel === "email") {
 		throw new ConvexError({ channel, code: "channel_not_linkable" });
 	}
 	return channel;

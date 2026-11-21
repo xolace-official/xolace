@@ -17,6 +17,8 @@ export const CHANNEL_DEFAULTS: Record<
 	OutreachChannel,
 	{ enabled: boolean; plan: ChannelPlan }
 > = {
+	// Shipped dark like Telegram: off until an admin turns it on (#912).
+	email: { enabled: false, plan: "free" },
 	push: { enabled: true, plan: "free" },
 	// Off until an admin turns it on (rollout stage 3).
 	telegram: { enabled: false, plan: "free" },
@@ -27,9 +29,10 @@ const DEFAULT_CHANNEL_ORDER: readonly OutreachChannel[] = ["push"];
 
 /**
  * Channels signing up links, so routing tries them even when the stored
- * order predates them. None yet; email joins here (#912).
+ * order predates them: email, whose address comes verified from the sign-in
+ * provider (#912). Never in a stored order: "Reach me on…" doesn't offer it.
  */
-const SIGN_UP_LINKED_CHANNELS: readonly OutreachChannel[] = [];
+const SIGN_UP_LINKED_CHANNELS: readonly OutreachChannel[] = ["email"];
 
 /**
  * The channels routing tries, in order: the person's stored order (absent =
@@ -84,10 +87,13 @@ export function countryFromRegion(
 /**
  * Which intents each channel takes. Telegram carries only the ones a person
  * can answer, act on or read in the chat (the daily quote arrives whole, as a
- * blockquote); everything else is push-only. Free or Plus is the channel's
- * own config, never the intent's.
+ * blockquote); everything else is push-only. Email takes only its own
+ * intents and nothing else takes them, so email is never a fallback for
+ * another channel and nothing is a fallback for email. Free or Plus is the
+ * channel's own config, never the intent's.
  */
 const CHANNEL_INTENTS: Record<OutreachChannel, ReadonlySet<OutreachIntent>> = {
+	email: new Set<OutreachIntent>(["welcome"]),
 	push: new Set<OutreachIntent>([
 		"nudge",
 		"gentle_return",

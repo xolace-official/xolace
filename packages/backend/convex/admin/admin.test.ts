@@ -136,6 +136,7 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 	"admin/monthlyEvents:removeImage": { slug: "x" },
 	"admin/monthlyEvents:save": { ...EVENT, slug: "x" },
 	"admin/monthlyEvents:setImage": { imageStorageId: "1_storage", slug: "x" },
+	"admin/outreachChannels:listChannelConfigs": {},
 	"admin/outreachChannels:setChannelConfig": {
 		channel: "telegram",
 		enabled: false,

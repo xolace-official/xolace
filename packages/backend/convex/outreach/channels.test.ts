@@ -2,15 +2,16 @@ import { describe, expect, it } from "vitest";
 import { routingOrder } from "./channels";
 
 describe("routingOrder", () => {
-	it("is the default order when the person has stored none", () => {
-		expect(routingOrder(undefined)).toEqual(["push"]);
-		expect(routingOrder({})).toEqual(["push"]);
+	it("is the default order, then email, when the person has stored none", () => {
+		expect(routingOrder(undefined)).toEqual(["push", "email"]);
+		expect(routingOrder({})).toEqual(["push", "email"]);
 	});
 
-	it("is the stored order when one is stored", () => {
+	it("is the stored order, then email, when one is stored", () => {
 		expect(routingOrder({ channelOrder: ["telegram", "push"] })).toEqual([
 			"telegram",
 			"push",
+			"email",
 		]);
 	});
 

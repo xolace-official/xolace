@@ -7,13 +7,17 @@ type NotificationType = Doc<"notification_log">["type"];
 
 /**
  * The old `notification_log.type` literal for an outreach (ADR 0001). Shipped
- * builds read it off the push payload and the history list.
+ * builds read it off the push payload and the history list. An email-only
+ * intent has none: push never takes it (`channelTakesIntent`).
  */
 export function legacyNotificationType(
 	outreach: Pick<Doc<"outreach">, "intent" | "provenance">
 ): NotificationType {
 	if (outreach.intent === "nudge") {
 		return "follow_up";
+	}
+	if (outreach.intent === "welcome") {
+		throw new ChannelError("permanent", { code: "intent_not_allowed" });
 	}
 	if (outreach.provenance.affirmation) {
 		return "affirmation";
