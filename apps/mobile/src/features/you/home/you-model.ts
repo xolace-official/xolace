@@ -243,3 +243,20 @@ export function rankView(rank: NonNullable<Rank>): RankCard {
 	}
 	return { foot, line: COPY.rank.unlit, pct: null };
 }
+
+/**
+ * Whether everything the collapsing header draws has arrived. The tabs measure the header once
+ * to pad the page; a row landing later grows it under content already laid out (and scrolled),
+ * so the page jumps and shows through it.
+ */
+export function headerLoaded(state: {
+	hero: Hero | undefined;
+	streak: Streak | null | undefined;
+	badges: BadgesRow | undefined;
+}) {
+	return (
+		state.hero !== undefined &&
+		state.streak !== undefined &&
+		state.badges !== undefined
+	);
+}

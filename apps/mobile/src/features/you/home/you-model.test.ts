@@ -10,6 +10,7 @@ import {
 	badgesRowView,
 	chipsView,
 	freezeCopy,
+	headerLoaded,
 	heroView,
 	patternRows,
 	rankView,
@@ -209,5 +210,20 @@ describe("the fixture tab", () => {
 	it("offers the Xolace+ row only to free users", () => {
 		expect(fixtureYou({ plus: true }).state.plusRow).toBe(false);
 		expect(fixtureYou({ plus: false }).state.plusRow).toBe(true);
+	});
+});
+
+describe("headerLoaded", () => {
+	const { state } = fixtureYou({ plus: false });
+
+	it("waits for the hero, the streak and the badges row", () => {
+		expect(headerLoaded(state)).toBe(true);
+		expect(headerLoaded({ ...state, hero: undefined })).toBe(false);
+		expect(headerLoaded({ ...state, streak: undefined })).toBe(false);
+		expect(headerLoaded({ ...state, badges: undefined })).toBe(false);
+	});
+
+	it("counts no streak as loaded", () => {
+		expect(headerLoaded({ ...state, streak: null })).toBe(true);
 	});
 });
