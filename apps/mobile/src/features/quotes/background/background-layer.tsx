@@ -1,4 +1,4 @@
-import { type SurfaceType, useVideoPlayer, VideoView } from "expo-video";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { StyleSheet, View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
@@ -12,6 +12,14 @@ import { type QuoteBackground, readyOn } from "../quotes-model";
 import { POSTER_WASH } from "../quotes-palette";
 
 const FIRST_FRAME_FADE = 180;
+/**
+ * Android draws every loop on a TextureView. The default SurfaceView is a separate window
+ * layer behind the app: it ignores its parents' clip, corner radius, opacity and transform, and
+ * when several play, the one created last covers the others' holes. So a tile showed the
+ * full-screen loop picked after it, its corners poked out of the sheet, the reveal's mask and
+ * the soft scale missed it, and the share preview cut through to black (#901). iOS ignores it.
+ */
+const SURFACE = "textureView";
 const PERCENT = 100;
 
 const contentPosition = (b: QuoteBackground) =>
@@ -26,18 +34,11 @@ export function BackgroundLayer({
 	background: b,
 	play,
 	onReady,
-	surfaceType,
 }: {
 	background: QuoteBackground;
 	play: boolean;
 	/** Called once the layer has drawn, unless `readyOn` is "now". */
 	onReady?: () => void;
-	/**
-	 * Android only. A loop in a small card (the share preview) wants "textureView": the
-	 * default SurfaceView sits behind the window and cuts through the poster drawn under
-	 * it, so the card shows black until frames arrive. Full-screen loops keep the default.
-	 */
-	surfaceType?: SurfaceType;
 }) {
 	const { night } = useQuoteInk();
 	const ready = readyOn(b, play);
@@ -76,26 +77,13 @@ export function BackgroundLayer({
 				/>
 			)}
 			{loop && b.videoUrl && (
-				<LoopVideo
-					key={b.key}
-					onReady={onReady}
-					surfaceType={surfaceType}
-					url={b.videoUrl}
-				/>
+				<LoopVideo key={b.key} onReady={onReady} url={b.videoUrl} />
 			)}
 		</View>
 	);
 }
 
-function LoopVideo({
-	url,
-	onReady,
-	surfaceType,
-}: {
-	url: string;
-	onReady?: () => void;
-	surfaceType?: SurfaceType;
-}) {
+function LoopVideo({ url, onReady }: { url: string; onReady?: () => void }) {
 	const shown = useSharedValue(0);
 	const player = useVideoPlayer({ uri: url, useCaching: true }, (p) => {
 		p.loop = true;
@@ -118,7 +106,7 @@ function LoopVideo({
 				}}
 				player={player}
 				style={StyleSheet.absoluteFill}
-				surfaceType={surfaceType}
+				surfaceType={SURFACE}
 			/>
 		</Animated.View>
 	);

@@ -1,4 +1,3 @@
-import MaskedView from "@react-native-masked-view/masked-view";
 import { BlurView as ExpoBlurView } from "expo-blur";
 import { useEffect, useState } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
@@ -15,10 +14,9 @@ import { EASE, SOFT, slice, T, useQuoteMotion } from "../motion/quote-motion";
 import { type QuoteBackground as Background, readyOn } from "../quotes-model";
 import { SCRIM_CLEAR, scrimOf } from "../quotes-palette";
 import { BackgroundLayer } from "./background-layer";
+import { RevealMask } from "./reveal-mask";
 
 const AnimatedBlur = Animated.createAnimatedComponent(ExpoBlurView);
-const ORIGIN = { x: 0.5, y: 0.9 };
-const REACH = 1.5;
 
 export function QuoteBackground({
 	background,
@@ -90,12 +88,6 @@ export function QuoteBackground({
 		);
 	}, [top, m.reduced, reveal]);
 
-	const radius = REACH * Math.sqrt((width * width + height * height) / 2);
-	const mask = useAnimatedStyle(() =>
-		m.reduced
-			? { opacity: reveal.get(), transform: [{ scale: 1 }] }
-			: { opacity: 1, transform: [{ scale: reveal.get() }] }
-	);
 	const fadeIn = useAnimatedStyle(() => ({
 		opacity: slice(m.clock.get(), 0, T.bgFade),
 		transform: [{ scale: 1 + (SOFT.scale - 1) * m.soft.get() }],
@@ -123,26 +115,14 @@ export function QuoteBackground({
 					play={play && (!top || settling !== false)}
 				/>
 				{top && (
-					<MaskedView
-						maskElement={
-							<Animated.View
-								className="absolute bg-black"
-								style={[
-									{
-										borderRadius: radius,
-										height: radius * 2,
-										left: width * ORIGIN.x - radius,
-										top: height * ORIGIN.y - radius,
-										width: radius * 2,
-									},
-									mask,
-								]}
-							/>
-						}
-						style={StyleSheet.absoluteFill}
+					<RevealMask
+						height={height}
+						reduced={m.reduced}
+						reveal={reveal}
+						width={width}
 					>
 						<BackgroundLayer background={top} key={top.key} play={play} />
-					</MaskedView>
+					</RevealMask>
 				)}
 				{gradient && (
 					<Animated.View className="absolute inset-0" style={scrim}>

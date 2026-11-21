@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
@@ -11,6 +11,7 @@ import { QuoteSheet } from "../sheets/quote-sheet";
 import { Segments, SheetNote } from "../sheets/sheet-parts";
 import { POSTER_SEMI } from "../stage/quote-type";
 import { BackgroundTile, TILE } from "./background-tile";
+import { inWindow, tilePlays, tileWindow } from "./tile-window";
 
 const ROW_INSET = 20;
 const SHEET_EDGE = 8;
@@ -19,6 +20,13 @@ const CATS = [
 	{ id: "still", label: QUOTE_COPY.still },
 	{ id: "loop", label: QUOTE_COPY.loop },
 ] as const;
+
+const rowFor = (viewport: number) => ({
+	gap: TILE.gap,
+	inset: ROW_INSET,
+	tile: TILE.w,
+	viewport,
+});
 
 type Props = {
 	ink: InkPalette;
@@ -35,13 +43,19 @@ type Props = {
 
 export function BackgroundSheet(p: Props) {
 	const { width } = useWindowDimensions();
-	const [scrollX, setScrollX] = useState(0);
 	const tiles = p.backgrounds.filter((b) => b.kind === p.cat);
+	const count = tiles.length;
 	const viewport = width - SHEET_EDGE * 2;
-	const onScreen = (i: number) => {
-		const left = ROW_INSET + i * (TILE.w + TILE.gap) - scrollX;
-		return left + TILE.w > 0 && left < viewport;
-	};
+	// The latest offset lives in a ref; the window is state, set to the same string while the
+	// same tiles stay in view, so scrolling renders only when the window changes. New tiles or a
+	// new width recompute it from where the row really is.
+	const offset = useRef(0);
+	const [inView, setInView] = useState(() =>
+		tileWindow(0, count, rowFor(viewport))
+	);
+	useEffect(() => {
+		setInView(tileWindow(offset.current, count, rowFor(viewport)));
+	}, [count, viewport]);
 	let note: string | null = null;
 	if (p.cat === "loop") {
 		note = p.lowPower ? QUOTE_COPY.lowPowerNote : QUOTE_COPY.loopNote;
@@ -59,7 +73,14 @@ export function BackgroundSheet(p: Props) {
 				ink={p.ink}
 				items={CATS}
 				onChange={(c) => {
-					setScrollX(0);
+					offset.current = 0;
+					setInView(
+						tileWindow(
+							0,
+							p.backgrounds.filter((b) => b.kind === c).length,
+							rowFor(viewport)
+						)
+					);
 					p.onCat(c);
 				}}
 				value={p.cat}
@@ -69,7 +90,10 @@ export function BackgroundSheet(p: Props) {
 				contentContainerClassName="gap-2.5 px-5 pt-1 pb-0.5"
 				horizontal
 				key={p.cat}
-				onScroll={(e) => setScrollX(e.nativeEvent.contentOffset.x)}
+				onScroll={(e) => {
+					offset.current = e.nativeEvent.contentOffset.x;
+					setInView(tileWindow(offset.current, count, rowFor(viewport)));
+				}}
 				scrollEventThrottle={SCROLL_THROTTLE}
 				showsHorizontalScrollIndicator={false}
 			>
@@ -84,7 +108,11 @@ export function BackgroundSheet(p: Props) {
 							Presets.System.selection();
 							p.onPick(b);
 						}}
-						play={p.moving && onScreen(i)}
+						play={tilePlays({
+							chosen: b.key === p.current,
+							inView: inWindow(inView, i),
+							moving: p.moving,
+						})}
 					/>
 				))}
 			</ScrollView>
