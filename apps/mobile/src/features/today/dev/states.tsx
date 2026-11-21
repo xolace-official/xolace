@@ -210,6 +210,32 @@ export const devStates: readonly DevState[] = [
 		...today({ intro: true, lateWord: true, phase: "evening" }),
 	},
 	{
+		id: "word-long",
+		title: "A long word for today (clamped; the card keeps its height)",
+		...today({ longWord: true, phase: "day" }),
+	},
+	{
+		id: "word-long-late",
+		title: "First open, a long word arriving late (it inks in, clamped)",
+		...today({ intro: true, lateWord: true, longWord: true, phase: "day" }),
+	},
+	{
+		id: "word-long-dark",
+		title: "A long word for today, dark",
+		...today({ longWord: true, phase: "day", theme: "dark" }),
+	},
+	{
+		id: "empty-day-dark",
+		title: "Empty day, dark (the word card's fallback)",
+		...today({
+			campfire: "none",
+			kindling: "none",
+			modules: "none",
+			phase: "day",
+			theme: "dark",
+		}),
+	},
+	{
 		id: "finding",
 		title:
 			"Day 3 of a v2 intake: “How did you find Xolace?” under the campfire",

@@ -13,6 +13,7 @@ import {
 	FIXTURE_CAMPFIRE,
 	FIXTURE_DAY,
 	FIXTURE_HOUR,
+	FIXTURE_LONG_WORD,
 	FIXTURE_MONTH_PROMPT,
 	FIXTURE_NAME,
 	FIXTURE_STREAK,
@@ -55,6 +56,7 @@ export type FixtureProps = FixtureKindling & {
 	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
 	free?: boolean;
 	lateWord?: boolean;
+	longWord?: boolean;
 	finding?: boolean;
 	modules?: FixtureModules;
 };
@@ -72,6 +74,7 @@ function FixtureToday({
 	modules = "board",
 	finding = false,
 	lateWord = false,
+	longWord = false,
 	free = false,
 	rekindle = false,
 	...kindlingProps
@@ -115,6 +118,9 @@ function FixtureToday({
 		intro,
 		...kindling,
 		...lowerModules(offline ? "loading" : modules, covers),
+		...(longWord && !offline && modules === "board"
+			? { word: FIXTURE_LONG_WORD }
+			: {}),
 		...(wordIn ? {} : { word: undefined }),
 		listenLocked: free,
 		phase,
