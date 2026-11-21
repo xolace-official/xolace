@@ -147,6 +147,9 @@ const FIXTURE_MOMENTS: MomentView[] = [
 ].map(momentView);
 
 const FIXTURE_WORD = "Slow is still moving.";
+/** A quote long enough to clamp on the word card. */
+export const FIXTURE_LONG_WORD =
+	"We are born alone, we live alone, we die alone. Only through our love and friendship can we create the illusion that we're not alone.";
 
 export type FixtureModules = "board" | "none" | "loading";
 
