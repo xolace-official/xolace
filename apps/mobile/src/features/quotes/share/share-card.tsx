@@ -58,11 +58,7 @@ export function ShareCard({
 			style={fill ? undefined : { height, width }}
 		>
 			{!transparent && (
-				<BackgroundLayer
-					background={background}
-					play={playing === true}
-					surfaceType="textureView"
-				/>
+				<BackgroundLayer background={background} play={playing === true} />
 			)}
 			{gradient && (
 				<LinearGradient
