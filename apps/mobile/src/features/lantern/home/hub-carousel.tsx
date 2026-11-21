@@ -34,7 +34,11 @@ export function HubCarousel() {
 		<View>
 			<View>
 				<Animated.ScrollView
-					contentContainerStyle={{ gap: H.gap, paddingHorizontal: H.inset }}
+					contentContainerStyle={{
+						gap: H.gap,
+						paddingHorizontal: H.inset,
+						paddingVertical: H.ring,
+					}}
 					decelerationRate="fast"
 					horizontal
 					onScroll={onScroll}
@@ -106,7 +110,7 @@ function HubCard({
 					style={{
 						borderCurve: "continuous",
 						borderRadius: H.r,
-						boxShadow: `0px 0px 0px 1px ${line}`,
+						boxShadow: `0px 0px 0px ${H.ring}px ${line}`,
 						padding: H.pad,
 						width,
 					}}

@@ -17,6 +17,8 @@ export const LS = {
 		inset: 24,
 		pad: 8,
 		r: 28,
+		/** The card's outline, drawn outside it: the carousel leaves room so it isn't clipped. */
+		ring: 1,
 	},
 	hubCover: 300,
 	hubFold: 250,
