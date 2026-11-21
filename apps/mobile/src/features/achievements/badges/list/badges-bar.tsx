@@ -10,7 +10,6 @@ import { COPY } from "@/features/achievements/copy";
 
 export const BAR = 50;
 const TITLE_TOP = 4;
-const BACK_TOP = 2;
 const BACKDROP = { from: 8, over: 32 } as const;
 const TITLE = { from: 30, over: 20 } as const;
 
@@ -60,7 +59,7 @@ export function BadgesBar({
 					{COPY.list.title}
 				</AppText>
 			</Animated.View>
-			<BackButton className="absolute left-4" style={{ top: top + BACK_TOP }} />
+			<BackButton className="absolute left-4" style={{ top }} />
 		</View>
 	);
 }

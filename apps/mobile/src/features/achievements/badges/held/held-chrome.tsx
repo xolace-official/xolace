@@ -1,6 +1,7 @@
 import type { SharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { BackButton } from "@/components/shared/back-button";
 import { GlassGroup } from "@/components/shared/glass-group";
 import { Icon, type IconName } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
@@ -13,7 +14,6 @@ import { cn } from "@/lib/cn";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 
-const CHEVRON: IconName = { android: "arrow_back", ios: "chevron.left" };
 const SHARE: IconName = { android: "ios_share", ios: "square.and.arrow.up" };
 const GLYPH = 17;
 
@@ -70,20 +70,7 @@ export function HeldChrome({
 				</Reveal>
 			</Part>
 			<Reveal className="left-4" i={RV.chrome} pose={pose} style={top}>
-				<GlassGroup className="p-0">
-					<PressScale
-						accessibilityLabel={COPY.badge.back}
-						className="size-11 items-center justify-center"
-						onPress={onBack}
-					>
-						<Icon
-							color={foreground}
-							name={CHEVRON}
-							size={GLYPH}
-							weight="semibold"
-						/>
-					</PressScale>
-				</GlassGroup>
+				<BackButton label={COPY.badge.back} onPress={onBack} />
 			</Reveal>
 			<Part on={earned}>
 				<Reveal className="right-4" i={RV.chrome} pose={pose} style={top}>

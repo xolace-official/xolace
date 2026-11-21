@@ -8,7 +8,9 @@ import { goHome } from "@/lib/landing";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const CHEVRON: IconName = { android: "arrow_back", ios: "chevron.left" };
-const GLYPH = 17;
+// Matches the native header back button (iOS bar button chevron), so a screen that draws its own
+// chrome looks the same as one with a native header.
+const GLYPH = 22;
 
 export const goBack = () => (router.canGoBack() ? router.back() : goHome());
 
@@ -42,7 +44,7 @@ export function BackButton({
 					color={tint ?? foreground}
 					name={icon}
 					size={GLYPH}
-					weight="semibold"
+					weight="regular"
 				/>
 			</PressScale>
 		</GlassGroup>
