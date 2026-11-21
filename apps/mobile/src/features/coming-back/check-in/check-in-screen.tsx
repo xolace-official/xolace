@@ -8,16 +8,18 @@ import {
 	useState,
 } from "react";
 import {
-	KeyboardAvoidingView,
 	type LayoutChangeEvent,
 	ScrollView,
 	useWindowDimensions,
 	View,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScheme } from "@/design/scheme";
 import { cn } from "@/lib/cn";
+import { KEYBOARD_GAP } from "@/lib/keyboard/keyboard-lift-math";
+import { KeyboardSpacer } from "@/lib/keyboard/keyboard-spacer";
 import { useTokenColor } from "@/lib/use-token-color";
 import { useCheckIn } from "../check-in-data";
 import type { WaitingCard } from "../coming-back-model";
@@ -49,7 +51,7 @@ export function CheckInScreen({ offer }: Props) {
 	const { height } = useWindowDimensions();
 	const navigation = useNavigation();
 	const shadow = useTokenColor("check-in-shadow");
-	const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
+	const scroll = useRef<ComponentRef<typeof KeyboardAwareScrollView>>(null);
 	const [pageH, setPageH] = useState(0);
 	const [headH, setHeadH] = useState(0);
 	const [stepH, setStepH] = useState<number | null>(null);
@@ -83,8 +85,6 @@ export function CheckInScreen({ offer }: Props) {
 
 	const panelStyle = usePanelRise(step !== null, reduced, height);
 
-	// KeyboardAvoidingView measures from its parent: it's told where the page sheet starts.
-	const sheetY = pageH > 0 ? Math.max(0, height - pageH) : 0;
 	const flow =
 		step !== null && stepH !== null && pageH > 0 && headH + stepH > pageH;
 	const card = state.card;
@@ -105,15 +105,16 @@ export function CheckInScreen({ offer }: Props) {
 		return null;
 	}
 	return (
-		<KeyboardAvoidingView
-			behavior="padding"
+		<View
 			className={cn("flex-1", dark ? "bg-background" : "bg-check-in-paper")}
-			keyboardVerticalOffset={sheetY}
 			onLayout={(e: LayoutChangeEvent) => setPageH(e.nativeEvent.layout.height)}
 		>
-			<ScrollView
+			{/* Only the flowing panel is in here; the docked one makes its own room below. */}
+			<KeyboardAwareScrollView
+				bottomOffset={KEYBOARD_GAP}
 				bounces={false}
 				contentContainerClassName="grow"
+				enabled={flow}
 				keyboardShouldPersistTaps="handled"
 				ref={scroll}
 				scrollEnabled={!step || flow}
@@ -138,7 +139,7 @@ export function CheckInScreen({ offer }: Props) {
 						{content}
 					</Animated.View>
 				) : null}
-			</ScrollView>
+			</KeyboardAwareScrollView>
 			{step && !flow ? (
 				<Animated.View
 					className={cn("absolute inset-x-0 bottom-0", SHEET)}
@@ -154,8 +155,10 @@ export function CheckInScreen({ offer }: Props) {
 					>
 						{content}
 					</ScrollView>
+					{/* The panel is pinned to the bottom, so padding the page can't lift it. */}
+					<KeyboardSpacer />
 				</Animated.View>
 			) : null}
-		</KeyboardAvoidingView>
+		</View>
 	);
 }
