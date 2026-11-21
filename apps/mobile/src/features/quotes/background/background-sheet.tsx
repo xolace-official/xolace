@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
@@ -21,6 +21,13 @@ const CATS = [
 	{ id: "loop", label: QUOTE_COPY.loop },
 ] as const;
 
+const rowFor = (viewport: number) => ({
+	gap: TILE.gap,
+	inset: ROW_INSET,
+	tile: TILE.w,
+	viewport,
+});
+
 type Props = {
 	ink: InkPalette;
 	backgrounds: readonly QuoteBackground[];
@@ -37,16 +44,18 @@ type Props = {
 export function BackgroundSheet(p: Props) {
 	const { width } = useWindowDimensions();
 	const tiles = p.backgrounds.filter((b) => b.kind === p.cat);
-	const row = {
-		gap: TILE.gap,
-		inset: ROW_INSET,
-		tile: TILE.w,
-		viewport: width - SHEET_EDGE * 2,
-	};
-	// The offset is stored only when the tiles in view change, so a scroll inside one window
-	// skips the render; the window itself is derived here, so it follows new tiles and widths.
-	const [scrollX, setScrollX] = useState(0);
-	const inView = tileWindow(scrollX, tiles.length, row);
+	const count = tiles.length;
+	const viewport = width - SHEET_EDGE * 2;
+	// The latest offset lives in a ref; the window is state, set to the same string while the
+	// same tiles stay in view, so scrolling renders only when the window changes. New tiles or a
+	// new width recompute it from where the row really is.
+	const offset = useRef(0);
+	const [inView, setInView] = useState(() =>
+		tileWindow(0, count, rowFor(viewport))
+	);
+	useEffect(() => {
+		setInView(tileWindow(offset.current, count, rowFor(viewport)));
+	}, [count, viewport]);
 	let note: string | null = null;
 	if (p.cat === "loop") {
 		note = p.lowPower ? QUOTE_COPY.lowPowerNote : QUOTE_COPY.loopNote;
@@ -64,7 +73,14 @@ export function BackgroundSheet(p: Props) {
 				ink={p.ink}
 				items={CATS}
 				onChange={(c) => {
-					setScrollX(0);
+					offset.current = 0;
+					setInView(
+						tileWindow(
+							0,
+							p.backgrounds.filter((b) => b.kind === c).length,
+							rowFor(viewport)
+						)
+					);
 					p.onCat(c);
 				}}
 				value={p.cat}
@@ -75,10 +91,8 @@ export function BackgroundSheet(p: Props) {
 				horizontal
 				key={p.cat}
 				onScroll={(e) => {
-					const x = e.nativeEvent.contentOffset.x;
-					if (tileWindow(x, tiles.length, row) !== inView) {
-						setScrollX(x);
-					}
+					offset.current = e.nativeEvent.contentOffset.x;
+					setInView(tileWindow(offset.current, count, rowFor(viewport)));
 				}}
 				scrollEventThrottle={SCROLL_THROTTLE}
 				showsHorizontalScrollIndicator={false}
