@@ -1,6 +1,6 @@
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
-import type { DayPhase } from "@/lib/day-phase";
+import { type DayPhase, NOON } from "@/lib/day-phase";
 import type { ProfileSummary } from "@/lib/profile-summary";
 import { COPY } from "./copy";
 import { type KindlingEmptyMode, kindlingCardMode } from "./kindling/card-mode";
@@ -47,15 +47,27 @@ export function cardA11yHint(mode: CardMode, doorsHint: string): string {
 	return mode === "idle" ? doorsHint : COPY.opensReflect;
 }
 
+/** The header's words: the phase, with the day phase's morning split off at noon. */
+export type HeaderPart = Exclude<TodayPhase, "day"> | "morning" | "afternoon";
+
+function headerPart(phase: TodayPhase, hour: number): HeaderPart {
+	if (phase !== "day") {
+		return phase;
+	}
+	return hour < NOON ? "morning" : "afternoon";
+}
+
 export function headerCopy(
 	phase: TodayPhase,
+	hour: number,
 	weekday: string,
 	name: string | null | undefined
 ): { eyebrow: string; greeting: string } {
+	const part = headerPart(phase, hour);
 	const trimmed = name?.trim();
 	return {
-		eyebrow: `${weekday} · ${COPY.partOfDay[phase]}`,
-		greeting: COPY.greeting[phase](trimmed ? trimmed : null),
+		eyebrow: `${weekday} · ${COPY.partOfDay[part]}`,
+		greeting: COPY.greeting[part](trimmed ? trimmed : null),
 	};
 }
 

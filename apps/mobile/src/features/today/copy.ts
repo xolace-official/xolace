@@ -1,4 +1,4 @@
-import type { TodayPhase } from "./today-model";
+import type { HeaderPart, TodayPhase } from "./today-model";
 
 export const COPY = {
 	campfire: {
@@ -69,14 +69,16 @@ export const COPY = {
 		writeInstead: "Write instead",
 	},
 	greeting: {
+		afternoon: (name: string | null) =>
+			name ? `Good afternoon, ${name}` : "Good afternoon",
 		dawn: (name: string | null) =>
 			name ? `Good morning, ${name}` : "Good morning",
-		day: (name: string | null) =>
-			name ? `Good afternoon, ${name}` : "Good afternoon",
 		evening: (name: string | null) =>
 			name ? `Good evening, ${name}` : "Good evening",
 		late: (name: string | null) => (name ? `Still up, ${name}?` : "Still up?"),
-	} satisfies Record<TodayPhase, (name: string | null) => string>,
+		morning: (name: string | null) =>
+			name ? `Good morning, ${name}` : "Good morning",
+	} satisfies Record<HeaderPart, (name: string | null) => string>,
 	help: "Get help now",
 	kindling: {
 		a11y: {
@@ -158,11 +160,12 @@ export const COPY = {
 	},
 	opensReflect: "Opens Reflect",
 	partOfDay: {
+		afternoon: "afternoon",
 		dawn: "early",
-		day: "afternoon",
 		evening: "evening",
 		late: "late",
-	} satisfies Record<TodayPhase, string>,
+		morning: "morning",
+	} satisfies Record<HeaderPart, string>,
 	reflect: "Reflect",
 	rekindle: {
 		ask: "Use 1 streak saver",

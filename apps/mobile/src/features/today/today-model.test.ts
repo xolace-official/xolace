@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { todayPhase } from "@/lib/day-phase";
 import { COPY } from "./copy";
 import {
 	campfireSettled,
@@ -67,23 +68,66 @@ describe("cardMode", () => {
 
 describe("headerCopy", () => {
 	it("greets by name, with the weekday and the part of the day", () => {
-		expect(headerCopy("evening", "Thursday", "Ama")).toEqual({
+		expect(headerCopy("evening", 19, "Thursday", "Ama")).toEqual({
 			eyebrow: "Thursday · evening",
 			greeting: "Good evening, Ama",
 		});
 	});
 
 	it("asks late", () => {
-		expect(headerCopy("late", "Thursday", "Ama").greeting).toBe(
+		expect(headerCopy("late", 23, "Thursday", "Ama").greeting).toBe(
 			"Still up, Ama?"
 		);
 	});
 
 	it("drops the name when there is none, or only spaces", () => {
-		expect(headerCopy("dawn", "Monday", null).greeting).toBe("Good morning");
-		expect(headerCopy("late", "Monday", "  ").greeting).toBe("Still up?");
-		expect(headerCopy("day", "Monday", undefined).eyebrow).toBe(
+		expect(headerCopy("dawn", 6, "Monday", null).greeting).toBe("Good morning");
+		expect(headerCopy("late", 23, "Monday", "  ").greeting).toBe("Still up?");
+		expect(headerCopy("day", 14, "Monday", undefined).eyebrow).toBe(
 			"Monday · afternoon"
+		);
+	});
+
+	const at = (hour: number, minute: number) => {
+		const now = new Date(2026, 10, 21, hour, minute);
+		return headerCopy(
+			todayPhase(now.getHours(), false),
+			now.getHours(),
+			"Saturday",
+			"Ama"
+		);
+	};
+
+	it("greets 10:27 as morning", () => {
+		expect(at(10, 27)).toEqual({
+			eyebrow: "Saturday · morning",
+			greeting: "Good morning, Ama",
+		});
+	});
+
+	it.each([
+		[6, 0, "Good morning, Ama", "early"],
+		[9, 0, "Good morning, Ama", "morning"],
+		[11, 59, "Good morning, Ama", "morning"],
+		[12, 0, "Good afternoon, Ama", "afternoon"],
+		[16, 59, "Good afternoon, Ama", "afternoon"],
+		[17, 0, "Good evening, Ama", "evening"],
+	] as const)("at %i:%i says %s", (hour, minute, greeting, part) => {
+		expect(at(hour, minute)).toEqual({
+			eyebrow: `Saturday · ${part}`,
+			greeting,
+		});
+	});
+
+	it("drops the name in the morning too", () => {
+		expect(headerCopy("day", 10, "Saturday", null).greeting).toBe(
+			"Good morning"
+		);
+	});
+
+	it("follows the phase it is given, so night mode keeps late", () => {
+		expect(headerCopy("late", 10, "Saturday", "Ama").greeting).toBe(
+			"Still up, Ama?"
 		);
 	});
 });

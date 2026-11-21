@@ -36,9 +36,14 @@ describe("todayPhase", () => {
 describe("nextWakeHour", () => {
 	it("is the next phase boundary", () => {
 		expect(nextWakeHour(5)).toBe(9);
-		expect(nextWakeHour(9)).toBe(17);
 		expect(nextWakeHour(20)).toBe(22);
 		expect(nextWakeHour(1)).toBe(4);
+	});
+
+	it("wakes at noon, when Today's header turns to afternoon", () => {
+		expect(nextWakeHour(9)).toBe(12);
+		expect(nextWakeHour(10)).toBe(12);
+		expect(nextWakeHour(12)).toBe(17);
 	});
 
 	it("wakes at midnight after late begins, for the weekday", () => {
