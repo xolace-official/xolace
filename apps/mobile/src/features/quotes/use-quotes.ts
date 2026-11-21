@@ -28,6 +28,7 @@ import {
 } from "./quotes-model";
 import type { QuotesScreenValue, ReplyOutcome } from "./quotes-screen-data";
 import {
+	localAmbient,
 	localLoop,
 	makeShareFile,
 	saveToPhotos,
@@ -294,6 +295,7 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 			prepareShare: () => {
 				if (canShareVideo(background, quoteVideoAvailable)) {
 					localLoop(background).catch(() => undefined);
+					localAmbient(background).catch(() => undefined);
 				}
 			},
 			reflect: (reply, flagged) => {

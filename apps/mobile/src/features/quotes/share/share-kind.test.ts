@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { canShareVideo, loopFileName, shareKindOf } from "./share-kind";
+import {
+	ambientFileName,
+	canShareVideo,
+	loopFileName,
+	shareKindOf,
+} from "./share-kind";
 
 const loop = {
 	kind: "loop",
@@ -46,6 +51,19 @@ describe("loopFileName", () => {
 	it("keeps the name to safe characters", () => {
 		expect(loopFileName("first light", "https://x/a b%20c.mp4")).toBe(
 			"first_light-a_b_20c.mp4"
+		);
+	});
+});
+
+describe("ambientFileName", () => {
+	it("ends a bare storage id in .m4a", () => {
+		expect(
+			ambientFileName("rain-window", "https://x.convex.cloud/api/storage/77aa")
+		).toBe("rain-window-77aa.m4a");
+	});
+	it("keeps a name that already ends in .m4a", () => {
+		expect(ambientFileName("hearth", "https://cdn.test/a/hearth.M4A")).toBe(
+			"hearth-hearth.M4A"
 		);
 	});
 });
