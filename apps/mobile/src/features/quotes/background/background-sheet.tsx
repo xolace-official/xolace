@@ -43,7 +43,10 @@ export function BackgroundSheet(p: Props) {
 		tile: TILE.w,
 		viewport: width - SHEET_EDGE * 2,
 	};
-	const [inView, setInView] = useState(() => tileWindow(0, tiles.length, row));
+	// The offset is stored only when the tiles in view change, so a scroll inside one window
+	// skips the render; the window itself is derived here, so it follows new tiles and widths.
+	const [scrollX, setScrollX] = useState(0);
+	const inView = tileWindow(scrollX, tiles.length, row);
 	let note: string | null = null;
 	if (p.cat === "loop") {
 		note = p.lowPower ? QUOTE_COPY.lowPowerNote : QUOTE_COPY.loopNote;
@@ -61,9 +64,7 @@ export function BackgroundSheet(p: Props) {
 				ink={p.ink}
 				items={CATS}
 				onChange={(c) => {
-					setInView(
-						tileWindow(0, p.backgrounds.filter((b) => b.kind === c).length, row)
-					);
+					setScrollX(0);
 					p.onCat(c);
 				}}
 				value={p.cat}
@@ -73,11 +74,12 @@ export function BackgroundSheet(p: Props) {
 				contentContainerClassName="gap-2.5 px-5 pt-1 pb-0.5"
 				horizontal
 				key={p.cat}
-				onScroll={(e) =>
-					setInView(
-						tileWindow(e.nativeEvent.contentOffset.x, tiles.length, row)
-					)
-				}
+				onScroll={(e) => {
+					const x = e.nativeEvent.contentOffset.x;
+					if (tileWindow(x, tiles.length, row) !== inView) {
+						setScrollX(x);
+					}
+				}}
 				scrollEventThrottle={SCROLL_THROTTLE}
 				showsHorizontalScrollIndicator={false}
 			>

@@ -4,7 +4,7 @@ type Row = { inset: number; tile: number; gap: number; viewport: number };
 
 /**
  * The tiles a horizontal row shows at `scrollX`, as "first-last" (or "" for none). A string so a
- * scroll that keeps the same tiles in view sets the same state and React skips the render.
+ * scroll handler can compare windows and skip the state update while the same tiles stay in view.
  */
 export function tileWindow(scrollX: number, count: number, row: Row): string {
 	let first = -1;
