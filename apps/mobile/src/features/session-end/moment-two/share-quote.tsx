@@ -83,7 +83,7 @@ export function ShareQuote({
 				>
 					<AppText
 						accessible={false}
-						className="text-transparent"
+						className="text-clear"
 						onTextLayout={onLayout}
 						style={QUOTE}
 						variant="body"

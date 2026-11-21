@@ -47,7 +47,7 @@ export function RollingDigits({ value, play, style }: Props) {
 	return (
 		<View className="overflow-hidden">
 			<AppText
-				className="text-transparent tabular-nums"
+				className="text-clear tabular-nums"
 				style={style}
 				variant="footnote"
 				weight="semibold"

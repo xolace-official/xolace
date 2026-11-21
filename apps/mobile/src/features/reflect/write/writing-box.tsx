@@ -14,9 +14,15 @@ import { WarmText, type Warmth } from "./warm-text";
 
 const FOCUS_AFTER_MS = 440;
 const ENDS_WORD = /[\s.,!?]$/;
+// `includeFontPadding: false` (Android only) matches AppText, so the input's
+// lines and caret sit exactly on WarmText's glyphs underneath.
 const FIELD_STYLE = [
 	FIELD_TEXT,
-	{ minHeight: LAYOUT.write.box, textAlignVertical: "top" as const },
+	{
+		includeFontPadding: false,
+		minHeight: LAYOUT.write.box,
+		textAlignVertical: "top" as const,
+	},
 ];
 
 type Props = {
@@ -79,7 +85,7 @@ export function WritingBox({ running, reduced, onWriting, inputRef }: Props) {
 			<TextInput
 				accessibilityHint={text ? undefined : placeholders[0]}
 				accessibilityLabel={prompt}
-				className="type-compose p-0 font-normal text-transparent"
+				className="type-compose p-0 font-normal text-clear"
 				maxFontSizeMultiplier={BODY_MAX_SCALE}
 				maxLength={REFLECTION_INPUT_MAX_CHARS}
 				multiline

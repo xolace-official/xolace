@@ -42,7 +42,7 @@ function tokens(text: string) {
 
 function Clear({ children }: { children: string }) {
 	return (
-		<AppText className="text-transparent" style={FIELD_TEXT} variant="compose">
+		<AppText className="text-clear" style={FIELD_TEXT} variant="compose">
 			{children}
 		</AppText>
 	);
@@ -161,11 +161,7 @@ function Tinted({
 	const style = useAnimatedStyle(() => ({ opacity: tint.get() }));
 	return (
 		<Animated.View className="absolute inset-0" style={style}>
-			<AppText
-				className="text-transparent"
-				style={FIELD_TEXT}
-				variant="compose"
-			>
+			<AppText className="text-clear" style={FIELD_TEXT} variant="compose">
 				{children}
 			</AppText>
 		</Animated.View>

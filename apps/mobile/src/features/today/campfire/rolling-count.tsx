@@ -56,7 +56,7 @@ export function RollingCount({
 		<View>
 			<AppText style={{ lineHeight: LINE }} variant="callout">
 				<AppText
-					className="text-transparent tabular-nums"
+					className="text-clear tabular-nums"
 					variant="callout"
 					weight="bold"
 				>

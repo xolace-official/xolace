@@ -106,7 +106,7 @@ export function WriteOn({
 				accessibilityActions={accessibilityActions}
 				accessibilityLabel={quote}
 				accessible
-				className={written ? "text-foreground" : "text-transparent"}
+				className={written ? "text-foreground" : "text-clear"}
 				numberOfLines={numberOfLines}
 				onAccessibilityAction={onAccessibilityAction}
 				onTextLayout={onLayout}
