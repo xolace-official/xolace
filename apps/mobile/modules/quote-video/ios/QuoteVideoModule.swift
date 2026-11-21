@@ -7,6 +7,8 @@ import UIKit
 struct ExportOptions: Record {
   @Field var videoUri: String = ""
   @Field var overlayUri: String = ""
+  /// The loop's ambient sound (AAC). Optional: older JS never sends it, and the video is silent.
+  @Field var audioUri: String? = nil
   /// "story" (720 × 1280) or "square" (720 × 720).
   @Field var size: String = "story"
   /// Where the crop sits vertically, 0 top … 1 bottom (Hearth is framed from the bottom).
@@ -20,11 +22,15 @@ final class QuoteVideoException: GenericException<String> {
 
 /// The Quotes share card as a real video: the loop with the words on it, made on the phone.
 /// AVFoundation only: the video track of one loop, cropped to the format, with the overlay PNG
-/// composited on top by Core Image, exported as H.264 mp4 into the caches directory.
+/// composited on top by Core Image, and the loop's ambient sound when JS passes one (the loop's
+/// mp4 is silent), exported as H.264/AAC mp4 into the caches directory.
 public class QuoteVideoModule: Module {
   private static let width: CGFloat = 720
   private static let storyHeight: CGFloat = 1280
   private static let fps: Int32 = 30
+  /// Short ramps so the sound doesn't click in or stop dead where the loop ends.
+  private static let fadeIn = CMTime(value: 1, timescale: 4)
+  private static let fadeOut = CMTime(value: 1, timescale: 1)
 
   public func definition() -> ModuleDefinition {
     Name("QuoteVideo")
@@ -58,6 +64,37 @@ public class QuoteVideoModule: Module {
     NSError(domain: "QuoteVideo", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
   }
 
+  /// Lays the ambient sound under the video, repeated or trimmed to `duration`, with a fade in
+  /// and out. Best effort: a sound that won't load leaves the video silent rather than failing it.
+  private static func addSound(_ uri: String?, to composition: AVMutableComposition, duration: CMTime) async -> AVAudioMix? {
+    guard let uri, let url = fileURL(uri), FileManager.default.fileExists(atPath: url.path) else { return nil }
+    let asset = AVURLAsset(url: url)
+    guard let source = try? await asset.loadTracks(withMediaType: .audio).first,
+          let length = try? await asset.load(.duration), length > .zero,
+          let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else {
+      return nil
+    }
+    var at = CMTime.zero
+    while at < duration {
+      let piece = CMTimeMinimum(length, duration - at)
+      do {
+        try track.insertTimeRange(CMTimeRange(start: .zero, duration: piece), of: source, at: at)
+      } catch {
+        composition.removeTrack(track)
+        return nil
+      }
+      at = at + piece
+    }
+    let params = AVMutableAudioMixInputParameters(track: track)
+    let rampIn = CMTimeMinimum(fadeIn, duration)
+    let rampOut = CMTimeMinimum(fadeOut, duration - rampIn)
+    params.setVolumeRamp(fromStartVolume: 0, toEndVolume: 1, timeRange: CMTimeRange(start: .zero, duration: rampIn))
+    params.setVolumeRamp(fromStartVolume: 1, toEndVolume: 0, timeRange: CMTimeRange(start: duration - rampOut, duration: rampOut))
+    let mix = AVMutableAudioMix()
+    mix.inputParameters = [params]
+    return mix
+  }
+
   private static func export(_ options: ExportOptions, done: @escaping (Result<[String: Any], Error>) -> Void) {
     let started = CFAbsoluteTimeGetCurrent()
     guard let videoURL = fileURL(options.videoUri), FileManager.default.fileExists(atPath: videoURL.path) else {
@@ -85,6 +122,7 @@ public class QuoteVideoModule: Module {
           }
           let range = CMTimeRange(start: .zero, duration: duration)
           try track.insertTimeRange(range, of: source, at: .zero)
+          let audioMix = await addSound(options.audioUri, to: composition, duration: duration)
 
           // Cover the render size: scale the frame to fill, centre it horizontally and place it
           // vertically by focusY (Core Image is y-up, so the bottom is y 0), then lay the overlay
@@ -122,12 +160,13 @@ public class QuoteVideoModule: Module {
           session.outputFileType = .mp4
           session.shouldOptimizeForNetworkUse = true
           session.videoComposition = video
+          session.audioMix = audioMix
           session.exportAsynchronously {
             switch session.status {
             case .completed:
               let bytes = (try? FileManager.default.attributesOfItem(atPath: out.path)[.size] as? NSNumber)?.intValue ?? 0
               let ms = Int((CFAbsoluteTimeGetCurrent() - started) * 1000)
-              done(.success(["uri": out.absoluteString, "ms": ms, "bytes": bytes]))
+              done(.success(["uri": out.absoluteString, "ms": ms, "bytes": bytes, "hasAudio": audioMix != nil]))
             default:
               done(.failure(fail(session.error?.localizedDescription ?? "The video couldn't be made.")))
             }

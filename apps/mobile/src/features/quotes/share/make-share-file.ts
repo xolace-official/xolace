@@ -11,7 +11,7 @@ import { exportQuoteVideo } from "@/modules/quote-video";
 import { QUOTE_COPY } from "../copy";
 import type { ShareFmt } from "../motion/quote-ui";
 import type { QuoteBackground } from "../quotes-model";
-import { loopFileName, type ShareKind } from "./share-kind";
+import { ambientFileName, loopFileName, type ShareKind } from "./share-kind";
 
 /** The image is 1080 wide; the video's overlay matches the loop's 720. */
 const IMAGE_W = 1080;
@@ -48,10 +48,10 @@ const capture = async (
 const LOOPS = "quote-loops";
 const pending = new Map<string, Promise<string>>();
 
-async function downloadLoop(key: string, url: string): Promise<string> {
+async function download(url: string, name: string): Promise<string> {
 	const dir = new Directory(Paths.cache, LOOPS);
 	dir.create({ idempotent: true, intermediates: true });
-	const file = new File(dir, loopFileName(key, url));
+	const file = new File(dir, name);
 	if (file.exists && file.size > 0) {
 		return file.uri;
 	}
@@ -59,40 +59,63 @@ async function downloadLoop(key: string, url: string): Promise<string> {
 	return got.uri;
 }
 
+/** Kept in caches and reused; a download already under way is shared. */
+function cached(url: string, name: string): Promise<string> {
+	const inFlight = pending.get(url);
+	if (inFlight) {
+		return inFlight;
+	}
+	const run = download(url, name).finally(() => pending.delete(url));
+	pending.set(url, run);
+	return run;
+}
+
 /**
- * A local copy of a loop, for the export (AVFoundation reads a file, not the R2 URL). Kept in
- * caches and reused; a download already under way is shared, so warming it when Share opens
- * and tapping Save at once fetch it once.
+ * A local copy of a loop, for the export (AVFoundation reads a file, not the R2 URL). Warming it
+ * when Share opens and tapping Save at once fetch it once.
  */
 export function localLoop(background: QuoteBackground): Promise<string> {
 	const url = background.videoUrl;
 	if (!url) {
 		return Promise.reject(new Error(QUOTE_COPY.errors.loopMissing));
 	}
-	const inFlight = pending.get(url);
-	if (inFlight) {
-		return inFlight;
+	return cached(url, loopFileName(background.key, url)).catch((e: unknown) => {
+		console.error("[quotes] loop download failed", e);
+		throw new Error(QUOTE_COPY.errors.loopMissing, { cause: e });
+	});
+}
+
+/**
+ * A local copy of the loop's ambient sound, when it has one. The loop's mp4 is silent; the
+ * video carries this sound whether or not sound is on in the app. Best effort: if it can't be
+ * fetched, the video is made silent rather than not at all.
+ */
+export async function localAmbient(
+	background: QuoteBackground
+): Promise<string | undefined> {
+	const url = background.audioUrl;
+	if (!url) {
+		return;
 	}
-	const run = downloadLoop(background.key, url)
-		.catch((e: unknown) => {
-			console.error("[quotes] loop download failed", e);
-			throw new Error(QUOTE_COPY.errors.loopMissing, { cause: e });
-		})
-		.finally(() => pending.delete(url));
-	pending.set(url, run);
-	return run;
+	try {
+		return await cached(url, ambientFileName(background.key, url));
+	} catch (e) {
+		console.error("[quotes] ambient download failed", e);
+	}
 }
 
 async function makeVideo(
 	background: QuoteBackground,
 	fmt: ShareFmt
 ): Promise<string> {
-	const [videoUri, overlayUri] = await Promise.all([
+	const [videoUri, audioUri, overlayUri] = await Promise.all([
 		localLoop(background),
+		localAmbient(background),
 		capture(OVERLAY_REF, VIDEO_W, fmt),
 	]);
 	try {
 		const out = await exportQuoteVideo({
+			audioUri,
 			focusY: background.focus?.y,
 			overlayUri,
 			size: fmt,

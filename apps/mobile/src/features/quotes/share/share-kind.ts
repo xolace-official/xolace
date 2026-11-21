@@ -22,14 +22,20 @@ export const canShareVideo = (
 ) => shareKindOf(background, "video", videoAvailable) === "video";
 
 const SAFE = /[^a-z0-9.-]/gi;
-const MP4 = /\.mp4$/i;
+
+function cacheName(key: string, url: string, ext: string): string {
+	const last = url.split("?")[0]?.split("/").pop() || "file";
+	const name = `${key}-${last}`.replace(SAFE, "_");
+	return name.toLowerCase().endsWith(ext) ? name : `${name}${ext}`;
+}
 
 /**
  * A stable cache name for a loop: the background's key and the file's own name, always ending
  * in `.mp4` (storage URLs are bare ids, and AVFoundation won't open a file it can't type).
  */
-export function loopFileName(key: string, url: string): string {
-	const last = url.split("?")[0]?.split("/").pop() || "loop";
-	const name = `${key}-${last}`.replace(SAFE, "_");
-	return MP4.test(name) ? name : `${name}.mp4`;
-}
+export const loopFileName = (key: string, url: string) =>
+	cacheName(key, url, ".mp4");
+
+/** The same for a loop's ambient sound, an AAC `.m4a`. */
+export const ambientFileName = (key: string, url: string) =>
+	cacheName(key, url, ".m4a");
