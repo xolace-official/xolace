@@ -94,7 +94,7 @@ export function InkPhrase({ segs, pair, e, at }: InkProps) {
 			<AppText numberOfLines={QUOTE_LINES} style={QUOTE_TEXT} variant="callout">
 				{segs.map(([s, p], i) => (
 					<AppText
-						className={p === pair ? undefined : "text-transparent"}
+						className={p === pair ? undefined : "text-clear"}
 						key={i}
 						style={QUOTE_TEXT}
 						variant="callout"

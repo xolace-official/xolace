@@ -58,6 +58,10 @@
 	--shadow-sheet: 0 -10px 60px rgb(40 20 90 / 0.3);
 	--shadow-dialog: 0 24px 60px -24px rgb(0 0 0 / 0.45);
 	--color-scrim: rgb(0 0 0 / 0.28);
+	/* Invisible text for layers that only hold space (a TextInput over WarmText,
+	   a sizer under a rolling number). Not `transparent`: Android's Fabric reads
+	   colour 0 as "unset" and draws the theme's default dark text instead. */
+	--color-clear: rgba(255, 255, 255, 0);
 }
 
 @utility rounded-row {
