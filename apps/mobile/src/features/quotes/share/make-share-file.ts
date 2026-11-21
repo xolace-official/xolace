@@ -3,10 +3,9 @@ import {
 	requestPermissionsAsync,
 	saveToLibraryAsync,
 } from "expo-media-library/legacy";
-import * as Sharing from "expo-sharing";
 import { type ComponentRef, createRef } from "react";
-import { PixelRatio, Platform, type View } from "react-native";
-import { captureRef } from "react-native-view-shot";
+import type { View } from "react-native";
+import { capturePng, shareLocalFile } from "@/lib/share-file";
 import { exportQuoteVideo } from "@/modules/quote-video";
 import { QUOTE_COPY } from "../copy";
 import type { ShareFmt } from "../motion/quote-ui";
@@ -24,26 +23,12 @@ export type ShareFile = { uri: string; kind: ShareKind };
 export const CARD_REF = createRef<ComponentRef<typeof View>>();
 export const OVERLAY_REF = createRef<ComponentRef<typeof View>>();
 
-/** view-shot sizes are points on iOS (it multiplies by the screen scale), pixels on Android. */
-const size = (px: number, fmt: ShareFmt) => {
-	const w = Platform.OS === "ios" ? px / PixelRatio.get() : px;
-	return { height: fmt === "story" ? w * STORY : w, width: w };
-};
-
-const capture = async (
-	ref: typeof CARD_REF,
-	px: number,
-	fmt: ShareFmt
-): Promise<string> => {
-	if (!ref.current) {
-		throw new Error(QUOTE_COPY.errors.cardNotReady);
-	}
-	return await captureRef(ref.current, {
-		format: "png",
-		result: "tmpfile",
-		...size(px, fmt),
-	});
-};
+const capture = (ref: typeof CARD_REF, px: number, fmt: ShareFmt) =>
+	capturePng(
+		ref.current,
+		{ height: fmt === "story" ? px * STORY : px, width: px },
+		QUOTE_COPY.errors.cardNotReady
+	);
 
 const LOOPS = "quote-loops";
 const pending = new Map<string, Promise<string>>();
@@ -153,14 +138,9 @@ export async function saveToPhotos(uri: string): Promise<void> {
 	await saveToLibraryAsync(uri);
 }
 
-export async function shareFile(file: ShareFile): Promise<void> {
-	if (!(await Sharing.isAvailableAsync())) {
-		throw new Error(QUOTE_COPY.errors.noShare);
-	}
-	await Sharing.shareAsync(
+export const shareFile = (file: ShareFile): Promise<void> =>
+	shareLocalFile(
 		file.uri,
-		file.kind === "video"
-			? { mimeType: "video/mp4", UTI: "public.mpeg-4" }
-			: { mimeType: "image/png", UTI: "public.png" }
+		file.kind === "video" ? "video" : "image",
+		QUOTE_COPY.errors.noShare
 	);
-}
