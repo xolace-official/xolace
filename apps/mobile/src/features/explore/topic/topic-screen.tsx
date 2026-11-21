@@ -39,6 +39,7 @@ export function TopicScreen() {
 	const { state } = useTopicScreen();
 	const insets = useSafeAreaInsets();
 	const { height } = useWindowDimensions();
+	const [viewport, setViewport] = useState(height);
 	const reduced = useEffectiveReducedMotion();
 	const focused = useIsFocused();
 	const dark = useScheme() === "dark";
@@ -51,6 +52,9 @@ export function TopicScreen() {
 	const [pinned, setPinned] = useState(false);
 	const barBottom = UNDER_BAR ? insets.top + NAV_BAR : 0;
 	const coverHeight = barBottom + TOPIC.coverBelow;
+	// The cover is absolute, so the flow is the spacer, then the sheet: the sheet fills the rest
+	// of the scroll view and no more, so a short topic reaches the bottom edge without scrolling.
+	const sheetMin = viewport - barBottom - PIN_AT;
 
 	const scroll = useAnimatedRef<Animated.ScrollView>();
 	const y = useSharedValue(0);
@@ -94,6 +98,7 @@ export function TopicScreen() {
 			<Animated.ScrollView
 				className="bg-background"
 				contentInsetAdjustmentBehavior="never"
+				onLayout={(e) => setViewport(e.nativeEvent.layout.height)}
 				onScroll={onScroll}
 				ref={scroll}
 				scrollEventThrottle={16}
@@ -127,7 +132,7 @@ export function TopicScreen() {
 								borderTopLeftRadius: TOPIC.sheetR,
 								borderTopRightRadius: TOPIC.sheetR,
 								marginTop: -TOPIC.sheetOverlap,
-								minHeight: height - barBottom + TOPIC.bottom,
+								minHeight: sheetMin,
 								paddingBottom: TOPIC.bottom,
 							}}
 						>
