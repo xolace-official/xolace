@@ -5,9 +5,9 @@ docs site, all on **one Convex backend with Clerk auth**. bun 1.3.14 workspaces
 (isolated linker) + Turborepo + Biome/Ultracite. Many people and agents work here at
 once: stay inside your task, your worktree and your Convex dev deployment.
 
-The mobile app and backend are real (moved in Phase 2). Web, admin, desktop, CLI and
-docs are still placeholders until Phase 4. Plan and decisions:
-`docs/plan/workspace-migration-plan.md`.
+The mobile app, backend and internal admin are real (mobile and backend moved in
+Phase 2). Web, desktop, CLI and docs are still placeholders until Phase 4. Plan and
+decisions: `docs/plan/workspace-migration-plan.md`.
 
 ## Repo map
 
