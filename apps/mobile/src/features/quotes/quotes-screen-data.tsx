@@ -20,6 +20,8 @@ export type QuotesState = {
 	sending: boolean;
 	backgrounds: readonly QuoteBackground[];
 	background: QuoteBackground;
+	/** `background` is the server's answer, not the one remembered on the phone. */
+	backgroundSettled: boolean;
 	lowPower: boolean;
 	active: boolean;
 	soundOn: boolean;

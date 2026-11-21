@@ -106,6 +106,37 @@ export function shownBackground(
 }
 
 /**
+ * The background to draw now, and whether it is `settled`: the server's answer, not a guess. While
+ * the catalogue, the saved choice or (for a saved Plus one) Xolace+ still load, it is the one the
+ * phone `remembered` from the last visit, so coming back never flashes Poster first.
+ */
+export function backgroundToShow(o: {
+	catalogue: readonly CatalogueRow[] | undefined;
+	saved: string | undefined;
+	plus: PlusStatus;
+	remembered: CatalogueRow | null;
+	stills: Readonly<Record<string, number>>;
+}): { background: QuoteBackground; settled: boolean } {
+	if (o.catalogue !== undefined && o.saved !== undefined) {
+		const list = resolveBackgrounds(o.catalogue, o.stills);
+		const found = list.find((b) => b.key === o.saved);
+		if (!found?.plus || o.plus !== "loading") {
+			return {
+				background: shownBackground(o.saved, list, o.plus),
+				settled: true,
+			};
+		}
+	}
+	const guess = o.remembered
+		? resolveBackgrounds([o.remembered], o.stills)
+		: [POSTER];
+	return {
+		background: shownBackground(o.remembered?.key, guess, o.plus),
+		settled: false,
+	};
+}
+
+/**
  * When a freshly mounted background layer has drawn: a gradient or flat still at once, an image
  * once it shows (it loads from disk), a playing loop on its first frame.
  */

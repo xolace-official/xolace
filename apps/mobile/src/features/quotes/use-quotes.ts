@@ -10,19 +10,20 @@ import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useStablePaginatedQuery } from "@/lib/convex/use-stable-query";
 import { useAppStore } from "@/store/store";
+import { useBackgroundMemory } from "./background/background-memory";
 import { useSoundMemory } from "./background/sound-memory";
 import { STILLS } from "./background/stills";
 import { useLoopRest } from "./background/use-loop-rest";
 import { QUOTE_COPY } from "./copy";
 import { useDailyQuoteOffer } from "./offer/use-daily-quote-offer";
 import {
+	backgroundToShow,
 	KEPT_PREFETCH,
 	keptCard,
 	plainQuote,
 	reasonLine,
 	reflectSeed,
 	resolveBackgrounds,
-	shownBackground,
 } from "./quotes-model";
 import type { QuotesScreenValue, ReplyOutcome } from "./quotes-screen-data";
 import { makeStill, saveToPhotos, shareImage } from "./share/make-share-file";
@@ -119,6 +120,7 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	const openPaywall = usePaywall((s) => s.open);
 	const setReplySeed = useAppStore((s) => s.setReplySeed);
 	const soundOn = useSoundMemory((s) => s.soundOn);
+	const remembered = useBackgroundMemory((s) => s.row);
 	const rest = useLoopRest();
 	const [sending, setSending] = useState(false);
 	const tracked = useRef({ gate: false, viewed: false });
@@ -169,7 +171,24 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	}, [today?.sessionLocked, posthog]);
 
 	const backgrounds = resolveBackgrounds(catalogue, STILLS);
-	const background = shownBackground(savedKey, backgrounds, plus);
+	const { background, settled: backgroundSettled } = backgroundToShow({
+		catalogue,
+		plus,
+		remembered,
+		saved: savedKey,
+		stills: STILLS,
+	});
+	const settledRow = backgroundSettled
+		? (catalogue?.find((r) => r.key === background.key) ?? null)
+		: undefined;
+	useEffect(() => {
+		if (
+			settledRow !== undefined &&
+			JSON.stringify(settledRow) !== JSON.stringify(remembered)
+		) {
+			useBackgroundMemory.setState({ row: settledRow });
+		}
+	}, [settledRow, remembered]);
 	let status: QuotesScreenValue["state"]["status"] = "loading";
 	if (raw) {
 		status = "ready";
@@ -180,6 +199,7 @@ export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	const state: QuotesScreenValue["state"] = {
 		active: rest.active,
 		background,
+		backgroundSettled,
 		backgrounds,
 		kept: kept.results.map(keptCard),
 		keptCount: today?.savedCount ?? 0,

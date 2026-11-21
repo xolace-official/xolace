@@ -73,7 +73,11 @@ export function QuotesScreen() {
 			<QuoteMotionContext value={motion}>
 				<View className="flex-1 bg-black">
 					<StatusBar style={b.ink === "dark" ? "dark" : "light"} />
-					<QuoteBackground background={b} play={loop.playing} />
+					<QuoteBackground
+						answered={state.backgroundSettled}
+						background={b}
+						play={loop.playing}
+					/>
 					<GestureDetector gesture={hit}>
 						<View accessible={false} className="absolute inset-0" />
 					</GestureDetector>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { QUOTE_COPY } from "./copy";
 import {
+	backgroundToShow,
 	type CatalogueRow,
 	keptBackground,
 	keptCard,
@@ -149,6 +150,72 @@ describe("shownBackground", () => {
 		expect(shownBackground("gone", list, "plus").key).toBe("poster");
 		expect(shownBackground(undefined, list, "plus").key).toBe("poster");
 		expect(shownBackground("gone", [], "plus")).toBe(POSTER);
+	});
+});
+
+describe("backgroundToShow", () => {
+	const rain = ROWS[5];
+	const dunes = ROWS[3];
+	const show = (o: Partial<Parameters<typeof backgroundToShow>[0]>) =>
+		backgroundToShow({
+			catalogue: ROWS,
+			plus: "plus",
+			remembered: null,
+			saved: "first-light",
+			stills: STILLS,
+			...o,
+		});
+
+	it("shows the saved choice once the catalogue, the choice and Xolace+ are known", () => {
+		expect(show({})).toMatchObject({
+			background: { key: "first-light" },
+			settled: true,
+		});
+		expect(show({ plus: "free", saved: "dunes" })).toMatchObject({
+			background: { key: "poster" },
+			settled: true,
+		});
+	});
+
+	it("shows the one remembered on the phone while the server loads, not Poster", () => {
+		for (const loading of [
+			{ catalogue: undefined },
+			{ saved: undefined },
+			{ catalogue: undefined, saved: undefined },
+		]) {
+			const now = show({ ...loading, remembered: rain });
+			expect(now.settled).toBe(false);
+			expect(now.background).toMatchObject({
+				image: { uri: rain.posterUrl },
+				ink: "light",
+				key: "rain-window",
+				videoUrl: rain.videoUrl,
+			});
+		}
+	});
+
+	it("is Poster, unsettled, with nothing remembered", () => {
+		expect(show({ catalogue: undefined, saved: undefined })).toEqual({
+			background: POSTER,
+			settled: false,
+		});
+	});
+
+	it("waits for Xolace+ before settling on a saved Plus background", () => {
+		expect(
+			show({ plus: "loading", remembered: dunes, saved: "dunes" })
+		).toMatchObject({
+			background: { key: "dunes" },
+			settled: false,
+		});
+		expect(show({ plus: "loading", saved: "first-light" }).settled).toBe(true);
+	});
+
+	it("never shows a remembered Plus background once Xolace+ has lapsed", () => {
+		expect(
+			show({ catalogue: undefined, plus: "free", remembered: dunes }).background
+				.key
+		).toBe("poster");
 	});
 });
 

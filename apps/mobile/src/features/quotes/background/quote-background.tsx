@@ -23,18 +23,30 @@ const REACH = 1.5;
 export function QuoteBackground({
 	background,
 	play,
+	answered,
 }: {
 	background: Background;
 	play: boolean;
+	/** `background` is the server's answer. Until it first is, a change corrects a guess: no reveal. */
+	answered: boolean;
 }) {
 	const m = useQuoteMotion();
 	const { width, height } = useWindowDimensions();
 	const [base, setBase] = useState(background);
 	const [top, setTop] = useState<Background | null>(null);
 	const [settling, setSettling] = useState<false | "drawing" | "frame">(false);
+	const [known, setKnown] = useState(answered);
 	const reveal = useSharedValue(1);
 
-	if (background.key !== base.key && background.key !== top?.key) {
+	if (answered && !known) {
+		setKnown(true);
+	}
+	if (!known && background.key !== base.key) {
+		// The background remembered on the phone was wrong (picked on another phone, Xolace+ lapsed, or
+		// nothing remembered yet). It's a correction, not a pick: swap it in under the arrival's fade
+		// instead of revealing it over the words.
+		setBase(background);
+	} else if (background.key !== base.key && background.key !== top?.key) {
 		if (top) {
 			setBase(top);
 		}
