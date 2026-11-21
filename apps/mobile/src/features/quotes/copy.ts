@@ -14,7 +14,7 @@ export const QUOTE_COPY = {
 			paused ? "Play the background" : "Pause the background",
 		plusSheet: "Keep quotes with Xolace+",
 		plusTile: (name: string) => `${name}, Xolace+`,
-		share: "Share as an image",
+		share: "Share these words",
 		sound: (on: boolean) => (on ? "Turn the sound off" : "Turn the sound on"),
 		star: (saved: boolean, locked: boolean) => {
 			if (saved) {
@@ -46,6 +46,7 @@ export const QUOTE_COPY = {
 		loopMissing: "The loop didn’t download. Try again.",
 		noShare: "Sharing isn’t available here.",
 		reply: "Your reply didn’t send. Try again.",
+		videoFailed: "The video couldn’t be made. Try again, or share the still.",
 	},
 	gate: "Keeping quotes is part of Xolace+. Resonate stays free, and it still shapes tomorrow’s words.",
 	gateBackground:
@@ -60,6 +61,7 @@ export const QUOTE_COPY = {
 	loopNote: "Loops rest in Low Power Mode and with Reduce Motion.",
 	lowPowerNote: "Low Power Mode is on, so loops show their still.",
 	making: "Making…",
+	makingVideo: "Making the video on your phone. It takes a few seconds.",
 	noneKept: "Nothing kept yet. The star keeps today’s words here.",
 	notNow: "Not now",
 	placeholder: "A thought, a feeling, a little of both…",

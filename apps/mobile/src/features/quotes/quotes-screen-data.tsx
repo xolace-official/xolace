@@ -3,6 +3,7 @@ import type { PlusStatus } from "@/features/purchases/plus-status";
 import type { QuoteUi, ShareFmt } from "./motion/quote-ui";
 import type { DailyQuoteSlot, OfferTrigger } from "./offer/daily-quote-offer";
 import type { KeptCard, QuoteBackground, Reason } from "./quotes-model";
+import type { ShareKind } from "./share/share-kind";
 import { useQuotes } from "./use-quotes";
 
 export type QuotesState = {
@@ -44,8 +45,10 @@ export type QuotesActions = {
 	reflect: (reply: string | undefined, flagged: boolean) => void;
 	talk: () => void;
 	keptAt: (index: number) => void;
-	saveImage: (fmt: ShareFmt) => Promise<string | null>;
-	shareImage: (fmt: ShareFmt) => Promise<string | null>;
+	/** Warms what a share will need (a loop's local copy) as the Share sheet opens. */
+	prepareShare: () => void;
+	saveImage: (fmt: ShareFmt, kind?: ShareKind) => Promise<string | null>;
+	shareImage: (fmt: ShareFmt, kind?: ShareKind) => Promise<string | null>;
 	offerShown: (trigger: OfferTrigger) => void;
 	answerOffer: (slot: DailyQuoteSlot | null) => Promise<string | null>;
 };

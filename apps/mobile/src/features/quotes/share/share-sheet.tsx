@@ -15,7 +15,12 @@ import { QuoteSheet } from "../sheets/quote-sheet";
 import { Segments, SheetButton, SheetNote } from "../sheets/sheet-parts";
 import { ShareCard } from "./share-card";
 import { CARD_H, CARD_W } from "./share-fit";
+import type { ShareKind } from "./share-kind";
 
+const KINDS = [
+	{ id: "video", label: QUOTE_COPY.video },
+	{ id: "still", label: QUOTE_COPY.still },
+] as const;
 const FMTS = [
 	{ id: "story", label: QUOTE_COPY.story },
 	{ id: "square", label: QUOTE_COPY.square },
@@ -28,7 +33,13 @@ type Props = {
 	background: QuoteBackground;
 	text: string;
 	fmt: ShareFmt;
+	/** The background is a loop and this build can make a video of it. */
+	canVideo: boolean;
+	kind: ShareKind;
+	/** Loops may move (not in Low Power Mode or with Reduce Motion). */
+	moving: boolean;
 	making: boolean;
+	onKind: (k: ShareKind) => void;
 	onFmt: (f: ShareFmt) => void;
 	onSave: () => void;
 	onShare: () => void;
@@ -37,6 +48,12 @@ type Props = {
 
 export function ShareSheet(p: Props) {
 	const m = useQuoteMotion();
+	const video = p.canVideo && p.kind === "video";
+	const saveLabel = video ? QUOTE_COPY.saveVideo : QUOTE_COPY.saveImage;
+	let note: string = QUOTE_COPY.shareStillNote;
+	if (video) {
+		note = p.making ? QUOTE_COPY.makingVideo : QUOTE_COPY.shareVideoNote;
+	}
 	const h = useSharedValue<number>(CARD_H[p.fmt]);
 	useEffect(() => {
 		h.set(
@@ -77,11 +94,20 @@ export function ShareSheet(p: Props) {
 						background={p.background}
 						fill
 						fmt={p.fmt}
+						playing={video && p.moving}
 						scale={1}
 						text={p.text}
 					/>
 				</Animated.View>
 				<View className="flex-1 gap-2.5">
+					{p.canVideo && (
+						<Segments
+							ink={p.ink}
+							items={KINDS}
+							onChange={p.onKind}
+							value={p.kind}
+						/>
+					)}
 					<Segments
 						column
 						ink={p.ink}
@@ -89,7 +115,7 @@ export function ShareSheet(p: Props) {
 						onChange={p.onFmt}
 						value={p.fmt}
 					/>
-					<SheetNote ink={p.ink}>{QUOTE_COPY.shareStillNote}</SheetNote>
+					<SheetNote ink={p.ink}>{note}</SheetNote>
 				</View>
 			</View>
 			<View className="flex-row gap-2.5">
@@ -98,7 +124,7 @@ export function ShareSheet(p: Props) {
 					disabled={p.making}
 					ink={p.ink}
 					kind="ghost"
-					label={p.making ? QUOTE_COPY.making : QUOTE_COPY.saveImage}
+					label={p.making ? QUOTE_COPY.making : saveLabel}
 					onPress={p.onSave}
 				>
 					{p.making && (

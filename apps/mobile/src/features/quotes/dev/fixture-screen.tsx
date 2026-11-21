@@ -13,6 +13,7 @@ const ACTIONS: QuotesActions = {
 	offerShown: ignore,
 	openPlus: ignore,
 	pickBackground: () => Promise.resolve(true),
+	prepareShare: ignore,
 	reflect: ignore,
 	reply: () => Promise.resolve("sent"),
 	retry: ignore,

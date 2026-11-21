@@ -6,6 +6,7 @@ import {
 	playSoftPress,
 	tap,
 } from "@/lib/haptics";
+import { quoteVideoAvailable } from "@/modules/quote-video";
 import { QUOTE_COPY } from "../copy";
 import {
 	type DailyQuoteSlot,
@@ -15,6 +16,7 @@ import {
 import type { KeptCard, QuoteBackground } from "../quotes-model";
 import { tileTap } from "../quotes-model";
 import type { QuotesScreenValue } from "../quotes-screen-data";
+import { shareKindOf } from "../share/share-kind";
 import { isSheetView, type QuoteUiStore } from "./quote-ui";
 
 export type QuoteHandlers = ReturnType<typeof quoteHandlers>;
@@ -118,11 +120,12 @@ function quoteHandlers(
 	};
 
 	const make = async (go: "save" | "share") => {
+		const { fmt, shareKind } = ui();
+		const kind = shareKindOf(now().background, shareKind, quoteVideoAvailable);
 		ui().set({ making: true });
-		const fmt = ui().fmt;
 		const error = await (go === "save"
-			? act().saveImage(fmt)
-			: act().shareImage(fmt));
+			? act().saveImage(fmt, kind)
+			: act().shareImage(fmt, kind));
 		ui().set({ making: false });
 		if (error) {
 			ui().showToast(error);
@@ -130,7 +133,11 @@ function quoteHandlers(
 		}
 		ui().set({ view: "today" });
 		if (go === "save") {
-			ui().showToast(QUOTE_COPY.toasts.savedImage);
+			ui().showToast(
+				kind === "video"
+					? QUOTE_COPY.toasts.savedVideo
+					: QUOTE_COPY.toasts.savedImage
+			);
 			playAffirmativePress();
 			return;
 		}
@@ -189,7 +196,10 @@ function quoteHandlers(
 		send: () => {
 			send().catch(() => ui().showToast(QUOTE_COPY.errors.reply));
 		},
-		share: () => ui().set({ clear: false, view: "share" }),
+		share: () => {
+			ui().set({ clear: false, view: "share" });
+			act().prepareShare();
+		},
 		shareGo: () => {
 			make("share").catch(() => ui().set({ making: false }));
 		},

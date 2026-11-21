@@ -23,6 +23,10 @@ type Props = {
 	scale: number;
 	fmt: ShareFmt;
 	fill?: boolean;
+	/** The video's overlay: no background, just the scrim, the words and the wordmark. */
+	transparent?: boolean;
+	/** The preview of a video plays its loop (the screen's own loop rests while Share is open). */
+	playing?: boolean;
 	ref?: Ref<ComponentRef<typeof View>>;
 };
 
@@ -32,6 +36,8 @@ export function ShareCard({
 	scale: f,
 	fmt,
 	fill,
+	transparent,
+	playing,
 	ref,
 }: Props) {
 	const q = useQuoteInk();
@@ -42,12 +48,18 @@ export function ShareCard({
 	const size = QUOTE.size * fitScale(text, fmt) * f;
 	return (
 		<View
-			className={cn("overflow-hidden bg-black", fill && "absolute inset-0")}
+			className={cn(
+				"overflow-hidden",
+				fill && "absolute inset-0",
+				transparent ? "bg-transparent" : "bg-black"
+			)}
 			collapsable={false}
 			ref={ref}
 			style={fill ? undefined : { height, width }}
 		>
-			<BackgroundLayer background={background} play={false} />
+			{!transparent && (
+				<BackgroundLayer background={background} play={playing === true} />
+			)}
 			{gradient && (
 				<LinearGradient
 					className="absolute inset-0"

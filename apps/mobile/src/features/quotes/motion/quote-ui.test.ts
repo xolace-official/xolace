@@ -6,6 +6,7 @@ import type { QuotesScreenValue } from "../quotes-screen-data";
 import { type QuoteView, useOpenQuoteUi } from "./quote-ui";
 import { useQuoteHandlers } from "./use-quote-handlers";
 
+vi.mock("@/modules/quote-video", () => ({ quoteVideoAvailable: false }));
 vi.mock("react-native-pulsar", () => ({
 	Presets: { System: { selection: () => undefined } },
 }));
