@@ -18,8 +18,9 @@ If any of these files don't exist, **proceed silently**. Don't flag their absenc
 /
 ├── GLOSSARY.md
 ├── docs/adr/
-│   ├── 0001-one-convex-backend-for-all-clients.md
-│   └── 0002-additive-only-contract-changes.md
+│   ├── 0001-notification-log-is-push-compatibility-only.md
+│   ├── 0002-peer-reflection-author-tag.md
+│   └── 0003-mobile-design-system-and-ease-for-loops.md
 ├── apps/
 └── packages/
 ```
