@@ -2,6 +2,7 @@ import { LegendList } from "@legendapp/list/react-native";
 import { Stack } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { StoryCall } from "@/features/lantern/home/story-call";
 import { LS } from "@/features/lantern/lantern-style";
 import { EntryRow } from "@/features/lantern/lists/entry-row";
 import { useList } from "@/features/lantern/lists/list-data";
@@ -45,7 +46,11 @@ export function ListScreen() {
 					)
 				}
 				ListFooterComponent={
-					state.loadingMore ? <ActivityIndicator className="py-6" /> : null
+					state.loadingMore ? (
+						<ActivityIndicator className="py-6" />
+					) : state.storyCall && state.items && state.items.length > 0 ? (
+						<StoryCall onWrite={actions.writeStory} />
+					) : null
 				}
 				onEndReached={state.canLoadMore ? actions.loadMore : undefined}
 				onEndReachedThreshold={LOAD_AHEAD}

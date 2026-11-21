@@ -13,6 +13,7 @@ import {
 import { PhotoCard } from "@/features/lantern/home/photo-card";
 import { ReadingAsCard } from "@/features/lantern/home/reading-as";
 import { Section, SectionTitle } from "@/features/lantern/home/section";
+import { StoryCall } from "@/features/lantern/home/story-call";
 import { subjectsHref } from "@/features/lantern/lantern-links";
 import { continuePct } from "@/features/lantern/lantern-model";
 import { LS } from "@/features/lantern/lantern-style";
@@ -86,6 +87,9 @@ export function HomeScreen() {
 									<LetterStrip />
 								</Section>
 							) : null}
+							<Section enter={enter} order={6}>
+								<StoryCall onWrite={actions.writeStory} />
+							</Section>
 						</>
 					) : null}
 				</View>

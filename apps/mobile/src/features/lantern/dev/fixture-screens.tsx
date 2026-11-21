@@ -26,6 +26,7 @@ const HOME_ACTIONS: Home["actions"] = {
 	answerReadingAs: ignore,
 	flipAudience: ignore,
 	share: ignore,
+	writeStory: ignore,
 };
 
 export function FixtureHome({
@@ -88,22 +89,25 @@ export function FixtureList({
 	items,
 	from,
 	empty = COPY.lists.empty,
+	storyCall = false,
 }: {
 	title: string;
 	items: readonly CardItem[] | undefined;
 	from: ReaderFrom;
 	empty?: string;
+	storyCall?: boolean;
 }) {
 	return (
 		<ListProvider
 			value={{
-				actions: { ...STILL, loadMore: ignore },
+				actions: { ...STILL, loadMore: ignore, writeStory: ignore },
 				state: {
 					canLoadMore: false,
 					empty,
 					from,
 					items,
 					loadingMore: false,
+					storyCall,
 					title,
 				},
 			}}

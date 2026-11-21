@@ -16,6 +16,7 @@ export type Home = {
 	actions: Pick<EntryActions, "share"> & {
 		answerReadingAs: (audiences: readonly string[]) => void;
 		flipAudience: (slug: string) => void;
+		writeStory: () => void;
 	};
 };
 

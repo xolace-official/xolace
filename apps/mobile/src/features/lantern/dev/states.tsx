@@ -76,6 +76,7 @@ export const devStates: readonly DevState[] = [
 			<FixtureList
 				from="kind"
 				items={ofKind("story")}
+				storyCall
 				title={COPY.kinds.story.label}
 			/>
 		),

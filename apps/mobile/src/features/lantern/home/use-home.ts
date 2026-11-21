@@ -10,6 +10,7 @@ import type { Home } from "@/features/lantern/home/home-data";
 import { WELCOME_HREF } from "@/features/lantern/lantern-links";
 import { facetLabel, toggleIn } from "@/features/lantern/lantern-model";
 import { useEntryActions } from "@/features/lantern/use-entry-actions";
+import { useStoryCall } from "@/features/lantern/use-story-call";
 import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
 import { trackLibrary } from "@/lib/library-analytics";
 import { useAppStore } from "@/store/store";
@@ -30,6 +31,7 @@ export function useHome(): Home {
 		}
 	});
 	const { share } = useEntryActions();
+	const writeStory = useStoryCall();
 	const posthog = usePostHog();
 	const arrival = useArrival();
 
@@ -57,6 +59,7 @@ export function useHome(): Home {
 				save(toggleIn(home?.readingAs ?? [], slug));
 			},
 			share,
+			writeStory,
 		},
 		state: { arrival, home, subjects },
 	};
