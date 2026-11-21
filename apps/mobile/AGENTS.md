@@ -286,9 +286,11 @@ older piece.
 
 - **Pieces:** `Card` + `SectionHeader`, `MediaRow` + `Kicker`, `CareRow`, `Avatar`,
   `BackButton`, `GlassGroup`, `DetachedSheet` (its route takes `DETACHED_SHEET`), `RollDigits`,
-  `CountryMenu`, `Flux`, `Aura`. Settings-like pages: `SettingsHeader`, `SectionTitle`,
-  `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`, `OpenRow`, `TileRow`, `SettingsDialog`,
-  `NameDialog`.
+  `CountryMenu`, `Flux`, `Aura`.
+- **Settings kit:** every settings-like page builds from it, never its own rows:
+  `SettingsHeader`, `SectionTitle`, `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`,
+  `OpenRow`, `TileRow`, `SheetButton`, `SettingsDialog`, `NameDialog`. Row measures live in
+  `settings-layout.ts` (`S`, `ROW`); change them there.
 - **The Xolace face** is a kit: `src/components/xolace-face/` (`XolaceFace`, `useFace`, the
   poses). Where it may appear: `docs/plan/xolace-face-placements.md`.
 - **Colours for native views and SVG:** `useTokenColor("danger-ink")`. Native views go in
@@ -302,15 +304,16 @@ older piece.
 - **Toast rule:** `toast()` counts as a backend side effect (`feature-shape.ts`), so in a ported
   folder only `use-*.ts` calls it. `ToastBridge` in `root-provider.tsx` hands it HeroUI's
   manager.
-- **Before first use:** each kit file is a knip `entry` (`knip.jsonc`) and its exports carry
-  `@public`. The first screen that imports a file deletes its line there.
+- **Before first use:** a kit file nothing imports yet is a knip `entry` (`knip.jsonc`) and
+  its exports carry `@public`. The first screen that imports it deletes its line there.
 
 ## Motion and haptics
 
 The redesign's motion lives in `src/design/`: `springs.ts` (the named springs, press and
 breath on Reanimated), `ease.ts` (their react-native-ease twins), `ease-loops.ts`,
 `ease-breath.ts`, `entering.ts` (`riseIn`, `fadeUp`) and `motion.ts` (loop timing for the
-hour). Night timing follows `useSessionMode().isNight`, which is re-read when the app comes to
+hour). Why it is split this way: `docs/adr/0003-mobile-design-system-and-ease-for-loops.md`
+(it covers themes, type and the kit too). Night timing follows `useSessionMode().isNight`, which is re-read when the app comes to
 the foreground, not by the minute like the prototype's clock.
 
 - **Ease for loops only.** An infinite loop goes on Ease (`loopProps`, `loopOrSettle` in
@@ -319,7 +322,7 @@ the foreground, not by the minute like the prototype's clock.
   colour toggles, chips and swaps stay on Reanimated. `fadeUpProps` and `stateTransition` exist only for the prototype pieces
   already on Ease; don't move another state-driven animation over.
 - **`src/design/ease.ts` is the only import of `react-native-ease`**, types included. The
-  legacy feature folders and three listed files predate it (`EASE_LEGACY_FILES` in
+  legacy feature folders and two listed files predate it (`EASE_LEGACY_FILES` in
   `src/features/motion-imports.ts`, which only shrinks); move them over when their screens
   are redone.
 - **Reduced motion:** read `useEffectiveReducedMotion()` and pass it as `reduced`. It puts
