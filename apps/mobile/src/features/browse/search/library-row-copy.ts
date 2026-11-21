@@ -1,8 +1,8 @@
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
-import * as Linking from "expo-linking";
 import type { usePostHog } from "posthog-react-native";
 import { Share } from "react-native";
+import { lanternShareUrl } from "@/lib/lantern-share-links";
 import { trackLibrary } from "@/lib/library-analytics";
 
 type EntryItem = FunctionReturnType<
@@ -28,9 +28,7 @@ export async function shareEntry(
 	entry: Pick<EntryItem, "slug" | "title">,
 	posthog: ReturnType<typeof usePostHog>
 ) {
-	const url = Linking.createURL(`library/${entry.slug}`, {
-		queryParams: { from: "share" },
-	});
+	const url = lanternShareUrl(entry.slug);
 	try {
 		const { action } = await Share.share({
 			message: `I just read “${entry.title}” on Xolace and thought you might like it too. Worth a few minutes:\n${url}`,

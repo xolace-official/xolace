@@ -1,6 +1,6 @@
 /**
  * The paths keep production's "library" names: shipped builds,
- * shares (`xolace://library/<slug>`) and notification payloads open them. The client feature is
+ * older shares (`xolace://library/<slug>`) and notification payloads open them. The client feature is
  * Lantern; the routes and the Convex namespace stay `library`.
  */
 import type { Href } from "expo-router";

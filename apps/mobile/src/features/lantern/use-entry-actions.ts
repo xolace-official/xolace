@@ -1,11 +1,11 @@
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useMutation } from "convex/react";
-import * as Linking from "expo-linking";
 import { usePostHog } from "posthog-react-native";
 import { Share } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { COPY } from "@/features/lantern/copy";
+import { lanternShareUrl } from "@/lib/lantern-share-links";
 import { trackLibrary } from "@/lib/library-analytics";
 
 export type EntryRef = {
@@ -30,9 +30,7 @@ export function useEntryActions(): EntryActions {
 			await record({ entryId: entry._id, saved }).catch(logDropped);
 		},
 		share: async (entry) => {
-			const url = Linking.createURL(`library/${entry.slug}`, {
-				queryParams: { from: "share" },
-			});
+			const url = lanternShareUrl(entry.slug);
 			try {
 				const { action } = await Share.share({
 					message: COPY.shareMessage(entry.title, url),

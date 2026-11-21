@@ -273,6 +273,7 @@ import type * as library_hubs from "../library/hubs.js";
 import type * as library_imageAlts from "../library/imageAlts.js";
 import type * as library_ingest from "../library/ingest.js";
 import type * as library_next from "../library/next.js";
+import type * as library_preview from "../library/preview.js";
 import type * as library_publishGates from "../library/publishGates.js";
 import type * as library_reads from "../library/reads.js";
 import type * as library_search from "../library/search.js";
@@ -647,6 +648,7 @@ declare const fullApi: ApiFromModules<{
   "library/imageAlts": typeof library_imageAlts;
   "library/ingest": typeof library_ingest;
   "library/next": typeof library_next;
+  "library/preview": typeof library_preview;
   "library/publishGates": typeof library_publishGates;
   "library/reads": typeof library_reads;
   "library/search": typeof library_search;

@@ -64,6 +64,9 @@ const getGoogleServicesPath = () => {
 	return "./google-services.json";
 };
 
+// The public site Lantern shares link to (src/features/lantern/lantern-links.ts).
+const SITE_HOSTS = ["www.xolaceinc.com", "xolaceinc.com"];
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
 	...config,
 	android: {
@@ -83,6 +86,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			"android.permission.SYSTEM_ALERT_WINDOW",
 		],
 		googleServicesFile: getGoogleServicesPath(),
+		// Lantern shares (`https://www.xolaceinc.com/lantern/<slug>`) open the
+		// entry. Verified against the site's /.well-known/assetlinks.json.
+		intentFilters: [
+			{
+				action: "VIEW",
+				autoVerify: true,
+				category: ["BROWSABLE", "DEFAULT"],
+				data: SITE_HOSTS.map((host) => ({
+					host,
+					pathPrefix: "/lantern",
+					scheme: "https",
+				})),
+			},
+		],
 		package: getUniqueIdentifier(),
 		predictiveBackGestureEnabled: false,
 	},
@@ -122,6 +139,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 	},
 	icon: "./assets/images/icon.png",
 	ios: {
+		// Universal Links for Lantern shares; the site's
+		// /.well-known/apple-app-site-association names the paths.
+		associatedDomains: SITE_HOSTS.map((host) => `applinks:${host}`),
 		bundleIdentifier: getUniqueIdentifier(),
 		icon: "./assets/xolace-app-v2.icon",
 		infoPlist: {
