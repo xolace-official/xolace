@@ -82,7 +82,7 @@ describe("toExercise", () => {
 		expect(soften.beats[3]).toEqual({
 			intensity: "medium",
 			k: "haptic",
-			s: 6,
+			s: 9,
 			t: "Feel your hand resting there.",
 		});
 	});

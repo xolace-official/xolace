@@ -6,7 +6,10 @@ import { EXERCISES } from "./seed";
 // store builds from before it. Both draw their own "You stayed." close and
 // render every line verbatim, so the copy has to arrive finished.
 
-const MIN_HAND_PULSE_S = 6;
+// Both runners pulse every 2.8 s and skip a pulse with under 1.4 s left, so
+// three pulses need at least 2 × 2.8 + 1.4 = 7 s. The old runner times them
+// with setInterval, which can drift past that edge; 9 s holds three on both.
+const MIN_HAND_PULSE_S = 9;
 const STAYED = /you stayed\.?$/i;
 const STRAIGHT_QUOTE = /['"]/;
 // Copy never promises an outcome or tells someone to relax.
@@ -43,7 +46,7 @@ describe("the exercise seed", () => {
 		}
 	});
 
-	it("gives a hand pulse a line and time for two pulses", () => {
+	it("gives a hand pulse a line and time for three pulses", () => {
 		const pulses = steps.filter((s) => s.type === "haptic");
 		expect(pulses.length).toBeGreaterThan(0);
 		for (const s of pulses) {

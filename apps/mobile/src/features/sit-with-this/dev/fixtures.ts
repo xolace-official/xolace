@@ -210,7 +210,7 @@ export const SOFTEN_TOWARD_IT: CatalogueExercise = {
 		{
 			content: "Feel your hand resting there.",
 			defaultContent: "Feel your hand resting there.",
-			durationSeconds: 6,
+			durationSeconds: 9,
 			hapticIntensity: "medium",
 			order: 4,
 			type: "haptic",
