@@ -92,6 +92,36 @@ const CASES: Case[] = [
 		note: "rupture, unresolved",
 	},
 
+	// --- true: worry or stress that is intense, not just present ---
+	{
+		codes: ["high_stakes_worry"],
+		expected: true,
+		input:
+			"My biopsy results come back tomorrow morning. I can't eat, I can't sleep, my hands won't stop shaking.",
+		note: "high-stakes worry, imminent, intense",
+	},
+	{
+		codes: ["high_stakes_worry"],
+		expected: true,
+		input:
+			"The custody hearing is on Thursday. If it goes wrong I lose my kids. I can't think about anything else.",
+		note: "high-stakes worry, everything riding on it",
+	},
+	{
+		codes: ["intense_stress", "stuck"],
+		expected: true,
+		input:
+			"I've held it together at work for weeks and today I broke down crying in the bathroom. I can't keep doing this.",
+		note: "stress with acute distress, breaking point",
+	},
+	{
+		codes: ["intense_stress", "stuck"],
+		expected: true,
+		input:
+			"Deadlines everywhere, my manager won't let up, I haven't slept properly in days and I snapped at my son. I'm falling apart.",
+		note: "stress with acute distress, falling apart",
+	},
+
 	// --- false: discharged / low stakes / future-anxiety / positive ---
 	{
 		anchor: true,
@@ -114,6 +144,13 @@ const CASES: Case[] = [
 		input:
 			"I'm nervous about my presentation tomorrow but I think I'm prepared.",
 		note: "future-focused anxiety, grounded",
+	},
+	{
+		codes: ["future_worry", "low_intensity"],
+		expected: false,
+		input:
+			"A bit nervous about the doctor's appointment next week, it's probably nothing.",
+		note: "mild health worry, below the line",
 	},
 	{
 		anchor: true,
