@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+	FOLLOW_UP_NO_CODES,
+	FOLLOW_UP_YES_CODES,
+} from "../../lib/followUpCadence";
 import { entryForAi } from "./accumulatedInput";
 import { buildClassifierPrompt } from "./classifier";
 
@@ -42,5 +46,25 @@ describe("classifier — picked feeling words (B10)", () => {
 		expect(user).toContain(
 			"What they wrote:\nwork again, all week\n\nFeeling words they picked: heavy, restless"
 		);
+	});
+});
+
+describe("classifier — follow-up reason codes", () => {
+	const { system } = buildClassifierPrompt("x", "", false, "open_prompt");
+
+	it("offers every code the parser accepts, and asks for both reasons", () => {
+		// Each rubric line carries its code in brackets; no_trigger, the plain
+		// default, has no line of its own and is named in the field's definition.
+		for (const code of [...FOLLOW_UP_YES_CODES, ...FOLLOW_UP_NO_CODES]) {
+			expect(system).toContain(
+				code === "no_trigger" ? '"no_trigger"' : `[${code}]`
+			);
+		}
+		expect(system).toContain('"followUpReasonCode"');
+		expect(system).toContain('"noFollowUpReason"');
+	});
+
+	it("never offers the parser's own fallback", () => {
+		expect(system).not.toContain("unknown");
 	});
 });

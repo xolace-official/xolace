@@ -56,7 +56,9 @@ The JSON must have this exact shape:
   "userLanguageTags": string[],
   "temporalContext": "past_focused" | "present_focused" | "future_focused" | null,
   "requiresFollowUp": boolean,
+  "followUpReasonCode": string,
   "followUpReason": string | null,
+  "noFollowUpReason": string | null,
   "supportNeed": "none" | "light" | "active"
 }
 
@@ -125,20 +127,24 @@ For body areas: Return the areas as tags ("chest", "stomach").
 - Future: "I'm dreading tomorrow", "What if..."
 
 **requiresFollowUp**: Should the system check in on this person within a day or so? This is the EXCEPTION, not the default. Default to false and reserve true for genuinely unresolved, high-stakes moments where the emotion has no natural release.
-true when:
-- Grief, loss, or bereavement content — especially when past-focused
-- Shame or guilt with intensity >= 6
-- Relational rupture (conflict, abandonment, rejection) with no resolution language
-- Identity or self-worth themes with present-focused despair
-- Any input where the person seems stuck and the emotion has no natural release
+true when (code in brackets):
+- [grief] Grief, loss, or bereavement content — especially when past-focused
+- [shame_guilt] Shame or guilt with intensity >= 6
+- [relational_rupture] Relational rupture (conflict, abandonment, rejection) with no resolution language
+- [identity_despair] Identity or self-worth themes with present-focused despair
+- [stuck] Any input where the person seems stuck and the emotion has no natural release
 false when:
-- The person seems to have discharged the emotion (vent complete)
-- Low intensity (<= 4) regardless of theme
-- Future-focused anxiety (worry about what hasn't happened yet — they need grounding, not follow-up)
-- Positive check-ins
-- General stress without acute personal distress
+- [discharged] The person seems to have discharged the emotion (vent complete)
+- [low_intensity] Low intensity (<= 4) regardless of theme
+- [future_worry] Future-focused anxiety (worry about what hasn't happened yet — they need grounding, not follow-up)
+- [positive] Positive check-ins
+- [general_stress] General stress without acute personal distress
+
+**followUpReasonCode**: The code of the line above that decided requiresFollowUp: a "true when" code when it is true, a "false when" code when it is false. If several lines fit, give the one that weighed most. When it is false and no "false when" line fits (simply none of the "true when" lines applies), use "no_trigger". Internal only — never shown to the user.
 
 **followUpReason**: One short sentence explaining why requiresFollowUp is true. null when requiresFollowUp is false. Internal only — never shown to the user.
+
+**noFollowUpReason**: One short sentence explaining why requiresFollowUp is false. null when requiresFollowUp is true. Internal only — never shown to the user.
 
 **supportNeed**: Does this person's emotional content suggest they'd benefit from a small follow-up action (a track, an exercise, a peer listener) beyond the mirror they're about to get? Graded, not binary.
 - "none": the moment is discharged, low-stakes, or positive. Most sessions. Also use "none" for any crisis or high-risk content — that is handled by safety response, never by a support suggestion, regardless of how you'd otherwise grade it.

@@ -1,6 +1,10 @@
 import { v } from "convex/values";
 import { dailyQuoteSettingValidator } from "../dailyQuotes/validators";
 import { outreachChannelValidator } from "../outreach/validators";
+import {
+	FOLLOW_UP_DECISION_SOURCES,
+	FOLLOW_UP_REASON_CODES,
+} from "./followUpCadence";
 import { ERROR_CODES } from "./shared";
 import { DOMAINS } from "./understandingVocab";
 import {
@@ -135,6 +139,17 @@ export const supportNeedValidator = v.union(
 	v.literal("none"),
 	v.literal("light"),
 	v.literal("active")
+);
+
+// Which rubric line the classifier applied to requiresFollowUp (internal,
+// never shown). lib/followUpCadence.ts has the codes and what each means.
+export const followUpReasonCodeValidator = v.union(
+	...FOLLOW_UP_REASON_CODES.map((c) => v.literal(c))
+);
+
+// What decided a session's follow-up at close (internal, never shown).
+export const followUpDecisionSourceValidator = v.union(
+	...FOLLOW_UP_DECISION_SOURCES.map((s) => v.literal(s))
 );
 
 export const triggerTypeValidator = v.union(

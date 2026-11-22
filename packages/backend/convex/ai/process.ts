@@ -403,8 +403,16 @@ export const generateMirror = internalAction({
 				...(context.semanticProfileVersion === null
 					? {}
 					: { profileVersion: context.semanticProfileVersion }),
+				// The classifier's own follow-up read, kept whatever it decided so a
+				// missed follow-up can be traced (escalation joins the session flag,
+				// not this one).
+				aiRequiresFollowUp: classification.requiresFollowUp,
+				followUpReasonCode: classification.followUpReasonCode ?? "unknown",
 				...(classification.followUpReason
 					? { followUpReason: classification.followUpReason }
+					: {}),
+				...(classification.noFollowUpReason
+					? { noFollowUpReason: classification.noFollowUpReason }
 					: {}),
 				supportNeed: resolveSupportNeed(
 					classification.supportNeed,

@@ -457,8 +457,20 @@ export const handleClarification = internalAction({
 								? {}
 								: { episodicTopScore: episodic.topScore }),
 						}),
-				...(reclassified?.followUpReason
-					? { followUpReason: reclassified.followUpReason }
+				// Only a turn that re-classified moves the follow-up read, and only
+				// up (refinedFollowUpRead): it stays on the same side as the
+				// session flag, which deliverMirror above also only raises.
+				...(reclassified
+					? {
+							aiRequiresFollowUp: reclassified.requiresFollowUp,
+							followUpReasonCode: reclassified.followUpReasonCode ?? "unknown",
+							...(reclassified.followUpReason
+								? { followUpReason: reclassified.followUpReason }
+								: {}),
+							...(reclassified.noFollowUpReason
+								? { noFollowUpReason: reclassified.noFollowUpReason }
+								: {}),
+						}
 					: {}),
 				// Refreshed only when this turn actually reclassified — zero-added-
 				// text turns reuse the existing classification (§4 above) and must

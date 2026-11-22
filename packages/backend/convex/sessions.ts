@@ -15,7 +15,9 @@ import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { deriveClaimStrength } from "./lib/claimStrength";
 import {
 	abandonRequiresFollowUp,
+	classifierFlaggedFollowUp,
 	computeRequiresFollowUp,
+	followUpDecisionSource,
 } from "./lib/followUpCadence";
 import { hasPremium } from "./lib/premium";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
@@ -96,14 +98,33 @@ const sessionDocValidator = v.object({
  * - completion paths use `computeRequiresFollowUp` (folds in gave_up);
  * - the abandon path gates strictly on `escalationTriggered` (escalation-then-
  *   abandon is the highest-value check-in; a plain abandon never starts one).
+ *
+ * Also records what decided it (`followUpDecidedBy`), so a missed follow-up
+ * can be traced to the classifier or to this gate. Internal, never shown.
  */
 async function finalizeFollowUp(
 	ctx: MutationCtx,
 	session: Doc<"sessions">,
 	requiresFollowUp: boolean
 ): Promise<void> {
-	if (session.requiresFollowUp !== requiresFollowUp) {
-		await ctx.db.patch("sessions", session._id, { requiresFollowUp });
+	const metadata = await ctx.db
+		.query("emotional_metadata")
+		.withIndex("by_session", (q) => q.eq("sessionId", session._id))
+		.unique();
+	const followUpDecidedBy = followUpDecisionSource({
+		classifierFlagged: classifierFlaggedFollowUp(metadata),
+		confirmationState: session.confirmationState,
+		escalationTriggered: session.escalationTriggered,
+		requiresFollowUp,
+	});
+	if (
+		session.requiresFollowUp !== requiresFollowUp ||
+		session.followUpDecidedBy !== followUpDecidedBy
+	) {
+		await ctx.db.patch("sessions", session._id, {
+			followUpDecidedBy,
+			requiresFollowUp,
+		});
 	}
 	// One-active-per-profile + idempotency are enforced in followUps; here we
 	// only guard against the obvious double-start on the same session. A

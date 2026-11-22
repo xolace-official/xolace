@@ -426,6 +426,8 @@ export const createAndStart = internalMutation({
 
 		await ctx.db.patch("sessions", args.sessionId, {
 			followUpWorkflowId: workflowId,
+			// The close recorded "none"; compounding is what started this one.
+			...(compoundingOnly ? { followUpDecidedBy: "compounding" as const } : {}),
 		});
 		return null;
 	},
