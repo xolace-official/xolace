@@ -296,6 +296,7 @@ const unseen = (a: AchievementView, n: number) => ({
 	achievementId: a.achievementId,
 	art: NO_ART,
 	copy: a.copy,
+	earnedAt: on(11, 9),
 	id: `fixture_${n}` as Id<"user_achievements">,
 	sparks: a.sparks,
 	title: a.title,

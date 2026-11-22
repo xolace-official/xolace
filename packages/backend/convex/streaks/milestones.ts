@@ -1,3 +1,4 @@
+import { type Infer, v } from "convex/values";
 import {
 	isStreakMilestone,
 	STREAK_MILESTONE_EVERY,
@@ -22,3 +23,21 @@ export function streakMilestoneCopy(streak: number): string {
 	}
 	return `${streak} days. Still here.`;
 }
+
+/**
+ * What a streak milestone's badge row remembers of the day it was reached
+ * (B14), so the arrival can say it truthfully however late it plays:
+ * - `added`: what the day put in hand. A milestone adds a saver (SAVER_CAP);
+ *   seven qualifying days in a row add a freeze (FREEZE_CAP). A saver is
+ *   named first when both landed; "nothing" when both were at their cap.
+ * - `dayKey`: the person's local day it was reached ("YYYY-MM-DD").
+ * - `week`: the seven local days ending on `dayKey`, oldest first; true for a
+ *   day showed up, false for one a freeze or a revive kept.
+ */
+export const milestoneDetailValidator = v.object({
+	added: v.union(v.literal("saver"), v.literal("freeze"), v.literal("nothing")),
+	dayKey: v.string(),
+	week: v.array(v.boolean()),
+});
+
+export type MilestoneDetail = Infer<typeof milestoneDetailValidator>;

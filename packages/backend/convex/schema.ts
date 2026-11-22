@@ -72,6 +72,7 @@ import {
 	revokedReasonValidator,
 	suppressedReasonValidator,
 } from "./outreach/validators";
+import { milestoneDetailValidator } from "./streaks/milestones";
 
 // =============================================================
 // XOLACE BETA
@@ -3520,6 +3521,9 @@ export default defineSchema({
 		achievementId: v.string(),
 		earnedAt: v.number(),
 		emotionalProfileId: v.id("emotional_profiles"),
+		// A streak milestone's rung only: what that day added and its week
+		// (B14, achievements/milestoneDetail.ts). Rows from before B14 have none.
+		milestone: v.optional(milestoneDetailValidator),
 		// When the user pinned it to their profile row (#699); unset when not pinned.
 		// Set only through convex/achievements/pins.ts.
 		pinnedAt: v.optional(v.number()),
