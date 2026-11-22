@@ -69,6 +69,28 @@ export function tidyPhrase(phrase: string): string {
 	return typeset(phrase.replace(LOWER_I, "$1I"));
 }
 
+const APOSTROPHES = /['’‘`]/g;
+const NOT_A_WORD = /[^\p{L}\p{N}]+/gu;
+
+/** Lowercase words only: apostrophes dropped, other punctuation a space. */
+function bareWords(text: string): string {
+	return text
+		.toLowerCase()
+		.replace(APOSTROPHES, "")
+		.replace(NOT_A_WORD, " ")
+		.trim();
+}
+
+/**
+ * Whether the person wrote or said this phrase themselves, word for word in
+ * order, allowing for case and punctuation. A phrase only the mirror used, or
+ * one stitched from words they said apart, is not theirs to be quoted as.
+ */
+export function saidByUser(phrase: string, userText: string): boolean {
+	const said = bareWords(phrase);
+	return said !== "" && ` ${bareWords(userText)} `.includes(` ${said} `);
+}
+
 /**
  * The slots an exercise's steps ask for, once each. A fallback mirror says
  * nothing about the session, so it leaves mirror_line to the seed's default.

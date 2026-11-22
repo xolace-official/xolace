@@ -415,6 +415,7 @@ export const generateMirror = internalAction({
 						sessionId: args.sessionId,
 						slotKeys,
 						userLanguageTags: classification.userLanguageTags,
+						userText: args.rawText,
 					});
 				}
 			}

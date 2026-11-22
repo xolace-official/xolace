@@ -3,6 +3,7 @@ import { PRIMARY_EMOTIONS } from "../lib/understandingVocab";
 import {
 	emotionAdjective,
 	firstSentence,
+	saidByUser,
 	slotKeysToFill,
 	tidyPhrase,
 	typeset,
@@ -85,5 +86,29 @@ describe("slotKeysToFill", () => {
 		expect(slotKeysToFill(steps, { fallbackMirror: true })).toEqual([
 			"user_emotion",
 		]);
+	});
+});
+
+describe("saidByUser", () => {
+	const wrote =
+		"Honestly? I’m so TIRED of feeling one step behind, at work and at home.";
+
+	it("finds a phrase they wrote, whatever its case and punctuation", () => {
+		expect(saidByUser("one step behind", wrote)).toBe(true);
+		expect(saidByUser("i'm so tired", wrote)).toBe(true);
+		expect(saidByUser("Im so tired of feeling", wrote)).toBe(true);
+	});
+
+	it("refuses a phrase only the mirror used", () => {
+		const mirror = "It sounds like you’re carrying a lot right now.";
+		expect(saidByUser("carrying a lot", mirror)).toBe(true);
+		expect(saidByUser("carrying a lot", wrote)).toBe(false);
+	});
+
+	it("refuses their words out of order, or cut mid-word", () => {
+		expect(saidByUser("behind one step", wrote)).toBe(false);
+		expect(saidByUser("tired at home", wrote)).toBe(false);
+		expect(saidByUser("ep behind", wrote)).toBe(false);
+		expect(saidByUser("", wrote)).toBe(false);
 	});
 });
