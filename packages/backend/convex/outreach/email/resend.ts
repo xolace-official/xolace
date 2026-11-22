@@ -1,6 +1,6 @@
 import { type EmailId, Resend, type Status } from "@convex-dev/resend";
 import { components, internal } from "../../_generated/api";
-import type { ActionCtx, MutationCtx } from "../../_generated/server";
+import type { MutationCtx } from "../../_generated/server";
 import { emailTestMode } from "./config";
 
 /**
@@ -33,9 +33,12 @@ export function resendClient(): Resend {
 	});
 }
 
-/** Hand an email to the component; its id there, for webhook events (#916). */
+/**
+ * Hand an email to the component; its id there, for webhook events (#916).
+ * Only through `handover:handOver`, which stores the id in the same commit.
+ */
 export async function queueEmail(
-	ctx: ActionCtx,
+	ctx: MutationCtx,
 	email: OutgoingEmail
 ): Promise<string> {
 	return await resendClient().sendEmail(ctx, email);

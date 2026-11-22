@@ -610,6 +610,81 @@ describe("an email still queued in Resend (#917)", () => {
 		}
 	);
 
+	/**
+	 * A second email delivery for the welcome's outreach, claimed and
+	 * mid-send: what the adapter holds between the Clerk lookup and settling.
+	 */
+	const sendingDelivery = (
+		user: SeededUser,
+		outreachId: Doc<"outreach">["_id"]
+	) =>
+		user.root.run((ctx) =>
+			ctx.db.insert("outreach_deliveries", {
+				attempts: 1,
+				channel: "email",
+				createdAt: Date.now(),
+				isFallback: false,
+				outreachId,
+				status: "sending",
+			})
+		);
+
+	const handOver = (
+		user: SeededUser,
+		deliveryId: Doc<"outreach_deliveries">["_id"]
+	) =>
+		user.root.mutation(internal.outreach.email.handover.handOver, {
+			deliveryId,
+			email: {
+				from: "Xolace <hello@notifications.xolaceinc.com>",
+				html: "<p>Welcome</p>",
+				replyTo: [],
+				subject: "Welcome to Xolace",
+				text: "Welcome",
+				to: ADDRESS,
+			},
+		});
+
+	it("finds a handover the moment it commits, before the send is settled, and cancels it", async () => {
+		const { user } = await welcomeWaiting();
+		const outreachId = (await emailDelivery(user))?.outreachId;
+		if (!outreachId) {
+			throw new Error("no welcome outreach");
+		}
+		const deliveryId = await sendingDelivery(user, outreachId);
+
+		const emailId = await handOver(user, deliveryId);
+		// Stored by the handover itself: erasure needs nothing from settling.
+		expect(
+			await user.root.run((ctx) =>
+				ctx.db.get("outreach_deliveries", deliveryId)
+			)
+		).toMatchObject({ providerMessageId: emailId, status: "sending" });
+
+		await purge(user);
+		await user.root.finishAllScheduledFunctions(vi.runAllTimers);
+
+		const status = await user.root.query(components.resend.lib.getStatus, {
+			emailId: emailId as EmailId,
+		});
+		expect(status).toMatchObject({ status: "cancelled" });
+		expect(resendCalls).toEqual([]);
+	});
+
+	it("queues nothing for a delivery erasure already drained", async () => {
+		const { user } = await welcomeWaiting();
+		const outreachId = (await emailDelivery(user))?.outreachId;
+		if (!outreachId) {
+			throw new Error("no welcome outreach");
+		}
+		const deliveryId = await sendingDelivery(user, outreachId);
+		await user.root.run((ctx) =>
+			ctx.db.delete("outreach_deliveries", deliveryId)
+		);
+
+		expect(await handOver(user, deliveryId)).toBeNull();
+	});
+
 	it("cancels one handed over after account deletion drained its delivery mid-send", async () => {
 		const user = await emailOn();
 		let drained = false;

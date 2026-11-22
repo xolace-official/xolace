@@ -295,6 +295,7 @@ import type * as outreach_email_adapter from "../outreach/email/adapter.js";
 import type * as outreach_email_appLinks from "../outreach/email/appLinks.js";
 import type * as outreach_email_config from "../outreach/email/config.js";
 import type * as outreach_email_events from "../outreach/email/events.js";
+import type * as outreach_email_handover from "../outreach/email/handover.js";
 import type * as outreach_email_render from "../outreach/email/render.js";
 import type * as outreach_email_resend from "../outreach/email/resend.js";
 import type * as outreach_email_retention from "../outreach/email/retention.js";
@@ -683,6 +684,7 @@ declare const fullApi: ApiFromModules<{
   "outreach/email/appLinks": typeof outreach_email_appLinks;
   "outreach/email/config": typeof outreach_email_config;
   "outreach/email/events": typeof outreach_email_events;
+  "outreach/email/handover": typeof outreach_email_handover;
   "outreach/email/render": typeof outreach_email_render;
   "outreach/email/resend": typeof outreach_email_resend;
   "outreach/email/retention": typeof outreach_email_retention;

@@ -12,13 +12,14 @@ import {
 	emailTestMode,
 	TEST_MODE_RECIPIENT,
 } from "./config";
-import { cancelQueuedEmail, queueEmail } from "./resend";
+import { cancelQueuedEmail } from "./resend";
 
 /**
  * Email, the outreach layer's third channel (#914). No address is ever
  * stored on a Xolace record (ADR 0004): `prepare` decides the template and
  * whose address, and `send` asks Clerk for it, checks the staging allowlist,
- * renders, and hands the email to the Resend component keyed by the delivery.
+ * renders, and hands the email to the Resend component keyed by the delivery,
+ * storing its id there in the same commit (`handover`).
  *
  * Failures: no Clerk user or no verified address → `unreachable`; Clerk's
  * 429s, 5xx and network errors, or a failed handover → `retry`; an address
@@ -91,8 +92,10 @@ function clerkError(status: number | undefined): ChannelError {
 
 export const emailAdapter: Omit<ActionAdapter<EmailSend>, "pool"> = {
 	/**
-	 * Its delivery was drained (account deletion, a wipe) while it was
-	 * handed over: stop it before the component sends it (#917).
+	 * Its delivery was drained (account deletion, a wipe) after the handover
+	 * committed but before the send was settled. The drain already saw the
+	 * id the handover stored and cancelled it; this is a second, harmless
+	 * try (#917).
 	 */
 	afterLost: async (ctx, receipt) => {
 		if (receipt.providerMessageId) {
@@ -119,16 +122,21 @@ export const emailAdapter: Omit<ActionAdapter<EmailSend>, "pool"> = {
 			internal.outreach.email.render.renderEmail,
 			{ template: prepared.template }
 		);
-		let emailId: string;
+		let emailId: string | null;
 		try {
-			emailId = await queueEmail(ctx, {
-				...emailSender(),
-				html,
-				idempotencyKey: prepared.deliveryId,
-				subject: prepared.subject,
-				text: prepared.text,
-				to: emailTestMode() ? TEST_MODE_RECIPIENT : lookup.address,
-			});
+			emailId = await ctx.runMutation(
+				internal.outreach.email.handover.handOver,
+				{
+					deliveryId: prepared.deliveryId,
+					email: {
+						...emailSender(),
+						html,
+						subject: prepared.subject,
+						text: prepared.text,
+						to: emailTestMode() ? TEST_MODE_RECIPIENT : lookup.address,
+					},
+				}
+			);
 		} catch (error) {
 			// Keyed by the delivery, so a retried handover never sends twice.
 			// The name only: the error may carry the email's fields.
@@ -137,6 +145,11 @@ export const emailAdapter: Omit<ActionAdapter<EmailSend>, "pool"> = {
 				error instanceof Error ? error.name : typeof error
 			);
 			throw new ChannelError("retry", { code: "resend_handover" });
+		}
+		if (emailId === null) {
+			// Drained meanwhile (a wipe, account deletion): nothing was queued,
+			// and with no delivery left, nothing records this outcome.
+			throw new ChannelError("permanent", { code: "delivery_gone" });
 		}
 		return { providerMessageId: emailId };
 	},
