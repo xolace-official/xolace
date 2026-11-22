@@ -12,7 +12,7 @@ import {
 	emailTestMode,
 	TEST_MODE_RECIPIENT,
 } from "./config";
-import { queueEmail } from "./resend";
+import { cancelQueuedEmail, queueEmail } from "./resend";
 
 /**
  * Email, the outreach layer's third channel (#914). No address is ever
@@ -90,6 +90,15 @@ function clerkError(status: number | undefined): ChannelError {
 }
 
 export const emailAdapter: Omit<ActionAdapter<EmailSend>, "pool"> = {
+	/**
+	 * Its delivery was drained (account deletion, a wipe) while it was
+	 * handed over: stop it before the component sends it (#917).
+	 */
+	afterLost: async (ctx, receipt) => {
+		if (receipt.providerMessageId) {
+			await cancelQueuedEmail(ctx, receipt.providerMessageId);
+		}
+	},
 	channel: "email",
 	configured: emailConfigured,
 	deliveryMode: "push",

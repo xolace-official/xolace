@@ -1,6 +1,6 @@
-import { Resend } from "@convex-dev/resend";
+import { type EmailId, Resend, type Status } from "@convex-dev/resend";
 import { components, internal } from "../../_generated/api";
-import type { ActionCtx } from "../../_generated/server";
+import type { ActionCtx, MutationCtx } from "../../_generated/server";
 import { emailTestMode } from "./config";
 
 /**
@@ -39,4 +39,24 @@ export async function queueEmail(
 	email: OutgoingEmail
 ): Promise<string> {
 	return await resendClient().sendEmail(ctx, email);
+}
+
+/** The component's states for an email it hasn't sent to Resend yet. */
+const UNSENT: ReadonlySet<Status> = new Set<Status>(["waiting", "queued"]);
+
+/**
+ * Account deletion and a wipe (#917): stop an email the component hasn't
+ * sent yet. One already sent, or already gone, is left alone: its copy ages
+ * out with the daily cleanup.
+ */
+export async function cancelQueuedEmail(
+	ctx: MutationCtx,
+	emailId: string
+): Promise<void> {
+	const client = resendClient();
+	const id = emailId as EmailId;
+	const email = await client.status(ctx, id);
+	if (email && UNSENT.has(email.status)) {
+		await client.cancelEmail(ctx, id);
+	}
 }

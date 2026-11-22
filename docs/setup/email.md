@@ -1,6 +1,6 @@
 # Email setup
 
-How a Convex deployment sends email (#912, #914, #915, #916). Email is the outreach layer's third
+How a Convex deployment sends email (#912, #914, #915, #916, #917). Email is the outreach layer's third
 channel, beside push and Telegram. It goes out through the `@convex-dev/resend`
 component, from `Xolace <hello@mail.xolaceinc.com>`. For now it carries only the
 **welcome**.
@@ -100,6 +100,22 @@ as closed, so an email intent for that person is recorded as suppressed with
 Nothing in the app clears the state yet. If someone fixes their address or asks to be
 emailed again, delete their `email_channel_states` row in the dashboard. Account
 deletion and a data wipe remove it with the rest of the person's outreach.
+
+## Retention and erasure
+
+The component keeps every email it sends (recipient, subject, body) in its own tables
+(#917, ADR 0004). A daily cron, `clean up sent emails`
+(`outreach/email/retention:cleanup`), deletes finished emails (delivered, bounced,
+failed, cancelled) 7 days after they finished, and any other email 28 days after it
+was queued. An address therefore sits in Convex for at most about 8 days. The
+exception: an email counts as finished only once Resend's webhook reports it, so one
+that went out while the webhook was missing or down stays until the 28-day pass. It
+runs daily, not hourly: volume is low, so more runs would only cost function calls.
+
+Account deletion and a data wipe cancel any email the component still holds unsent for
+that person (status `waiting` or `queued`), so Resend is never asked to send it. That
+includes one handed over while deletion was draining its delivery. An email already
+sent is left alone; its copy goes with the daily cleanup.
 
 ## Environment variables
 

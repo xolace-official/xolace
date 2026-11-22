@@ -108,7 +108,9 @@ The backend deploys before app-store review clears, so the *old* app runs agains
   `listChannels` must never return `email` (old app builds don't know it). Resend's
   webhook (`/webhooks/resend`) marks a hard bounce `unreachable` and a spam complaint
   `complained` in `email_channel_states`, and routing then skips email for that
-  person. Runbook: `docs/setup/email.md`.
+  person. The component's own copy of each email goes with a daily cleanup cron
+  (7 days finished, 28 abandoned), and account deletion or a wipe cancels any it
+  still holds unsent. Runbook: `docs/setup/email.md`.
 - Every `users.getOrCreate` sign-up (so every `asNewUser`) schedules the welcome 30
   minutes on. A test that moves the clock past that and counts outreach should call
   `cancelWelcome` (`test/fixtures.helpers.ts`) unless the welcome is what it tests.

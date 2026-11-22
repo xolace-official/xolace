@@ -176,6 +176,15 @@ crons.interval(
 	{}
 );
 
+// The Resend component's copy of each email (#917, ADR 0004): finished ones
+// after 7 days, abandoned ones after 28. Daily, never more often.
+crons.interval(
+	"clean up sent emails",
+	{ hours: 24 },
+	internal.outreach.email.retention.cleanup,
+	{}
+);
+
 // Inbound Telegram updates (#773): rows go 30 days after they arrive; one
 // the pool lost is put back after 5 minutes, and failed if it sticks again.
 crons.interval(
