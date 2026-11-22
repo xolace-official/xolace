@@ -9,7 +9,8 @@
     "dev": "next dev --port 3002",
     "grant-admin": "varlock run -- bun scripts/grant-admin.ts",
     "lint": "biome check .",
-    "start": "next start --port 3002"
+    "start": "next start --port 3002",
+    "test": "vitest run"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.15",
@@ -33,11 +34,15 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@xolace/config": "workspace:*",
+    "happy-dom": "^21.0.4",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
