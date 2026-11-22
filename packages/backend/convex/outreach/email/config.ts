@@ -9,7 +9,7 @@
  */
 
 /** Used when `EMAIL_FROM` is unset. */
-const DEFAULT_FROM = "Xolace <hello@mail.xolaceinc.com>";
+const DEFAULT_FROM = "Xolace <hello@notifications.xolaceinc.com>";
 
 /** Where every test-mode email goes: Resend's own sink, never a person. */
 export const TEST_MODE_RECIPIENT = "delivered@resend.dev";

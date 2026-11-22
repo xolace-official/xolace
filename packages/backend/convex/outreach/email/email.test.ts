@@ -82,7 +82,7 @@ const rateLimiterModules = import.meta.glob(
 const HOUR = 3_600_000;
 const NOW = Date.UTC(2026, 10, 13, 12, 0);
 const ADDRESS = "sam@example.com";
-const FROM = "Xolace <hello@mail.xolaceinc.com>";
+const FROM = "Xolace <hello@notifications.xolaceinc.com>";
 const REPLY_TO = "support@xolaceinc.com";
 
 /** A Clerk user with a verified primary address. */

@@ -2,7 +2,7 @@
 
 How a Convex deployment sends email (#912, #914, #915, #916, #917). Email is the outreach layer's third
 channel, beside push and Telegram. It goes out through the `@convex-dev/resend`
-component, from `Xolace <hello@mail.xolaceinc.com>`. For now it carries only the
+component, from `Xolace <hello@notifications.xolaceinc.com>`. For now it carries only the
 **welcome**.
 
 No email address is stored on a Xolace record. The adapter asks Clerk for the user's
@@ -125,9 +125,9 @@ Set per deployment in the Convex dashboard (staging, prod) or with `bunx convex 
 
 | Name | prod | staging | dev | What |
 |---|---|---|---|---|
-| `RESEND_API_KEY` | yes | yes | optional | A Resend API key with **sending access** to `mail.xolaceinc.com` only. One key per deployment. |
+| `RESEND_API_KEY` | yes | yes | optional | A Resend API key with **sending access** to `notifications.xolaceinc.com` only. One key per deployment. |
 | `RESEND_WEBHOOK_SECRET` | yes | yes | optional | The signing secret (`whsec_…`) of that deployment's Resend webhook. Unset, the webhook route fails every request and no bounce or complaint is recorded. |
-| `EMAIL_FROM` | yes | yes | optional | `Xolace <hello@mail.xolaceinc.com>`. Unset means that same address. |
+| `EMAIL_FROM` | yes | yes | optional | `Xolace <hello@notifications.xolaceinc.com>`. Unset means that same address. |
 | `EMAIL_REPLY_TO` | yes | yes | optional | The monitored support inbox replies go to. Unset means no reply-to. |
 | `EMAIL_TEST_MODE` | `false` | `false` | unset | Anything but `false` (or unset) keeps test mode on. |
 | `EMAIL_ALLOWLIST` | unset | yes | unset | Comma-separated staff addresses, compared case-insensitively. Unset means anyone. |
@@ -138,21 +138,21 @@ Set per deployment in the Convex dashboard (staging, prod) or with `bunx convex 
 ### 1. Resend account
 
 1. Create the Xolace Resend account with a Xolace-owned login.
-2. Add the domain `mail.xolaceinc.com` (**Domains** → **Add domain**). A subdomain keeps
+2. Add the domain `notifications.xolaceinc.com` (**Domains** → **Add domain**). A subdomain keeps
    email reputation apart from `xolaceinc.com`'s own mail.
 3. In the domain's settings, turn **open tracking** and **click tracking** off. Resend
    sets tracking per domain, not per email, so this is what keeps every Xolace email
    untracked. Check it again after any domain change.
 4. Create one API key per deployment (prod, staging), each with **Sending access**
-   limited to `mail.xolaceinc.com`.
+   limited to `notifications.xolaceinc.com`.
 
-### 2. Verify `mail.xolaceinc.com`
+### 2. Verify `notifications.xolaceinc.com`
 
 Add the DNS records Resend shows for the domain at the DNS host for `xolaceinc.com`:
 
 - **SPF**: the `TXT` record and the `MX` record on Resend's `send` subdomain.
-- **DKIM**: the `TXT` record at `resend._domainkey.mail.xolaceinc.com`.
-- **DMARC**: a `TXT` record at `_dmarc.mail.xolaceinc.com`, starting with
+- **DKIM**: the `TXT` record at `resend._domainkey.notifications.xolaceinc.com`.
+- **DMARC**: a `TXT` record at `_dmarc.notifications.xolaceinc.com`, starting with
   `v=DMARC1; p=none; rua=mailto:<a monitored inbox>`. Once a few weeks of reports
   look clean, move to `p=quarantine`.
 
@@ -166,7 +166,7 @@ senders.
 
 1. In the Apple Developer account: **Certificates, Identifiers & Profiles** →
    **Services** → **Sign in with Apple for Email Communication** → **Configure**.
-2. Register the domain `mail.xolaceinc.com` and the address `hello@mail.xolaceinc.com`.
+2. Register the domain `notifications.xolaceinc.com` and the address `hello@notifications.xolaceinc.com`.
 3. Apple checks SPF for the domain, so step 2 must be done first.
 
 ### 4. The support inbox
@@ -215,7 +215,7 @@ first sign of a deliverability problem.
 ## Try it on your dev deployment
 
 1. Make a free Resend account of your own, or use a Xolace dev key. With a personal
-   account, `mail.xolaceinc.com` isn't verified there, so also set
+   account, `notifications.xolaceinc.com` isn't verified there, so also set
    `EMAIL_FROM` to `Xolace <onboarding@resend.dev>`.
 2. From `packages/backend`:
 
