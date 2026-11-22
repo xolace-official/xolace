@@ -1,6 +1,6 @@
 # Email setup
 
-How a Convex deployment sends email (#912, #914). Email is the outreach layer's third
+How a Convex deployment sends email (#912, #914, #915). Email is the outreach layer's third
 channel, beside push and Telegram. It goes out through the `@convex-dev/resend`
 component, from `Xolace <hello@mail.xolaceinc.com>`. For now it carries only the
 **welcome**.
@@ -32,6 +32,42 @@ On staging, an address that isn't on the allowlist fails the delivery for good
 
 With no `RESEND_API_KEY`, email is `not_configured`: the router never picks it, and a
 welcome is recorded as suppressed with `no_channel`. Nothing else breaks.
+
+## The welcome
+
+Every new user gets one welcome, about 30 minutes after signing up, so it lands after
+onboarding rather than in the middle of it (#915). `users.getOrCreate` schedules
+`outreach/welcome:sendWelcome` only when it creates a user, so signing in again, on
+another device, or after reactivating a deleted account never schedules another.
+Nobody who signed up before the welcome existed gets one.
+
+`sendWelcome` goes through `enqueue`, which decides at send time:
+
+- **Deleted account** within the 30 minutes: nothing is sent; recorded as suppressed,
+  `account_deleted`.
+- **Email switched off** or not configured: recorded as suppressed, `no_channel`. The
+  welcome's dedupe key (`welcome:<profile id>`) is then spent, so **people who sign up
+  while email is off never get a welcome**, even after it's turned on.
+
+The words live in `packages/backend/convex/outreach/email/welcomeCopy.ts`, shared by
+the HTML template (`welcome.tsx`) and the plain-text part. Copy changes go through
+review, and the subject and preview must say nothing about mental health.
+
+### Links in an email
+
+Mail clients don't open the app's `xolace://` scheme, so each link points at the
+deployment's site, `<CONVEX_SITE_URL>/email/open/<target>`, which redirects into the
+app (same mechanism as Telegram's `/telegram/open/`). Each target carries
+`from=email` so the app can count returns from email. The redirect records nothing.
+
+| Target | Opens |
+|---|---|
+| `talk` | `xolace://talk?from=email` |
+| `vent` | `xolace://voice-vent?from=email` |
+| `explore` | `xolace://explore?from=email` |
+| `support` | `xolace://crisis-resources?from=email` |
+
+Any other path is a 404. The footer also links IASP's helpline directory directly.
 
 ## Environment variables
 
@@ -123,17 +159,15 @@ outcomes (queued, sent, failed, suppressed and why), never their address.
 3. Turn email on for your deployment (above), from the dashboard's function runner with
    an admin identity, or by adding an `outreach_channels` row in the dashboard's data
    view: `{ channel: "email", enabled: true, plan: "free", updatedAt: <now> }`.
-4. Enqueue a welcome for your own profile:
+4. Send the welcome for your own profile now, rather than waiting for a sign-up:
 
    ```sh
-   bunx convex run outreach/enqueue:enqueue '{
-     "content": { "title": "Welcome to Xolace", "body": "Welcome to Xolace." },
-     "dedupeKey": "welcome:<your emotional profile id>",
-     "emotionalProfileId": "<your emotional profile id>",
-     "intent": "welcome",
-     "provenance": { "triggerReason": "manual_test" }
-   }'
+   bunx convex run outreach/welcome:sendWelcome \
+     '{ "emotionalProfileId": "<your emotional profile id>" }'
    ```
+
+   It's sent once per profile. If yours already has a welcome, delete that `outreach`
+   row in the dashboard first.
 
 5. In Resend's **Emails** list, the welcome appears addressed to
    `delivered@resend.dev`. In the Convex dashboard, the `outreach` row and its

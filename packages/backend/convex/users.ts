@@ -8,6 +8,7 @@ import { requireAuth } from "./lib/auth";
 import { generateDisplayName } from "./lib/displayName";
 import { rateLimiter } from "./lib/rateLimits";
 import { preferencesDocValidator } from "./lib/validators";
+import { scheduleWelcome } from "./outreach/welcome";
 import schema from "./schema";
 import { streakState } from "./streaks/state";
 
@@ -192,6 +193,8 @@ export const getOrCreate = mutation({
 		await ctx.scheduler.runAfter(0, internal.streamSetup.addToXolaceChannel, {
 			profileId,
 		});
+		// Only here: a returning or reactivated user never gets a second one.
+		await scheduleWelcome(ctx, profileId);
 
 		return userId;
 	},

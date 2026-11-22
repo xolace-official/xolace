@@ -23,7 +23,7 @@ import {
 	EMPTY_CATEGORIES,
 	type ModerationResult,
 } from "../ai/providers/moderation";
-import { seedSession } from "../test/fixtures.helpers";
+import { cancelWelcome, seedSession } from "../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
 import { OUTREACH_EVENT_KEYS } from "./analytics";
@@ -168,6 +168,8 @@ const named = (event: string) =>
 
 async function linkable() {
 	const user = await asNewUser();
+	// These tests move the clock days on; the sign-up's welcome isn't theirs.
+	await cancelWelcome(user.root);
 	backend(user.root);
 	const secret = await configure(user.root);
 	await setTelegram(user, { enabled: true, plan: "free" });

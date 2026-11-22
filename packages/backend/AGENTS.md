@@ -107,6 +107,9 @@ The backend deploys before app-store review clears, so the *old* app runs agains
   ever stored on a Xolace row; the adapter reads it from Clerk at send time (ADR 0004).
   `listChannels` must never return `email` (old app builds don't know it). Runbook:
   `docs/setup/email.md`.
+- Every `users.getOrCreate` sign-up (so every `asNewUser`) schedules the welcome 30
+  minutes on. A test that moves the clock past that and counts outreach should call
+  `cancelWelcome` (`test/fixtures.helpers.ts`) unless the welcome is what it tests.
 - Codegen drift fails CI: commit `convex/_generated` changes with the code.
 - Quote backgrounds (`convex/quoteBackgrounds/`, B18) are a catalogue per deployment:
   until `bun run quote-backgrounds:upload` has run there, `catalogue.list` is empty and

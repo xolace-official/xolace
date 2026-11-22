@@ -1,6 +1,10 @@
 import { httpRouter } from "convex/server";
 import { chatCompletions } from "./ai/talk/chatCompletions";
 import { lanternPreview, PREVIEW_PATH } from "./library/preview";
+import {
+	EMAIL_LINK_PATH_PREFIX,
+	openAppFromEmail,
+} from "./outreach/email/appLinks";
 import { APP_LINK_PATH_PREFIX, openApp } from "./outreach/telegram/appLinks";
 import { TELEGRAM_WEBHOOK_PATH } from "./outreach/telegram/botApi";
 import { telegramWebhook } from "./outreach/telegram/webhook";
@@ -49,6 +53,14 @@ http.route({
 	handler: openApp,
 	method: "GET",
 	pathPrefix: APP_LINK_PATH_PREFIX,
+});
+
+// Links in an email (#915): the same redirect into the app's scheme, which
+// mail clients won't open themselves. Records nothing.
+http.route({
+	handler: openAppFromEmail,
+	method: "GET",
+	pathPrefix: EMAIL_LINK_PATH_PREFIX,
 });
 
 // Lantern share previews for xolaceinc.com/lantern/<slug> (read server-side by

@@ -8,39 +8,86 @@ import {
 	Head,
 	Hr,
 	Html,
+	Link,
 	Preview,
+	Section,
 	Text,
 } from "@react-email/components";
+import {
+	WELCOME_CRISIS,
+	WELCOME_HELPLINES,
+	WELCOME_INTRO,
+	WELCOME_PREVIEW,
+	WELCOME_REPLIES,
+	WELCOME_SETTINGS,
+	WELCOME_SIGN_OFF,
+	WELCOME_START,
+	WELCOME_STARTS,
+	WELCOME_SUBJECT,
+	WELCOME_SUPPORT,
+	type WelcomeLinks,
+} from "./welcomeCopy";
 
 /**
- * The welcome (#914): a placeholder, reviewed like code. The final copy, the
- * deep links and the crisis footer come with the sign-up trigger (#915).
- * Neutral by design: the subject and preview say nothing about mental
- * health, so a glance at an inbox gives nothing away.
+ * The welcome (#915), reviewed like code. Its words live in `welcomeCopy`,
+ * shared with the plain-text part. No images and no tracking: every link
+ * goes through this deployment's redirect into the app, which records
+ * nothing.
  */
-export function WelcomeEmail() {
+export function WelcomeEmail({ links }: { links: WelcomeLinks }) {
 	return (
 		<Html lang="en">
 			<Head />
-			<Preview>Welcome to Xolace</Preview>
+			<Preview>{WELCOME_PREVIEW}</Preview>
 			<Body style={body}>
 				<Container style={container}>
-					<Text style={heading}>Welcome to Xolace</Text>
-					<Text style={paragraph}>
-						Xolace is a quiet place to put down what's on your mind.
-					</Text>
-					<Hr />
+					<Text style={heading}>{WELCOME_SUBJECT}</Text>
+					<Text style={paragraph}>{WELCOME_INTRO}</Text>
+					<Text style={paragraph}>{WELCOME_START}</Text>
+					<Section>
+						{WELCOME_STARTS.map(({ label, target }) => (
+							<Text key={target} style={start}>
+								<Link href={links[target]} style={link}>
+									{label}
+								</Link>
+							</Text>
+						))}
+					</Section>
+					<Text style={paragraph}>{WELCOME_SETTINGS}</Text>
+					<Text style={paragraph}>{WELCOME_SIGN_OFF}</Text>
+					<Hr style={rule} />
 					<Text style={footer}>
-						A person reads replies to this address, though not instantly.
+						{WELCOME_CRISIS}{" "}
+						<Link href={links.helplines} style={footerLink}>
+							{WELCOME_HELPLINES}
+						</Link>
+						{" · "}
+						<Link href={links.support} style={footerLink}>
+							{WELCOME_SUPPORT}
+						</Link>
 					</Text>
+					<Text style={footer}>{WELCOME_REPLIES}</Text>
 				</Container>
 			</Body>
 		</Html>
 	);
 }
 
-const body = { backgroundColor: "#ffffff", fontFamily: "sans-serif" };
+const INK = "#1f1f1f";
+const MUTED = "#6b6b6b";
+const PAPER = "#ffffff";
+const RULE = "#e6e6e6";
+
+const body = {
+	backgroundColor: PAPER,
+	color: INK,
+	fontFamily: "sans-serif",
+};
 const container = { margin: "0 auto", maxWidth: "560px", padding: "24px" };
 const heading = { fontSize: "20px", fontWeight: 600 };
 const paragraph = { fontSize: "16px", lineHeight: "24px" };
-const footer = { color: "#6b6b6b", fontSize: "13px" };
+const start = { fontSize: "16px", lineHeight: "24px", margin: "8px 0" };
+const link = { color: INK, textDecoration: "underline" };
+const rule = { borderColor: RULE, margin: "24px 0" };
+const footer = { color: MUTED, fontSize: "13px", lineHeight: "20px" };
+const footerLink = { color: MUTED, textDecoration: "underline" };

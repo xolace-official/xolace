@@ -23,7 +23,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
-import { seedSession } from "../test/fixtures.helpers";
+import { cancelWelcome, seedSession } from "../test/fixtures.helpers";
 import { asAdmin, asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, noopJob, revenuecatMock } from "../test/mocks.helpers";
 
@@ -282,6 +282,7 @@ describe("welcome", () => {
 	it("goes by email alone, every time, with no push and no log row", async () => {
 		vi.stubEnv("RESEND_API_KEY", "re_test_key");
 		vi.stubEnv("CLERK_SECRET_KEY", "sk_test_key");
+		vi.stubEnv("CONVEX_SITE_URL", "https://happy-otter-123.convex.site");
 		vi.stubGlobal("fetch", async () =>
 			Response.json({
 				email_addresses: [
@@ -295,6 +296,8 @@ describe("welcome", () => {
 			})
 		);
 		const user = await reachable();
+		// Only the welcomes sent below: sign-up's own is `welcome.test.ts`'s.
+		await cancelWelcome(user.root);
 		workpoolTest.register(user.root, "outreachEmail");
 		await asAdmin(9, user.root).mutation(
 			api.admin.outreachChannels.setChannelConfig,

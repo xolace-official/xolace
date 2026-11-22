@@ -14,7 +14,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import rateLimiterSchema from "../../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api, internal } from "../../_generated/api";
 import type { Doc, Id } from "../../_generated/dataModel";
-import { expectCode, seedSession } from "../../test/fixtures.helpers";
+import {
+	cancelWelcome,
+	expectCode,
+	seedSession,
+} from "../../test/fixtures.helpers";
 import {
 	asAdmin,
 	asNewUser,
@@ -111,6 +115,7 @@ beforeEach(() => {
 	vi.stubEnv("EMAIL_FROM", FROM);
 	vi.stubEnv("EMAIL_REPLY_TO", REPLY_TO);
 	vi.stubEnv("EMAIL_TEST_MODE", "false");
+	vi.stubEnv("CONVEX_SITE_URL", "https://happy-otter-123.convex.site");
 	vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
 		const url = String(input);
 		if (!url.startsWith("https://api.clerk.com/")) {
@@ -126,9 +131,14 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-/** A new user, with email switched on by an admin. */
+/**
+ * A new user, with email switched on by an admin. The welcome their sign-up
+ * scheduled is cancelled: these tests send their own (`outreach/welcome.test.ts`
+ * covers the one from sign-up).
+ */
 async function signedUp(): Promise<SeededUser> {
 	const user = await asNewUser();
+	await cancelWelcome(user.root);
 	user.root.registerComponent(
 		"rateLimiter",
 		rateLimiterSchema,
