@@ -9,8 +9,24 @@ import { XolaceMark, XolacerAvatar } from "../parts/xolacer-avatar";
 import type { ChannelRowView, PairRowView } from "./chats-model";
 
 export const ROW =
-	"flex-row items-center gap-3 border-separator border-b bg-background px-1 py-3";
+	"flex-row items-center gap-3 bg-background px-1 pt-3 pb-[13px]";
 const VERIFIED = { android: "verified", ios: "checkmark.seal.fill" } as const;
+/**
+ * Where the name starts: the row's `px-1`, the 48 pt avatar, then `gap-3`. The row's extra
+ * bottom point is the rule's height, so rows keep the height the old full-width border gave them.
+ */
+const RULE_INSET = 4 + 48 + 12;
+
+/** The line under a row, from the name to the row's edge: it stops short of the avatar. */
+function RowRule() {
+	return (
+		<View
+			className="absolute right-0 bottom-0 h-px bg-separator"
+			pointerEvents="none"
+			style={{ left: RULE_INSET }}
+		/>
+	);
+}
 
 export function ChatRowBody({ row }: { row: PairRowView }) {
 	return (
@@ -50,6 +66,7 @@ export function ChatRowBody({ row }: { row: PairRowView }) {
 					<View className="size-2 rounded-full bg-accent" />
 				) : null}
 			</View>
+			<RowRule />
 		</>
 	);
 }
@@ -88,6 +105,7 @@ export function ChannelRow({
 				) : null}
 				{row.unread ? <View className="size-2 rounded-full bg-accent" /> : null}
 			</View>
+			<RowRule />
 		</PressScale>
 	);
 }

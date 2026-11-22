@@ -34,8 +34,11 @@ import { useScrollMoments } from "@/features/lantern/reader/reader-scroll";
 import { READING_MODES } from "@/features/lantern/reader/reading-modes";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
+import { columnPad, useScreen } from "@/lib/wide-layout";
 
 const PILL_GAP = 16;
+/** The page's side padding (`px-6`): on wide screens it grows to hold the text to a reading column. */
+const PAGE_PAD = 24;
 const SHEET_BOTTOM = 96;
 
 export function ReaderScreen({ startAt }: { startAt?: number }) {
@@ -53,6 +56,7 @@ function ReaderView({ startAt }: { startAt?: number }) {
 	const focused = useIsFocused();
 	const reduced = useEffectiveReducedMotion();
 	const page = useTokenColor("background");
+	const padX = columnPad(useScreen(), PAGE_PAD);
 	const f = useFold();
 	const [contentH, setContentH] = useState(1);
 	const [viewH, setViewH] = useState(1);
@@ -127,20 +131,24 @@ function ReaderView({ startAt }: { startAt?: number }) {
 				showsVerticalScrollIndicator={false}
 			>
 				<Animated.View
-					className="justify-end px-6 pb-12"
+					className="justify-end pb-12"
 					pointerEvents="none"
-					style={[{ height: f.coverH - FOLD.sheetOverlap }, styles.largeTitle]}
+					style={[
+						{ height: f.coverH - FOLD.sheetOverlap, paddingHorizontal: padX },
+						styles.largeTitle,
+					]}
 				>
 					{f.ax ? null : title}
 				</Animated.View>
 				<View
-					className="rounded-t-[28px] px-6 pt-6"
+					className="rounded-t-[28px] pt-6"
 					pointerEvents={focused ? "auto" : "none"}
 					style={{
 						backgroundColor: page,
 						borderCurve: "continuous",
 						minHeight: f.screenH,
 						paddingBottom: insets.bottom + dockH + SHEET_BOTTOM,
+						paddingHorizontal: padX,
 					}}
 				>
 					<PageContent

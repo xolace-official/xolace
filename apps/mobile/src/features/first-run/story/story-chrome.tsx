@@ -68,8 +68,8 @@ export function StoryBars({
 			style={[
 				{
 					gap: BARS.gap,
-					left: BARS.side,
-					right: BARS.side,
+					left: BARS.side + stage.inset,
+					right: BARS.side + stage.inset,
 					top: BARS.top + stage.dy,
 				},
 				style,
@@ -130,8 +130,8 @@ export function SeatCall({
 					borderColor: css(EMBER, 0.35),
 					borderRadius: call.h / 2,
 					height: call.h,
-					left: CALL.side,
-					right: CALL.side,
+					left: CALL.side + stage.inset,
+					right: CALL.side + stage.inset,
 					top: call.top + stage.dy,
 				},
 				box,

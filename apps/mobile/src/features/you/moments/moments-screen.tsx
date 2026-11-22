@@ -13,12 +13,15 @@ import type { ListItem } from "@/features/you/moments/moments-model";
 import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
 import { useHeaderOptions } from "@/lib/header-options";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { columnPad, useScreen } from "@/lib/wide-layout";
 
 const L = MOMENTS_COPY.list;
 const CARD_ESTIMATE = 128;
 const LOAD_AHEAD = 0.4;
 const DOOR_CLEAR = 140;
 const END_CLEAR = 40;
+/** The list's side padding (`px-4`); on wide screens it holds the cards to a reading column. */
+const LIST_PAD = 16;
 
 /**
  * Moments (was Timeline): the mirror's line leads each card, grouped by day under a native large
@@ -33,6 +36,7 @@ export function MomentsScreen() {
 	const { screenReaderEnabled } = useAccessibilityInfo();
 	const [arriving, setArriving] = useState(true);
 	const door = state?.windowDays ?? null;
+	const padX = columnPad(useScreen(), LIST_PAD);
 	return (
 		<>
 			<Stack.Screen
@@ -44,9 +48,9 @@ export function MomentsScreen() {
 				}}
 			/>
 			<LegendList
-				contentContainerClassName="px-4"
 				contentContainerStyle={{
 					paddingBottom: door === null ? END_CLEAR : DOOR_CLEAR,
+					paddingHorizontal: padX,
 				}}
 				contentInsetAdjustmentBehavior="automatic"
 				data={state?.items ?? []}

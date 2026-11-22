@@ -13,13 +13,20 @@ import { useMomentScreen } from "@/features/you/moments/moment/moment-data";
 import { TalkThread } from "@/features/you/moments/moment/talk-thread";
 import { playSoftPress, tap } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
+import { columnPad, useScreen } from "@/lib/wide-layout";
 
 const M = MOMENTS_COPY.moment;
 const SHARE = { android: "ios_share", ios: "square.and.arrow.up" } as const;
+/** Side padding of the bars (`px-4`) and the page (`px-5`); on wide screens all three hold to one reading column. */
+const BAR_PAD = 16;
+const PAGE_PAD = 20;
 
 export function MomentScreen() {
 	const { state, actions } = useMomentScreen();
 	const fg = useTokenColor("foreground");
+	const screen = useScreen();
+	const barX = columnPad(screen, BAR_PAD);
+	const pageX = columnPad(screen, PAGE_PAD);
 
 	if (!state) {
 		return (
@@ -41,7 +48,10 @@ export function MomentScreen() {
 	const { moment } = state;
 	return (
 		<View className="flex-1 bg-surface pt-safe-offset-2">
-			<View className="flex-row items-center gap-2.5 px-4">
+			<View
+				className="flex-row items-center gap-2.5"
+				style={{ paddingHorizontal: barX }}
+			>
 				<BackButton />
 				<View className="flex-1">
 					<AppText
@@ -57,7 +67,8 @@ export function MomentScreen() {
 				</View>
 			</View>
 			<ScrollView
-				contentContainerClassName="gap-5.5 px-5 pt-6.5 pb-6"
+				contentContainerClassName="gap-5.5 pt-6.5 pb-6"
+				contentContainerStyle={{ paddingHorizontal: pageX }}
 				showsVerticalScrollIndicator={false}
 			>
 				{moment.said ? (
@@ -85,7 +96,10 @@ export function MomentScreen() {
 					</View>
 				) : null}
 			</ScrollView>
-			<View className="mb-2 flex-row gap-2.5 px-4 pt-2 pb-safe-or-4">
+			<View
+				className="mb-2 flex-row gap-2.5 pt-2 pb-safe-or-4"
+				style={{ paddingHorizontal: barX }}
+			>
 				<PressScale
 					accessibilityRole="button"
 					className="h-13.5 flex-1 items-center justify-center rounded-[27px] bg-foreground"

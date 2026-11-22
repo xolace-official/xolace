@@ -5,6 +5,7 @@ import { useFirstRunContext } from "./first-run-data";
 import { PromiseView } from "./promise/promise-view";
 import { useFirstRunFaces } from "./skia-words";
 import { useStage } from "./stage";
+import { StageFrame } from "./stage-frame";
 import { StoryView } from "./story/story-view";
 
 type Phase = "promise" | "handoff" | "story";
@@ -25,27 +26,29 @@ export function FirstRunScreen() {
 	};
 	return (
 		<View className="flex-1 bg-first-run-ground">
-			{phase === "story" ? null : (
-				<PromiseView
-					day={state.day}
-					faces={faces}
-					gate={gate}
-					onBegin={begin}
-					onSwap={() => setPhase("story")}
-					reduced={state.reduced}
-					scene={state.scene?.promise}
-					stage={stage}
-				/>
-			)}
-			{phase === "promise" ? null : (
-				<StoryView
-					faces={faces}
-					gate={gate}
-					seat={toSeat}
-					stage={stage}
-					statusBar={phase === "story"}
-				/>
-			)}
+			<StageFrame stage={stage}>
+				{phase === "story" ? null : (
+					<PromiseView
+						day={state.day}
+						faces={faces}
+						gate={gate}
+						onBegin={begin}
+						onSwap={() => setPhase("story")}
+						reduced={state.reduced}
+						scene={state.scene?.promise}
+						stage={stage}
+					/>
+				)}
+				{phase === "promise" ? null : (
+					<StoryView
+						faces={faces}
+						gate={gate}
+						seat={toSeat}
+						stage={stage}
+						statusBar={phase === "story"}
+					/>
+				)}
+			</StageFrame>
 		</View>
 	);
 }

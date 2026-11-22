@@ -1,7 +1,9 @@
-import { useWindowDimensions, View } from "react-native";
+import { View } from "react-native";
 import { Bone } from "@/components/shared/skeleton";
 import { EXS, HOME_S } from "@/features/explore/explore-style";
 import { RowsSkeleton } from "@/features/explore/rows/rows-skeleton";
+import { useScreen } from "@/lib/wide-layout";
+import { featuredSize, tileArt } from "./home-sizes";
 
 const SHELF_TILES = 3;
 
@@ -17,11 +19,10 @@ function Shelf({ children }: { children: React.ReactNode }) {
 }
 
 export function FeaturedSkeleton() {
-	const { width } = useWindowDimensions();
-	const F = HOME_S.feat;
+	const { w, h } = featuredSize(useScreen());
 	return (
 		<View style={{ paddingHorizontal: HOME_S.gutter }}>
-			<Bone h={F.h} r={F.r} w={width - HOME_S.gutter * 2} />
+			<Bone h={h} r={HOME_S.feat.r} w={w} />
 		</View>
 	);
 }
@@ -39,11 +40,12 @@ export function HourSkeleton() {
 
 export function TilesSkeleton() {
 	const T = HOME_S.tile;
+	const art = tileArt(useScreen());
 	return (
 		<Shelf>
 			{Array.from({ length: SHELF_TILES }, (_, i) => (
-				<View key={i} style={{ gap: T.gap, width: T.art }}>
-					<Bone h={T.art} r={T.artR} w={T.art} />
+				<View key={i} style={{ gap: T.gap, width: art }}>
+					<Bone h={art} r={T.artR} w={art} />
 					<Bone h={15} r={4} w="80%" />
 					<Bone h={12} r={4} w="50%" />
 				</View>

@@ -23,7 +23,7 @@ export function MoodBelt({
 	eng: SharedValue<PEng>;
 	stage: Stage;
 }) {
-	const cw = cardWidth(stage.W);
+	const cw = cardWidth(stage);
 	const flick = () => Presets.flick();
 	const pan = usePanGesture({
 		minDistance: 0,

@@ -80,4 +80,18 @@ export function nextNow(
 
 export const BOARD = { h: 844, status: 54, w: 390 } as const;
 
-export type Stage = { W: number; H: number; dx: number; dy: number };
+/**
+ * Where the phone-sized board sits. W, H, dx, dy and inset are in board points:
+ * on a tablet the whole first run is drawn on a virtual screen of W x H and
+ * scaled up by `s` to fill the real one. `inset` is how far the board's column
+ * sits in from each side of that screen; full-width controls start there. On a
+ * phone `s` is 1 and `inset` 0, so controls span the screen as they always did.
+ */
+export type Stage = {
+	W: number;
+	H: number;
+	dx: number;
+	dy: number;
+	s: number;
+	inset: number;
+};

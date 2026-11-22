@@ -30,6 +30,7 @@ export function PromiseWords({
 	day: boolean;
 }) {
 	const L = layout(faces);
+	const width = stage.W - 2 * stage.inset;
 	const pick = day ? "day" : "dusk";
 	const ink = PROMISE_COLORS.ink[pick];
 	const gleam = PROMISE_COLORS.gleam[pick];
@@ -41,7 +42,7 @@ export function PromiseWords({
 	const kick = useCanvasKick();
 	const picture = useDerivedValue(() => {
 		const rec = Skia.PictureRecorder();
-		const c = rec.beginRecording(Skia.XYWHRect(0, 0, stage.W, HEIGHT));
+		const c = rec.beginRecording(Skia.XYWHRect(0, 0, width, HEIGHT));
 		seedPicture(c);
 		if (L) {
 			const e = eng.get();
@@ -111,15 +112,16 @@ export function PromiseWords({
 			accessibilityLabel={`${PROMISE.title} ${PROMISE.body}`}
 			accessibilityRole="header"
 			accessible
-			className="absolute left-0"
+			className="absolute"
 			pointerEvents="none"
 			style={{
 				height: HEIGHT,
+				left: stage.inset,
 				top: BLOCK.top + stage.dy - PAD,
-				width: stage.W,
+				width,
 			}}
 		>
-			<Canvas style={{ height: HEIGHT, width: stage.W }}>
+			<Canvas style={{ height: HEIGHT, width }}>
 				<Picture key={kick} picture={picture} />
 			</Canvas>
 		</View>
