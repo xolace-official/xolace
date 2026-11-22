@@ -21,6 +21,24 @@ const MODERATE: ExerciseTitle[] = [
 	"name_the_room",
 ];
 
+const GROUNDING: ExerciseTitle[] = [
+	"reset",
+	"find_your_edges",
+	"slow_it_down",
+	"name_the_room",
+];
+/** One session for each ladder step, the catch-all included. */
+const FEELINGS: Partial<MatchInput>[] = [
+	{ primaryEmotion: "sadness" },
+	{ primaryEmotion: "anxiety" },
+	{ primaryEmotion: "numbness" },
+	{ primaryEmotion: "helplessness" },
+	{ primaryEmotion: "shame" },
+	{ primaryEmotion: "anger" },
+	{ primaryEmotion: "loneliness" },
+	{ primaryEmotion: "joy", userLanguageTags: ["left out"] },
+];
+
 const base: MatchInput = {
 	confirmationState: "confirmed",
 	entryType: "open_prompt",
@@ -176,36 +194,78 @@ describe("matchExercise", () => {
 				)
 			).toEqual(["speak_to_it", "pause_before_acting"]);
 		});
+	});
 
-		it("never reaches a session the safeguard flagged", () => {
-			for (const primaryEmotion of [
-				"anger",
-				"anxiety",
-				"shame",
-				"loneliness",
-			]) {
-				const ranked = matchExercise({ ...base, atRisk: true, primaryEmotion });
-				expect([...ranked].sort()).toEqual([...FIRST_SIX].sort());
+	describe("a flagged session gets only grounding", () => {
+		const signals: [string, Partial<MatchInput>][] = [
+			["the risk flag", { atRisk: isAtRisk({ riskFlag: true }) }],
+			["an escalation", { atRisk: isAtRisk({ escalated: true }) }],
+			[
+				"an elevated level",
+				{ atRisk: isAtRisk({ safeguardLevel: "elevated" }) },
+			],
+			["a crisis level", { atRisk: isAtRisk({ safeguardLevel: "crisis" }) }],
+			["intensity 8", { intensity: 8 }],
+			["intensity 10", { intensity: 10 }],
+		];
+
+		for (const [signal, flag] of signals) {
+			it(`gives ${signal} the four, Three breaths first`, () => {
+				for (const feeling of FEELINGS) {
+					const ranked = matchExercise({ ...base, ...feeling, ...flag });
+					expect(ranked[0], signal).toBe("reset");
+					expect([...ranked].sort(), signal).toEqual([...GROUNDING].sort());
+				}
+			});
+		}
+
+		it("is never empty and never offers the other six, whatever the session", () => {
+			const states: MatchInput["confirmationState"][] = [
+				"confirmed",
+				"refined",
+				"gave_up",
+				"abandoned",
+			];
+			const close = { let_it_land: 0.9, name_the_room: 0.8, speak_to_it: 0.95 };
+			for (const feeling of FEELINGS) {
+				for (const confirmationState of states) {
+					for (const similarity of [undefined, close]) {
+						const ranked = matchExercise(
+							{ ...base, ...feeling, atRisk: true, confirmationState },
+							similarity
+						);
+						expect(ranked.length).toBeGreaterThan(0);
+						expect(ranked.every((t) => GROUNDING.includes(t))).toBe(true);
+					}
+				}
 			}
 		});
 
-		it("never reaches intensity 8 and above", () => {
-			const ranked = matchExercise({
-				...base,
-				intensity: 8,
-				primaryEmotion: "anger",
-			});
-			expect(ranked.some((t) => MODERATE.includes(t))).toBe(false);
-			expect(ranked[0]).toBe("reset");
+		it("orders the rest as the feeling would have", () => {
+			const flagged = (input: Partial<MatchInput>) =>
+				matchExercise({ ...base, ...input, atRisk: true });
+			expect(flagged({ primaryEmotion: "numbness" })).toEqual([
+				"reset",
+				"find_your_edges",
+				"name_the_room",
+				"slow_it_down",
+			]);
+			expect(flagged({ primaryEmotion: "anxiety" })).toEqual([
+				"reset",
+				"slow_it_down",
+				"find_your_edges",
+				"name_the_room",
+			]);
 		});
 
-		it("stays out at risk even when its meaning is closest", () => {
-			const ranked = matchExercise(
-				{ ...base, atRisk: true },
-				{ name_the_room: 0.9, not_only_you: 0.8 }
-			);
-			expect(ranked[0]).toBe("let_it_land");
-			expect(ranked).toHaveLength(FIRST_SIX.length);
+		it("keeps today's matching just below the line", () => {
+			const ranked = matchExercise({
+				...base,
+				intensity: 7,
+				primaryEmotion: "shame",
+			});
+			expect(ranked[0]).toBe("soften_toward_it");
+			expect(ranked).toHaveLength(FIRST_SIX.length + MODERATE.length);
 		});
 	});
 

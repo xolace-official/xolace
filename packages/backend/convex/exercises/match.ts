@@ -8,7 +8,7 @@ export type MatchInput = {
 	userLanguageTags: string[];
 	entryType: string;
 	confirmationState: "confirmed" | "refined" | "gave_up" | "abandoned";
-	/** The safeguard flagged the session (see `isAtRisk`); absent = not flagged. */
+	/** The safeguard's read (see `isAtRisk`); absent = not at risk. */
 	atRisk?: boolean;
 };
 
@@ -25,19 +25,30 @@ export type ExerciseTitle =
 	| "name_the_room";
 
 /**
- * Written for moderate moments, so never offered when the safeguard flagged
- * the session or at intensity 8 and above: those keep the first six.
+ * All a flagged session is ever offered: grounding that asks nothing of the
+ * feeling itself. The owner's call (B16): Three breaths, Find your edges,
+ * Slow it down and Name the room may be given in a crisis.
  */
-const MODERATE_ONLY: ReadonlySet<ExerciseTitle> = new Set([
-	"pause_before_acting",
+const GROUNDING: ReadonlySet<ExerciseTitle> = new Set([
+	"reset",
+	"find_your_edges",
 	"slow_it_down",
-	"not_only_you",
 	"name_the_room",
 ]);
 
 const HIGH_INTENSITY = 8;
 /** Anger at or above this reaches for Pause before you act first. */
 const PAUSE_FIRST_INTENSITY = 6;
+
+/**
+ * A flagged session: the safeguard's read (`isAtRisk`) or intensity 8 and
+ * above. It gets only the grounding exercises.
+ */
+export function isFlagged(
+	input: Pick<MatchInput, "atRisk" | "intensity">
+): boolean {
+	return input.atRisk === true || input.intensity >= HIGH_INTENSITY;
+}
 
 /** The safeguard's read of a session, as stored or as just decided. */
 export function isAtRisk(signal: {
@@ -121,15 +132,18 @@ function hasTag(tags: string[], set: Set<string>): boolean {
 /**
  * Returns ranked exercises (primary + fallbacks). Never returns an empty list.
  * Every step is a rule (ADR 0021); only the catch-all ranks on `similarity`.
+ * A flagged session gets only the grounding four, Three breaths first and the
+ * rest in the order its feeling would have put them.
  */
 export function matchExercise(
 	input: MatchInput,
 	similarity?: ExerciseSimilarity
 ): ExerciseTitle[] {
 	const ranked = rankExercises(input, similarity);
-	return input.atRisk === true || input.intensity >= HIGH_INTENSITY
-		? ranked.filter((t) => !MODERATE_ONLY.has(t))
-		: ranked;
+	if (!isFlagged(input)) {
+		return ranked;
+	}
+	return ["reset", ...ranked.filter((t) => t !== "reset" && GROUNDING.has(t))];
 }
 
 function rankExercises(

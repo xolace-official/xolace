@@ -14,12 +14,14 @@ const STAYED = /you stayed\.?$/i;
 const STRAIGHT_QUOTE = /['"]/;
 // Copy never promises an outcome or tells someone to relax.
 const PROMISES = /\b(relax\w*|relief|reliev\w*|calm\w*)\b/i;
-const MODERATE_ONLY = [
+const NEW_IN_B16 = [
 	"pause_before_acting",
 	"slow_it_down",
 	"not_only_you",
 	"name_the_room",
 ];
+// All a flagged session may be offered (GROUNDING in exercises/match.ts).
+const GROUNDING = ["reset", "find_your_edges", "slow_it_down", "name_the_room"];
 
 type Step = Doc<"exercises">["steps"][number] & { exercise: string };
 
@@ -85,11 +87,12 @@ describe("the exercise seed", () => {
 		}
 	});
 
-	it("seeds the four for moderate moments, ending before intensity 8", () => {
-		for (const title of MODERATE_ONLY) {
-			const e = EXERCISES.find((x) => x.title === title);
-			expect(e, title).toBeDefined();
-			expect(e?.intensityRange.max, title).toBeLessThan(8);
+	it("seeds the four new exercises and all four a flagged session may get", () => {
+		for (const title of new Set([...NEW_IN_B16, ...GROUNDING])) {
+			expect(
+				EXERCISES.find((x) => x.title === title),
+				title
+			).toBeDefined();
 		}
 	});
 

@@ -1468,8 +1468,9 @@ export const EXERCISES = [
 		targetEmotions: ["anxiety", "overwhelm", "dread"],
 		title: "reset",
 		type: "breathing" as const,
-	}, // The four below are for moderate moments: matchExercise never offers them
-	// at risk or at intensity 8 and above (MODERATE_ONLY in exercises/match.ts).
+	}, // The four below came with B16. A flagged session (at risk, or intensity 8
+	// and above) is offered only Three breaths, Find your edges, Slow it down and
+	// Name the room (GROUNDING in exercises/match.ts), whatever these ranges say.
 	{
 		estimatedMinutes: 1.5,
 		intensityRange: { max: 7, min: 4 },

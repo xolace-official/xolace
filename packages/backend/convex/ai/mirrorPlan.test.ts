@@ -150,7 +150,7 @@ describe("decideMirrorOutcome", () => {
 		expect(decide().exerciseTitle).toBe("let_it_land");
 	});
 
-	it("keeps the moderate-only exercises from a session the safeguard flagged", () => {
+	it("gives a session the safeguard flagged Three breaths, never what it would have had", () => {
 		const angry = classification({ intensity: 6, primaryEmotion: "anger" });
 		expect(decide({ classification: angry }).exerciseTitle).toBe(
 			"pause_before_acting"
@@ -160,11 +160,12 @@ describe("decideMirrorOutcome", () => {
 			{ isEscalation: true },
 			{ isCrisis: true },
 			{ level: "elevated" as const },
+			{ level: "crisis" as const },
 		]) {
 			expect(
 				decide({ classification: angry, safeguard: safeguard(flag) })
 					.exerciseTitle
-			).toBe("speak_to_it");
+			).toBe("reset");
 		}
 	});
 });

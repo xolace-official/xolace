@@ -153,8 +153,8 @@ async function seedExercises(
 	return byId;
 }
 
-/** Runs the mirror and returns the matched title plus the swap sheet's next-best. */
-async function mirror({ firstSession = false, flagged = false } = {}) {
+/** Runs the mirror; `flagged` then marks its metadata at risk. */
+async function runMirror({ firstSession = false, flagged = false } = {}) {
 	const user = await asNewUser();
 	const titleOf = await seedExercises(user);
 	if (!firstSession) {
@@ -186,6 +186,14 @@ async function mirror({ firstSession = false, flagged = false } = {}) {
 			});
 		});
 	}
+	return { sessionId, titleOf, user };
+}
+
+/** Runs the mirror and returns the matched title plus the swap sheet's next-best. */
+async function mirror(
+	options: { firstSession?: boolean; flagged?: boolean } = {}
+) {
+	const { sessionId, titleOf, user } = await runMirror(options);
 	const session = await user.root.run((ctx) =>
 		ctx.db.get("sessions", sessionId)
 	);
@@ -212,7 +220,7 @@ describe("exercise routing on meaning", () => {
 		});
 		expect(await mirror()).toEqual({
 			matched: "reset",
-			nextBest: "let_it_land",
+			nextBest: "slow_it_down",
 		});
 	});
 
@@ -227,15 +235,51 @@ describe("exercise routing on meaning", () => {
 		});
 	});
 
-	it("a flagged session's swap never offers a moderate-only exercise", async () => {
+	it("a session the safeguard flags gets Three breaths, and a grounding swap", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "shame",
+		});
+		stub.cache.moderation = moderationResult({
+			categoryScores: { "self-harm": 0.4 },
+		});
+		expect(await mirror()).toEqual({
+			matched: "reset",
+			nextBest: "find_your_edges",
+		});
+	});
+
+	it("a session flagged after it matched swaps only to grounding", async () => {
 		stub.cache.classification = classificationResult({
 			...CATCH_ALL,
 			primaryEmotion: "shame",
 		});
 		expect(await mirror({ flagged: true })).toEqual({
 			matched: "soften_toward_it",
-			nextBest: "let_it_land",
+			nextBest: "find_your_edges",
 		});
+	});
+
+	it("a flagged session with no matched exercise falls back to grounding", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "shame",
+		});
+		const { sessionId, user } = await runMirror({ flagged: true });
+		await user.root.run((ctx) =>
+			ctx.db.patch("sessions", sessionId, { matchedExerciseId: undefined })
+		);
+		const sit = await user.t.query(api.exercises.getForSession, { sessionId });
+		expect(sit?.exercise.title).toBe("reset");
+	});
+
+	it("an unflagged session with no matched exercise still falls back to Let it land", async () => {
+		const { sessionId, user } = await runMirror();
+		await user.root.run((ctx) =>
+			ctx.db.patch("sessions", sessionId, { matchedExerciseId: undefined })
+		);
+		const sit = await user.t.query(api.exercises.getForSession, { sessionId });
+		expect(sit?.exercise.title).toBe("let_it_land");
 	});
 
 	it("a lonely session gets Not only you, and the swap follows", async () => {
