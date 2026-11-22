@@ -181,6 +181,10 @@ export const FOLLOW_UP_YES_CODES = [
 	"relational_rupture",
 	"identity_despair",
 	"stuck",
+	// Intense worry or stress (intensity >= 7): "how did it go?" is the
+	// natural check-in. Below that line they stay future_worry / general_stress.
+	"high_stakes_worry",
+	"intense_stress",
 ] as const;
 
 export const FOLLOW_UP_NO_CODES = [

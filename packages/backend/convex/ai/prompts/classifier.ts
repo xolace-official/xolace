@@ -133,12 +133,15 @@ true when (code in brackets):
 - [relational_rupture] Relational rupture (conflict, abandonment, rejection) with no resolution language
 - [identity_despair] Identity or self-worth themes with present-focused despair
 - [stuck] Any input where the person seems stuck and the emotion has no natural release
+- [high_stakes_worry] Intense dread (intensity >= 7) about a specific, high-stakes event that is close (a medical result, a court hearing, a confrontation): checking in after it lands is the natural follow-up
+- [intense_stress] Stress at intensity >= 7 with acute personal distress (breaking down, not coping, falling apart)
 false when:
 - [discharged] The person seems to have discharged the emotion (vent complete)
 - [low_intensity] Low intensity (<= 4) regardless of theme
-- [future_worry] Future-focused anxiety (worry about what hasn't happened yet — they need grounding, not follow-up)
+- [future_worry] Future-focused anxiety at intensity <= 6 that grounding now can hold (worry about what hasn't happened yet, and manageable)
 - [positive] Positive check-ins
-- [general_stress] General stress without acute personal distress
+- [general_stress] General stress at intensity <= 6, without acute personal distress
+Worry and stress are not exclusions in themselves: at intensity >= 7 the high_stakes_worry and intense_stress lines above apply.
 
 **followUpReasonCode**: The code of the line above that decided requiresFollowUp: a "true when" code when it is true, a "false when" code when it is false. If several lines fit, give the one that weighed most. When it is false and no "false when" line fits (simply none of the "true when" lines applies), use "no_trigger". Internal only — never shown to the user.
 
