@@ -1,5 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { type MatchInput, matchExercise } from "./match";
+import {
+	type ExerciseTitle,
+	isAtRisk,
+	type MatchInput,
+	matchExercise,
+} from "./match";
+
+const FIRST_SIX: ExerciseTitle[] = [
+	"let_it_land",
+	"find_your_edges",
+	"make_room",
+	"speak_to_it",
+	"soften_toward_it",
+	"reset",
+];
+const MODERATE: ExerciseTitle[] = [
+	"pause_before_acting",
+	"slow_it_down",
+	"not_only_you",
+	"name_the_room",
+];
 
 const base: MatchInput = {
 	confirmationState: "confirmed",
@@ -110,18 +130,96 @@ describe("matchExercise", () => {
 		expect(first).toBe("reset");
 	});
 
-	it("always returns all 6 exercises in ranked list", () => {
-		const result = matchExercise(base);
-		expect(result).toHaveLength(6);
-		const all = [
-			"let_it_land",
-			"find_your_edges",
-			"make_room",
-			"speak_to_it",
-			"soften_toward_it",
-			"reset",
-		];
-		expect(result.sort()).toEqual(all.sort());
+	it("always returns every exercise in the ranked list", () => {
+		expect([...matchExercise(base)].sort()).toEqual(
+			[...FIRST_SIX, ...MODERATE].sort()
+		);
+	});
+
+	describe("the four for moderate moments", () => {
+		it("each leads for the feeling it was written for", () => {
+			expect(
+				matchExercise({ ...base, intensity: 6, primaryEmotion: "anger" })[0]
+			).toBe("pause_before_acting");
+			expect(
+				matchExercise({
+					...base,
+					intensity: 4,
+					primaryEmotion: "frustration",
+				})[0]
+			).toBe("speak_to_it");
+			expect(matchExercise({ ...base, primaryEmotion: "loneliness" })[0]).toBe(
+				"not_only_you"
+			);
+			expect(
+				matchExercise({ ...base, userLanguageTags: ["left out"] })[0]
+			).toBe("not_only_you");
+		});
+
+		it("comes next, so the swap sheet offers it, where it fits", () => {
+			const next = (input: Partial<MatchInput>) =>
+				matchExercise({ ...base, ...input }).find((t) => t !== "reset");
+			expect(next({ intensity: 4, primaryEmotion: "anxiety" })).toBe(
+				"slow_it_down"
+			);
+			expect(next({ primaryEmotion: "stress" })).toBe("slow_it_down");
+			expect(
+				matchExercise({ ...base, primaryEmotion: "numbness" }).slice(0, 2)
+			).toEqual(["find_your_edges", "name_the_room"]);
+			expect(
+				matchExercise({ ...base, primaryEmotion: "shame" }).slice(0, 2)
+			).toEqual(["soften_toward_it", "not_only_you"]);
+			expect(
+				matchExercise({ ...base, intensity: 4, primaryEmotion: "anger" }).slice(
+					0,
+					2
+				)
+			).toEqual(["speak_to_it", "pause_before_acting"]);
+		});
+
+		it("never reaches a session the safeguard flagged", () => {
+			for (const primaryEmotion of [
+				"anger",
+				"anxiety",
+				"shame",
+				"loneliness",
+			]) {
+				const ranked = matchExercise({ ...base, atRisk: true, primaryEmotion });
+				expect([...ranked].sort()).toEqual([...FIRST_SIX].sort());
+			}
+		});
+
+		it("never reaches intensity 8 and above", () => {
+			const ranked = matchExercise({
+				...base,
+				intensity: 8,
+				primaryEmotion: "anger",
+			});
+			expect(ranked.some((t) => MODERATE.includes(t))).toBe(false);
+			expect(ranked[0]).toBe("reset");
+		});
+
+		it("stays out at risk even when its meaning is closest", () => {
+			const ranked = matchExercise(
+				{ ...base, atRisk: true },
+				{ name_the_room: 0.9, not_only_you: 0.8 }
+			);
+			expect(ranked[0]).toBe("let_it_land");
+			expect(ranked).toHaveLength(FIRST_SIX.length);
+		});
+	});
+
+	describe("isAtRisk", () => {
+		it("reads the risk flag, an escalation, or an elevated or crisis level", () => {
+			expect(isAtRisk({ riskFlag: true })).toBe(true);
+			expect(isAtRisk({ escalated: true })).toBe(true);
+			expect(isAtRisk({ safeguardLevel: "elevated" })).toBe(true);
+			expect(isAtRisk({ safeguardLevel: "crisis" })).toBe(true);
+			expect(isAtRisk({ riskFlag: false, safeguardLevel: "gentle" })).toBe(
+				false
+			);
+			expect(isAtRisk({})).toBe(false);
+		});
 	});
 
 	describe("catch-all ranks on meaning (#569)", () => {
@@ -132,6 +230,10 @@ describe("matchExercise", () => {
 			"find_your_edges",
 			"reset",
 			"speak_to_it",
+			"slow_it_down",
+			"not_only_you",
+			"name_the_room",
+			"pause_before_acting",
 		];
 
 		it("puts the closest exercise above the floor first", () => {
@@ -147,6 +249,10 @@ describe("matchExercise", () => {
 				"make_room",
 				"soften_toward_it",
 				"reset",
+				"slow_it_down",
+				"not_only_you",
+				"name_the_room",
+				"pause_before_acting",
 			]);
 		});
 

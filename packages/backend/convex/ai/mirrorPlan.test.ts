@@ -149,4 +149,22 @@ describe("decideMirrorOutcome", () => {
 	it("uses the top-ranked exercise when confidence is sufficient", () => {
 		expect(decide().exerciseTitle).toBe("let_it_land");
 	});
+
+	it("keeps the moderate-only exercises from a session the safeguard flagged", () => {
+		const angry = classification({ intensity: 6, primaryEmotion: "anger" });
+		expect(decide({ classification: angry }).exerciseTitle).toBe(
+			"pause_before_acting"
+		);
+		for (const flag of [
+			{ riskFlag: true },
+			{ isEscalation: true },
+			{ isCrisis: true },
+			{ level: "elevated" as const },
+		]) {
+			expect(
+				decide({ classification: angry, safeguard: safeguard(flag) })
+					.exerciseTitle
+			).toBe("speak_to_it");
+		}
+	});
 });

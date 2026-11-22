@@ -8,6 +8,8 @@ export type MatchInput = {
 	userLanguageTags: string[];
 	entryType: string;
 	confirmationState: "confirmed" | "refined" | "gave_up" | "abandoned";
+	/** The safeguard flagged the session (see `isAtRisk`); absent = not flagged. */
+	atRisk?: boolean;
 };
 
 export type ExerciseTitle =
@@ -16,7 +18,40 @@ export type ExerciseTitle =
 	| "make_room"
 	| "speak_to_it"
 	| "soften_toward_it"
-	| "reset";
+	| "reset"
+	| "pause_before_acting"
+	| "slow_it_down"
+	| "not_only_you"
+	| "name_the_room";
+
+/**
+ * Written for moderate moments, so never offered when the safeguard flagged
+ * the session or at intensity 8 and above: those keep the first six.
+ */
+const MODERATE_ONLY: ReadonlySet<ExerciseTitle> = new Set([
+	"pause_before_acting",
+	"slow_it_down",
+	"not_only_you",
+	"name_the_room",
+]);
+
+const HIGH_INTENSITY = 8;
+/** Anger at or above this reaches for Pause before you act first. */
+const PAUSE_FIRST_INTENSITY = 6;
+
+/** The safeguard's read of a session, as stored or as just decided. */
+export function isAtRisk(signal: {
+	riskFlag?: boolean;
+	safeguardLevel?: string;
+	escalated?: boolean;
+}): boolean {
+	return (
+		signal.riskFlag === true ||
+		signal.escalated === true ||
+		signal.safeguardLevel === "elevated" ||
+		signal.safeguardLevel === "crisis"
+	);
+}
 
 const HIGH_ACTIVATION = new Set([
 	"anxiety",
@@ -29,6 +64,7 @@ const NUMB = new Set(["numbness", "dissociation", "flatness", "anhedonia"]);
 const STUCK = new Set(["helplessness", "despair", "hopelessness"]);
 const SHAME = new Set(["shame", "guilt", "embarrassment"]);
 const ANGER = new Set(["anger", "frustration", "rage", "resentment"]);
+const LONELY = new Set(["loneliness", "not-belonging", "homesickness"]);
 
 const NUMB_TAGS = new Set([
 	"numb",
@@ -66,6 +102,14 @@ const ANGER_TAGS = new Set([
 	"betrayal",
 	"violated",
 ]);
+const LONELY_TAGS = new Set([
+	"lonely",
+	"alone",
+	"isolated",
+	"left out",
+	"invisible",
+	"unseen",
+]);
 
 /** Best-chunk similarity to tonight's text by exercise title (#569); a title may be missing. */
 export type ExerciseSimilarity = Record<string, number>;
@@ -79,6 +123,16 @@ function hasTag(tags: string[], set: Set<string>): boolean {
  * Every step is a rule (ADR 0021); only the catch-all ranks on `similarity`.
  */
 export function matchExercise(
+	input: MatchInput,
+	similarity?: ExerciseSimilarity
+): ExerciseTitle[] {
+	const ranked = rankExercises(input, similarity);
+	return input.atRisk === true || input.intensity >= HIGH_INTENSITY
+		? ranked.filter((t) => !MODERATE_ONLY.has(t))
+		: ranked;
+}
+
+function rankExercises(
 	input: MatchInput,
 	similarity?: ExerciseSimilarity
 ): ExerciseTitle[] {
@@ -105,28 +159,40 @@ export function matchExercise(
 			"make_room",
 			"speak_to_it",
 			"soften_toward_it",
+			"slow_it_down",
+			"name_the_room",
+			"not_only_you",
+			"pause_before_acting",
 		];
 	}
 
-	if (intensity >= 8 || matches(HIGH_ACTIVATION)) {
+	if (intensity >= HIGH_INTENSITY || matches(HIGH_ACTIVATION)) {
 		return [
 			"reset",
+			"slow_it_down",
 			"let_it_land",
 			"make_room",
 			"find_your_edges",
 			"speak_to_it",
 			"soften_toward_it",
+			"name_the_room",
+			"not_only_you",
+			"pause_before_acting",
 		];
 	}
 
 	if (matches(NUMB) || hasTag(userLanguageTags, NUMB_TAGS)) {
 		return [
 			"find_your_edges",
+			"name_the_room",
 			"let_it_land",
 			"reset",
 			"make_room",
 			"speak_to_it",
 			"soften_toward_it",
+			"slow_it_down",
+			"not_only_you",
+			"pause_before_acting",
 		];
 	}
 
@@ -138,28 +204,58 @@ export function matchExercise(
 			"find_your_edges",
 			"speak_to_it",
 			"soften_toward_it",
+			"slow_it_down",
+			"name_the_room",
+			"not_only_you",
+			"pause_before_acting",
 		];
 	}
 
 	if (matches(SHAME) || hasTag(userLanguageTags, SHAME_TAGS)) {
 		return [
 			"soften_toward_it",
+			"not_only_you",
 			"let_it_land",
 			"make_room",
 			"reset",
 			"find_your_edges",
 			"speak_to_it",
+			"slow_it_down",
+			"name_the_room",
+			"pause_before_acting",
 		];
 	}
 
 	if (matches(ANGER) || hasTag(userLanguageTags, ANGER_TAGS)) {
+		const lead: ExerciseTitle[] =
+			intensity >= PAUSE_FIRST_INTENSITY
+				? ["pause_before_acting", "speak_to_it"]
+				: ["speak_to_it", "pause_before_acting"];
 		return [
-			"speak_to_it",
+			...lead,
 			"make_room",
 			"let_it_land",
 			"reset",
 			"find_your_edges",
 			"soften_toward_it",
+			"slow_it_down",
+			"name_the_room",
+			"not_only_you",
+		];
+	}
+
+	if (matches(LONELY) || hasTag(userLanguageTags, LONELY_TAGS)) {
+		return [
+			"not_only_you",
+			"let_it_land",
+			"soften_toward_it",
+			"make_room",
+			"find_your_edges",
+			"reset",
+			"speak_to_it",
+			"slow_it_down",
+			"name_the_room",
+			"pause_before_acting",
 		];
 	}
 
@@ -170,6 +266,10 @@ export function matchExercise(
 		"find_your_edges",
 		"reset",
 		"speak_to_it",
+		"slow_it_down",
+		"not_only_you",
+		"name_the_room",
+		"pause_before_acting",
 	];
 	if (!similarity) {
 		return order;

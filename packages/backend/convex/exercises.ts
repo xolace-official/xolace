@@ -9,7 +9,7 @@ import {
 	type QueryCtx,
 	query,
 } from "./_generated/server";
-import { matchExercise } from "./exercises/match";
+import { isAtRisk, matchExercise } from "./exercises/match";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { ERROR_CODES, EXERCISE_MAX_SWAPS } from "./lib/shared";
 import { recordActivity } from "./streaks/activityLog";
@@ -43,6 +43,11 @@ async function computeSwapOptions(
 
 	const ranked = matchExercise(
 		{
+			atRisk: isAtRisk({
+				escalated: session.escalationTriggered,
+				riskFlag: metadata.riskFlag,
+				safeguardLevel: metadata.safeguardLevel,
+			}),
 			confirmationState: "confirmed",
 			entryType: session.entryType ?? "open_prompt",
 			granularLabel: metadata.granularLabel,
@@ -205,6 +210,11 @@ export const matchForSession = query({
 
 		const rankedTitles = matchExercise(
 			{
+				atRisk: isAtRisk({
+					escalated: session.escalationTriggered,
+					riskFlag: metadata.riskFlag,
+					safeguardLevel: metadata.safeguardLevel,
+				}),
 				confirmationState: "confirmed",
 				entryType: session.entryType ?? "open_prompt",
 				granularLabel: metadata.granularLabel,
