@@ -217,7 +217,8 @@ export function useReflectionMachine() {
 				state.entryType,
 				duration,
 				typing.froze,
-				typing.frozeMs
+				typing.frozeMs,
+				state.selectedTextures
 			);
 			clearReflectDraft();
 			posthog.capture("reflection_submitted", {
@@ -236,6 +237,7 @@ export function useReflectionMachine() {
 		state.entryText,
 		state.entryType,
 		state.typing,
+		state.selectedTextures,
 		initiateAndSubmit,
 		posthog,
 		dispatchError,
@@ -253,7 +255,9 @@ export function useReflectionMachine() {
 				state.selectedTextures.join(", "),
 				"scaffold",
 				undefined,
-				false
+				false,
+				undefined,
+				state.selectedTextures
 			);
 			posthog.capture("reflection_submitted", {
 				entry_type: "scaffold",
