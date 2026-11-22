@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { internalMutation, mutation, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
+import { milestoneDetailValidator } from "../streaks/milestones";
 import { badgeArt, badgeArtValidator } from "./art";
 import { type Achievement, findAchievement } from "./catalog";
 
@@ -51,7 +52,9 @@ export const unseen = query({
 				achievementId: row.achievementId,
 				art: await badgeArt(ctx, achievement.artKey),
 				copy: achievement.copy,
+				earnedAt: row.earnedAt,
 				id: row._id,
+				...(row.milestone && { milestone: row.milestone }),
 				// What it awarded at the time, not today's catalog value.
 				sparks: row.sparks,
 				title: achievement.title,
@@ -63,7 +66,11 @@ export const unseen = query({
 			achievementId: v.string(),
 			art: badgeArtValidator,
 			copy: v.string(),
+			/** When it was earned (B14); old builds ignore it. */
+			earnedAt: v.optional(v.number()),
 			id: v.id("user_achievements"),
+			/** A streak milestone's rung: what that day added and its week (B14). */
+			milestone: v.optional(milestoneDetailValidator),
 			sparks: v.number(),
 			title: v.string(),
 		})

@@ -48,6 +48,18 @@ describe("handPulse", () => {
 		expect(handPulse(2900, 6000)).toMatchObject({ k: 1, live: true });
 		expect(handPulse(5700, 6000)).toMatchObject({ env: 0, k: 2, live: false });
 	});
+
+	it("fits three pulses in Soften's 9 s hand beat, and two in 6 s", () => {
+		const pulses = (ms: number) =>
+			new Set(
+				Array.from({ length: ms / 100 }, (_, i) => handPulse(i * 100, ms))
+					.filter((p) => p.live)
+					.map((p) => p.k)
+			).size;
+		expect(pulses(6000)).toBe(2);
+		expect(pulses(7000)).toBe(3);
+		expect(pulses(9000)).toBe(3);
+	});
 });
 
 describe("leavingAt", () => {

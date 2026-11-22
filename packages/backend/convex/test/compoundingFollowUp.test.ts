@@ -13,7 +13,7 @@ import workpoolTest from "@convex-dev/workpool/test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api, internal } from "../_generated/api";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { compoundingFor } from "../compounding/stretches";
 import {
 	runEvaluations,
@@ -186,6 +186,11 @@ describe("the compounding follow-up trigger (#522)", () => {
 			"across recent sessions, not just this one: work and studies"
 		);
 		expect((await workStretch(user))?.followUpStartedAt).toBeTypeOf("number");
+		// The close said none; the start records that compounding decided it.
+		const session = await user.root.run((ctx) =>
+			ctx.db.get("sessions", card?.sessionId as Id<"sessions">)
+		);
+		expect(session?.followUpDecidedBy).toBe("compounding");
 	});
 
 	it("fires on the session whose reading opens the stretch, starting only once it's open (#529)", async () => {
@@ -297,6 +302,11 @@ describe("the compounding follow-up trigger (#522)", () => {
 			requiresFollowUp: true,
 		});
 		expect(card).toMatchObject({ compoundingDomain: "work", tier: "elevated" });
+		// Compounding only rode along: the session's own flag decided it.
+		const session = await user.root.run((ctx) =>
+			ctx.db.get("sessions", card?.sessionId as Id<"sessions">)
+		);
+		expect(session?.followUpDecidedBy).toBe("ai");
 	});
 
 	it("never fires on easing", async () => {

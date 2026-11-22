@@ -20,7 +20,10 @@ import {
 import { resolveMirrorTone } from "./mirrorPlan";
 import {
 	buildAccumulatedInput,
+	entryForAi,
 	type RefinementTurn,
+	writtenSoFar,
+	wroteInRefinement,
 } from "./prompts/accumulatedInput";
 import {
 	buildArticulatorPrompt,
@@ -71,6 +74,7 @@ export const handleClarification = internalAction({
 					entryType?: string;
 					inputDuration?: number;
 					freezeOccurred?: boolean;
+					textures?: string[];
 					escalationTriggered?: boolean;
 					gapNamed?: boolean;
 					[key: string]: unknown;
@@ -89,6 +93,7 @@ export const handleClarification = internalAction({
 				entryType?: string;
 				inputDuration?: number;
 				freezeOccurred?: boolean;
+				textures?: string[];
 				[key: string]: unknown;
 			};
 
@@ -137,8 +142,13 @@ export const handleClarification = internalAction({
 			const userFeedback = currentTurn?.userFeedback;
 			const addedText = (currentTurn?.userInput ?? "").trim();
 
+			// Base: what they wrote and the feeling words they picked (B10).
 			const accumulatedInput = buildAccumulatedInput(
-				(session.rawInput as string | undefined) ?? "",
+				entryForAi({
+					entryType: session.entryType,
+					rawInput: (session.rawInput as string | undefined) ?? "",
+					textures: session.textures,
+				}),
 				turns
 			);
 
@@ -172,7 +182,8 @@ export const handleClarification = internalAction({
 							}),
 							context.isFirstSession,
 							session.entryType ?? "open_prompt",
-							session.timeOfDay as string | undefined
+							session.timeOfDay as string | undefined,
+							session.textures
 						)
 					: null;
 
@@ -342,9 +353,24 @@ export const handleClarification = internalAction({
 				// refinement is grounded in who this person is, matching process.ts.
 				semanticProfile: context.semanticProfile,
 				spaceName: context.preferences?.spaceName,
+				textures: session.textures,
 				turnCount: args.turnNumber,
 				useAudioTags: context.isPremium,
 				userFeedback,
+				// With picked words the base carries labels, so count only what
+				// they wrote, later turns included (process.ts does the same).
+				...(session.textures?.length
+					? {
+							writtenChars: writtenSoFar(
+								{
+									entryType: session.entryType,
+									rawInput: (session.rawInput as string | undefined) ?? "",
+								},
+								turns
+							),
+							wroteLater: wroteInRefinement(turns),
+						}
+					: {}),
 			});
 
 			// 5. Call Sonnet for revised mirror. Stage hint first (see process.ts).
@@ -447,8 +473,20 @@ export const handleClarification = internalAction({
 								? {}
 								: { episodicTopScore: episodic.topScore }),
 						}),
-				...(reclassified?.followUpReason
-					? { followUpReason: reclassified.followUpReason }
+				// Only a turn that re-classified moves the follow-up read, and only
+				// up (refinedFollowUpRead): it stays on the same side as the
+				// session flag, which deliverMirror above also only raises.
+				...(reclassified
+					? {
+							aiRequiresFollowUp: reclassified.requiresFollowUp,
+							followUpReasonCode: reclassified.followUpReasonCode ?? "unknown",
+							...(reclassified.followUpReason
+								? { followUpReason: reclassified.followUpReason }
+								: {}),
+							...(reclassified.noFollowUpReason
+								? { noFollowUpReason: reclassified.noFollowUpReason }
+								: {}),
+						}
 					: {}),
 				// Refreshed only when this turn actually reclassified — zero-added-
 				// text turns reuse the existing classification (§4 above) and must

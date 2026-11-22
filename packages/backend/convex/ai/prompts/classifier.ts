@@ -16,6 +16,7 @@ const quotedList = (values: readonly string[]) =>
  * @param isFirstSession - If true, include guidance to be slightly more conservative with confidence
  * @param entryType - How the input was entered: "open_prompt" | "guided_entry" | "body_scan" | "word_cloud" | "voice" | "talk"
  * @param timeOfDay - Optional time context: "early_morning" | "morning" | "afternoon" | "evening" | "late_night"
+ * @param textures - Feeling words picked with the entry (B10), labelled apart in `rawInput`
  * @returns An object with `system` (the composed instruction prompt) and `user` (metadata-framed raw input)
  */
 
@@ -24,7 +25,9 @@ export function buildClassifierPrompt(
 	patternSummary: string,
 	isFirstSession: boolean,
 	entryType: string,
-	timeOfDay?: string
+	timeOfDay?: string,
+	/** B10: feeling words picked with the entry; the input labels them apart. */
+	textures?: readonly string[]
 ): { system: string; user: string } {
 	const system = `You are an emotion classification system for Xolace, an emotional processing app. Your job is to analyze raw emotional input and return a structured JSON classification.
 
@@ -34,7 +37,7 @@ You are NOT a therapist. You are NOT having a conversation. You are a precise an
 
 You will receive one of these input types, indicated by a tag in the user message:
 - **Free text**: Unstructured writing, often messy, ungrammatical, stream-of-consciousness
-- **Texture words**: 2-3 tapped words like "heavy, empty" or "tight, foggy, restless". These are somatic/emotional textures, not literal descriptions. "Heavy" means emotional weight, not physical heaviness. Infer the emotional state from the combination of textures.
+- **Texture words**: up to four tapped words like "heavy, empty" or "tight, foggy, restless". These are somatic/emotional textures, not literal descriptions. "Heavy" means emotional weight, not physical heaviness. Infer the emotional state from the combination of textures.
 - **Body areas**: Tapped body locations where emotion is felt physically. Chest = often grief, anxiety, love. Stomach = often dread, guilt, anxiety. Head = often overwhelm, rumination. Throat = often suppressed expression, things unsaid. Hands = often helplessness, restlessness.
 - **Voice transcription**: May contain filler words, repetition, and incomplete sentences. This is normal for spoken emotional expression.
 
@@ -53,7 +56,9 @@ The JSON must have this exact shape:
   "userLanguageTags": string[],
   "temporalContext": "past_focused" | "present_focused" | "future_focused" | null,
   "requiresFollowUp": boolean,
+  "followUpReasonCode": string,
   "followUpReason": string | null,
+  "noFollowUpReason": string | null,
   "supportNeed": "none" | "light" | "active"
 }
 
@@ -122,20 +127,27 @@ For body areas: Return the areas as tags ("chest", "stomach").
 - Future: "I'm dreading tomorrow", "What if..."
 
 **requiresFollowUp**: Should the system check in on this person within a day or so? This is the EXCEPTION, not the default. Default to false and reserve true for genuinely unresolved, high-stakes moments where the emotion has no natural release.
-true when:
-- Grief, loss, or bereavement content — especially when past-focused
-- Shame or guilt with intensity >= 6
-- Relational rupture (conflict, abandonment, rejection) with no resolution language
-- Identity or self-worth themes with present-focused despair
-- Any input where the person seems stuck and the emotion has no natural release
+true when (code in brackets):
+- [grief] Grief, loss, or bereavement content — especially when past-focused
+- [shame_guilt] Shame or guilt with intensity >= 6
+- [relational_rupture] Relational rupture (conflict, abandonment, rejection) with no resolution language
+- [identity_despair] Identity or self-worth themes with present-focused despair
+- [stuck] Any input where the person seems stuck and the emotion has no natural release
+- [high_stakes_worry] Intense dread (intensity >= 7) about a specific, high-stakes event that is close (a medical result, a court hearing, a confrontation): checking in after it lands is the natural follow-up
+- [intense_stress] Stress at intensity >= 7 with acute personal distress (breaking down, not coping, falling apart)
 false when:
-- The person seems to have discharged the emotion (vent complete)
-- Low intensity (<= 4) regardless of theme
-- Future-focused anxiety (worry about what hasn't happened yet — they need grounding, not follow-up)
-- Positive check-ins
-- General stress without acute personal distress
+- [discharged] The person seems to have discharged the emotion (vent complete)
+- [low_intensity] Low intensity (<= 4) regardless of theme
+- [future_worry] Future-focused anxiety at intensity <= 6 that grounding now can hold (worry about what hasn't happened yet, and manageable)
+- [positive] Positive check-ins
+- [general_stress] General stress at intensity <= 6, without acute personal distress
+Worry and stress are not exclusions in themselves: at intensity >= 7 the high_stakes_worry and intense_stress lines above apply.
+
+**followUpReasonCode**: The code of the line above that decided requiresFollowUp: a "true when" code when it is true, a "false when" code when it is false. If several lines fit, give the one that weighed most. When it is false and no "false when" line fits (simply none of the "true when" lines applies), use "no_trigger". Internal only — never shown to the user.
 
 **followUpReason**: One short sentence explaining why requiresFollowUp is true. null when requiresFollowUp is false. Internal only — never shown to the user.
+
+**noFollowUpReason**: One short sentence explaining why requiresFollowUp is false. null when requiresFollowUp is true. Internal only — never shown to the user.
 
 **supportNeed**: Does this person's emotional content suggest they'd benefit from a small follow-up action (a track, an exercise, a peer listener) beyond the mirror they're about to get? Graded, not binary.
 - "none": the moment is discharged, low-stakes, or positive. Most sessions. Also use "none" for any crisis or high-risk content — that is handled by safety response, never by a support suggestion, regardless of how you'd otherwise grade it.
@@ -185,6 +197,13 @@ ${patternSummary}`;
 			break;
 		default:
 			userParts.push("[Text input]");
+	}
+
+	// Picked feeling words beside writing (B10). Words only already says so above.
+	if (textures?.length && entryType !== "word_cloud") {
+		userParts.push(
+			"[Feeling words were also picked alongside it — tapped, not typed. Both parts describe the same moment; classify them together.]"
+		);
 	}
 
 	// Time context

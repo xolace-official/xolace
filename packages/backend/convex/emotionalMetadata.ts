@@ -6,8 +6,10 @@ import { internalMutation, internalQuery, query } from "./_generated/server";
 import { adjustImportance, DEFAULT_IMPORTANCE } from "./episodicImportance";
 import { receivesLetters } from "./letters/pool";
 import { requireSessionOwnership } from "./lib/auth";
+import { type FollowUpRead, refinedFollowUpRead } from "./lib/followUpCadence";
 import { specialtyValidator } from "./lib/specialties";
 import {
+	followUpReasonCodeValidator,
 	safeguardLevelValidator,
 	supportNeedValidator,
 	triggerTypeValidator,
@@ -92,6 +94,11 @@ async function resolveSuggestedSpecialty(
  */
 export const store = internalMutation({
 	args: {
+		// The classifier's own follow-up flag. When passed, this write is the
+		// whole follow-up read: followUpReason and noFollowUpReason are replaced
+		// (an omitted one is cleared), so a remade talk mirror never keeps a
+		// stale reason from the read before it.
+		aiRequiresFollowUp: v.optional(v.boolean()),
 		classifierVersion: v.string(),
 		emotionalProfileId: v.id("emotional_profiles"),
 		episodicMatchKeys: v.optional(v.array(v.string())),
@@ -101,8 +108,12 @@ export const store = internalMutation({
 		// Follow-up system: brief internal reason from the classifier. Never
 		// shown to the user. Present only when the classifier flagged a follow-up.
 		followUpReason: v.optional(v.string()),
+		// The rubric line the classifier applied, yes or no. Internal only.
+		followUpReasonCode: v.optional(followUpReasonCodeValidator),
 		granularLabel: v.optional(v.string()),
 		intensity: v.number(),
+		// Why the classifier said no. Present only when it did. Internal only.
+		noFollowUpReason: v.optional(v.string()),
 		primaryEmotion: v.string(),
 		primaryEmotionConfidence: v.number(),
 		profileVersion: v.optional(v.number()),
@@ -165,7 +176,16 @@ export const store = internalMutation({
 		};
 
 		if (existing) {
-			await ctx.db.patch("emotional_metadata", existing._id, row);
+			await ctx.db.patch("emotional_metadata", existing._id, {
+				...row,
+				// Patched as undefined, which deletes: see aiRequiresFollowUp.
+				...(args.aiRequiresFollowUp === undefined
+					? {}
+					: {
+							followUpReason: args.followUpReason,
+							noFollowUpReason: args.noFollowUpReason,
+						}),
+			});
 		} else {
 			await ctx.db.insert("emotional_metadata", {
 				...row,
@@ -208,10 +228,15 @@ async function scheduleLetterPoolRefresh(
  * validator has no safety fields at all, so wiping one is not expressible.
  *
  * `followUpReason` is raise-only — a re-classification may turn a follow-up
- * on, never off.
+ * on, never off. So is the rest of the follow-up read (`refinedFollowUpRead`):
+ * a new yes replaces the code and drops any "no" reason; a new no replaces an
+ * earlier no but never an earlier yes. Without `aiRequiresFollowUp` (a turn
+ * that didn't re-classify) the read is left as it was.
  */
 export const replaceForRefinement = internalMutation({
 	args: {
+		// The re-classification's follow-up read; all three move together.
+		aiRequiresFollowUp: v.optional(v.boolean()),
 		classifierVersion: v.string(),
 		// Replaced too: Loop #3 fires once at terminal confirmation and reads
 		// whatever the row holds then, so these must credit the memories that
@@ -222,8 +247,10 @@ export const replaceForRefinement = internalMutation({
 		episodicMatchKeys: v.optional(v.array(v.string())),
 		episodicTopScore: v.optional(v.number()),
 		followUpReason: v.optional(v.string()),
+		followUpReasonCode: v.optional(followUpReasonCodeValidator),
 		granularLabel: v.optional(v.string()),
 		intensity: v.number(),
+		noFollowUpReason: v.optional(v.string()),
 		primaryEmotion: v.string(),
 		primaryEmotionConfidence: v.number(),
 		// Safety verdict re-evaluated on the accumulated input. The trio moves
@@ -261,6 +288,23 @@ export const replaceForRefinement = internalMutation({
 			return null;
 		}
 
+		// A caller without the flag (a turn that didn't re-classify, or one
+		// scheduled before the flag existed) keeps the old raise-only reason.
+		let followUpRead: FollowUpRead = args.followUpReason
+			? { followUpReason: args.followUpReason }
+			: {};
+		if (
+			args.aiRequiresFollowUp !== undefined &&
+			args.followUpReasonCode !== undefined
+		) {
+			followUpRead = refinedFollowUpRead(existing, {
+				aiRequiresFollowUp: args.aiRequiresFollowUp,
+				followUpReason: args.followUpReason,
+				followUpReasonCode: args.followUpReasonCode,
+				noFollowUpReason: args.noFollowUpReason,
+			});
+		}
+
 		await ctx.db.patch("emotional_metadata", existing._id, {
 			...(args.safeguardLevel === undefined
 				? {}
@@ -293,7 +337,7 @@ export const replaceForRefinement = internalMutation({
 			...(existing.initialConfidence === undefined
 				? { initialConfidence: existing.primaryEmotionConfidence }
 				: {}),
-			...(args.followUpReason ? { followUpReason: args.followUpReason } : {}),
+			...followUpRead,
 		});
 		await scheduleLetterPoolRefresh(ctx, existing.emotionalProfileId);
 		return null;
@@ -395,10 +439,21 @@ export const getBySession = query({
 	handler: async (ctx, args) => {
 		await requireSessionOwnership(ctx, args.sessionId);
 
-		return await ctx.db
+		const row = await ctx.db
 			.query("emotional_metadata")
 			.withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
 			.unique();
+		if (!row) {
+			return null;
+		}
+		// The follow-up read is internal: it never reaches a client.
+		const {
+			aiRequiresFollowUp: _flag,
+			followUpReasonCode: _code,
+			noFollowUpReason: _no,
+			...shown
+		} = row;
+		return shown;
 	},
 	returns: v.union(emotionalMetadataDocValidator, v.null()),
 });

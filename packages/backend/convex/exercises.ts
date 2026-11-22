@@ -9,10 +9,45 @@ import {
 	type QueryCtx,
 	query,
 } from "./_generated/server";
-import { matchExercise } from "./exercises/match";
+import {
+	isAtRisk,
+	isFlagged,
+	isGroundingTitle,
+	type MatchInput,
+	matchExercise,
+} from "./exercises/match";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { ERROR_CODES, EXERCISE_MAX_SWAPS } from "./lib/shared";
 import { recordActivity } from "./streaks/activityLog";
+
+/** A session with no metadata yet: nothing known but what the session says. */
+const UNKNOWN: MatchInput = {
+	confirmationState: "confirmed",
+	entryType: "open_prompt",
+	intensity: 0,
+	primaryEmotion: "",
+	userLanguageTags: [],
+};
+
+/** What the matcher reads from a finished session and its metadata. */
+function matchInputFor(
+	session: Doc<"sessions">,
+	metadata: Doc<"emotional_metadata">
+): MatchInput {
+	return {
+		atRisk: isAtRisk({
+			escalated: session.escalationTriggered,
+			riskFlag: metadata.riskFlag,
+			safeguardLevel: metadata.safeguardLevel,
+		}),
+		confirmationState: "confirmed",
+		entryType: session.entryType ?? "open_prompt",
+		granularLabel: metadata.granularLabel,
+		intensity: metadata.intensity,
+		primaryEmotion: metadata.primaryEmotion,
+		userLanguageTags: metadata.userLanguageTags,
+	};
+}
 
 /**
  * Compute allowed swap target IDs for a session: the reset exercise + the
@@ -42,14 +77,7 @@ async function computeSwapOptions(
 	}
 
 	const ranked = matchExercise(
-		{
-			confirmationState: "confirmed",
-			entryType: session.entryType ?? "open_prompt",
-			granularLabel: metadata.granularLabel,
-			intensity: metadata.intensity,
-			primaryEmotion: metadata.primaryEmotion,
-			userLanguageTags: metadata.userLanguageTags,
-		},
+		matchInputFor(session, metadata),
 		session.exerciseSimilarity
 	);
 
@@ -143,19 +171,38 @@ export const getForSession = query({
 				? swapped[swapped.length - 1]
 				: (session.matchedExerciseId ?? null);
 
-		if (!exerciseId) {
-			const fallback = await ctx.db
-				.query("exercises")
-				.withIndex("by_title", (q) => q.eq("title", "let_it_land"))
-				.unique();
-			if (!fallback) {
-				return null;
-			}
-			return { exercise: fallback, slots: {} as Record<string, string> };
-		}
+		const metadata = await ctx.db
+			.query("emotional_metadata")
+			.withIndex("by_session", (q) => q.eq("sessionId", session._id))
+			.unique();
+		const input = metadata ? matchInputFor(session, metadata) : undefined;
+		const flagged = input
+			? isFlagged(input)
+			: session.escalationTriggered === true;
 
-		const exercise = await ctx.db.get("exercises", exerciseId);
-		if (!exercise) {
+		const exercise = exerciseId
+			? await ctx.db.get("exercises", exerciseId)
+			: null;
+		if (exerciseId && !exercise) {
+			return null;
+		}
+		// A session flagged after it matched (clarify raised the risk or the
+		// intensity) still plays only grounding; a grounding swap it chose stays.
+		if (!exercise || (flagged && !isGroundingTitle(exercise.title))) {
+			// Let it land, or for a flagged session the first grounding exercise
+			// there is.
+			const titles: string[] = flagged
+				? matchExercise(input ?? { ...UNKNOWN, atRisk: true })
+				: ["let_it_land"];
+			for (const title of titles) {
+				const fallback = await ctx.db
+					.query("exercises")
+					.withIndex("by_title", (q) => q.eq("title", title))
+					.unique();
+				if (fallback) {
+					return { exercise: fallback, slots: {} as Record<string, string> };
+				}
+			}
 			return null;
 		}
 
@@ -195,25 +242,22 @@ export const matchForSession = query({
 			.withIndex("by_active", (q) => q.eq("active", true))
 			.take(50);
 
-		const matching = exercises.filter((e) => {
-			const emotionMatch = e.targetEmotions.includes(metadata.primaryEmotion);
-			const intensityMatch =
-				metadata.intensity >= e.intensityRange.min &&
-				metadata.intensity <= e.intensityRange.max;
-			return emotionMatch && intensityMatch;
-		});
+		const input = matchInputFor(session, metadata);
+		// A flagged session's list is the grounding four whatever its feeling
+		// or intensity, so their target emotions and ranges don't narrow it.
+		const matching = isFlagged(input)
+			? exercises
+			: exercises.filter((e) => {
+					const emotionMatch = e.targetEmotions.includes(
+						metadata.primaryEmotion
+					);
+					const intensityMatch =
+						metadata.intensity >= e.intensityRange.min &&
+						metadata.intensity <= e.intensityRange.max;
+					return emotionMatch && intensityMatch;
+				});
 
-		const rankedTitles = matchExercise(
-			{
-				confirmationState: "confirmed",
-				entryType: session.entryType ?? "open_prompt",
-				granularLabel: metadata.granularLabel,
-				intensity: metadata.intensity,
-				primaryEmotion: metadata.primaryEmotion,
-				userLanguageTags: metadata.userLanguageTags,
-			},
-			session.exerciseSimilarity
-		);
+		const rankedTitles = matchExercise(input, session.exerciseSimilarity);
 
 		const byTitle = new Map(matching.map((e) => [e.title, e]));
 		const ordered: typeof matching = [];

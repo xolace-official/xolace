@@ -1,6 +1,15 @@
 import type { DevState } from "@/dev/dev-state";
 import { FixtureArrival } from "@/features/achievements/arrival/dev/fixture-arrival";
-import { DAY_7, DAY_30, ONE, TWO } from "@/features/achievements/dev/fixtures";
+import {
+	DAY_7,
+	DAY_7_BEFORE_B14,
+	DAY_7_FREEZE,
+	DAY_7_KEPT,
+	DAY_7_NOTHING,
+	DAY_30,
+	ONE,
+	TWO,
+} from "@/features/achievements/dev/fixtures";
 
 const OPTIONS = { headerShown: false };
 
@@ -72,7 +81,7 @@ export const devStates: readonly DevState[] = [
 		id: "milestone-7-settled",
 		options: OPTIONS,
 		Screen: () => <FixtureArrival still={{ at: 5000 }} unseen={DAY_7} />,
-		title: "Day 7, settled: the week, the freeze, Next",
+		title: "Day 7, settled: the week, a streak saver, Next",
 	},
 	{
 		id: "milestone-7-next",
@@ -91,21 +100,32 @@ export const devStates: readonly DevState[] = [
 		title: "Day 7's badge, 1.3 s: the burst and the fall",
 	},
 	{
-		id: "milestone-capped",
+		id: "milestone-freeze",
+		options: OPTIONS,
+		Screen: () => <FixtureArrival still={{ at: 5000 }} unseen={DAY_7_FREEZE} />,
+		title: "Day 7, a saver already held: it added a freeze",
+	},
+	{
+		id: "milestone-nothing",
 		options: OPTIONS,
 		Screen: () => (
-			<FixtureArrival cards="capped" still={{ at: 5000 }} unseen={DAY_7} />
+			<FixtureArrival still={{ at: 5000 }} unseen={DAY_7_NOTHING} />
 		),
-		title: "Day 7, a freeze already held",
+		title: "Day 7, saver and freezes full: the week, no card",
+	},
+	{
+		id: "milestone-kept-day",
+		options: OPTIONS,
+		Screen: () => <FixtureArrival still={{ at: 5000 }} unseen={DAY_7_KEPT} />,
+		title: "Day 7 with a day a freeze kept: that day unlit",
 	},
 	{
 		id: "milestone-7-live",
 		options: OPTIONS,
 		Screen: () => (
-			<FixtureArrival cards="live" still={{ at: 5000 }} unseen={DAY_7} />
+			<FixtureArrival still={{ at: 5000 }} unseen={DAY_7_BEFORE_B14} />
 		),
-		title:
-			"Day 7, settled, as the app shows it today: no week or freeze card yet",
+		title: "Day 7 earned before B14: no week or card",
 	},
 	{
 		id: "milestone-30",

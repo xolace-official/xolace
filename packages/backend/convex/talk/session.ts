@@ -342,6 +342,8 @@ export async function finalizeTalk(
 	// The whole thread, a reopening's earlier lines too: a remade mirror is checked afresh (#606).
 	const issues = afterTalkIssues(lines, session.talkSafety);
 	await ctx.db.patch("sessions", session._id, {
+		// Decided again when the remade session closes.
+		followUpDecidedBy: undefined,
 		// deliverMirror only raises these; a remade mirror starts from none.
 		// escalationTriggered stays: escalation is sticky (see clarify).
 		gapNamed: undefined,

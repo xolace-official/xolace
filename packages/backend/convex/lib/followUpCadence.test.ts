@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
 	abandonRequiresFollowUp,
+	classifierFlaggedFollowUp,
 	computeRequiresFollowUp,
+	FOLLOW_UP_NO_CODES,
+	FOLLOW_UP_YES_CODES,
 	followUpCadence,
+	followUpDecisionSource,
 	followUpTier,
 	isCardWaiting,
 	minReturnGapForTier,
+	parseFollowUpReasonCode,
+	refinedFollowUpRead,
 	shouldEmitReturn,
 	shouldSupersede,
 	WAITING_CARD_LIFETIME_MS,
@@ -252,5 +258,163 @@ describe("waitingSince / isCardWaiting (Coming back v2)", () => {
 		for (const status of ["pending", "resolved", "expired", "superseded"]) {
 			expect(isCardWaiting({ createdAt: now, status }, now)).toBe(false);
 		}
+	});
+});
+
+describe("parseFollowUpReasonCode", () => {
+	it("keeps a code on the same side as the flag", () => {
+		for (const code of FOLLOW_UP_YES_CODES) {
+			expect(parseFollowUpReasonCode(true, code)).toBe(code);
+		}
+		for (const code of FOLLOW_UP_NO_CODES) {
+			expect(parseFollowUpReasonCode(false, code)).toBe(code);
+		}
+	});
+
+	it("tolerates case and whitespace", () => {
+		expect(parseFollowUpReasonCode(true, "  Grief ")).toBe("grief");
+	});
+
+	it("unknown when the code contradicts the flag: the flag wins", () => {
+		expect(parseFollowUpReasonCode(false, "grief")).toBe("unknown");
+		expect(parseFollowUpReasonCode(true, "future_worry")).toBe("unknown");
+		expect(parseFollowUpReasonCode(true, "no_trigger")).toBe("unknown");
+	});
+
+	it("unknown when missing, not a string, or not on the list", () => {
+		expect(parseFollowUpReasonCode(false, undefined)).toBe("unknown");
+		expect(parseFollowUpReasonCode(false, null)).toBe("unknown");
+		expect(parseFollowUpReasonCode(true, 3)).toBe("unknown");
+		expect(parseFollowUpReasonCode(true, "loneliness")).toBe("unknown");
+		// The fallback itself is never accepted from the model.
+		expect(parseFollowUpReasonCode(false, "unknown")).toBe("unknown");
+	});
+});
+
+describe("classifierFlaggedFollowUp", () => {
+	it("reads the stored flag", () => {
+		expect(classifierFlaggedFollowUp({ aiRequiresFollowUp: true })).toBe(true);
+		expect(
+			classifierFlaggedFollowUp({
+				aiRequiresFollowUp: false,
+				noFollowUpReason: "vented",
+			})
+		).toBe(false);
+	});
+
+	it("an older row with only a reason was a yes; with nothing, a no", () => {
+		expect(classifierFlaggedFollowUp({ followUpReason: "grief" })).toBe(true);
+		expect(classifierFlaggedFollowUp({})).toBe(false);
+		expect(classifierFlaggedFollowUp(null)).toBe(false);
+	});
+});
+
+describe("refinedFollowUpRead (re-classification, raise-only)", () => {
+	const earlierNo = {
+		aiRequiresFollowUp: false,
+		followUpReasonCode: "low_intensity" as const,
+		noFollowUpReason: "mild",
+	};
+	const earlierYes = {
+		aiRequiresFollowUp: true,
+		followUpReason: "loss of a parent",
+		followUpReasonCode: "grief" as const,
+	};
+
+	it("a yes replaces a no and drops the no reason", () => {
+		const patch = refinedFollowUpRead(earlierNo, {
+			aiRequiresFollowUp: true,
+			followUpReason: "stuck in it",
+			followUpReasonCode: "stuck",
+		});
+		expect(patch).toEqual({
+			aiRequiresFollowUp: true,
+			followUpReason: "stuck in it",
+			followUpReasonCode: "stuck",
+			noFollowUpReason: undefined,
+		});
+		expect("noFollowUpReason" in patch).toBe(true);
+	});
+
+	it("a yes without a sentence keeps the earlier yes sentence", () => {
+		const patch = refinedFollowUpRead(earlierYes, {
+			aiRequiresFollowUp: true,
+			followUpReasonCode: "shame_guilt",
+		});
+		expect(patch.followUpReasonCode).toBe("shame_guilt");
+		expect("followUpReason" in patch).toBe(false);
+	});
+
+	it("a no never replaces a yes", () => {
+		expect(
+			refinedFollowUpRead(earlierYes, {
+				aiRequiresFollowUp: false,
+				followUpReasonCode: "discharged",
+				noFollowUpReason: "vented it out",
+			})
+		).toEqual({});
+		// An older row's yes counts too.
+		expect(
+			refinedFollowUpRead(
+				{ followUpReason: "rupture" },
+				{ aiRequiresFollowUp: false, followUpReasonCode: "discharged" }
+			)
+		).toEqual({});
+	});
+
+	it("a no replaces a no, clearing a reason it doesn't give", () => {
+		const patch = refinedFollowUpRead(earlierNo, {
+			aiRequiresFollowUp: false,
+			followUpReasonCode: "future_worry",
+		});
+		expect(patch).toEqual({
+			aiRequiresFollowUp: false,
+			followUpReasonCode: "future_worry",
+			noFollowUpReason: undefined,
+		});
+	});
+});
+
+describe("followUpDecisionSource", () => {
+	const decide = (
+		over: Partial<Parameters<typeof followUpDecisionSource>[0]>
+	) =>
+		followUpDecisionSource({
+			classifierFlagged: false,
+			requiresFollowUp: true,
+			...over,
+		});
+
+	it("none when no follow-up, whatever else is set", () => {
+		expect(
+			decide({
+				classifierFlagged: true,
+				escalationTriggered: true,
+				requiresFollowUp: false,
+			})
+		).toBe("none");
+	});
+
+	it("names each source on its own", () => {
+		expect(decide({ escalationTriggered: true })).toBe("escalation");
+		expect(decide({ classifierFlagged: true })).toBe("ai");
+		expect(decide({ confirmationState: "gave_up" })).toBe("gave_up");
+	});
+
+	it("escalation first, then the classifier, then gave_up", () => {
+		expect(
+			decide({
+				classifierFlagged: true,
+				confirmationState: "gave_up",
+				escalationTriggered: true,
+			})
+		).toBe("escalation");
+		expect(
+			decide({ classifierFlagged: true, confirmationState: "gave_up" })
+		).toBe("ai");
+	});
+
+	it("a stored flag with no other trace is the classifier's", () => {
+		expect(decide({})).toBe("ai");
 	});
 });

@@ -32,6 +32,6 @@ describe("durations", () => {
 		expect(lengthLabel(toExercise(SPEAK_TO_IT, REFLECT_SLOTS))).toBe(
 			"About 45 seconds. Stay with it."
 		);
-		expect(shortLength(toExercise(RESET, {}))).toBe("about a minute");
+		expect(shortLength(toExercise(RESET, {}))).toBe("about 50 seconds");
 	});
 });

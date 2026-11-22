@@ -38,6 +38,10 @@ const TITLES: ExerciseTitle[] = [
 	"speak_to_it",
 	"soften_toward_it",
 	"reset",
+	"pause_before_acting",
+	"slow_it_down",
+	"not_only_you",
+	"name_the_room",
 ];
 
 const stub = vi.hoisted(() => ({
@@ -149,8 +153,8 @@ async function seedExercises(
 	return byId;
 }
 
-/** Runs the mirror and returns the matched title plus the swap sheet's next-best. */
-async function mirror({ firstSession = false } = {}) {
+/** Runs the mirror; `flagged` then marks its metadata at risk. */
+async function runMirror({ firstSession = false, flagged = false } = {}) {
 	const user = await asNewUser();
 	const titleOf = await seedExercises(user);
 	if (!firstSession) {
@@ -171,6 +175,25 @@ async function mirror({ firstSession = false } = {}) {
 		sessionId,
 	});
 
+	if (flagged) {
+		await user.root.run(async (ctx) => {
+			const metadata = await ctx.db
+				.query("emotional_metadata")
+				.withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+				.unique();
+			await ctx.db.patch("emotional_metadata", metadata!._id, {
+				riskFlag: true,
+			});
+		});
+	}
+	return { sessionId, titleOf, user };
+}
+
+/** Runs the mirror and returns the matched title plus the swap sheet's next-best. */
+async function mirror(
+	options: { firstSession?: boolean; flagged?: boolean } = {}
+) {
+	const { sessionId, titleOf, user } = await runMirror(options);
 	const session = await user.root.run((ctx) =>
 		ctx.db.get("sessions", sessionId)
 	);
@@ -197,7 +220,7 @@ describe("exercise routing on meaning", () => {
 		});
 		expect(await mirror()).toEqual({
 			matched: "reset",
-			nextBest: "let_it_land",
+			nextBest: "slow_it_down",
 		});
 	});
 
@@ -208,6 +231,88 @@ describe("exercise routing on meaning", () => {
 		});
 		expect(await mirror()).toEqual({
 			matched: "soften_toward_it",
+			nextBest: "not_only_you",
+		});
+	});
+
+	it("a session the safeguard flags gets Three breaths, and a grounding swap", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "shame",
+		});
+		stub.cache.moderation = moderationResult({
+			categoryScores: { "self-harm": 0.4 },
+		});
+		expect(await mirror()).toEqual({
+			matched: "reset",
+			nextBest: "find_your_edges",
+		});
+	});
+
+	it("a session flagged after it matched swaps only to grounding", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "shame",
+		});
+		expect(await mirror({ flagged: true })).toEqual({
+			matched: "soften_toward_it",
+			nextBest: "find_your_edges",
+		});
+	});
+
+	it("a session flagged after it matched plays grounding, not its match", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "shame",
+		});
+		const { sessionId, user } = await runMirror({ flagged: true });
+		const sit = await user.t.query(api.exercises.getForSession, { sessionId });
+		expect(sit?.exercise.title).toBe("reset");
+	});
+
+	it("a flagged session keeps a grounding exercise it swapped to", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "shame",
+		});
+		const { sessionId, titleOf, user } = await runMirror({ flagged: true });
+		const edges = [...titleOf].find(([, t]) => t === "find_your_edges")![0];
+		await user.root.run((ctx) =>
+			ctx.db.patch("sessions", sessionId, { swappedExerciseIds: [edges] })
+		);
+		const sit = await user.t.query(api.exercises.getForSession, { sessionId });
+		expect(sit?.exercise.title).toBe("find_your_edges");
+	});
+
+	it("a flagged session with no matched exercise falls back to grounding", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "shame",
+		});
+		const { sessionId, user } = await runMirror({ flagged: true });
+		await user.root.run((ctx) =>
+			ctx.db.patch("sessions", sessionId, { matchedExerciseId: undefined })
+		);
+		const sit = await user.t.query(api.exercises.getForSession, { sessionId });
+		expect(sit?.exercise.title).toBe("reset");
+	});
+
+	it("an unflagged session with no matched exercise still falls back to Let it land", async () => {
+		const { sessionId, user } = await runMirror();
+		await user.root.run((ctx) =>
+			ctx.db.patch("sessions", sessionId, { matchedExerciseId: undefined })
+		);
+		const sit = await user.t.query(api.exercises.getForSession, { sessionId });
+		expect(sit?.exercise.title).toBe("let_it_land");
+	});
+
+	it("a lonely session gets Not only you, and the swap follows", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "loneliness",
+		});
+		expect(await mirror()).toEqual({
+			matched: "not_only_you",
 			nextBest: "let_it_land",
 		});
 	});

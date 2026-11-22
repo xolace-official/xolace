@@ -1184,18 +1184,19 @@ export const seedReflections = internalAction({
 });
 
 // ---------------------------------------------------------------------------
-// Exercise seed data — 6 exercises for beta.
+// Exercise seed data — 10 exercises. seedExercises.test.ts checks the
+// rules every client relies on.
 // Run: bunx convex run seed:seedExercises
 // Safe to re-run — upserts by title.
 // ---------------------------------------------------------------------------
 
-const EXERCISES = [
+export const EXERCISES = [
 	{
 		estimatedMinutes: 1.5,
 		intensityRange: { max: 7, min: 2 },
 		steps: [
 			{
-				content: "You named it. Let's just sit with that for a moment.",
+				content: "You named it. Let’s just sit with that for a moment.",
 				durationSeconds: 4,
 				order: 1,
 				type: "text" as const,
@@ -1218,7 +1219,7 @@ const EXERCISES = [
 			},
 			{
 				content:
-					"Notice where in your body '{{user_phrase}}' lives right now. Not to fix it. Just so it knows you heard it.",
+					"Notice where in your body “{{user_phrase}}” lives right now. Not to fix it. Just so it knows you heard it.",
 				defaultContent:
 					"Notice where this lives in your body right now. Not to fix it. Just so it knows you heard it.",
 				durationSeconds: 6,
@@ -1227,7 +1228,7 @@ const EXERCISES = [
 				type: "text" as const,
 			},
 			{
-				content: "You don't have to do anything with it.",
+				content: "You don’t have to do anything with it.",
 				durationSeconds: 6,
 				order: 5,
 				type: "text" as const,
@@ -1242,37 +1243,37 @@ const EXERCISES = [
 		intensityRange: { max: 5, min: 1 },
 		steps: [
 			{
-				content: "Before anything else, let's find where you are.",
+				content: "Before anything else, let’s find where you are.",
 				durationSeconds: 5,
 				order: 1,
 				type: "text" as const,
 			},
 			{
-				content: "Look around. Don't move your head much — just your eyes.",
+				content: "Look around. Don’t move your head much, just your eyes.",
 				durationSeconds: 4,
 				order: 2,
 				type: "text" as const,
 			},
 			{
 				content: "Find three things. A corner. A shadow. A color. Anything.",
-				durationSeconds: 6,
+				durationSeconds: 10,
 				order: 3,
 				type: "text" as const,
 			},
 			{
-				content: "Now feel your feet. Whatever they're touching.",
+				content: "Now feel your feet. Whatever they’re touching.",
 				durationSeconds: 5,
 				order: 4,
 				type: "text" as const,
 			},
 			{
-				content: "Your back. Against what's behind it.",
+				content: "Your back. Against what’s behind it.",
 				durationSeconds: 5,
 				order: 5,
 				type: "text" as const,
 			},
 			{
-				content: "Hands. What temperature are they.",
+				content: "Your hands. What temperature are they?",
 				durationSeconds: 6,
 				order: 6,
 				type: "text" as const,
@@ -1285,7 +1286,7 @@ const EXERCISES = [
 				type: "breath" as const,
 			},
 			{
-				content: "You're here. That's enough.",
+				content: "You’re here. That’s enough.",
 				durationSeconds: 5,
 				order: 8,
 				type: "text" as const,
@@ -1301,14 +1302,14 @@ const EXERCISES = [
 		steps: [
 			{
 				content: "{{mirror_line}}",
-				defaultContent: "You're carrying something heavy.",
+				defaultContent: "You’re carrying something heavy.",
 				durationSeconds: 4,
 				order: 1,
 				slotKeys: ["mirror_line"],
 				type: "text" as const,
 			},
 			{
-				content: "What if you didn't have to make this smaller right now?",
+				content: "What if you didn’t have to make this smaller right now?",
 				durationSeconds: 4,
 				order: 2,
 				type: "text" as const,
@@ -1317,23 +1318,17 @@ const EXERCISES = [
 				breathCycles: 3,
 				breathPattern: "extended_exhale" as const,
 				content:
-					"Breathing in; imagine giving it room.\nBreathing out; rest beside it.",
+					"Breathing in, imagine giving it room.\nBreathing out, rest beside it.",
 				order: 3,
 				type: "breath" as const,
 			},
 			{
 				breathCycles: 1,
 				breathPattern: "slow_exhale" as const,
-				content: "It doesn't have to leave to stop hurting.",
+				content: "It doesn’t have to leave to stop hurting.",
 				durationSeconds: 6,
 				order: 4,
 				syncToBreath: true,
-				type: "text" as const,
-			},
-			{
-				content: "You stayed.",
-				durationSeconds: 5,
-				order: 5,
 				type: "text" as const,
 			},
 		],
@@ -1360,28 +1355,22 @@ const EXERCISES = [
 				type: "text" as const,
 			},
 			{
-				content: "If it could speak, what does it want you to know?",
+				content: "Imagine it could speak. Let it, for a moment.",
 				durationSeconds: 6,
 				order: 3,
 				type: "text" as const,
 			},
 			{
-				content: "This stays on your phone. No one else will see it.",
+				content: "What does it want you to know?",
 				order: 4,
 				promptMaxSeconds: 60,
-				promptPlaceholder: "What does it want you to know?",
+				promptPlaceholder: "Say it however it comes.",
 				type: "private_prompt" as const,
 			},
 			{
 				content: "You heard it. That matters.",
 				durationSeconds: 4,
 				order: 5,
-				type: "text" as const,
-			},
-			{
-				content: "You stayed.",
-				durationSeconds: 5,
-				order: 6,
 				type: "text" as const,
 			},
 		],
@@ -1394,7 +1383,7 @@ const EXERCISES = [
 		intensityRange: { max: 8, min: 3 },
 		steps: [
 			{
-				content: "You said: '{{user_phrase}}'.",
+				content: "You said: “{{user_phrase}}.”",
 				defaultContent: "You named something hard.",
 				durationSeconds: 4,
 				order: 1,
@@ -1403,7 +1392,7 @@ const EXERCISES = [
 			},
 			{
 				content:
-					"Right now, in this moment, you're not the only one feeling something like this.",
+					"Right now, in this moment, you’re not the only one feeling something like this.",
 				durationSeconds: 5,
 				order: 2,
 				type: "text" as const,
@@ -1416,9 +1405,9 @@ const EXERCISES = [
 				type: "text" as const,
 			},
 			{
-				content: "",
+				content: "Feel your hand resting there.",
 				defaultContent: "Feel your hand resting there.",
-				durationSeconds: 4,
+				durationSeconds: 9,
 				hapticIntensity: "medium" as const,
 				order: 4,
 				type: "haptic" as const,
@@ -1434,14 +1423,14 @@ const EXERCISES = [
 				breathCycles: 1,
 				breathPattern: "slow_exhale" as const,
 				content:
-					"You don't have to say it out loud. Just let yourself hear it.",
+					"You don’t have to say it out loud. Just let yourself hear it.",
 				durationSeconds: 6,
 				order: 6,
 				syncToBreath: true,
 				type: "text" as const,
 			},
 			{
-				content: "That was kind. You stayed.",
+				content: "That was kind.",
 				durationSeconds: 5,
 				order: 7,
 				type: "text" as const,
@@ -1456,7 +1445,7 @@ const EXERCISES = [
 		intensityRange: { max: 10, min: 5 },
 		steps: [
 			{
-				content: "Three breaths. That's it.",
+				content: "Three breaths. That’s it.",
 				durationSeconds: 3,
 				order: 1,
 				type: "text" as const,
@@ -1475,16 +1464,241 @@ const EXERCISES = [
 				order: 3,
 				type: "text" as const,
 			},
-			{
-				content: "Okay.",
-				durationSeconds: 4,
-				order: 4,
-				type: "text" as const,
-			},
 		],
 		targetEmotions: ["anxiety", "overwhelm", "dread"],
 		title: "reset",
 		type: "breathing" as const,
+	}, // The four below came with B16. A flagged session (at risk, or intensity 8
+	// and above) is offered only Three breaths, Find your edges, Slow it down and
+	// Name the room (GROUNDING in exercises/match.ts), whatever these ranges say.
+	{
+		estimatedMinutes: 1.5,
+		intensityRange: { max: 7, min: 4 },
+		steps: [
+			{
+				content: "Before you do anything, pause.",
+				durationSeconds: 4,
+				order: 1,
+				type: "text" as const,
+			},
+			{
+				content: "You don’t have to act on it yet.",
+				durationSeconds: 4,
+				order: 2,
+				type: "text" as const,
+			},
+			{
+				breathCycles: 1,
+				breathPattern: "physiological_sigh" as const,
+				content: "Step back from it.",
+				order: 3,
+				type: "breath" as const,
+			},
+			{
+				content: "{{mirror_line}}",
+				defaultContent: "Something just happened that matters to you.",
+				durationSeconds: 4,
+				order: 4,
+				slotKeys: ["mirror_line"],
+				type: "text" as const,
+			},
+			{
+				content:
+					"Notice it: something in you is {{user_emotion}}, and wants to do something.",
+				defaultContent: "Notice it: something in you wants to do something.",
+				durationSeconds: 6,
+				order: 5,
+				slotKeys: ["user_emotion"],
+				type: "text" as const,
+			},
+			{
+				breathCycles: 2,
+				breathPattern: "extended_exhale" as const,
+				content: "Feel the pull.\nDon’t follow it yet.",
+				order: 6,
+				type: "breath" as const,
+			},
+			{
+				content: "An hour from now, what would you be glad you did?",
+				order: 7,
+				promptMaxSeconds: 60,
+				promptPlaceholder: "Whatever comes first.",
+				type: "private_prompt" as const,
+			},
+			{
+				content: "You can decide from here.",
+				durationSeconds: 4,
+				order: 8,
+				type: "text" as const,
+			},
+		],
+		targetEmotions: ["anger", "frustration"],
+		title: "pause_before_acting",
+		type: "cognitive_reframe" as const,
+	},
+	{
+		estimatedMinutes: 1.5,
+		intensityRange: { max: 7, min: 2 },
+		steps: [
+			{
+				content: "Nothing to do here but breathe a little slower.",
+				durationSeconds: 5,
+				order: 1,
+				type: "text" as const,
+			},
+			{
+				breathCycles: 2,
+				breathPattern: "slow_exhale" as const,
+				content: "Follow it in.\nFollow it out.",
+				order: 2,
+				type: "breath" as const,
+			},
+			{
+				content: "A little longer now.",
+				durationSeconds: 3,
+				order: 3,
+				type: "text" as const,
+			},
+			{
+				breathCycles: 3,
+				breathPattern: "extended_exhale" as const,
+				content: "In through your nose.\nOut, slower than it came in.",
+				order: 4,
+				type: "breath" as const,
+			},
+			{
+				breathCycles: 2,
+				breathPattern: "extended_exhale" as const,
+				content:
+					"If it ever feels like too little air, breathe however you need.",
+				durationSeconds: 6,
+				order: 5,
+				syncToBreath: true,
+				type: "text" as const,
+			},
+			{
+				content: "Your breath can find its own pace now.",
+				durationSeconds: 5,
+				order: 6,
+				type: "text" as const,
+			},
+		],
+		targetEmotions: ["anxiety", "stress", "overwhelm", "exhaustion"],
+		title: "slow_it_down",
+		type: "breathing" as const,
+	},
+	{
+		estimatedMinutes: 1.25,
+		intensityRange: { max: 7, min: 3 },
+		steps: [
+			{
+				content: "{{mirror_line}}",
+				defaultContent: "What you’re carrying is heavy.",
+				durationSeconds: 4,
+				order: 1,
+				slotKeys: ["mirror_line"],
+				type: "text" as const,
+			},
+			{
+				content: "This is a hard moment.",
+				durationSeconds: 4,
+				order: 2,
+				type: "text" as const,
+			},
+			{
+				content: "Right now, other people are feeling something like this too.",
+				durationSeconds: 6,
+				order: 3,
+				type: "text" as const,
+			},
+			{
+				content: "Not the same story. Something close to it.",
+				durationSeconds: 5,
+				order: 4,
+				type: "text" as const,
+			},
+			{
+				breathCycles: 2,
+				breathPattern: "extended_exhale" as const,
+				content: "You’re one of many.\nFeeling this is part of being a person.",
+				order: 5,
+				type: "breath" as const,
+			},
+			{
+				content: "It doesn’t mean something is wrong with you.",
+				durationSeconds: 5,
+				order: 6,
+				type: "text" as const,
+			},
+			{
+				content: "It means you’re human, and this hurts.",
+				durationSeconds: 5,
+				order: 7,
+				type: "text" as const,
+			},
+		],
+		targetEmotions: ["shame", "loneliness", "not-belonging", "embarrassment"],
+		title: "not_only_you",
+		type: "self_compassion" as const,
+	},
+	{
+		estimatedMinutes: 1.5,
+		intensityRange: { max: 7, min: 3 },
+		steps: [
+			{
+				content: "Let your eyes leave the screen for a moment.",
+				durationSeconds: 5,
+				order: 1,
+				type: "text" as const,
+			},
+			{
+				content: "Find something blue.",
+				durationSeconds: 8,
+				order: 2,
+				type: "text" as const,
+			},
+			{
+				content: "Find something with a straight edge.",
+				durationSeconds: 8,
+				order: 3,
+				type: "text" as const,
+			},
+			{
+				content: "Find something you could pick up.",
+				durationSeconds: 8,
+				order: 4,
+				type: "text" as const,
+			},
+			{
+				content: "Say its name, quietly or in your head.",
+				durationSeconds: 6,
+				order: 5,
+				type: "text" as const,
+			},
+			{
+				content: "Where are you right now?",
+				order: 6,
+				promptMaxSeconds: 60,
+				promptPlaceholder: "The room, the place, the time of day.",
+				type: "private_prompt" as const,
+			},
+			{
+				content: "That’s where you are. This is now.",
+				durationSeconds: 5,
+				order: 7,
+				type: "text" as const,
+			},
+			{
+				breathCycles: 2,
+				breathPattern: "slow_exhale" as const,
+				content: "Here.",
+				order: 8,
+				type: "breath" as const,
+			},
+		],
+		targetEmotions: ["numbness", "confusion", "overwhelm", "exhaustion"],
+		title: "name_the_room",
+		type: "grounding" as const,
 	},
 ];
 

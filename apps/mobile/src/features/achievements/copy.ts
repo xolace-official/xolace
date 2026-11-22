@@ -81,19 +81,20 @@ export const COPY = {
 			`${earned} of ${total} unlocked`,
 	},
 	milestone: {
-		capped: {
-			line: "You can hold one, so this one isn’t added. Yours is still there for a day you miss.",
-			title: "You already hold a freeze",
-		},
 		daysInARow: "days in a row",
-		earned: {
-			line: "It keeps your streak lit on a day you miss. You can hold one.",
+		// What the day put in hand (B14). Nothing added: no card.
+		freeze: {
+			line: "It keeps your streak lit on a day you miss. You can hold two.",
 			title: "You earned a freeze",
 		},
 		inARow: (days: number) => `${days} in a row`,
-		label: (day: number, line: string, freeze: string | null) =>
-			`${day} days in a row. ${line}${freeze ? ` ${freeze}.` : ""}`,
+		label: (day: number, line: string, added: string | null) =>
+			`${day} days in a row. ${line}${added ? ` ${added}.` : ""}`,
 		lastSeven: "The last 7 days",
+		saver: {
+			line: "It can rekindle your streak if it goes quiet. You can hold one.",
+			title: "You earned a streak saver",
+		},
 	},
 	pins: {
 		limit: "You can pin 3 badges. Unpin one to pin this.",

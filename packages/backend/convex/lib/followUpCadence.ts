@@ -167,6 +167,159 @@ export function abandonRequiresFollowUp(args: {
 }
 
 // =============================================================
+// Why a session did or didn't get a follow-up (internal, never shown)
+// =============================================================
+
+/**
+ * The classifier's rubric lines, one code each (ai/prompts/classifier.ts).
+ * "Yes" codes come with requiresFollowUp true, "no" codes with false.
+ * `no_trigger` is the plain default: none of the yes lines applied.
+ */
+export const FOLLOW_UP_YES_CODES = [
+	"grief",
+	"shame_guilt",
+	"relational_rupture",
+	"identity_despair",
+	"stuck",
+	// Intense worry or stress (intensity >= 7): "how did it go?" is the
+	// natural check-in. Below that line they stay future_worry / general_stress.
+	"high_stakes_worry",
+	"intense_stress",
+] as const;
+
+export const FOLLOW_UP_NO_CODES = [
+	"discharged",
+	"low_intensity",
+	"future_worry",
+	"positive",
+	"general_stress",
+	"no_trigger",
+] as const;
+
+/**
+ * Every stored code. `unknown` is never offered to the model: the parser
+ * writes it when the model gave no valid code, or one on the wrong side of
+ * its own flag. The flag always wins; the code only explains it.
+ */
+export const FOLLOW_UP_REASON_CODES = [
+	...FOLLOW_UP_YES_CODES,
+	...FOLLOW_UP_NO_CODES,
+	"unknown",
+] as const;
+
+export type FollowUpReasonCode = (typeof FOLLOW_UP_REASON_CODES)[number];
+
+const YES_CODES: ReadonlySet<string> = new Set(FOLLOW_UP_YES_CODES);
+const NO_CODES: ReadonlySet<string> = new Set(FOLLOW_UP_NO_CODES);
+
+/** The model's code, kept only when it sits on the same side as its flag. */
+export function parseFollowUpReasonCode(
+	requiresFollowUp: boolean,
+	raw: unknown
+): FollowUpReasonCode {
+	if (typeof raw !== "string") {
+		return "unknown";
+	}
+	const code = raw.trim().toLowerCase();
+	const side = requiresFollowUp ? YES_CODES : NO_CODES;
+	return side.has(code) ? (code as FollowUpReasonCode) : "unknown";
+}
+
+/** The classifier's part of the follow-up read, as stored on emotional_metadata. */
+export type FollowUpRead = {
+	aiRequiresFollowUp?: boolean;
+	followUpReason?: string;
+	followUpReasonCode?: FollowUpReasonCode;
+	noFollowUpReason?: string;
+};
+
+/**
+ * Did the classifier ask for a follow-up? Rows written before
+ * `aiRequiresFollowUp` existed only ever carried `followUpReason` on a yes.
+ */
+export function classifierFlaggedFollowUp(read: FollowUpRead | null): boolean {
+	if (!read) {
+		return false;
+	}
+	return read.aiRequiresFollowUp ?? read.followUpReason !== undefined;
+}
+
+/**
+ * What a re-classification (clarify) writes to the follow-up read. Raise-only,
+ * like the session flag: a yes replaces anything, a no never replaces a yes.
+ * So the stored code always matches the classifier's side of the session's
+ * flag. `undefined` values in the result delete the field when patched.
+ * `followUpReason` keeps the earlier sentence when a new yes gives none.
+ */
+export function refinedFollowUpRead(
+	existing: FollowUpRead,
+	next: Required<
+		Pick<FollowUpRead, "aiRequiresFollowUp" | "followUpReasonCode">
+	> &
+		Pick<FollowUpRead, "followUpReason" | "noFollowUpReason">
+): FollowUpRead {
+	if (next.aiRequiresFollowUp) {
+		return {
+			aiRequiresFollowUp: true,
+			followUpReasonCode: next.followUpReasonCode,
+			noFollowUpReason: undefined,
+			...(next.followUpReason ? { followUpReason: next.followUpReason } : {}),
+		};
+	}
+	if (classifierFlaggedFollowUp(existing)) {
+		return {};
+	}
+	return {
+		aiRequiresFollowUp: false,
+		followUpReasonCode: next.followUpReasonCode,
+		noFollowUpReason: next.noFollowUpReason,
+	};
+}
+
+/**
+ * What decided a session's follow-up, recorded on the session. `compounding`
+ * is written later, by the follow-up start, when compounding alone earned it.
+ */
+export const FOLLOW_UP_DECISION_SOURCES = [
+	"ai",
+	"gave_up",
+	"escalation",
+	"compounding",
+	"none",
+] as const;
+
+export type FollowUpDecisionSource =
+	(typeof FOLLOW_UP_DECISION_SOURCES)[number];
+
+/**
+ * The source of the gate `finalizeFollowUp` was given. When several agree,
+ * the safety signal is named first: escalation, then the classifier, then
+ * gave_up. A stored flag with no other trace (rows from before the
+ * classifier's flag was kept) is the classifier's: deliverMirror raises it
+ * only from the classifier or escalation.
+ */
+export function followUpDecisionSource(args: {
+	requiresFollowUp: boolean;
+	escalationTriggered?: boolean | null;
+	classifierFlagged: boolean;
+	confirmationState?: string | null;
+}): FollowUpDecisionSource {
+	if (!args.requiresFollowUp) {
+		return "none";
+	}
+	if (args.escalationTriggered === true) {
+		return "escalation";
+	}
+	if (args.classifierFlagged) {
+		return "ai";
+	}
+	if (args.confirmationState === "gave_up") {
+		return "gave_up";
+	}
+	return "ai";
+}
+
+// =============================================================
 // Return-event gap guard
 // =============================================================
 

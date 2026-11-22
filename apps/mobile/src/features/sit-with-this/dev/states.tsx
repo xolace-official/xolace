@@ -9,6 +9,12 @@ import {
 	SOFTEN_TOWARD_IT,
 	SPEAK_TO_IT,
 } from "./fixtures";
+import {
+	NAME_THE_ROOM,
+	NOT_ONLY_YOU,
+	PAUSE_BEFORE_ACTING,
+	SLOW_IT_DOWN,
+} from "./fixtures-moderate";
 
 const SHEET = { headerShown: false };
 
@@ -25,6 +31,10 @@ const PAUSED = { paused: true } as const;
 const ROOM = { exercise: MAKE_ROOM };
 const SOFTEN = { exercise: SOFTEN_TOWARD_IT };
 const SPEAK = { exercise: SPEAK_TO_IT };
+const PAUSE = { exercise: PAUSE_BEFORE_ACTING };
+const SLOW = { exercise: SLOW_IT_DOWN };
+const NOT_ONLY = { exercise: NOT_ONLY_YOU };
+const NAMED = { exercise: NAME_THE_ROOM };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
 export const devStates: readonly DevState[] = [
@@ -171,6 +181,10 @@ export const devStates: readonly DevState[] = [
 		title: "Play: Let it land",
 		...play({ exercise: LET_IT_LAND }),
 	},
+	{ id: "play-pause", title: "Play: Pause before you act", ...play(PAUSE) },
+	{ id: "play-slow-it-down", title: "Play: Slow it down", ...play(SLOW) },
+	{ id: "play-not-only-you", title: "Play: Not only you", ...play(NOT_ONLY) },
+	{ id: "play-name-the-room", title: "Play: Name the room", ...play(NAMED) },
 	{ id: "loading", title: "Getting ready", ...play({ status: "loading" }) },
 	{ id: "empty", title: "No exercise available", ...play({ status: "empty" }) },
 ];

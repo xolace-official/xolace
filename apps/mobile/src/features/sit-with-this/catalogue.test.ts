@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveContent, toExercise, typeset } from "./catalogue";
+import { resolveContent, toExercise } from "./catalogue";
 import {
 	LET_IT_LAND,
 	MAKE_ROOM,
@@ -12,7 +12,7 @@ import {
 const land = toExercise(LET_IT_LAND, REFLECT_SLOTS);
 
 describe("toExercise", () => {
-	it("fills the slots and typesets the catalogue's quotes", () => {
+	it("fills the slots into the catalogue's copy", () => {
 		expect(land.name).toBe("Let it land");
 		expect(land.beats.map((b) => b.k)).toEqual([
 			"text",
@@ -49,7 +49,7 @@ describe("toExercise", () => {
 		});
 	});
 
-	it("splits Make room's caption into one line per phase and drops the repeated “You stayed.”", () => {
+	it("splits Make room's caption into one line per phase", () => {
 		const room = toExercise(MAKE_ROOM, REFLECT_SLOTS);
 		expect(room.beats.map((b) => b.k)).toEqual([
 			"mirror",
@@ -61,8 +61,8 @@ describe("toExercise", () => {
 			cyc: 3,
 			pat: "ext",
 			t: [
-				"Breathing in; imagine giving it room.",
-				"Breathing out; rest beside it.",
+				"Breathing in, imagine giving it room.",
+				"Breathing out, rest beside it.",
 			],
 		});
 		expect(room.beats[3]).toEqual({
@@ -73,7 +73,7 @@ describe("toExercise", () => {
 		});
 	});
 
-	it("keeps “That was kind.” and says the hand pulse for two pulses", () => {
+	it("plays the hand pulse with its line, for its seeded length", () => {
 		const soften = toExercise(SOFTEN_TOWARD_IT, REFLECT_SLOTS);
 		expect(soften.beats.at(-1)).toMatchObject({
 			k: "text",
@@ -82,12 +82,12 @@ describe("toExercise", () => {
 		expect(soften.beats[3]).toEqual({
 			intensity: "medium",
 			k: "haptic",
-			s: 6,
+			s: 9,
 			t: "Feel your hand resting there.",
 		});
 	});
 
-	it("makes the private prompt's question the heading", () => {
+	it("makes the private prompt's content the heading", () => {
 		const speak = toExercise(SPEAK_TO_IT, REFLECT_SLOTS);
 		expect(speak.beats.map((b) => b.k)).toEqual([
 			"text",
@@ -112,7 +112,7 @@ describe("toExercise", () => {
 	});
 });
 
-describe("resolveContent and typeset", () => {
+describe("resolveContent", () => {
 	it("uses the default when any slot is missing", () => {
 		const step = {
 			content: "{{a}} {{b}}",
@@ -123,11 +123,5 @@ describe("resolveContent and typeset", () => {
 		};
 		expect(resolveContent(step, { a: "x" })).toBe("fallback");
 		expect(resolveContent(step, { a: "x", b: "y" })).toBe("x y");
-	});
-
-	it("curls apostrophes and quoted phrases", () => {
-		expect(typeset("You don't — 'one step' here")).toBe(
-			"You don’t — “one step” here"
-		);
 	});
 });

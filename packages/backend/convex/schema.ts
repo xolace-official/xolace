@@ -23,6 +23,8 @@ import {
 	escalationSourceValidator,
 	exploreHiddenContinueValidator,
 	explorePhaseValidator,
+	followUpDecisionSourceValidator,
+	followUpReasonCodeValidator,
 	insightFeatureValidator,
 	intakeRowAnswerValidators,
 	licenceValidator,
@@ -72,6 +74,7 @@ import {
 	revokedReasonValidator,
 	suppressedReasonValidator,
 } from "./outreach/validators";
+import { milestoneDetailValidator } from "./streaks/milestones";
 
 // =============================================================
 // XOLACE BETA
@@ -723,6 +726,9 @@ export default defineSchema({
 	// One metadata record per session. 1:1 relationship.
 	//
 	emotional_metadata: defineTable({
+		// The classifier's own requiresFollowUp, before escalation or gave_up
+		// joined it on the session. A re-classification only raises it.
+		aiRequiresFollowUp: v.optional(v.boolean()),
 		// Which classifier version produced this interpretation.
 		// Enables re-classification when models improve —
 		// create a new metadata record with the new version,
@@ -766,6 +772,10 @@ export default defineSchema({
 		// tuning only. Co-located here with all other classifier output.
 		// null/undefined when the classifier did not request a follow-up.
 		followUpReason: v.optional(v.string()),
+		// The rubric line the classifier applied, yes or no (lib/followUpCadence.ts).
+		// Filled for every classification since it was added; absent on older
+		// rows. Same internal-only rule as followUpReason.
+		followUpReasonCode: v.optional(followUpReasonCodeValidator),
 
 		// More nuanced label within the broad category.
 		// "frustration" under "anger", "grief" under "sadness",
@@ -783,6 +793,9 @@ export default defineSchema({
 
 		// 1-10. How intense is this feeling?
 		intensity: v.number(),
+		// One sentence on why the classifier said no. Kept apart from
+		// followUpReason so the check-in card writer never sees a "no" reason.
+		noFollowUpReason: v.optional(v.string()),
 
 		// --- Emotion Classification ---
 
@@ -3060,6 +3073,11 @@ export default defineSchema({
 
 		// Claude-filled slot values for the matched exercise (e.g. user_phrase).
 		exerciseSlots: v.optional(v.record(v.string(), v.string())),
+		// What decided requiresFollowUp when the session closed: the classifier,
+		// gave_up, escalation, or none; compounding when it alone started one
+		// later (followUps.createAndStart). Internal, never shown. Absent on
+		// sessions closed before it existed.
+		followUpDecidedBy: v.optional(followUpDecisionSourceValidator),
 
 		// Workflow ID returned by workflow.start(). Stored here so:
 		// (1) markReturn can target the right workflow on app open
@@ -3274,6 +3292,11 @@ export default defineSchema({
 		// generateMirror (session level = max of this and the end verdict).
 		talkSafety: v.optional(talkPeakValidator),
 		talkSlowed: v.optional(v.boolean()),
+
+		// The feeling words the person picked on the write screen (B10), apart
+		// from what they wrote: a "word_cloud" entry picked only words, a
+		// "guided_entry" picked words and wrote. Absent from older builds.
+		textures: v.optional(v.array(v.string())),
 
 		// --- Temporal Context ---
 		// Stored explicitly for fast pattern queries without
@@ -3520,6 +3543,9 @@ export default defineSchema({
 		achievementId: v.string(),
 		earnedAt: v.number(),
 		emotionalProfileId: v.id("emotional_profiles"),
+		// A streak milestone's rung only: what that day added and its week
+		// (B14, achievements/milestoneDetail.ts). Rows from before B14 have none.
+		milestone: v.optional(milestoneDetailValidator),
 		// When the user pinned it to their profile row (#699); unset when not pinned.
 		// Set only through convex/achievements/pins.ts.
 		pinnedAt: v.optional(v.number()),

@@ -8,6 +8,8 @@ export type MatchInput = {
 	userLanguageTags: string[];
 	entryType: string;
 	confirmationState: "confirmed" | "refined" | "gave_up" | "abandoned";
+	/** The safeguard's read (see `isAtRisk`); absent = not at risk. */
+	atRisk?: boolean;
 };
 
 export type ExerciseTitle =
@@ -16,7 +18,56 @@ export type ExerciseTitle =
 	| "make_room"
 	| "speak_to_it"
 	| "soften_toward_it"
-	| "reset";
+	| "reset"
+	| "pause_before_acting"
+	| "slow_it_down"
+	| "not_only_you"
+	| "name_the_room";
+
+/**
+ * All a flagged session is ever offered: grounding that asks nothing of the
+ * feeling itself. The owner's call (B16): Three breaths, Find your edges,
+ * Slow it down and Name the room may be given in a crisis.
+ */
+const GROUNDING: ReadonlySet<ExerciseTitle> = new Set([
+	"reset",
+	"find_your_edges",
+	"slow_it_down",
+	"name_the_room",
+]);
+
+/** Whether a flagged session may play this exercise (by its seeded title). */
+export function isGroundingTitle(title: string): boolean {
+	return [...GROUNDING].some((t) => t === title);
+}
+
+const HIGH_INTENSITY = 8;
+/** Anger at or above this reaches for Pause before you act first. */
+const PAUSE_FIRST_INTENSITY = 6;
+
+/**
+ * A flagged session: the safeguard's read (`isAtRisk`) or intensity 8 and
+ * above. It gets only the grounding exercises.
+ */
+export function isFlagged(
+	input: Pick<MatchInput, "atRisk" | "intensity">
+): boolean {
+	return input.atRisk === true || input.intensity >= HIGH_INTENSITY;
+}
+
+/** The safeguard's read of a session, as stored or as just decided. */
+export function isAtRisk(signal: {
+	riskFlag?: boolean;
+	safeguardLevel?: string;
+	escalated?: boolean;
+}): boolean {
+	return (
+		signal.riskFlag === true ||
+		signal.escalated === true ||
+		signal.safeguardLevel === "elevated" ||
+		signal.safeguardLevel === "crisis"
+	);
+}
 
 const HIGH_ACTIVATION = new Set([
 	"anxiety",
@@ -29,6 +80,7 @@ const NUMB = new Set(["numbness", "dissociation", "flatness", "anhedonia"]);
 const STUCK = new Set(["helplessness", "despair", "hopelessness"]);
 const SHAME = new Set(["shame", "guilt", "embarrassment"]);
 const ANGER = new Set(["anger", "frustration", "rage", "resentment"]);
+const LONELY = new Set(["loneliness", "not-belonging", "homesickness"]);
 
 const NUMB_TAGS = new Set([
 	"numb",
@@ -66,6 +118,14 @@ const ANGER_TAGS = new Set([
 	"betrayal",
 	"violated",
 ]);
+const LONELY_TAGS = new Set([
+	"lonely",
+	"alone",
+	"isolated",
+	"left out",
+	"invisible",
+	"unseen",
+]);
 
 /** Best-chunk similarity to tonight's text by exercise title (#569); a title may be missing. */
 export type ExerciseSimilarity = Record<string, number>;
@@ -77,8 +137,21 @@ function hasTag(tags: string[], set: Set<string>): boolean {
 /**
  * Returns ranked exercises (primary + fallbacks). Never returns an empty list.
  * Every step is a rule (ADR 0021); only the catch-all ranks on `similarity`.
+ * A flagged session gets only the grounding four, Three breaths first and the
+ * rest in the order its feeling would have put them.
  */
 export function matchExercise(
+	input: MatchInput,
+	similarity?: ExerciseSimilarity
+): ExerciseTitle[] {
+	const ranked = rankExercises(input, similarity);
+	if (!isFlagged(input)) {
+		return ranked;
+	}
+	return ["reset", ...ranked.filter((t) => t !== "reset" && GROUNDING.has(t))];
+}
+
+function rankExercises(
 	input: MatchInput,
 	similarity?: ExerciseSimilarity
 ): ExerciseTitle[] {
@@ -105,28 +178,40 @@ export function matchExercise(
 			"make_room",
 			"speak_to_it",
 			"soften_toward_it",
+			"slow_it_down",
+			"name_the_room",
+			"not_only_you",
+			"pause_before_acting",
 		];
 	}
 
-	if (intensity >= 8 || matches(HIGH_ACTIVATION)) {
+	if (intensity >= HIGH_INTENSITY || matches(HIGH_ACTIVATION)) {
 		return [
 			"reset",
+			"slow_it_down",
 			"let_it_land",
 			"make_room",
 			"find_your_edges",
 			"speak_to_it",
 			"soften_toward_it",
+			"name_the_room",
+			"not_only_you",
+			"pause_before_acting",
 		];
 	}
 
 	if (matches(NUMB) || hasTag(userLanguageTags, NUMB_TAGS)) {
 		return [
 			"find_your_edges",
+			"name_the_room",
 			"let_it_land",
 			"reset",
 			"make_room",
 			"speak_to_it",
 			"soften_toward_it",
+			"slow_it_down",
+			"not_only_you",
+			"pause_before_acting",
 		];
 	}
 
@@ -138,28 +223,58 @@ export function matchExercise(
 			"find_your_edges",
 			"speak_to_it",
 			"soften_toward_it",
+			"slow_it_down",
+			"name_the_room",
+			"not_only_you",
+			"pause_before_acting",
 		];
 	}
 
 	if (matches(SHAME) || hasTag(userLanguageTags, SHAME_TAGS)) {
 		return [
 			"soften_toward_it",
+			"not_only_you",
 			"let_it_land",
 			"make_room",
 			"reset",
 			"find_your_edges",
 			"speak_to_it",
+			"slow_it_down",
+			"name_the_room",
+			"pause_before_acting",
 		];
 	}
 
 	if (matches(ANGER) || hasTag(userLanguageTags, ANGER_TAGS)) {
+		const lead: ExerciseTitle[] =
+			intensity >= PAUSE_FIRST_INTENSITY
+				? ["pause_before_acting", "speak_to_it"]
+				: ["speak_to_it", "pause_before_acting"];
 		return [
-			"speak_to_it",
+			...lead,
 			"make_room",
 			"let_it_land",
 			"reset",
 			"find_your_edges",
 			"soften_toward_it",
+			"slow_it_down",
+			"name_the_room",
+			"not_only_you",
+		];
+	}
+
+	if (matches(LONELY) || hasTag(userLanguageTags, LONELY_TAGS)) {
+		return [
+			"not_only_you",
+			"let_it_land",
+			"soften_toward_it",
+			"make_room",
+			"find_your_edges",
+			"reset",
+			"speak_to_it",
+			"slow_it_down",
+			"name_the_room",
+			"pause_before_acting",
 		];
 	}
 
@@ -170,6 +285,10 @@ export function matchExercise(
 		"find_your_edges",
 		"reset",
 		"speak_to_it",
+		"slow_it_down",
+		"not_only_you",
+		"name_the_room",
+		"pause_before_acting",
 	];
 	if (!similarity) {
 		return order;

@@ -296,6 +296,7 @@ const unseen = (a: AchievementView, n: number) => ({
 	achievementId: a.achievementId,
 	art: NO_ART,
 	copy: a.copy,
+	earnedAt: on(11, 9),
 	id: `fixture_${n}` as Id<"user_achievements">,
 	sparks: a.sparks,
 	title: a.title,
@@ -303,9 +304,33 @@ const unseen = (a: AchievementView, n: number) => ({
 
 export const ONE = [unseen(QUOTE, 1)];
 export const TWO = [unseen(QUOTE, 1), unseen(UND_3, 2)];
-export const DAY_7 = [unseen(S7, 3)];
-export const DAY_30 = [unseen(S30, 4)];
 export const ARRIVAL_DAY = new Date(Date.UTC(2026, 10, 9, 12));
+const ARRIVAL_DAY_KEY = "2026-11-09";
+
+type Added = "saver" | "freeze" | "nothing";
+const ALL_LIT = [true, true, true, true, true, true, true];
+/** Thursday kept by a freeze: the streak held, but it wasn't a day showed up. */
+const THURSDAY_KEPT = [true, true, false, true, true, true, true];
+
+/** A milestone badge as `unseen` returns it since B14: what the day added, and its week. */
+const milestoneBadge = (
+	a: AchievementView,
+	n: number,
+	added: Added,
+	week = ALL_LIT
+) => ({
+	...unseen(a, n),
+	milestone: { added, dayKey: ARRIVAL_DAY_KEY, week },
+});
+
+/** Day 7 as most people meet it: the week's first streak saver. */
+export const DAY_7 = [milestoneBadge(S7, 3, "saver")];
+export const DAY_7_FREEZE = [milestoneBadge(S7, 3, "freeze")];
+export const DAY_7_NOTHING = [milestoneBadge(S7, 3, "nothing")];
+export const DAY_7_KEPT = [milestoneBadge(S7, 3, "saver", THURSDAY_KEPT)];
+/** Earned before B14: no detail, so the arrival claims neither card nor week. */
+export const DAY_7_BEFORE_B14 = [unseen(S7, 3)];
+export const DAY_30 = [milestoneBadge(S30, 4, "freeze")];
 
 export const BACKFILL = {
 	badges: 4,

@@ -1,5 +1,6 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import type { MilestoneDetail } from "../streaks/milestones";
 import { awardAchievement } from "./award";
 import {
 	type GoalCounter,
@@ -78,13 +79,21 @@ export async function awardStreakRungs(
 	ctx: MutationCtx,
 	emotionalProfileId: Id<"emotional_profiles">,
 	longestStreak: { from: number; to: number },
-	earnedAt: number
+	earnedAt: number,
+	/** The rung this day reached, with what it added (B14); others get none. */
+	milestone?: { rung: number; detail: MilestoneDetail }
 ): Promise<void> {
 	for (
 		let rung = nextStreakRungAfter(longestStreak.from);
 		rung <= longestStreak.to;
 		rung = nextStreakRungAfter(rung)
 	) {
-		await awardAchievement(ctx, emotionalProfileId, `streak-${rung}`, earnedAt);
+		await awardAchievement(
+			ctx,
+			emotionalProfileId,
+			`streak-${rung}`,
+			earnedAt,
+			milestone?.rung === rung ? milestone.detail : undefined
+		);
 	}
 }

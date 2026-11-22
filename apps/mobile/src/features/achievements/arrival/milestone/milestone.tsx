@@ -15,7 +15,7 @@ import {
 import { Count } from "@/features/achievements/arrival/milestone/count";
 import { Embers } from "@/features/achievements/arrival/milestone/embers";
 import { Fire } from "@/features/achievements/arrival/milestone/fire";
-import { MilestoneFreeze } from "@/features/achievements/arrival/milestone/milestone-freeze";
+import { AddedCard } from "@/features/achievements/arrival/milestone/milestone-added";
 import { Week } from "@/features/achievements/arrival/milestone/week";
 import { OnceShown } from "@/features/achievements/arrival/once-shown";
 import { COPY } from "@/features/achievements/copy";
@@ -43,7 +43,7 @@ export function Milestone({
 	milestone: MilestoneModel;
 }) {
 	const top = (y: number) => ({ top: y + geo.dy });
-	const lifts = milestone.week !== null || milestone.freeze !== null;
+	const lifts = milestone.week !== null || milestone.added !== null;
 	const out = useAnimatedStyle(() => {
 		const o = outAt(eng.get());
 		return { opacity: 1 - o, transform: [{ translateY: OUT_Y * o }] };
@@ -123,13 +123,8 @@ export function Milestone({
 						to={milestone.day}
 					/>
 				) : null}
-				{milestone.freeze ? (
-					<MilestoneFreeze
-						dark={dark}
-						eng={eng}
-						freeze={milestone.freeze}
-						geo={geo}
-					/>
+				{milestone.added ? (
+					<AddedCard added={milestone.added} dark={dark} eng={eng} geo={geo} />
 				) : null}
 			</Animated.View>
 			<OnceShown>

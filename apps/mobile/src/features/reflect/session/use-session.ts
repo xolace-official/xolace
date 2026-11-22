@@ -69,7 +69,9 @@ export function useSession() {
 			entryType: EntryType,
 			inputDuration?: number,
 			freezeOccurred = false,
-			freezeDuration?: number
+			freezeDuration?: number,
+			/** The feeling words they picked (B10), read with what they wrote. */
+			textures: readonly string[] = []
 		) => {
 			const serverEntryType = mapEntryType(entryType);
 			const { pendingEventPrompt: pending, replySeed } = useAppStore.getState();
@@ -96,6 +98,7 @@ export function useSession() {
 					rawInputLength: rawText.length,
 					rawText,
 					sessionId: newSessionId,
+					...(textures.length > 0 && { textures: [...textures] }),
 				});
 			} catch (error) {
 				try {

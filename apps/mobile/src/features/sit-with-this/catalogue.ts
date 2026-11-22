@@ -10,7 +10,6 @@ import type {
 
 const TEXT_DEFAULT_S = 8;
 const HAND_DEFAULT_S = 6;
-const HAND_MIN_S = 6;
 const BREATH_DEFAULT_CYCLES = 1;
 
 const PATTERN: Record<
@@ -35,15 +34,8 @@ export function resolveContent(step: CatalogueStep, slots: Slots): string {
 	return step.content.replace(SLOT, (_, k: string) => slots[k] ?? "");
 }
 
-const APOSTROPHE = /(\w)'(\w)/g;
-const QUOTED = /'([^']+)'/g;
-
-export function typeset(text: string): string {
-	return text.replace(APOSTROPHE, "$1’$2").replace(QUOTED, "“$1”");
-}
-
 function toBeat(step: CatalogueStep, slots: Slots): Beat {
-	const text = typeset(resolveContent(step, slots));
+	const text = resolveContent(step, slots);
 	const pat = PATTERN[step.breathPattern ?? "slow_exhale"];
 	const cyc = step.breathCycles ?? BREATH_DEFAULT_CYCLES;
 	switch (step.type) {
@@ -56,11 +48,11 @@ function toBeat(step: CatalogueStep, slots: Slots): Beat {
 			return {
 				intensity: step.hapticIntensity ?? "medium",
 				k: "haptic",
-				s: Math.max(HAND_MIN_S, step.durationSeconds ?? HAND_DEFAULT_S),
-				t: text || typeset(step.defaultContent ?? ""),
+				s: step.durationSeconds ?? HAND_DEFAULT_S,
+				t: text,
 			};
 		case "private_prompt":
-			return { k: "prompt", t: typeset(step.promptPlaceholder ?? text) };
+			return { k: "prompt", t: text };
 		default: {
 			if (step.syncToBreath) {
 				return { cyc, k: "sync", pat, t: text };
@@ -77,27 +69,12 @@ function toBeat(step: CatalogueStep, slots: Slots): Beat {
 	}
 }
 
-function withoutStayed(beats: Beat[]): Beat[] {
-	const last = beats.at(-1);
-	if (!last || (last.k !== "text" && last.k !== "mirror")) {
-		return beats;
-	}
-	const stayed = COPY.stayed.title;
-	if (!last.t.endsWith(stayed)) {
-		return beats;
-	}
-	const rest = last.t.slice(0, -stayed.length).trim();
-	return rest
-		? [...beats.slice(0, -1), { ...last, t: rest }]
-		: beats.slice(0, -1);
-}
-
 const exerciseName = (id: string) => COPY.names[id] ?? COPY.unnamed;
 
 export function toExercise(doc: CatalogueExercise, slots: Slots): Exercise {
 	const steps = [...doc.steps].sort((a, b) => a.order - b.order);
 	return {
-		beats: withoutStayed(steps.map((s) => toBeat(s, slots))),
+		beats: steps.map((s) => toBeat(s, slots)),
 		id: doc.title,
 		key: doc._id,
 		name: exerciseName(doc.title),

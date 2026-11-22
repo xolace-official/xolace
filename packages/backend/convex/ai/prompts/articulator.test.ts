@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { entryForAi } from "./accumulatedInput";
 import { buildArticulatorPrompt } from "./articulator";
 
 /**
@@ -107,5 +108,104 @@ describe("articulator — intake signal instructions (ADR-0014)", () => {
 		expect(system).toContain("struggle to find the words");
 		expect(system).toContain("Only let the intake claim shape your mirror");
 		expect(system).toContain("Never mention intake");
+	});
+});
+
+/** B10: the mirror reads the feeling words people pick, apart from their writing. */
+const buildWith = ({
+	entryType,
+	rawInput,
+	textures,
+	writtenChars,
+	wroteLater,
+}: {
+	entryType: string;
+	rawInput: string;
+	textures?: string[];
+	writtenChars?: number;
+	wroteLater?: boolean;
+}) =>
+	buildArticulatorPrompt({
+		classification: {
+			intensity: 5,
+			primaryEmotion: "sadness",
+			primaryEmotionConfidence: 0.6,
+			requiresFollowUp: false,
+			specificity: 3,
+			supportNeed: "none",
+			thematicTags: [],
+			userLanguageTags: [],
+		},
+		entryType,
+		intakeSignals: { disclosureStyle: "keep_it_brief" },
+		isFirstSession: true,
+		mirrorTone: "adaptive",
+		patternSummary: "(none)",
+		rawInput: entryForAi({ entryType, rawInput, textures }),
+		recentMirrors: [],
+		safeguardLevel: "none",
+		textures,
+		writtenChars,
+		wroteLater,
+	});
+
+describe("articulator — picked feeling words (B10)", () => {
+	it("words only, then written in a refinement: no longer says they wrote nothing", () => {
+		const { system } = buildWith({
+			entryType: "word_cloud",
+			rawInput: "heavy, restless",
+			textures: ["heavy", "restless"],
+			writtenChars: 10,
+			wroteLater: true,
+		});
+		expect(system).not.toContain("wrote nothing");
+		expect(system).toContain(
+			"At first they only picked these feeling words, without writing: heavy, restless"
+		);
+		expect(system).toContain("never a picked word as something they said");
+		expect(system).toContain("10 characters written");
+	});
+
+	it("typed only: no feeling-words block, their text as the input", () => {
+		const { system, user } = buildWith({
+			entryType: "open_prompt",
+			rawInput: "work again, all week",
+		});
+		expect(system).not.toContain("## Feeling Words");
+		expect(user).toBe("work again, all week");
+		expect(system).toContain("20 characters written");
+	});
+
+	it("words only: says they only picked, and never to present them as said", () => {
+		const { system, user } = buildWith({
+			entryType: "word_cloud",
+			rawInput: "heavy, restless",
+			textures: ["heavy", "restless"],
+			writtenChars: 0,
+		});
+		expect(system).toContain("## Feeling Words");
+		expect(system).toContain("wrote nothing: heavy, restless");
+		expect(system).toContain(
+			"never present them as something they wrote or said"
+		);
+		expect(user).toContain("they only picked feeling words");
+		expect(system).toContain("0 characters written");
+	});
+
+	it("both: two labelled inputs, read as one moment, quote only their words", () => {
+		const { system, user } = buildWith({
+			entryType: "guided_entry",
+			rawInput: "work again, all week",
+			textures: ["heavy", "restless"],
+			writtenChars: 20,
+		});
+		expect(user).toBe(
+			"What they wrote:\nwork again, all week\n\nFeeling words they picked: heavy, restless"
+		);
+		expect(system).toContain("picked these feeling words: heavy, restless");
+		expect(system).toContain("describe the same moment");
+		expect(system).toContain("never a picked word as something they said");
+		// The count is what they wrote, not the labelled input.
+		expect(system).toContain("20 characters written");
 	});
 });

@@ -9,6 +9,7 @@
 import {
 	type ExerciseSimilarity,
 	type ExerciseTitle,
+	isAtRisk,
 	matchExercise,
 } from "../exercises/match";
 import type { ClassificationResult } from "./providers/anthropic";
@@ -64,6 +65,11 @@ export function decideMirrorOutcome(input: {
 
 	const rankedTitles = matchExercise(
 		{
+			atRisk: isAtRisk({
+				escalated: safeguard.isCrisis || safeguard.isEscalation,
+				riskFlag: safeguard.riskFlag,
+				safeguardLevel: safeguard.level,
+			}),
 			confirmationState: "confirmed",
 			entryType: input.entryType,
 			granularLabel: classification.granularLabel,

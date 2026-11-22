@@ -26,6 +26,8 @@ export const LIBRARY_HELPED_FLOOR = 15;
 
 export const QUOTE_REPLY_MAX_CHARS = 500;
 export const REFLECTION_INPUT_MAX_CHARS = 5000;
+/** Feeling words a reflection may carry alongside (or instead of) its text (B10). */
+export const REFLECTION_MAX_TEXTURES = 4;
 export const REFINEMENT_MAX_TURNS = 2;
 export const EXERCISE_MAX_SWAPS = 2;
 

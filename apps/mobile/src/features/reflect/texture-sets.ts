@@ -1,3 +1,5 @@
+import { REFLECTION_MAX_TEXTURES } from "@xolace/backend/shared";
+
 export type TextureSetId = "flat" | "tender" | "bright" | "charged";
 
 export const TEXTURE_SET_IDS: readonly TextureSetId[] = [
@@ -7,7 +9,8 @@ export const TEXTURE_SET_IDS: readonly TextureSetId[] = [
 	"charged",
 ];
 
-export const MAX_TEXTURES = 4;
+/** The server refuses more (B10), so the picker stops here too. */
+export const MAX_TEXTURES = REFLECTION_MAX_TEXTURES;
 
 export const TEXTURE_SETS: Record<TextureSetId, readonly string[]> = {
 	bright: [
