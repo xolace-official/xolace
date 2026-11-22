@@ -469,6 +469,16 @@ describe("delivery errors", () => {
 		expect(h.queued).toEqual([]);
 	});
 
+	it("retries when Clerk's body can't be read after a 200, then sends", async () => {
+		const user = await signedUp();
+		h.clerk.push(new Response("{not json", { status: 200 }));
+
+		const delivery = await deliveredOnce(user);
+
+		expect(delivery).toMatchObject({ attempts: 2, status: "sent" });
+		expect(h.queued).toHaveLength(1);
+	});
+
 	it("fails a Clerk 4xx for good, with its status", async () => {
 		const user = await signedUp();
 		h.clerk.push(new Response(null, { status: 403 }));

@@ -103,6 +103,15 @@ export async function primaryEmailOf(
 		console.error("[clerk] user email failed", res.status);
 		return { kind: "failed", status: res.status };
 	}
-	const address = verifiedPrimary(await res.json());
+	let body: unknown;
+	try {
+		body = await res.json();
+	} catch (err) {
+		// A body cut off or garbled after a 200: transient, so retried like a
+		// network error (no status), never failed for good.
+		console.error("[clerk] user email body unreadable", err);
+		return { kind: "failed" };
+	}
+	const address = verifiedPrimary(body);
 	return address === null ? { kind: "missing" } : { address, kind: "found" };
 }
