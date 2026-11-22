@@ -16,6 +16,7 @@ const quotedList = (values: readonly string[]) =>
  * @param isFirstSession - If true, include guidance to be slightly more conservative with confidence
  * @param entryType - How the input was entered: "open_prompt" | "guided_entry" | "body_scan" | "word_cloud" | "voice" | "talk"
  * @param timeOfDay - Optional time context: "early_morning" | "morning" | "afternoon" | "evening" | "late_night"
+ * @param textures - Feeling words picked with the entry (B10), labelled apart in `rawInput`
  * @returns An object with `system` (the composed instruction prompt) and `user` (metadata-framed raw input)
  */
 
@@ -24,7 +25,9 @@ export function buildClassifierPrompt(
 	patternSummary: string,
 	isFirstSession: boolean,
 	entryType: string,
-	timeOfDay?: string
+	timeOfDay?: string,
+	/** B10: feeling words picked with the entry; the input labels them apart. */
+	textures?: readonly string[]
 ): { system: string; user: string } {
 	const system = `You are an emotion classification system for Xolace, an emotional processing app. Your job is to analyze raw emotional input and return a structured JSON classification.
 
@@ -34,7 +37,7 @@ You are NOT a therapist. You are NOT having a conversation. You are a precise an
 
 You will receive one of these input types, indicated by a tag in the user message:
 - **Free text**: Unstructured writing, often messy, ungrammatical, stream-of-consciousness
-- **Texture words**: 2-3 tapped words like "heavy, empty" or "tight, foggy, restless". These are somatic/emotional textures, not literal descriptions. "Heavy" means emotional weight, not physical heaviness. Infer the emotional state from the combination of textures.
+- **Texture words**: up to four tapped words like "heavy, empty" or "tight, foggy, restless". These are somatic/emotional textures, not literal descriptions. "Heavy" means emotional weight, not physical heaviness. Infer the emotional state from the combination of textures.
 - **Body areas**: Tapped body locations where emotion is felt physically. Chest = often grief, anxiety, love. Stomach = often dread, guilt, anxiety. Head = often overwhelm, rumination. Throat = often suppressed expression, things unsaid. Hands = often helplessness, restlessness.
 - **Voice transcription**: May contain filler words, repetition, and incomplete sentences. This is normal for spoken emotional expression.
 
@@ -185,6 +188,13 @@ ${patternSummary}`;
 			break;
 		default:
 			userParts.push("[Text input]");
+	}
+
+	// Picked feeling words beside writing (B10). Words only already says so above.
+	if (textures?.length && entryType !== "word_cloud") {
+		userParts.push(
+			"[Feeling words were also picked alongside it — tapped, not typed. Both parts describe the same moment; classify them together.]"
+		);
 	}
 
 	// Time context

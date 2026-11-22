@@ -114,6 +114,7 @@ describe("lib/shared, the values every client bundles", () => {
 			  "QUOTE_REPLY_MAX_CHARS": 500,
 			  "REFINEMENT_MAX_TURNS": 2,
 			  "REFLECTION_INPUT_MAX_CHARS": 5000,
+			  "REFLECTION_MAX_TEXTURES": 4,
 			  "RETENTION_KEEPS_LONGER": [
 			    "6_months",
 			    "1_year",

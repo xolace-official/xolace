@@ -20,7 +20,10 @@ import {
 import { hasPremium } from "./lib/premium";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
 import { purgeSessions } from "./lib/sessionCascade";
-import { REFLECTION_INPUT_MAX_CHARS } from "./lib/shared";
+import {
+	REFLECTION_INPUT_MAX_CHARS,
+	REFLECTION_MAX_TEXTURES,
+} from "./lib/shared";
 import { getDayOfWeek, getTimeOfDay } from "./lib/timeOfDay";
 import {
 	confirmationStateValidator,
@@ -47,6 +50,32 @@ const TALK_MIRROR_WAIT_MS = 24 * 60 * 60 * 1000;
 // words); the mirror rate limit is the real cost containment, this is cheap
 // insurance on token spend.
 const MAX_RAW_INPUT = REFLECTION_INPUT_MAX_CHARS;
+/** Longest picked word kept: the app's longest ("heavy-hearted") with room to spare. */
+const MAX_TEXTURE_CHARS = 32;
+
+/**
+ * The picked feeling words as stored: trimmed, each once, none empty. More
+ * than REFLECTION_MAX_TEXTURES, or a word too long to be one, is refused: the
+ * app never sends either, and they reach every prompt that reads the entry.
+ */
+export function checkedTextures(
+	textures: readonly string[] | undefined
+): string[] | undefined {
+	if (textures === undefined) {
+		return;
+	}
+	const words = [...new Set(textures.map((t) => t.trim()))].filter(Boolean);
+	if (
+		words.length > REFLECTION_MAX_TEXTURES ||
+		words.some((w) => w.length > MAX_TEXTURE_CHARS)
+	) {
+		throw new ConvexError({
+			code: "invalid_textures",
+			max: REFLECTION_MAX_TEXTURES,
+		});
+	}
+	return words.length > 0 ? words : undefined;
+}
 
 // Terminal states — sessions in these states cannot be transitioned further.
 const TERMINAL_STATES = new Set(["completed", "abandoned"]);
@@ -326,9 +355,16 @@ export const submitInput = mutation({
 		/** @deprecated derived from rawInput server-side; value ignored */
 		rawText: v.optional(v.string()),
 		sessionId: v.id("sessions"),
+		/**
+		 * The feeling words picked on the write screen (B10), at most
+		 * REFLECTION_MAX_TEXTURES. Sent for words only and for words with
+		 * writing; older builds send none and are read as before.
+		 */
+		textures: v.optional(v.array(v.string())),
 	},
 	handler: async (ctx, args) => {
 		const { session } = await requireSessionOwnership(ctx, args.sessionId);
+		const textures = checkedTextures(args.textures);
 
 		if (session.state !== "initiated") {
 			throw new Error(`Cannot submit input in state "${session.state}"`);
@@ -360,6 +396,7 @@ export const submitInput = mutation({
 			rawInput: rawText,
 			rawInputLength: rawText.length,
 			state: "processing",
+			...(textures && { textures }),
 			timeOfDay: getTimeOfDay(now),
 			updatedAt: now.getTime(),
 		});

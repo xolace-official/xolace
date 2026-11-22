@@ -11,7 +11,7 @@ import { clearSettingUp, kindlingSlot } from "../../paths/settingUp";
 import { posthog } from "../../posthog";
 import { renderSemanticProfile } from "../../semanticProfiles";
 import { MAX_TURNS } from "../../sessionTurns";
-import { buildAccumulatedInput } from "../prompts/accumulatedInput";
+import { buildAccumulatedInput, entryForAi } from "../prompts/accumulatedInput";
 import {
 	type BindEntry,
 	type BindTrack,
@@ -246,7 +246,7 @@ async function loadSessionText(ctx: QueryCtx, sessionId: Id<"sessions">) {
 		.withIndex("by_session", (q) => q.eq("sessionId", sessionId))
 		.take(MAX_TURNS);
 	// Blank text has no meaning to search: null = "skipped", not a failed embed.
-	const text = buildAccumulatedInput(session.rawInput, turns);
+	const text = buildAccumulatedInput(entryForAi(session), turns);
 	return text.trim() ? text : null;
 }
 

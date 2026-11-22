@@ -37,6 +37,10 @@ interface ArticulatorInput {
 	sessionMode?: "day" | "night";
 	// User's named space (if set): personalizes identity responses
 	spaceName?: string;
+	// B10: the feeling words they picked on the write screen. `rawInput` then
+	// carries them labelled apart from their writing (entryForAi); this adds
+	// how to read the two together. Absent = none picked, or an older build.
+	textures?: readonly string[];
 	// How many turns this session has taken so far (refinement count), handed
 	// to the model alongside intakeSignals as a corroboration signal. Omitted
 	// on the initial pass.
@@ -45,6 +49,8 @@ interface ArticulatorInput {
 	// expressive read. Gated on isPremium only — applies across all tones.
 	useAudioTags?: boolean;
 	userFeedback?: string;
+	// Characters they actually wrote, when `rawInput` is labelled (B10).
+	writtenChars?: number;
 }
 
 /**
@@ -88,6 +94,8 @@ export function buildArticulatorPrompt(input: ArticulatorInput): {
 		useAudioTags,
 		intakeSignals,
 		turnCount,
+		textures,
+		writtenChars,
 	} = input;
 
 	// The reach paths (§4.3): the blocks only hold once the standing prompt
@@ -98,11 +106,11 @@ export function buildArticulatorPrompt(input: ArticulatorInput): {
 	const claimStrengthInstructions = getClaimStrengthInstructions(claimStrength);
 	const safeguardInstructions = getSafeguardInstructions(safeguardLevel);
 	const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
-	const entryTypeInstructions = getEntryTypeInstructions(entryType, isFaint);
+	const entryTypeInstructions = `${getEntryTypeInstructions(entryType, isFaint)}${getFeelingWordsInstructions(textures, entryType)}`;
 	const intakeInstructions = getIntakeInstructions(
 		intakeSignals,
 		entryType,
-		rawInput,
+		writtenChars ?? rawInput.length,
 		turnCount
 	);
 	const identityLine = getIdentityLine(spaceName);
@@ -419,7 +427,7 @@ const EMOTION_AWARENESS_CLAIMS: Record<
 function getIntakeInstructions(
 	intakeSignals: IntakeSignals | null | undefined,
 	entryType: string | undefined,
-	rawInput: string,
+	charsWritten: number,
 	turnCount?: number
 ): string {
 	if (!intakeSignals) {
@@ -436,8 +444,27 @@ function getIntakeInstructions(
 
 	return `\n\n## Intake Signal (first session only, unverified)
 At onboarding, before writing anything, this user said ${claims.join(" and ")}.
-This session so far: entry type "${entryType ?? "open_prompt"}", ${rawInput.length} characters written${turnCount ? `, ${turnCount} turn(s)` : ""}.
+This session so far: entry type "${entryType ?? "open_prompt"}", ${charsWritten} characters written${turnCount ? `, ${turnCount} turn(s)` : ""}.
 Only let the intake claim shape your mirror if what they actually did tonight corroborates it. If tonight's behavior contradicts the claim (e.g. they wrote at length despite claiming brevity, or wrote clearly despite claiming numbness), ignore the intake claim entirely and respond only to what's actually here. If it does corroborate, you may gently acknowledge it (e.g. "it's okay you don't have the words for this yet") without making them feel profiled. Never mention intake, onboarding, or that you were told anything about them.`;
+}
+
+/**
+ * How to read picked feeling words with (or without) writing (B10). The input
+ * labels them apart ("What they wrote" / "Feeling words they picked"); this
+ * says they are one moment, and that a tapped word is never their quote.
+ */
+export function getFeelingWordsInstructions(
+	textures: readonly string[] | undefined,
+	entryType?: string
+): string {
+	if (!textures?.length) {
+		return "";
+	}
+	const words = textures.join(", ");
+	if (entryType === "word_cloud") {
+		return `## Feeling Words\nThey picked these feeling words and wrote nothing: ${words}. Build the mirror from them. They were tapped, not typed: never present them as something they wrote or said.\n\n`;
+	}
+	return `## Feeling Words\nAlongside their own words, they picked these feeling words: ${words}. Both are theirs and describe the same moment: let the words color how you read what they said, and what they said tell you what the words are about. Where they pull apart, that tension is part of the picture. The words were tapped, not typed: quote only their own words, never a picked word as something they said.\n\n`;
 }
 
 /**
@@ -451,8 +478,8 @@ function getEntryTypeInstructions(
 	switch (entryType) {
 		case "word_cloud":
 			return isFaint
-				? "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Do not add emotions not implied by the words.\n\n"
-				: "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Make the combination feel like a complete emotional picture. Do not add emotions not implied by the words.\n\n";
+				? "## Entry Type: Texture Words\nThe user tapped up to four emotional texture words. These ARE their language: build the mirror around them. Do not add emotions not implied by the words.\n\n"
+				: "## Entry Type: Texture Words\nThe user tapped up to four emotional texture words. These ARE their language: build the mirror around them. Make the combination feel like a complete emotional picture. Do not add emotions not implied by the words.\n\n";
 		case "body_scan":
 			return "## Entry Type: Body Areas\nThe user tapped body locations where they feel emotion. Translate somatic to emotional: chest = grief/anxiety/tightness, stomach = dread/guilt, head = overwhelm/rumination, throat = suppression/things unsaid, hands = helplessness/restlessness.\n\n";
 		case "voice":

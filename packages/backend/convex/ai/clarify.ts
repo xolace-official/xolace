@@ -20,6 +20,7 @@ import {
 import { resolveMirrorTone } from "./mirrorPlan";
 import {
 	buildAccumulatedInput,
+	entryForAi,
 	type RefinementTurn,
 } from "./prompts/accumulatedInput";
 import {
@@ -71,6 +72,7 @@ export const handleClarification = internalAction({
 					entryType?: string;
 					inputDuration?: number;
 					freezeOccurred?: boolean;
+					textures?: string[];
 					escalationTriggered?: boolean;
 					gapNamed?: boolean;
 					[key: string]: unknown;
@@ -89,6 +91,7 @@ export const handleClarification = internalAction({
 				entryType?: string;
 				inputDuration?: number;
 				freezeOccurred?: boolean;
+				textures?: string[];
 				[key: string]: unknown;
 			};
 
@@ -137,8 +140,13 @@ export const handleClarification = internalAction({
 			const userFeedback = currentTurn?.userFeedback;
 			const addedText = (currentTurn?.userInput ?? "").trim();
 
+			// Base: what they wrote and the feeling words they picked (B10).
 			const accumulatedInput = buildAccumulatedInput(
-				(session.rawInput as string | undefined) ?? "",
+				entryForAi({
+					entryType: session.entryType,
+					rawInput: (session.rawInput as string | undefined) ?? "",
+					textures: session.textures,
+				}),
 				turns
 			);
 
@@ -172,7 +180,8 @@ export const handleClarification = internalAction({
 							}),
 							context.isFirstSession,
 							session.entryType ?? "open_prompt",
-							session.timeOfDay as string | undefined
+							session.timeOfDay as string | undefined,
+							session.textures
 						)
 					: null;
 
@@ -342,6 +351,7 @@ export const handleClarification = internalAction({
 				// refinement is grounded in who this person is, matching process.ts.
 				semanticProfile: context.semanticProfile,
 				spaceName: context.preferences?.spaceName,
+				textures: session.textures,
 				turnCount: args.turnNumber,
 				useAudioTags: context.isPremium,
 				userFeedback,

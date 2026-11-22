@@ -55,3 +55,46 @@ export function buildAccumulatedInput(
 		),
 	].join("\n\n");
 }
+
+/** What a reflection was given: the person's own words and the feeling words they picked. */
+export interface EntryInput {
+	entryType?: string;
+	rawInput?: string;
+	textures?: readonly string[];
+}
+
+const WORDS_ONLY = "word_cloud";
+
+/**
+ * The entry as every AI reader sees it: the classifier, the safeguard's
+ * moderation, the memory and exercise embeddings, the mirror and its
+ * refinements (B10). Without picked words it is `rawInput`, exactly as before
+ * B10. With them, what they wrote and what they picked arrive as two labelled
+ * parts of one moment, so no reader mistakes a tapped word for their writing.
+ * A words-only entry stored the joined words as `rawInput`; the label says
+ * they only picked.
+ */
+export function entryForAi({
+	rawInput = "",
+	entryType,
+	textures,
+}: EntryInput): string {
+	if (!textures?.length) {
+		return rawInput;
+	}
+	const picked = `Feeling words they picked: ${textures.join(", ")}`;
+	const written = entryType === WORDS_ONLY ? "" : rawInput.trim();
+	if (!written) {
+		return `They wrote nothing; they only picked feeling words.\n${picked}`;
+	}
+	const label = entryType === "voice" ? "What they said" : "What they wrote";
+	return `${label}:\n${written}\n\n${picked}`;
+}
+
+/**
+ * Only what the person wrote or said: the one source a "You said" quote may
+ * come from. A words-only entry has none, even from builds that sent the
+ * picked words as its text.
+ */
+export const ownWords = ({ rawInput = "", entryType }: EntryInput): string =>
+	entryType === WORDS_ONLY ? "" : rawInput;

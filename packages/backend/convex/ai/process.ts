@@ -20,6 +20,7 @@ import {
 	collectRecentMirrors,
 } from "./helpers/patternSummary";
 import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
+import { entryForAi, ownWords } from "./prompts/accumulatedInput";
 import {
 	buildArticulatorPrompt,
 	hasMetaNarration,
@@ -65,6 +66,7 @@ export const generateMirror = internalAction({
 					timeOfDay?: string;
 					sessionMode?: "day" | "night";
 					emotionalProfileId: string;
+					textures?: string[];
 					[key: string]: unknown;
 			  }
 			| undefined;
@@ -135,15 +137,24 @@ export const generateMirror = internalAction({
 				timeOfDay?: string;
 				sessionMode?: "day" | "night";
 				emotionalProfileId: string;
+				textures?: string[];
 				[key: string]: unknown;
 			};
+			// What they wrote and the feeling words they picked, labelled apart
+			// (B10). Without picked words it is their text, exactly as before.
+			const entry = entryForAi({
+				entryType: session.entryType,
+				rawInput: args.rawText,
+				textures: session.textures,
+			});
 
 			const classifierPrompt = buildClassifierPrompt(
-				args.rawText,
+				entry,
 				patternSummary,
 				context.isFirstSession,
 				session.entryType ?? "open_prompt",
-				session.timeOfDay
+				session.timeOfDay,
+				session.textures
 			);
 			console.log("classifier prompt ", classifierPrompt);
 
@@ -156,7 +167,7 @@ export const generateMirror = internalAction({
 			const [moderationResult, classification, [episodic, exerciseSimilarity]] =
 				await Promise.all([
 					moderationCache
-						.fetch(ctx, { text: args.rawText })
+						.fetch(ctx, { text: entry })
 						.catch(() => MODERATION_UNAVAILABLE),
 					classifierCache.fetch(ctx, {
 						systemPrompt: classifierPrompt.system,
@@ -166,7 +177,7 @@ export const generateMirror = internalAction({
 						? Promise.resolve<[EpisodicSearch, ExerciseSimilarity | undefined]>(
 								[{ matches: [] }, undefined]
 							)
-						: embedSessionText(args.rawText).then((vector) =>
+						: embedSessionText(entry).then((vector) =>
 								Promise.all<
 									[
 										Promise<EpisodicSearch>,
@@ -253,13 +264,22 @@ export const generateMirror = internalAction({
 					isFirstSession: context.isFirstSession,
 					mirrorTone,
 					patternSummary: articulatorPatternSummary,
-					rawInput: args.rawText,
+					rawInput: entry,
 					recentMirrors,
 					safeguardLevel: safeguard.level,
 					semanticProfile: context.semanticProfile,
 					sessionMode: session.sessionMode,
 					spaceName: context.preferences?.spaceName,
+					textures: session.textures,
 					useAudioTags: context.isPremium,
+					...(session.textures?.length
+						? {
+								writtenChars: ownWords({
+									entryType: session.entryType,
+									rawInput: args.rawText,
+								}).length,
+							}
+						: {}),
 				});
 
 				const mirrorResponse = await anthropic.messages.create({
@@ -415,7 +435,11 @@ export const generateMirror = internalAction({
 						sessionId: args.sessionId,
 						slotKeys,
 						userLanguageTags: classification.userLanguageTags,
-						userText: args.rawText,
+						// Never a picked word: only what they wrote may be quoted.
+						userText: ownWords({
+							entryType: session.entryType,
+							rawInput: args.rawText,
+						}),
 					});
 				}
 			}

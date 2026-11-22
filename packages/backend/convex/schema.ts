@@ -3276,6 +3276,11 @@ export default defineSchema({
 		talkSafety: v.optional(talkPeakValidator),
 		talkSlowed: v.optional(v.boolean()),
 
+		// The feeling words the person picked on the write screen (B10), apart
+		// from what they wrote: a "word_cloud" entry picked only words, a
+		// "guided_entry" picked words and wrote. Absent from older builds.
+		textures: v.optional(v.array(v.string())),
+
 		// --- Temporal Context ---
 		// Stored explicitly for fast pattern queries without
 		// needing to compute from timestamps every time.
