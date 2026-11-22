@@ -161,6 +161,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 				"Allow $(PRODUCT_NAME) to save quote images to your photos.",
 			NSPhotoLibraryUsageDescription:
 				"Allow $(PRODUCT_NAME) to access your photos.",
+			// `orientation: "portrait"` only writes UISupportedInterfaceOrientations;
+			// the ~ipad list kept all four, so iPad rotated. Portrait on iPad too.
+			// Expo keeps this list only with `ios.requireFullScreen` (below).
+			"UISupportedInterfaceOrientations~ipad": [
+				"UIInterfaceOrientationPortrait",
+				"UIInterfaceOrientationPortraitUpsideDown",
+			],
 		},
 		privacyManifests: {
 			NSPrivacyCollectedDataTypes: [
@@ -238,6 +245,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 				},
 			],
 		},
+		// Writes UIRequiresFullScreen. Without it Expo overwrites the ~ipad list
+		// above with all four orientations (App Store validation: an iPad app
+		// that isn't full screen must support every orientation). Apple
+		// deprecated UIRequiresFullScreen in iPadOS 26; resizable windows ignore
+		// it and the orientation list there.
+		requireFullScreen: true,
 		supportsTablet: true,
 	},
 	name: getAppName(),
