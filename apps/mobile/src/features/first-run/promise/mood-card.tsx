@@ -28,7 +28,9 @@ const MOOD_IMAGES = [
 	require("@/assets/images/onboarding/Lost-mini.jpeg"),
 ] as const;
 
-export const cardWidth = (W: number) => W * WIDTH_RATIO;
+/** A card's width: a share of the board's column, which on a phone is the screen. */
+export const cardWidth = (stage: Stage) =>
+	(stage.W - 2 * stage.inset) * WIDTH_RATIO;
 
 const MOOD_TOKENS = [
 	"first-run-mood-lift",
@@ -47,7 +49,7 @@ export function MoodCard({
 	stage: Stage;
 }) {
 	const [lift, footClear, foot, glow] = useTokenColors(MOOD_TOKENS);
-	const cw = cardWidth(stage.W);
+	const cw = cardWidth(stage);
 	const card = useAnimatedStyle(() => {
 		const p = cardPose(eng.get(), i, cw, stage.W);
 		const off = p.x > stage.W + 10 || p.x < -cw - 10;

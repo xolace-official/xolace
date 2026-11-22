@@ -140,7 +140,7 @@ export function SeatSheet({
 			</View>
 			<ScrollView
 				alwaysBounceVertical={false}
-				className="absolute inset-x-0 bottom-0"
+				className="absolute bottom-0"
 				contentContainerClassName="grow justify-end gap-2.5 px-6"
 				contentContainerStyle={{ paddingBottom: insets.bottom + BOTTOM_GAP }}
 				onContentSizeChange={() =>
@@ -148,7 +148,11 @@ export function SeatSheet({
 				}
 				ref={column}
 				showsVerticalScrollIndicator={false}
-				style={{ top: stage.dy + BACK_TOP + BACK_H + BACK_GAP }}
+				style={{
+					left: stage.inset,
+					right: stage.inset,
+					top: stage.dy + BACK_TOP + BACK_H + BACK_GAP,
+				}}
 			>
 				<View className="mb-3 px-1">
 					<SeatWords eng={eng} seated={seated} />

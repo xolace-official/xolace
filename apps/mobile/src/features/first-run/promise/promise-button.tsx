@@ -64,8 +64,8 @@ export function PromiseButton({
 		const rest = {
 			borderRadius: pill.h / 2,
 			height: pill.h,
-			left: CTA.side,
-			right: CTA.side,
+			left: CTA.side + stage.inset,
+			right: CTA.side + stage.inset,
 			top: pill.top + stage.dy,
 		};
 		if (x < 0) {
@@ -92,7 +92,7 @@ export function PromiseButton({
 		}
 		const am = ease(seg(x, 0, X.amber));
 		const k = easeIO(seg(x, X.collapse[0], X.collapse[1]));
-		const side = lerp(CTA.side, stage.W / 2 - COAL / 2, k);
+		const side = lerp(CTA.side + stage.inset, stage.W / 2 - COAL / 2, k);
 		const h = lerp(pill.h, COAL, k);
 		return {
 			backgroundColor: css(mixRGB(base, ember, am)),
@@ -170,8 +170,16 @@ export function PromiseButton({
 				</Pressable>
 			</Animated.View>
 			<Animated.View
-				className="absolute inset-x-0"
-				style={[{ height: link.h, top: link.top + stage.dy }, acct]}
+				className="absolute"
+				style={[
+					{
+						height: link.h,
+						left: stage.inset,
+						right: stage.inset,
+						top: link.top + stage.dy,
+					},
+					acct,
+				]}
 			>
 				<Pressable
 					accessibilityRole="button"

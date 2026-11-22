@@ -71,7 +71,7 @@ export function PromiseView({
 	onBegin,
 	onSwap,
 }: Props) {
-	const cw = cardWidth(stage.W);
+	const cw = cardWidth(stage);
 	const eng = useSharedValue(freshEng(cw, stage.W, reduced, scene?.at ?? -1));
 	const drift = useTokenColors(DRIFT_TOKENS) as [string, string, ...string[]];
 	const thud = () => Presets.thud();
@@ -167,8 +167,8 @@ export function PromiseView({
 				onPress={settle}
 				style={{
 					height: WORDS_BOX.height,
-					left: WORDS_BOX.left,
-					right: WORDS_BOX.left,
+					left: WORDS_BOX.left + stage.inset,
+					right: WORDS_BOX.left + stage.inset,
 					top: WORDS_BOX.top + stage.dy,
 				}}
 			/>

@@ -1,3 +1,5 @@
+import { BOARD, type Stage } from "./first-run-motion";
+
 export const BOARD_TEXT_MAX = 1.15;
 type Control = { h: number; line: number; pad: number };
 
@@ -30,3 +32,33 @@ export const CONTROL_MIN_SCALE = 0.5;
 
 export const SEAT_TITLE_MAX = 1.6;
 export const SEAT_TEXT_MAX = 2.4;
+
+/** The shortest side, in points, from which a screen counts as a tablet. No phone comes close (the widest iPhone is 440). */
+export const TABLET_MIN_SIDE = 600;
+
+/**
+ * The board on a screen of `width` x `height`. A phone keeps the board at scale 1,
+ * centred across and hung from the safe area; a tablet scales it up to fit and
+ * centres it both ways, on a virtual screen of the real one divided by the scale.
+ */
+export function stageFor(
+	width: number,
+	height: number,
+	insetTop: number
+): Stage {
+	if (Math.min(width, height) < TABLET_MIN_SIDE) {
+		return {
+			dx: (width - BOARD.w) / 2,
+			dy: insetTop - BOARD.status,
+			H: height,
+			inset: 0,
+			s: 1,
+			W: width,
+		};
+	}
+	const s = Math.min(width / BOARD.w, height / BOARD.h);
+	const W = width / s;
+	const H = height / s;
+	const dx = (W - BOARD.w) / 2;
+	return { dx, dy: (H - BOARD.h) / 2, H, inset: dx, s, W };
+}
