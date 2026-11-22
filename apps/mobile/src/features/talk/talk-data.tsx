@@ -38,6 +38,8 @@ export type TalkScreen = {
 		week: WeekLeft;
 		micAsk: boolean;
 		starting: boolean;
+		/** A free person: the start screen shows, no talk can begin. */
+		locked: boolean;
 		sample: VoiceSlug | null;
 		endsAt: number | null;
 		clockFromS: number;
@@ -46,6 +48,7 @@ export type TalkScreen = {
 	};
 	actions: {
 		begin: () => void;
+		unlock: () => void;
 		send: (text: string) => void;
 		toggleMic: () => void;
 		end: () => void;

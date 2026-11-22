@@ -47,7 +47,14 @@ export function weekFact(week: WeekLeft): string {
 export const keptTimeLine = (week: WeekLeft): string =>
 	(week == null ? null : talkTimeLine(week)) ?? TALK_COPY.kept.full;
 
-export function footnoteLead(week: WeekLeft, micAsk: boolean): string {
+export function footnoteLead(
+	week: WeekLeft,
+	micAsk: boolean,
+	locked = false
+): string {
+	if (locked) {
+		return TALK_COPY.start.footnote.locked;
+	}
 	if (isLow(week)) {
 		return TALK_COPY.start.footnote.low;
 	}

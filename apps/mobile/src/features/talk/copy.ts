@@ -66,6 +66,7 @@ export const TALK_COPY = {
 		},
 		footnote: {
 			kept: "What’s kept",
+			locked: "Talking out loud is part of Xolace+ · ",
 			low: "You can still write a reflection any time · ",
 			mic: "We’ll ask for the microphone once · ",
 		},
@@ -84,6 +85,8 @@ export const TALK_COPY = {
 		sub: "Speak or type. When you finish, the talk becomes your mirror.",
 		timeUsed: `There isn't enough talk time left this week. ${TALK_TIME_RESETS}.`,
 		title: (name: string) => `Talk it through\nwith ${name}`,
+		unlock: "Unlock with Xolace+",
+		unlockHint: "Shows Xolace+",
 		voice: (name: string) => `${name} voice`,
 		voiceHint: (trait: string) => `${trait}. Plays a sample.`,
 	},
