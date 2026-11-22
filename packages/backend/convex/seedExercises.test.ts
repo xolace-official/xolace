@@ -54,6 +54,14 @@ describe("the exercise seed", () => {
 		}
 	});
 
+	it("ends Three breaths on one sign-off before the close", () => {
+		const reset = EXERCISES.find((e) => e.title === "reset");
+		const last = [...(reset?.steps ?? [])]
+			.sort((a, b) => a.order - b.order)
+			.at(-1);
+		expect(last?.content).toBe("That was enough.");
+	});
+
 	it("asks a private prompt's question in its content", () => {
 		for (const s of steps.filter((x) => x.type === "private_prompt")) {
 			expect(s.content, s.exercise).toMatch(/\?$/);

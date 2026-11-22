@@ -259,7 +259,6 @@ export const RESET: CatalogueExercise = {
 			type: "breath",
 		},
 		{ content: "That was enough.", durationSeconds: 4, order: 3, type: "text" },
-		{ content: "Okay.", durationSeconds: 4, order: 4, type: "text" },
 	],
 	title: "reset",
 };

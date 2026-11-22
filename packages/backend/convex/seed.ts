@@ -1464,12 +1464,6 @@ export const EXERCISES = [
 				order: 3,
 				type: "text" as const,
 			},
-			{
-				content: "Okay.",
-				durationSeconds: 4,
-				order: 4,
-				type: "text" as const,
-			},
 		],
 		targetEmotions: ["anxiety", "overwhelm", "dread"],
 		title: "reset",
