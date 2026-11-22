@@ -8,6 +8,7 @@
  * intent reaches email, or a failed email falls back somewhere; a Clerk or
  * Resend failure is mapped to the wrong outcome; staging emails a stranger.
  */
+import resendTest from "@convex-dev/resend/test";
 import workpoolTest from "@convex-dev/workpool/test";
 import type { FunctionArgs } from "convex/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -64,7 +65,8 @@ vi.mock("../../streamSetup", async (orig) => ({
 	...(await orig<typeof import("../../streamSetup")>()),
 	addToXolaceChannel: noopJob(),
 }));
-vi.mock("./resend", () => ({
+vi.mock("./resend", async (orig) => ({
+	...(await orig<typeof import("./resend")>()),
 	queueEmail: async (_ctx: unknown, email: Queued) => {
 		const failure = h.resendFailures.shift();
 		if (failure) {
@@ -616,6 +618,7 @@ const eventData = (resendId: string) => ({
 });
 
 type EmailEventKind =
+	| "sent"
 	| "hard_bounce"
 	| "soft_bounce"
 	| "complaint"
@@ -648,6 +651,8 @@ function resendEvent(
 			return { created_at, data, type: "email.complained" };
 		case "delivered":
 			return { created_at, data, type: "email.delivered" };
+		case "sent":
+			return { created_at, data, type: "email.sent" };
 		default:
 			return {
 				created_at,
@@ -816,6 +821,150 @@ describe("bounces and complaints", () => {
 		expect(configs.find((c) => c.channel === "email")).toMatchObject({
 			notReachable: { complained: 1, unreachable: 0 },
 		});
+	});
+});
+
+/** The deployment's Resend webhook signing secret, for these tests. */
+const WEBHOOK_SECRET = `whsec_${btoa("xolace-test-webhook-secret")}`;
+
+/** Svix's signature over a webhook body, as Resend sends it. */
+async function svixHeaders(
+	body: string,
+	secret = WEBHOOK_SECRET
+): Promise<Record<string, string>> {
+	const id = "msg_test";
+	const timestamp = String(Math.floor(Date.now() / 1000));
+	const keyBytes = Uint8Array.from(atob(secret.slice("whsec_".length)), (c) =>
+		c.charCodeAt(0)
+	);
+	const key = await crypto.subtle.importKey(
+		"raw",
+		keyBytes,
+		{ hash: "SHA-256", name: "HMAC" },
+		false,
+		["sign"]
+	);
+	const signature = await crypto.subtle.sign(
+		"HMAC",
+		key,
+		new TextEncoder().encode(`${id}.${timestamp}.${body}`)
+	);
+	return {
+		"content-type": "application/json",
+		"svix-id": id,
+		"svix-signature": `v1,${btoa(String.fromCharCode(...new Uint8Array(signature)))}`,
+		"svix-timestamp": timestamp,
+	};
+}
+
+/**
+ * Resend posting an event to `/webhooks/resend`. The component holds no copy
+ * of the test's emails (`queueEmail` is faked), exactly as after its daily
+ * cleanup has deleted them.
+ */
+async function postResendEvent(
+	user: SeededUser,
+	resendId: string,
+	kind: EmailEventKind,
+	secret = WEBHOOK_SECRET
+) {
+	const body = JSON.stringify(resendEvent(resendId, kind));
+	return await user.root.fetch("/webhooks/resend", {
+		body,
+		headers: await svixHeaders(body, secret),
+		method: "POST",
+	});
+}
+
+const emailStateRow = (user: SeededUser) =>
+	user.root.run((ctx) =>
+		ctx.db
+			.query("email_channel_states")
+			.withIndex("by_profile", (q) =>
+				q.eq("emotionalProfileId", user.profileId)
+			)
+			.unique()
+	);
+
+/** A welcome Resend has sent, whose `email.sent` the component passed on. */
+async function sentAndRecorded(user: SeededUser): Promise<string> {
+	resendTest.register(user.root);
+	const emailId = await welcomed(user);
+	await onEmailEvent(user, emailEvent(emailId, "sent"));
+	return `re_${emailId}`;
+}
+
+describe("bounces and complaints after the component's cleanup", () => {
+	beforeEach(() => {
+		vi.stubEnv("RESEND_WEBHOOK_SECRET", WEBHOOK_SECRET);
+	});
+
+	it("copies Resend's id onto the delivery from the first event", async () => {
+		const user = await signedUp();
+		const resendId = await sentAndRecorded(user);
+		const { outreachId } = await welcome(user);
+
+		const [delivery] = await deliveriesOf(user, outreachId);
+		expect(delivery?.resendEmailId).toBe(resendId);
+	});
+
+	it.each([
+		["complaint", "complained"],
+		["hard_bounce", "unreachable"],
+	] as const)("still closes email for a late %s", async (kind, status) => {
+		const user = await signedUp();
+		const resendId = await sentAndRecorded(user);
+
+		vi.setSystemTime(NOW + 30 * 24 * HOUR);
+		const response = await postResendEvent(user, resendId, kind);
+		const again = await welcomeAgain(user);
+
+		expect(response.status).toBe(201);
+		expect(await emailStateRow(user)).toMatchObject({
+			changedAt: NOW + 30 * 24 * HOUR,
+			status,
+		});
+		expect(again).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "no_channel",
+		});
+	});
+
+	it.each(["soft_bounce", "delivered"] as const)(
+		"keeps emailing after a late %s",
+		async (kind) => {
+			const user = await signedUp();
+			const resendId = await sentAndRecorded(user);
+
+			await postResendEvent(user, resendId, kind);
+
+			expect(await emailStateRow(user)).toBeNull();
+		}
+	);
+
+	it("acts on nothing that isn't signed with the deployment's secret", async () => {
+		const user = await signedUp();
+		const resendId = await sentAndRecorded(user);
+
+		const response = await postResendEvent(
+			user,
+			resendId,
+			"complaint",
+			`whsec_${btoa("someone-else")}`
+		).catch(() => null);
+
+		expect(response?.status ?? 500).not.toBe(201);
+		expect(await emailStateRow(user)).toBeNull();
+	});
+
+	it("ignores a late event for a Resend id no delivery holds", async () => {
+		const user = await signedUp();
+		await sentAndRecorded(user);
+
+		const response = await postResendEvent(user, "re_unknown", "complaint");
+
+		expect(response.status).toBe(201);
+		expect(await emailStateRow(user)).toBeNull();
 	});
 });
 

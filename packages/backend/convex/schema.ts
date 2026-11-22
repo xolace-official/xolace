@@ -2278,6 +2278,12 @@ export default defineSchema({
 		outreachId: v.id("outreach"),
 		providerChatId: v.optional(v.string()),
 		providerMessageId: v.optional(v.string()),
+		/**
+		 * Email: Resend's own id for the email, copied from the first webhook
+		 * event. Outlives the component's copy, so a late bounce or complaint
+		 * still finds its delivery. An opaque id, never an address (ADR 0004).
+		 */
+		resendEmailId: v.optional(v.string()),
 		/** Telegram: when "What was this about?" added the card text (#768). */
 		revealedAt: v.optional(v.number()),
 		sentAt: v.optional(v.number()),
@@ -2289,6 +2295,9 @@ export default defineSchema({
 		// An email's id in the Resend component, to find its delivery when
 		// a bounce or complaint comes in (#916).
 		.index("by_channel_provider_message", ["channel", "providerMessageId"])
+		// Resend's id for an email, for an event that arrives after the
+		// component's daily cleanup deleted its copy.
+		.index("by_channel_resend_email", ["channel", "resendEmailId"])
 		// A chat's live check-ins, to collapse them when its link ends (#768).
 		.index("by_chat_check_in", ["providerChatId", "checkInOpen"]),
 
