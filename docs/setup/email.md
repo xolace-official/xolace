@@ -1,6 +1,6 @@
 # Email setup
 
-How a Convex deployment sends email (#912, #914, #915). Email is the outreach layer's third
+How a Convex deployment sends email (#912, #914, #915, #916). Email is the outreach layer's third
 channel, beside push and Telegram. It goes out through the `@convex-dev/resend`
 component, from `Xolace <hello@mail.xolaceinc.com>`. For now it carries only the
 **welcome**.
@@ -69,6 +69,38 @@ app (same mechanism as Telegram's `/telegram/open/`). Each target carries
 
 Any other path is a 404. The footer also links IASP's helpline directory directly.
 
+## Bounces and spam complaints
+
+Resend tells each deployment what happened to an email through a webhook at
+`<CONVEX_SITE_URL>/webhooks/resend` (#916). The component checks the signature against
+`RESEND_WEBHOOK_SECRET`, updates its own copy of the email, then hands the event to
+`outreach/email/events:onEmailEvent`. That callback finds the delivery by the
+component's email id (`outreach_deliveries.providerMessageId`) and acts on two events:
+
+| Event | Email channel state | Effect |
+|---|---|---|
+| `email.bounced` with bounce type `Permanent` (a hard bounce) | `unreachable` | No more email to that person |
+| `email.complained` (marked as spam) | `complained` | No more email to that person |
+
+The component learns which callback to call when an email is sent, so a deployment
+acts on events only from its first email after this shipped. Email shipped switched
+off, so nothing was sent before that.
+
+Everything else is ignored, including soft bounces (`Transient`, `Undetermined`), which
+Resend retries itself. An event for an email no delivery sent (another sender's mail,
+or an account since erased) is ignored without error. Opens and clicks are never
+recorded: tracking is off on the domain, and the callback drops those events anyway.
+
+The state lives in `email_channel_states`, one row per person at most, with no
+address. No row means `linked`, which is everyone from sign-up. A complaint stays a
+complaint even if a bounce follows. The router treats `unreachable` and `complained`
+as closed, so an email intent for that person is recorded as suppressed with
+`no_channel`.
+
+Nothing in the app clears the state yet. If someone fixes their address or asks to be
+emailed again, delete their `email_channel_states` row in the dashboard. Account
+deletion and a data wipe remove it with the rest of the person's outreach.
+
 ## Environment variables
 
 Set per deployment in the Convex dashboard (staging, prod) or with `bunx convex env set`
@@ -78,7 +110,7 @@ Set per deployment in the Convex dashboard (staging, prod) or with `bunx convex 
 | Name | prod | staging | dev | What |
 |---|---|---|---|---|
 | `RESEND_API_KEY` | yes | yes | optional | A Resend API key with **sending access** to `mail.xolaceinc.com` only. One key per deployment. |
-| `RESEND_WEBHOOK_SECRET` | yes | yes | no | The signing secret of that deployment's Resend webhook. Used once bounce and complaint handling lands (#916). |
+| `RESEND_WEBHOOK_SECRET` | yes | yes | optional | The signing secret (`whsec_…`) of that deployment's Resend webhook. Unset, the webhook route fails every request and no bounce or complaint is recorded. |
 | `EMAIL_FROM` | yes | yes | optional | `Xolace <hello@mail.xolaceinc.com>`. Unset means that same address. |
 | `EMAIL_REPLY_TO` | yes | yes | optional | The monitored support inbox replies go to. Unset means no reply-to. |
 | `EMAIL_TEST_MODE` | `false` | `false` | unset | Anything but `false` (or unset) keeps test mode on. |
@@ -127,11 +159,24 @@ Choose the inbox replies go to and make sure a person reads it. The welcome says
 person reads replies, though not instantly. Set its address as `EMAIL_REPLY_TO` on prod
 and staging.
 
-### 5. The webhook (with #916)
+### 5. The webhook
 
-In Resend, **Webhooks** → **Add endpoint**, one per deployment, pointing at that
-deployment's site URL with the path the bounce handling adds. Copy each signing secret
-into that deployment's `RESEND_WEBHOOK_SECRET`.
+One endpoint per deployment (prod, staging), so each deployment hears only about its
+own email.
+
+1. Find the deployment's site URL: the Convex dashboard → the deployment →
+   **Settings** → **URL & Deploy Key** → **HTTP Actions URL**, e.g.
+   `https://<deployment-name>.convex.site`.
+2. In Resend, **Webhooks** → **Add endpoint**, with the URL
+   `https://<deployment-name>.convex.site/webhooks/resend`.
+3. Under events, pick `email.sent`, `email.delivered`, `email.delivery_delayed`,
+   `email.bounced`, `email.complained` and `email.failed`. Leave `email.opened` and
+   `email.clicked` unticked: tracking is off, and Xolace never wants those.
+4. Copy the endpoint's signing secret (`whsec_…`) into that deployment's
+   `RESEND_WEBHOOK_SECRET`.
+5. Check it: Resend's endpoint page lists each attempt. After the next email on that
+   deployment, attempts should answer `201`. A `500` usually means the secret is unset
+   or wrong (the deployment's logs say which).
 
 ## Turn email on
 
@@ -142,7 +187,14 @@ The kill switch is the existing per-channel config. As an admin, run
 email at once; a delivery already queued still goes.
 
 `admin/outreachView:viewUserOutreach` shows a person's email channel and their welcome
-outcomes (queued, sent, failed, suppressed and why), never their address.
+outcomes (queued, sent, failed, suppressed and why), never their address. A person whose
+address hard-bounced or who complained has an `emailState` on their email entry
+(`unreachable` or `complained`, and when). It shows even while the kill switch is off,
+when `ineligibleReason` reads `disabled` instead.
+
+`listChannelConfigs` also gives the email entry a `notReachable` count of people in each
+state (`unreachable`, `complained`), each counted up to 1,000. A rising count is the
+first sign of a deliverability problem.
 
 ## Try it on your dev deployment
 

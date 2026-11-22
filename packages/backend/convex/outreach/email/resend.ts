@@ -1,5 +1,5 @@
 import { Resend } from "@convex-dev/resend";
-import { components } from "../../_generated/api";
+import { components, internal } from "../../_generated/api";
 import type { ActionCtx } from "../../_generated/server";
 import { emailTestMode } from "./config";
 
@@ -21,12 +21,22 @@ export type OutgoingEmail = {
 	to: string;
 };
 
+/**
+ * Built per call: the env (test mode, `RESEND_WEBHOOK_SECRET`) is read when
+ * it's used, not at import. Every client names the event callback: the
+ * component keeps the one from the latest send (#916).
+ */
+export function resendClient(): Resend {
+	return new Resend(components.resend, {
+		onEmailEvent: internal.outreach.email.events.onEmailEvent,
+		testMode: emailTestMode(),
+	});
+}
+
 /** Hand an email to the component; its id there, for webhook events (#916). */
 export async function queueEmail(
 	ctx: ActionCtx,
 	email: OutgoingEmail
 ): Promise<string> {
-	// Built per call: the env is read when the email goes, not at import.
-	const resend = new Resend(components.resend, { testMode: emailTestMode() });
-	return await resend.sendEmail(ctx, email);
+	return await resendClient().sendEmail(ctx, email);
 }

@@ -1,11 +1,19 @@
 import { v } from "convex/values";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
 import { CHANNEL_DEFAULTS } from "../outreach/channels";
+import { countEmailStates } from "../outreach/email/state";
 import {
 	channelPlanValidator,
+	notReachableCountsValidator,
 	type OutreachChannel,
 	outreachChannelValidator,
 } from "../outreach/validators";
+
+/**
+ * People counted per email state, at most. Past it the count reads as this
+ * many: enough to show a deliverability problem without an unbounded read.
+ */
+const NOT_REACHABLE_COUNT_CAP = 1000;
 
 /** Every outreach channel, in the order the admin lists them. */
 const CHANNELS: readonly OutreachChannel[] = ["push", "telegram", "email"];
@@ -13,6 +21,8 @@ const CHANNELS: readonly OutreachChannel[] = ["push", "telegram", "email"];
 /**
  * Every channel's kill switch and plan (#914): its row, else the coded
  * default (email and Telegram ship off). `updatedAt` once an admin set it.
+ * Email also says how many people it can't reach (#916): hard bounces and
+ * spam complaints, each counted up to {@link NOT_REACHABLE_COUNT_CAP}.
  */
 export const listChannelConfigs = adminQuery({
 	args: {},
@@ -23,15 +33,24 @@ export const listChannelConfigs = adminQuery({
 				.query("outreach_channels")
 				.withIndex("by_channel", (q) => q.eq("channel", channel))
 				.unique();
+			const config = row
+				? {
+						channel,
+						enabled: row.enabled,
+						plan: row.plan,
+						updatedAt: row.updatedAt,
+					}
+				: { channel, ...CHANNEL_DEFAULTS[channel] };
 			configs.push(
-				row
+				channel === "email"
 					? {
-							channel,
-							enabled: row.enabled,
-							plan: row.plan,
-							updatedAt: row.updatedAt,
+							...config,
+							notReachable: await countEmailStates(
+								ctx,
+								NOT_REACHABLE_COUNT_CAP
+							),
 						}
-					: { channel, ...CHANNEL_DEFAULTS[channel] }
+					: config
 			);
 		}
 		return configs;
@@ -40,6 +59,8 @@ export const listChannelConfigs = adminQuery({
 		v.object({
 			channel: outreachChannelValidator,
 			enabled: v.boolean(),
+			/** Email only: people it can't reach, by why (#916). */
+			notReachable: v.optional(notReachableCountsValidator),
 			plan: channelPlanValidator,
 			updatedAt: v.optional(v.number()),
 		})

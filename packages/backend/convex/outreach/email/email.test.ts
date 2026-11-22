@@ -513,7 +513,12 @@ describe("admin", () => {
 		).toEqual([
 			{ channel: "push", enabled: true, plan: "free" },
 			{ channel: "telegram", enabled: false, plan: "free" },
-			{ channel: "email", enabled: false, plan: "free" },
+			{
+				channel: "email",
+				enabled: false,
+				notReachable: { complained: 0, unreachable: 0 },
+				plan: "free",
+			},
 		]);
 
 		await setEmail(user, true);
@@ -557,6 +562,222 @@ describe("admin", () => {
 				outcome: "queued",
 			},
 		]);
+	});
+});
+
+type EmailEventArgs = FunctionArgs<
+	typeof internal.outreach.email.events.onEmailEvent
+>;
+
+const eventData = (resendId: string) => ({
+	created_at: "2026-11-13T12:31:00.000Z",
+	email_id: resendId,
+	from: FROM,
+	subject: "Welcome to Xolace",
+	to: ADDRESS,
+});
+
+type EmailEventKind =
+	| "hard_bounce"
+	| "soft_bounce"
+	| "complaint"
+	| "delivered"
+	| "opened";
+
+/** A Resend event as the component normalizes it, for one of its emails. */
+function resendEvent(
+	resendId: string,
+	kind: EmailEventKind
+): EmailEventArgs["event"] {
+	const created_at = "2026-11-13T12:31:00.000Z";
+	const data = eventData(resendId);
+	switch (kind) {
+		case "hard_bounce":
+		case "soft_bounce":
+			return {
+				created_at,
+				data: {
+					...data,
+					bounce: {
+						message: "Mailbox does not exist",
+						subType: "General",
+						type: kind === "hard_bounce" ? "Permanent" : "Transient",
+					},
+				},
+				type: "email.bounced",
+			};
+		case "complaint":
+			return { created_at, data, type: "email.complained" };
+		case "delivered":
+			return { created_at, data, type: "email.delivered" };
+		default:
+			return {
+				created_at,
+				data: {
+					...data,
+					open: {
+						ipAddress: "203.0.113.7",
+						timestamp: created_at,
+						userAgent: "Mail",
+					},
+				},
+				type: "email.opened",
+			};
+	}
+}
+
+/** What the component hands `onEmailEvent` for its email `id`. */
+const emailEvent = (id: string, kind: EmailEventKind): EmailEventArgs => ({
+	event: resendEvent(`re_${id}`, kind),
+	// The component's branded id; the test's ids are plain strings.
+	id: id as EmailEventArgs["id"],
+});
+
+/** A welcome that reached Resend; the component's id for it. */
+async function welcomed(user: SeededUser): Promise<string> {
+	const result = await welcome(user);
+	await drain(user);
+	const [delivery] = await deliveriesOf(user, result.outreachId);
+	if (!delivery?.providerMessageId) {
+		throw new Error("the welcome wasn't sent");
+	}
+	return delivery.providerMessageId;
+}
+
+const onEmailEvent = (user: SeededUser, args: EmailEventArgs) =>
+	user.root.mutation(internal.outreach.email.events.onEmailEvent, args);
+
+/** Another welcome-intent enqueue, past the first one's dedupe key. */
+const welcomeAgain = (user: SeededUser) =>
+	welcome(user, { dedupeKey: `welcome:${user.profileId}:again` });
+
+describe("bounces and complaints", () => {
+	it("stops email to someone whose address hard-bounced", async () => {
+		const user = await signedUp();
+		const emailId = await welcomed(user);
+
+		await onEmailEvent(user, emailEvent(emailId, "hard_bounce"));
+		const again = await welcomeAgain(user);
+		await drain(user);
+
+		expect(again).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "no_channel",
+		});
+		expect(h.queued).toHaveLength(1);
+	});
+
+	it("stops email to someone who marked one as spam", async () => {
+		const user = await signedUp();
+		const emailId = await welcomed(user);
+
+		await onEmailEvent(user, emailEvent(emailId, "complaint"));
+		const again = await welcomeAgain(user);
+
+		expect(again).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "no_channel",
+		});
+	});
+
+	it.each(["soft_bounce", "delivered", "opened"] as const)(
+		"keeps emailing after a %s event",
+		async (type) => {
+			const user = await signedUp();
+			const emailId = await welcomed(user);
+
+			await onEmailEvent(user, emailEvent(emailId, type));
+			const again = await welcomeAgain(user);
+			await drain(user);
+
+			expect(again.outcome).toBe("queued");
+			expect(h.queued).toHaveLength(2);
+		}
+	);
+
+	it("ignores an event for an email no delivery sent", async () => {
+		const user = await signedUp();
+		await welcomed(user);
+
+		await onEmailEvent(user, emailEvent("email_unknown", "hard_bounce"));
+		await onEmailEvent(user, emailEvent("email_unknown", "complaint"));
+		const again = await welcomeAgain(user);
+
+		expect(again.outcome).toBe("queued");
+	});
+
+	it("touches only the person whose email bounced", async () => {
+		const user = await signedUp();
+		const other = await asNewUser(2, user.root);
+		await cancelWelcome(user.root);
+		const emailId = await welcomed(user);
+
+		await onEmailEvent(user, emailEvent(emailId, "hard_bounce"));
+		const theirs = await welcome(other);
+
+		expect(theirs.outcome).toBe("queued");
+	});
+
+	it("shows staff who bounced or complained, and when", async () => {
+		const user = await signedUp();
+		const emailId = await welcomed(user);
+		const admin = asAdmin(9, user.root);
+
+		vi.setSystemTime(NOW + HOUR);
+		await onEmailEvent(user, emailEvent(emailId, "hard_bounce"));
+		const view = await admin.mutation(api.admin.outreachView.viewUserOutreach, {
+			clerkUserId: makeIdentity().subject,
+		});
+		const configs = await admin.query(
+			api.admin.outreachChannels.listChannelConfigs,
+			{}
+		);
+
+		expect(view?.channels.find((c) => c.channel === "email")).toEqual({
+			channel: "email",
+			eligible: false,
+			emailState: { changedAt: NOW + HOUR, status: "unreachable" },
+			ineligibleReason: "unreachable",
+			status: "active",
+		});
+		expect(configs.find((c) => c.channel === "email")).toMatchObject({
+			notReachable: { complained: 0, unreachable: 1 },
+		});
+	});
+
+	it("shows staff a complaint even while email is switched off", async () => {
+		const user = await signedUp();
+		const emailId = await welcomed(user);
+
+		vi.setSystemTime(NOW + HOUR);
+		await onEmailEvent(user, emailEvent(emailId, "complaint"));
+		await setEmail(user, false);
+		const view = await asAdmin(9, user.root).mutation(
+			api.admin.outreachView.viewUserOutreach,
+			{ clerkUserId: makeIdentity().subject }
+		);
+
+		expect(view?.channels.find((c) => c.channel === "email")).toMatchObject({
+			emailState: { changedAt: NOW + HOUR, status: "complained" },
+			ineligibleReason: "disabled",
+		});
+	});
+
+	it("keeps a complaint over a later bounce", async () => {
+		const user = await signedUp();
+		const emailId = await welcomed(user);
+		const admin = asAdmin(9, user.root);
+
+		await onEmailEvent(user, emailEvent(emailId, "complaint"));
+		await onEmailEvent(user, emailEvent(emailId, "hard_bounce"));
+		const configs = await admin.query(
+			api.admin.outreachChannels.listChannelConfigs,
+			{}
+		);
+
+		expect(configs.find((c) => c.channel === "email")).toMatchObject({
+			notReachable: { complained: 1, unreachable: 0 },
+		});
 	});
 });
 

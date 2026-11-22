@@ -55,6 +55,7 @@ import {
 	channelErrorKindValidator,
 	channelPlanValidator,
 	deliveryStatusValidator,
+	emailChannelStatusValidator,
 	followUpTierValidator,
 	identityStatusValidator,
 	inboundStatusValidator,
@@ -697,6 +698,17 @@ export default defineSchema({
 		// undefined `savedAt`, which sorts out of any numeric range — that is
 		// what keeps them out of the paginated list, with no filter pass.
 		.index("by_profile_saved", ["emotionalProfileId", "savedAt"]),
+
+	// Whether email can reach a person (#916): set by Resend's bounce and
+	// complaint events (outreach/email/events.ts), read by the router. At
+	// most one row per profile; none means linked. Never holds an address.
+	email_channel_states: defineTable({
+		changedAt: v.number(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		status: emailChannelStatusValidator,
+	})
+		.index("by_profile", ["emotionalProfileId"])
+		.index("by_status", ["status"]),
 
 	// ===========================================================
 	// 6. EMOTIONAL METADATA
@@ -2274,6 +2286,9 @@ export default defineSchema({
 		workId: v.optional(v.string()),
 	})
 		.index("by_outreach", ["outreachId"])
+		// An email's id in the Resend component, to find its delivery when
+		// a bounce or complaint comes in (#916).
+		.index("by_channel_provider_message", ["channel", "providerMessageId"])
 		// A chat's live check-ins, to collapse them when its link ends (#768).
 		.index("by_chat_check_in", ["providerChatId", "checkInOpen"]),
 

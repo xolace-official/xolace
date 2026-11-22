@@ -105,8 +105,10 @@ The backend deploys before app-store review clears, so the *old* app runs agains
 - Email (`convex/outreach/email/`) ships switched off and in test mode: without
   `EMAIL_TEST_MODE=false` every email goes to `delivered@resend.dev`. No address is
   ever stored on a Xolace row; the adapter reads it from Clerk at send time (ADR 0004).
-  `listChannels` must never return `email` (old app builds don't know it). Runbook:
-  `docs/setup/email.md`.
+  `listChannels` must never return `email` (old app builds don't know it). Resend's
+  webhook (`/webhooks/resend`) marks a hard bounce `unreachable` and a spam complaint
+  `complained` in `email_channel_states`, and routing then skips email for that
+  person. Runbook: `docs/setup/email.md`.
 - Every `users.getOrCreate` sign-up (so every `asNewUser`) schedules the welcome 30
   minutes on. A test that moves the clock past that and counts outreach should call
   `cancelWelcome` (`test/fixtures.helpers.ts`) unless the welcome is what it tests.

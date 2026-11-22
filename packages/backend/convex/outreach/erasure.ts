@@ -1,5 +1,6 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { drainEmailChannelState } from "./email/state";
 import { eraseTelegramChats } from "./telegram/erase";
 
 /**
@@ -38,11 +39,14 @@ export async function eraseForWipe(
 	await eraseTelegramChats(ctx, profileId, { accountDeleted: false });
 }
 
-/** Every outreach row, with its deliveries. */
+/** Every outreach row, with its deliveries, and the email channel state. */
 export async function drainOutreach(
 	ctx: MutationCtx,
 	profileId: ProfileId
 ): Promise<boolean> {
+	// One row at most (#916): a bounce or complaint is forgotten with the
+	// outreach that drew it.
+	await drainEmailChannelState(ctx, profileId);
 	const rows = await ctx.db
 		.query("outreach")
 		.withIndex("by_profile_created", (q) =>

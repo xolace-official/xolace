@@ -5,6 +5,7 @@ import {
 	EMAIL_LINK_PATH_PREFIX,
 	openAppFromEmail,
 } from "./outreach/email/appLinks";
+import { RESEND_WEBHOOK_PATH, resendWebhook } from "./outreach/email/webhook";
 import { APP_LINK_PATH_PREFIX, openApp } from "./outreach/telegram/appLinks";
 import { TELEGRAM_WEBHOOK_PATH } from "./outreach/telegram/botApi";
 import { telegramWebhook } from "./outreach/telegram/webhook";
@@ -61,6 +62,15 @@ http.route({
 	handler: openAppFromEmail,
 	method: "GET",
 	pathPrefix: EMAIL_LINK_PATH_PREFIX,
+});
+
+// Resend's delivery events (#916): a hard bounce or a spam complaint stops
+// that person's email. The component verifies the Svix signature against
+// RESEND_WEBHOOK_SECRET; opens and clicks are never recorded.
+http.route({
+	handler: resendWebhook,
+	method: "POST",
+	path: RESEND_WEBHOOK_PATH,
 });
 
 // Lantern share previews for xolaceinc.com/lantern/<slug> (read server-side by

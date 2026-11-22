@@ -31,6 +31,30 @@ export const outreachChannelValidator = v.union(
 );
 export type OutreachChannel = Infer<typeof outreachChannelValidator>;
 
+/**
+ * Whether email can reach a person (#916). No row means `linked`: signing up
+ * links email. `unreachable` after a hard bounce, `complained` after a spam
+ * complaint; routing treats both as closed.
+ */
+export const closedEmailStatusValidator = v.union(
+	v.literal("unreachable"),
+	v.literal("complained")
+);
+export type ClosedEmailStatus = Infer<typeof closedEmailStatusValidator>;
+
+export const emailChannelStatusValidator = v.union(
+	v.literal("linked"),
+	...closedEmailStatusValidator.members
+);
+export type EmailChannelStatus = Infer<typeof emailChannelStatusValidator>;
+
+/** How many people email can't reach, per closed status (admin, #916). */
+export const notReachableCountsValidator = v.object({
+	complained: v.number(),
+	unreachable: v.number(),
+});
+export type NotReachableCounts = Infer<typeof notReachableCountsValidator>;
+
 /** An email template, rendered by `email/render` (#914). One per email intent. */
 export const emailTemplateValidator = v.union(v.literal("welcome"));
 export type EmailTemplate = Infer<typeof emailTemplateValidator>;
@@ -81,7 +105,11 @@ export const ineligibilityReasonValidator = v.union(
 	v.literal("no_device"),
 	v.literal("push_off"),
 	v.literal("intent_not_allowed"),
-	v.literal("bucket_full")
+	v.literal("bucket_full"),
+	/** Email: the address hard-bounced (#916). */
+	v.literal("unreachable"),
+	/** Email: the person marked one as spam (#916). */
+	v.literal("complained")
 );
 export type IneligibilityReason = Infer<typeof ineligibilityReasonValidator>;
 

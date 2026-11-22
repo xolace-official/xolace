@@ -5,6 +5,7 @@ import { adminMutation } from "../lib/adminAuth";
 import { hasPremium } from "../lib/premium";
 import { rateLimiter } from "../lib/rateLimits";
 import { routingOrder } from "../outreach/channels";
+import { emailStateOf } from "../outreach/email/state";
 import {
 	channelIneligibility,
 	ESCALATION_HOLD_MS,
@@ -22,6 +23,7 @@ import {
 } from "../outreach/telegram/lifecycle";
 import {
 	channelErrorKindValidator,
+	closedEmailStatusValidator,
 	deliveryStatusValidator,
 	ineligibilityReasonValidator,
 	type OutreachChannel,
@@ -69,6 +71,13 @@ const adminSuppressedReasonValidator = v.union(
 const channelEntryValidator = v.object({
 	channel: outreachChannelValidator,
 	eligible: v.boolean(),
+	/**
+	 * Email: closed by a hard bounce or a spam complaint, and since when
+	 * (#916). Shown on its own: the kill switch's reason comes first.
+	 */
+	emailState: v.optional(
+		v.object({ changedAt: v.number(), status: closedEmailStatusValidator })
+	),
 	/** Why outreach can't land here now; absent when eligible. */
 	ineligibleReason: v.optional(ineligibilityReasonValidator),
 	linkedAt: v.optional(v.number()),
@@ -235,8 +244,15 @@ async function channelEntries(
 			continue;
 		}
 		if (channel === "email") {
-			// Linked at sign-up; the address stays in Clerk (ADR 0004).
-			entries.push({ channel, status: "active", ...eligibility });
+			// Linked at sign-up; the address stays in Clerk (ADR 0004). A
+			// bounce or complaint shows whatever else closes it (#916).
+			const emailState = await emailStateOf(ctx, profile._id);
+			entries.push({
+				channel,
+				status: "active",
+				...eligibility,
+				...(emailState.status !== "linked" && { emailState }),
+			});
 			continue;
 		}
 		const link =

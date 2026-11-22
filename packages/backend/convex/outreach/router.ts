@@ -11,6 +11,7 @@ import {
 	channelTakesIntent,
 	routingOrder,
 } from "./channels";
+import { emailStateOf } from "./email/state";
 import { telegramConfigured } from "./telegram/bot";
 import { identitiesOf } from "./telegram/lifecycle";
 import type {
@@ -433,7 +434,9 @@ export async function channelIneligibility(
 
 	if (channel === "email") {
 		// Linked at sign-up, for everyone: the address is Clerk's (ADR 0004).
-		return null;
+		// A hard bounce or a spam complaint closes it (#916).
+		const { status } = await emailStateOf(ctx, input.emotionalProfileId);
+		return status === "linked" ? null : status;
 	}
 
 	const identities = await identitiesOf(ctx, input.emotionalProfileId, channel);

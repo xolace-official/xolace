@@ -451,6 +451,49 @@ describe("data wipe", () => {
 	});
 });
 
+describe("email channel state (#916)", () => {
+	/** Two people email can't reach: the one being erased, and another. */
+	async function twoUnreachable() {
+		const user = await asNewUser();
+		const other = await asNewUser(2, user.root);
+		await user.root.run(async (ctx) => {
+			await ctx.db.insert("email_channel_states", {
+				changedAt: Date.now(),
+				emotionalProfileId: user.profileId,
+				status: "complained",
+			});
+			await ctx.db.insert("email_channel_states", {
+				changedAt: Date.now(),
+				emotionalProfileId: other.profileId,
+				status: "unreachable",
+			});
+		});
+		return { other, user };
+	}
+
+	const statesOf = (user: SeededUser) =>
+		user.root.run((ctx) =>
+			ctx.db
+				.query("email_channel_states")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.collect()
+		);
+
+	it.each([
+		["account deletion", purge],
+		["a wipe", wipe],
+	])("%s removes it, and only that person's", async (_name, erase) => {
+		const { other, user } = await twoUnreachable();
+
+		await erase(user);
+
+		expect(await statesOf(user)).toEqual([]);
+		expect(await statesOf(other)).toMatchObject([{ status: "unreachable" }]);
+	});
+});
+
 describe("a chat moved to another account", () => {
 	/**
 	 * The first account's chat, with the welcome (100) and a /help line (101)
