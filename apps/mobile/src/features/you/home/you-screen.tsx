@@ -6,6 +6,7 @@ import { Tabs } from "react-native-collapsible-tab";
 import { COPY } from "@/features/you/copy";
 import { FollowUpsTab } from "@/features/you/home/follow-ups/follow-ups-tab";
 import { YouHeader } from "@/features/you/home/header/you-header";
+import { YouSkeleton } from "@/features/you/home/header/you-skeleton";
 import { InsightsTab } from "@/features/you/home/insights/insights-tab";
 import { FreezeTip } from "@/features/you/home/streak/freeze-tip";
 import { YouTabBar } from "@/features/you/home/tabs/you-tab-bar";
@@ -17,6 +18,16 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 const INSIGHTS: YouTab = "insights";
 const FOLLOW_UPS: YouTab = "follow-ups";
+// The screen draws under the bar on both platforms (the header's own band covers it once
+// scrolled). Android's bar is opaque unless told otherwise, which pushed the page down a bar's
+// height on top of the bar's height the header already leaves.
+const CLEAR_BAR =
+	process.env.EXPO_OS === "android"
+		? {
+				headerStyle: { backgroundColor: "transparent" },
+				headerTransparent: true,
+			}
+		: null;
 
 export function YouScreen() {
 	const header = useHeaderOptions("small");
@@ -30,6 +41,7 @@ export function YouScreen() {
 			<Stack.Screen
 				options={{
 					...header,
+					...CLEAR_BAR,
 					headerBackVisible: false,
 					headerShown: true,
 					headerTitle: "",
@@ -43,6 +55,7 @@ export function YouScreen() {
 				/>
 			</Stack.Toolbar>
 
+			{headerLoaded(state) ? null : <YouSkeleton />}
 			{headerHeight > 0 && headerLoaded(state) ? (
 				<Tabs.Container
 					// Solid: a tab keeps its own offset, so its content can sit under the expanded header.
