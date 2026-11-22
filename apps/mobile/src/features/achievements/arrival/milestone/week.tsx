@@ -5,6 +5,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { Icon, type IconName } from "@/components/shared/icon";
+import type { WeekDay } from "@/features/achievements/arrival/arrival-model";
 import {
 	age,
 	type Eng,
@@ -42,7 +43,7 @@ export function Week({
 }: {
 	eng: SharedValue<Eng>;
 	geo: Geo;
-	days: readonly string[];
+	days: readonly WeekDay[];
 	to: number;
 	dark: boolean;
 }) {
@@ -74,13 +75,14 @@ export function Week({
 				</AppText>
 			</View>
 			<View className="mt-2.5 flex-row justify-between">
-				{days.map((letter, i) => (
+				{days.map((day, i) => (
 					<Day
 						dark={dark}
 						eng={eng}
 						i={i}
 						key={i}
-						letter={letter}
+						letter={day.letter}
+						showedUp={day.lit}
 						today={i === days.length - 1}
 					/>
 				))}
@@ -89,16 +91,19 @@ export function Week({
 	);
 }
 
+/** A day a freeze or revive kept stays the empty circle: it wasn't a day showed up. */
 function Day({
 	eng,
 	i,
 	letter,
+	showedUp,
 	today,
 	dark,
 }: {
 	eng: SharedValue<Eng>;
 	i: number;
 	letter: string;
+	showedUp: boolean;
 	today: boolean;
 	dark: boolean;
 }) {
@@ -126,18 +131,20 @@ function Day({
 	return (
 		<View className="w-9 items-center gap-[5px]">
 			<View className="size-7.5 rounded-full bg-surface-secondary">
-				<Animated.View
-					className="absolute top-0 left-0 size-7.5 items-center justify-center rounded-full bg-ember"
-					style={[{ opacity: 0 }, lit]}
-				>
-					{today ? (
-						<Animated.View
-							className="absolute -top-1 -left-1 size-9.5 rounded-full border-4 border-arrival-today-ring"
-							style={ring}
-						/>
-					) : null}
-					<Icon color={check} name={CHECK} size={CHECK_SIZE} weight="heavy" />
-				</Animated.View>
+				{showedUp ? (
+					<Animated.View
+						className="absolute top-0 left-0 size-7.5 items-center justify-center rounded-full bg-ember"
+						style={[{ opacity: 0 }, lit]}
+					>
+						{today ? (
+							<Animated.View
+								className="absolute -top-1 -left-1 size-9.5 rounded-full border-4 border-arrival-today-ring"
+								style={ring}
+							/>
+						) : null}
+						<Icon color={check} name={CHECK} size={CHECK_SIZE} weight="heavy" />
+					</Animated.View>
+				) : null}
 			</View>
 			<AppText
 				className="text-[11px] leading-[13px]"

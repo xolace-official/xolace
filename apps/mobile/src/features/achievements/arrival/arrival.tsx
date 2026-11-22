@@ -27,7 +27,7 @@ const roomOf = (hasMs: boolean, dark: boolean) => {
 
 const silentEvents = (m: Milestone | null): number[] => [
 	...(m?.week ? [] : [EV.today]),
-	...(m?.freeze ? [] : [EV.token]),
+	...(m?.added ? [] : [EV.token]),
 ];
 
 export type ArrivalHandle = { start: () => void };

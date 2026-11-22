@@ -29,12 +29,18 @@ export type ArrivingBadge = {
 	family: Family;
 };
 
+/** What the milestone day put in hand; nothing added draws no card (B14). */
+export type MilestoneAdded = "saver" | "freeze";
+
+/** One of the last seven days: lit when showed up, not when a freeze kept it. */
+export type WeekDay = { letter: string; lit: boolean };
+
 export type Milestone = {
 	day: number;
 	from: number;
 	line: string;
-	freeze: "earned" | "capped" | null;
-	week: readonly string[] | null;
+	added: MilestoneAdded | null;
+	week: readonly WeekDay[] | null;
 };
 
 export type ArrivalPlan =
@@ -71,6 +77,27 @@ export function lastSevenDays(last: Date, locale?: string): string[] {
 			.slice(0, LETTERS)
 	);
 }
+
+/** Local noon on a "YYYY-MM-DD" day, so its weekday reads true in any zone. */
+const noonOf = (dayKey: string) => new Date(`${dayKey}T12:00:00`);
+
+/**
+ * The milestone's week as the server recorded it (B14), or null for a badge
+ * from before it: then the strip stays out rather than light the wrong days.
+ */
+export function milestoneWeek(
+	detail: UnseenBadge["milestone"],
+	locale?: string
+): WeekDay[] | null {
+	if (detail?.week.length !== WEEK) {
+		return null;
+	}
+	const letters = lastSevenDays(noonOf(detail.dayKey), locale);
+	return letters.map((letter, i) => ({ letter, lit: detail.week[i] === true }));
+}
+
+const addedOf = (detail: UnseenBadge["milestone"]): MilestoneAdded | null =>
+	detail && detail.added !== "nothing" ? detail.added : null;
 
 const arrivingBadge = (b: UnseenBadge): ArrivingBadge => ({
 	art: artOf(b.art),
@@ -118,11 +145,11 @@ export function arrivalPlan({
 			day === null
 				? null
 				: {
+						added: addedOf(lead?.milestone),
 						day,
-						freeze: null,
 						from: day - 1,
 						line: getStreakCopy(day) ?? lead?.copy ?? "",
-						week: null,
+						week: milestoneWeek(lead?.milestone),
 					},
 	};
 }
@@ -131,7 +158,7 @@ export function milestoneLabel(m: Milestone): string {
 	return COPY.milestone.label(
 		m.day,
 		m.line,
-		m.freeze ? COPY.milestone[m.freeze].title : null
+		m.added ? COPY.milestone[m.added].title : null
 	);
 }
 

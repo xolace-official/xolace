@@ -6,11 +6,17 @@ import {
 	mayArrive,
 	milestoneDayOf,
 	milestoneLabel,
+	milestoneWeek,
+	type UnseenBadge,
 } from "@/features/achievements/arrival/arrival-model";
 import {
 	ARRIVAL_DAY,
 	BACKFILL,
 	DAY_7,
+	DAY_7_BEFORE_B14,
+	DAY_7_FREEZE,
+	DAY_7_KEPT,
+	DAY_7_NOTHING,
 	DAY_30,
 	ONE,
 	TWO,
@@ -86,12 +92,50 @@ describe("arrivalPlan", () => {
 		});
 	});
 
-	it("claims no freeze and lights no week until the server says (#811 review)", () => {
-		const p = plan({ unseen: DAY_7 });
+	it("claims no card and lights no week for a badge from before B14 (#811 review)", () => {
+		const p = plan({ unseen: DAY_7_BEFORE_B14 });
 		expect(p?.kind === "badges" && p.milestone).toMatchObject({
-			freeze: null,
+			added: null,
 			week: null,
 		});
+	});
+
+	it("shows what the day added: a saver, a freeze, or no card (B14)", () => {
+		const added = (unseen: readonly UnseenBadge[]) => {
+			const p = plan({ unseen });
+			return p?.kind === "badges" ? p.milestone?.added : undefined;
+		};
+		expect(added(DAY_7)).toBe("saver");
+		expect(added(DAY_7_FREEZE)).toBe("freeze");
+		expect(added(DAY_7_NOTHING)).toBeNull();
+	});
+
+	it("draws the recorded week, the milestone day last (B14)", () => {
+		const p = plan({ unseen: DAY_7_NOTHING });
+		const week = p?.kind === "badges" ? p.milestone?.week : null;
+		expect(week).toHaveLength(7);
+		expect(week?.every((d) => d.lit)).toBe(true);
+	});
+
+	it("letters the week from the milestone's own day, whatever today is", () => {
+		expect(
+			milestoneWeek(DAY_7[0]?.milestone, "en-GB")?.map((d) => d.letter)
+		).toEqual(["Tu", "We", "Th", "Fr", "Sa", "Su", "Mo"]);
+		expect(milestoneWeek(undefined)).toBeNull();
+	});
+
+	it("leaves a day a freeze kept unlit (B14)", () => {
+		const p = plan({ unseen: DAY_7_KEPT });
+		const week = p?.kind === "badges" ? p.milestone?.week : null;
+		expect(week?.map((d) => d.lit)).toEqual([
+			true,
+			true,
+			false,
+			true,
+			true,
+			true,
+			true,
+		]);
 	});
 
 	it("rolls 29 over to 30 with the month's line", () => {
@@ -122,15 +166,18 @@ describe("milestoneLabel", () => {
 		return p.milestone;
 	};
 
-	it("is one sentence for VoiceOver, saying nothing of a freeze it can't vouch for", () => {
-		expect(milestoneLabel(milestone())).toBe(
+	it("is one sentence for VoiceOver, saying nothing of a card it can't vouch for", () => {
+		expect(milestoneLabel({ ...milestone(), added: null })).toBe(
 			"7 days in a row. A week. You made a week."
 		);
 	});
 
-	it("names the freeze once it's known", () => {
-		expect(milestoneLabel({ ...milestone(), freeze: "capped" })).toBe(
-			"7 days in a row. A week. You made a week. You already hold a freeze."
+	it("names what the day added once it's known", () => {
+		expect(milestoneLabel(milestone())).toBe(
+			"7 days in a row. A week. You made a week. You earned a streak saver."
+		);
+		expect(milestoneLabel({ ...milestone(), added: "freeze" })).toBe(
+			"7 days in a row. A week. You made a week. You earned a freeze."
 		);
 	});
 });

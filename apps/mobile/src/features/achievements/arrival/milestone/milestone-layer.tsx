@@ -40,7 +40,7 @@ export function MilestoneLayer({
 	wake: () => void;
 	ref?: Ref<ViewInstance>;
 }) {
-	const lift = milestone.week !== null || milestone.freeze !== null ? LIFT : 0;
+	const lift = milestone.week !== null || milestone.added !== null ? LIFT : 0;
 	const tap = Gesture.Tap()
 		.maxDistance(TAP_SLOP)
 		.onEnd((ev, ok) => {
