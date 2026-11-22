@@ -4,8 +4,8 @@ import {
 	chatNotificationRoute,
 	isChatNotificationType,
 } from "@xolace/backend/convex/lib/chatNotifications";
+import { isHeldRoute } from "@/lib/held-routes";
 
-/** The shape of an expo-notifications response that this module reads. */
 export type TapResponse = {
 	notification: {
 		request: {
@@ -15,17 +15,12 @@ export type TapResponse = {
 	};
 };
 
-/** Emitter surface, injected so the cold-start ordering (`getLast` returns what `subscribe`
- * never emits) is testable. */
 export type TapSource<R extends TapResponse = TapResponse> = {
 	getLast: () => R | null;
 	subscribe: (listener: (response: R) => void) => { remove: () => void };
-	/** Wipes the cached launch tap so a remount can't replay it. */
 	clear: () => void;
 };
 
-/** Delivers every tap to `onTap`, including the launch tap the listener never sees. Returns an
- * unsubscribe. */
 export function subscribeToNotificationTaps<R extends TapResponse>(
 	source: TapSource<R>,
 	onTap: (response: R) => void
@@ -41,7 +36,6 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 	};
 
 	const subscription = source.subscribe((response) => {
-		// A tap that landed during subscription arrives through both paths; skip the duplicate.
 		if (response.notification.request.identifier === launchId) {
 			return;
 		}
@@ -55,41 +49,56 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 	return () => subscription.remove();
 }
 
-/** Where a tap navigates. `navigate` reuses the screen already on top; `push` always stacks. */
 export type TapNavigation =
 	| {
 			action: "navigate";
 			href:
 				| ReturnType<typeof chatNotificationRoute>
-				| "/(protected)/achievements";
+				| "/(protected)/achievements"
+				| "/(protected)/letters";
 	  }
+	| { action: "home" }
 	| {
 			action: "push";
 			href:
 				| "/(protected)/quotes"
-				| "/(protected)"
+				| {
+						pathname: "/(protected)/quotes";
+						params: { quote: string };
+				  }
 				| "/(protected)/kindling"
-				| "/profile/insights";
+				| "/profile/insights"
+				| {
+						pathname: "/letters/read/[id]";
+						params: { id: string; from: "push" };
+				  };
 	  };
 
 export type NotificationTapPlan = {
-	/** Present when the tap has an analytics row to attribute a session to. */
 	logId?: string;
-	/** Content for the soft framing banner on the reflect screen. */
 	banner?: { content: string; notificationId: string };
 	navigation?: TapNavigation;
 };
 
-/** Everything a tap should cause, from its payload alone. Chat notifications carry no `logId`. */
+const HOME: TapNavigation = { action: "home" };
+
+const LETTER_FOR_YOU = "letter_for_you";
+const LETTER_SENT_TYPES: ReadonlySet<unknown> = new Set([
+	"letter_received",
+	"letter_acknowledged",
+]);
+
+const REFLECT = "/reflect";
+
 export function notificationTapPlan(
 	data: Record<string, any> | null | undefined,
 	body: string | null | undefined,
-	tappedAt: number
+	tappedAt: number,
+	pathname: string
 ): NotificationTapPlan {
 	const plan: NotificationTapPlan = {};
 
 	const logId = typeof data?.logId === "string" ? data.logId : undefined;
-	// A badge push isn't a nudge: its tap opens the badges, not a session.
 	if (logId && data?.type !== "achievement") {
 		plan.logId = logId;
 	}
@@ -97,8 +106,6 @@ export function notificationTapPlan(
 	if (isChatNotificationType(data?.type)) {
 		const conversationId =
 			typeof data?.conversationId === "string" ? data.conversationId : "";
-		// Only accept and message open a thread by id; the others land on Connect.
-		// Without a real id, drop the navigation rather than pushing `/chat/undefined`.
 		const opensThread =
 			data!.type === "chat_accepted" || data!.type === "chat_message";
 		if (conversationId || !opensThread) {
@@ -108,27 +115,44 @@ export function notificationTapPlan(
 			};
 		}
 	} else if (data?.screen === "quotes") {
-		plan.navigation = { action: "push", href: "/(protected)/quotes" };
-	} else if (data?.type === "domain_unlock") {
+		const quote = typeof data.quoteId === "string" ? data.quoteId : "";
+		plan.navigation = {
+			action: "push",
+			href: quote
+				? { params: { quote }, pathname: "/(protected)/quotes" }
+				: "/(protected)/quotes",
+		};
+	} else if (data?.type === "domain_unlock" && !isHeldRoute(pathname)) {
 		plan.navigation = { action: "push", href: "/profile/insights" };
+	} else if (data?.type === LETTER_FOR_YOU) {
+		const letterId = typeof data.letterId === "string" ? data.letterId : "";
+		if (letterId) {
+			plan.navigation = {
+				action: "push",
+				href: {
+					params: { from: "push", id: letterId },
+					pathname: "/letters/read/[id]",
+				},
+			};
+		}
+	} else if (LETTER_SENT_TYPES.has(data?.type)) {
+		plan.navigation = { action: "navigate", href: "/(protected)/letters" };
 	} else if (data?.type === "kindling_ready") {
 		plan.navigation = { action: "push", href: "/(protected)/kindling" };
 	} else if (data?.type === "achievement") {
-		// Off a held screen, so the unlock moment can open over the badges.
 		plan.navigation = { action: "navigate", href: "/(protected)/achievements" };
 	} else if (
-		data?.type === "gentle_return" ||
-		data?.type === "pattern_nudge" ||
-		data?.type === "milestone" ||
-		data?.type === "streak_milestone"
+		(data?.type === "gentle_return" ||
+			data?.type === "pattern_nudge" ||
+			data?.type === "milestone" ||
+			data?.type === "streak_milestone") &&
+		!isHeldRoute(pathname) &&
+		pathname !== REFLECT
 	) {
-		plan.navigation = { action: "push", href: "/(protected)" };
+		plan.navigation = HOME;
 	}
 
-	// The banner lives on home, so a tap that opens another screen would leave it
-	// waiting there for later. A tap with no route (a follow-up) goes nowhere new.
-	const opensElsewhere =
-		plan.navigation && plan.navigation.href !== "/(protected)";
+	const opensElsewhere = plan.navigation && plan.navigation !== HOME;
 	if (logId && body && !opensElsewhere) {
 		plan.banner = { content: body, notificationId: logId };
 	}

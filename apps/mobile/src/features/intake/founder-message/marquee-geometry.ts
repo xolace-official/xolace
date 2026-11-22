@@ -1,12 +1,7 @@
-// Belt geometry for the founder marquee, kept separate from the component so the
-// coverage guarantee is testable without a renderer.
-
 export const CARD_WIDTH = 150;
 export const CARD_HEIGHT = 200;
-export const CARD_STRIDE = CARD_WIDTH * 0.82; // deliberate overlap, so the band reads as a stack
+export const CARD_STRIDE = CARD_WIDTH * 0.82;
 
-/** Slots the belt needs to stay one card wider than the viewport; pinning to the card count
- * left wide screens empty (#280). */
 export const beltSlots = (viewport: number, minSlots: number) =>
 	Math.max(minSlots, Math.ceil((viewport + CARD_WIDTH) / CARD_STRIDE));
 
@@ -15,7 +10,6 @@ const mod = (a: number, m: number) => {
 	return ((a % m) + m) % m;
 };
 
-/** Left edge of one slot for the current drift, recycled onto the near side. */
 export const slotLeft = (
 	index: number,
 	offset: number,

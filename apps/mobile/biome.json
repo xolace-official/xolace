@@ -3,7 +3,15 @@
   "root": false,
   "extends": "//",
   "files": {
-    "includes": ["**", "!assets", "!src/uniwind-types.d.ts"]
+    "includes": [
+      "**",
+      "!assets",
+      "!src/uniwind-types.d.ts",
+      "!src/themes/themes.generated.css",
+      "!src/themes/type.generated.css",
+      "!src/design/type-classes.generated.ts",
+      "!src/design/theme-names.generated.json"
+    ]
   },
   "linter": {
     "rules": {
@@ -97,18 +105,6 @@
           "style": {
             "useConsistentMethodSignatures": "off",
             "useFilenamingConvention": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": [
-        "src/features/insights/{glass,trend-chip,detail-card,domain-list,overall-dial}.tsx"
-      ],
-      "assist": {
-        "actions": {
-          "source": {
-            "useSortedAttributes": "off"
           }
         }
       }

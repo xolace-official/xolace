@@ -16,17 +16,33 @@
 // trees — never one set uploaded to two deployments. `--prod` targets the
 // prod Convex deployment/bucket AND defaults manifest/media to the prod/
 // tree, so a bare `--prod` can't accidentally push the tiny dev fixture set
-// as if it were the real catalogue. Pass `--manifest`/`--media` explicitly
-// to override either side independently.
+// as if it were the real catalogue. `--deploy-key` (staging, a preview) is
+// for testing, so it defaults to the dev/ tree. Pass `--manifest`/`--media`
+// explicitly to override either side independently.
+//
+// Which deployment (../target.ts): a bare run reaches only your own dev
+// deployment (.env.local) and first pushes this checkout's functions to it.
+// `--prod` and `--deploy-key` (needs CONVEX_DEPLOY_KEY, e.g. staging's) are
+// the release owner's; agents never pass them. A bare run with
+// CONVEX_DEPLOY_KEY set refuses, because the Convex CLI would follow the key.
+//
+// Where it lands: audio and WebP thumbs go to Cloudflare R2 through the
+// deployment's R2 component, rows to `audio_tracks` / `topics`, and each new
+// or changed track is embedded into the meaning index. So the target
+// deployment needs R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_ENDPOINT,
+// R2_BUCKET and OPENAI_API_KEY set, and a deploy key that may run internal
+// functions.
 //
 // Usage:
 //   bun scripts/kindling/ingest.ts --update-hashes   # fill in audio sha256 fields from local files
 //   bun scripts/kindling/ingest.ts --update-hashes --prod (or --manifest scripts/kindling/prod/manifest.json explicitly)
 //   bun scripts/kindling/ingest.ts                    # dev deployment + dev/ fixtures
 //   bun scripts/kindling/ingest.ts --prod             # prod deployment + prod/ curated catalogue
+//   bun scripts/kindling/ingest.ts --deploy-key       # CONVEX_DEPLOY_KEY's deployment (staging) + dev/ fixtures
+//   bun scripts/kindling/ingest.ts --dry-run [--deploy-key]   # print target, trees and missing media; no Convex calls
 //   bun scripts/kindling/ingest.ts --manifest scripts/kindling/dev/manifest.json   # topics.json is read from the same dir
 //
-//   bun scripts/kindling/ingest.ts --thumbs-only [--prod]   # re-upload thumbs only, no audio
+//   bun scripts/kindling/ingest.ts --thumbs-only [--prod | --deploy-key]   # re-upload thumbs only, no audio
 //   bun scripts/kindling/ingest.ts --prod --only a,b,c        # just these track slugs, no topics
 //   bun scripts/kindling/ingest.ts --prod --concurrency 2     # fewer uploads at once (default 5)
 //
@@ -48,10 +64,16 @@
 
 import { execFileSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { createReadStream, readFileSync, writeFileSync } from "node:fs";
+import {
+	createReadStream,
+	existsSync,
+	readFileSync,
+	writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 import { rgbaToThumbHash } from "thumbhash";
+import { catalogueFor, type Target, targetFromArgs } from "../target";
 
 type SharedFields = {
 	slug: string;
@@ -63,6 +85,8 @@ type SharedFields = {
 	durationSec: number;
 	sha256: string;
 	newUntil?: number;
+	// Explore's "For the hour" (B6): the times of day it suits. Leave out to keep what's stored.
+	bestAt?: ("dawn" | "day" | "evening" | "late")[];
 	// measure-loudness.ts; sent only while it was measured on this audio
 	loudness?: { lufs: number; sha256: string; truePeak: number };
 };
@@ -91,11 +115,11 @@ const flag = (name: string, fallback: string) => {
 	const i = args.indexOf(`--${name}`);
 	return i === -1 ? fallback : args[i + 1];
 };
-const prod = args.includes("--prod");
 const updateHashes = args.includes("--update-hashes");
 const thumbsOnly = args.includes("--thumbs-only");
+const dryRun = args.includes("--dry-run");
 const THUMB_PX = 1080;
-const catalogueDir = prod ? "prod" : "dev";
+const catalogueDir = catalogueFor(args);
 const manifestPath = path.resolve(
 	flag("manifest", `scripts/kindling/${catalogueDir}/manifest.json`)
 );
@@ -131,16 +155,18 @@ function sha256File(filePath: string): Promise<string> {
 	});
 }
 
+// Resolved on first use: `--update-hashes` reads local files only, so it
+// needs no deployment.
+let target: Target | undefined;
+const deployment = () => {
+	target ??= targetFromArgs(args);
+	return target;
+};
+
 function convexRun(fn: string, jsonArgs: unknown): any {
 	const out = execFileSync(
 		"npx",
-		[
-			"convex",
-			"run",
-			fn,
-			JSON.stringify(jsonArgs),
-			...(prod ? ["--prod"] : []),
-		],
+		["convex", "run", fn, JSON.stringify(jsonArgs), ...deployment().convexArgs],
 		{ encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] }
 	);
 	// A `null` return prints nothing.
@@ -399,7 +425,29 @@ async function main() {
 		return;
 	}
 
-	if (!prod) {
+	const { label, pushFunctions } = deployment();
+	if (dryRun) {
+		const missing = [
+			...new Set([
+				...manifest.flatMap((track) => [track.thumbPath, track.audioPath]),
+				...topics.map((topic) => topic.thumbPath),
+			]),
+		].filter((file) => !existsSync(path.resolve(mediaDir, file)));
+		console.log(
+			[
+				`Target: ${label}`,
+				`Manifest: ${manifestPath}`,
+				`Media: ${mediaDir}`,
+				`Would ingest ${only ? 0 : topics.length} topic(s) and ${tracks.length} track(s)${thumbsOnly ? " (thumbs only)" : ""}`,
+				missing.length > 0
+					? `Missing media (${missing.length}): ${missing.join(", ")}`
+					: "All media present",
+			].join("\n")
+		);
+		return;
+	}
+	console.log(`Ingesting into ${label}`);
+	if (pushFunctions) {
 		execFileSync("npx", ["convex", "dev", "--once"], { stdio: "inherit" });
 	}
 

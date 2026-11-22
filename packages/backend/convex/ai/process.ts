@@ -2,7 +2,9 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
 import type { ExerciseSimilarity } from "../exercises/match";
+import { slotKeysToFill } from "../exercises/slots";
 import { AI_MIRROR_LIMITS_PLUS, rateLimiter } from "../lib/rateLimits";
+import { ERROR_CODES } from "../lib/shared";
 import { posthog } from "../posthog";
 import { classifierCache, moderationCache } from "./cached";
 import type { SessionContext } from "./context";
@@ -18,6 +20,7 @@ import {
 	collectRecentMirrors,
 } from "./helpers/patternSummary";
 import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
+import { entryForAi, ownWords } from "./prompts/accumulatedInput";
 import {
 	buildArticulatorPrompt,
 	hasMetaNarration,
@@ -63,6 +66,7 @@ export const generateMirror = internalAction({
 					timeOfDay?: string;
 					sessionMode?: "day" | "night";
 					emotionalProfileId: string;
+					textures?: string[];
 					[key: string]: unknown;
 			  }
 			| undefined;
@@ -91,6 +95,7 @@ export const generateMirror = internalAction({
 						: "Try again in a few minutes.";
 
 				await ctx.runMutation(internal.sessions.failSession, {
+					errorCode: ERROR_CODES.reflectionRateLimited,
 					errorMessage: `You've reached the limit for reflections. ${retryText}`,
 					retryAfterMs: retryAfter,
 					sessionId: args.sessionId,
@@ -132,15 +137,24 @@ export const generateMirror = internalAction({
 				timeOfDay?: string;
 				sessionMode?: "day" | "night";
 				emotionalProfileId: string;
+				textures?: string[];
 				[key: string]: unknown;
 			};
+			// What they wrote and the feeling words they picked, labelled apart
+			// (B10). Without picked words it is their text, exactly as before.
+			const entry = entryForAi({
+				entryType: session.entryType,
+				rawInput: args.rawText,
+				textures: session.textures,
+			});
 
 			const classifierPrompt = buildClassifierPrompt(
-				args.rawText,
+				entry,
 				patternSummary,
 				context.isFirstSession,
 				session.entryType ?? "open_prompt",
-				session.timeOfDay
+				session.timeOfDay,
+				session.textures
 			);
 			console.log("classifier prompt ", classifierPrompt);
 
@@ -153,7 +167,7 @@ export const generateMirror = internalAction({
 			const [moderationResult, classification, [episodic, exerciseSimilarity]] =
 				await Promise.all([
 					moderationCache
-						.fetch(ctx, { text: args.rawText })
+						.fetch(ctx, { text: entry })
 						.catch(() => MODERATION_UNAVAILABLE),
 					classifierCache.fetch(ctx, {
 						systemPrompt: classifierPrompt.system,
@@ -163,7 +177,7 @@ export const generateMirror = internalAction({
 						? Promise.resolve<[EpisodicSearch, ExerciseSimilarity | undefined]>(
 								[{ matches: [] }, undefined]
 							)
-						: embedSessionText(args.rawText).then((vector) =>
+						: embedSessionText(entry).then((vector) =>
 								Promise.all<
 									[
 										Promise<EpisodicSearch>,
@@ -193,7 +207,9 @@ export const generateMirror = internalAction({
 			// 5a. If content should be rejected, fail the session
 			if (safeguard.shouldReject) {
 				await ctx.runMutation(internal.sessions.failSession, {
-					errorMessage: safeguard.rejectionReason ?? "content_policy_violation",
+					errorCode: ERROR_CODES.safeguardRejected,
+					errorMessage:
+						safeguard.rejectionReason ?? ERROR_CODES.safeguardRejected,
 					rejected: true,
 					sessionId: args.sessionId,
 				});
@@ -202,7 +218,7 @@ export const generateMirror = internalAction({
 					event: "mirror_content_rejected",
 					properties: {
 						rejectionReason:
-							safeguard.rejectionReason ?? "content_policy_violation",
+							safeguard.rejectionReason ?? ERROR_CODES.safeguardRejected,
 					},
 				});
 				return null;
@@ -248,13 +264,22 @@ export const generateMirror = internalAction({
 					isFirstSession: context.isFirstSession,
 					mirrorTone,
 					patternSummary: articulatorPatternSummary,
-					rawInput: args.rawText,
+					rawInput: entry,
 					recentMirrors,
 					safeguardLevel: safeguard.level,
 					semanticProfile: context.semanticProfile,
 					sessionMode: session.sessionMode,
 					spaceName: context.preferences?.spaceName,
+					textures: session.textures,
 					useAudioTags: context.isPremium,
+					...(session.textures?.length
+						? {
+								writtenChars: ownWords({
+									entryType: session.entryType,
+									rawInput: args.rawText,
+								}).length,
+							}
+						: {}),
 				});
 
 				const mirrorResponse = await anthropic.messages.create({
@@ -378,8 +403,16 @@ export const generateMirror = internalAction({
 				...(context.semanticProfileVersion === null
 					? {}
 					: { profileVersion: context.semanticProfileVersion }),
+				// The classifier's own follow-up read, kept whatever it decided so a
+				// missed follow-up can be traced (escalation joins the session flag,
+				// not this one).
+				aiRequiresFollowUp: classification.requiresFollowUp,
+				followUpReasonCode: classification.followUpReasonCode ?? "unknown",
 				...(classification.followUpReason
 					? { followUpReason: classification.followUpReason }
+					: {}),
+				...(classification.noFollowUpReason
+					? { noFollowUpReason: classification.noFollowUpReason }
 					: {}),
 				supportNeed: resolveSupportNeed(
 					classification.supportNeed,
@@ -399,13 +432,9 @@ export const generateMirror = internalAction({
 				});
 
 				// Slot-fill — fire-and-forget so it doesn't block mirror delivery.
-				const slotKeys = [
-					...new Set(
-						matched.steps.flatMap(
-							(s: { slotKeys?: string[] }) => s.slotKeys ?? []
-						)
-					),
-				];
+				const slotKeys = slotKeysToFill(matched.steps, {
+					fallbackMirror: isFallback,
+				});
 				if (slotKeys.length > 0) {
 					await ctx.scheduler.runAfter(0, internal.ai.slotFill.fillSlots, {
 						exerciseTitle: plan.exerciseTitle,
@@ -414,6 +443,11 @@ export const generateMirror = internalAction({
 						sessionId: args.sessionId,
 						slotKeys,
 						userLanguageTags: classification.userLanguageTags,
+						// Never a picked word: only what they wrote may be quoted.
+						userText: ownWords({
+							entryType: session.entryType,
+							rawInput: args.rawText,
+						}),
 					});
 				}
 			}
@@ -454,7 +488,7 @@ export const generateMirror = internalAction({
 
 			// Create escalation event if needed
 			if (plan.isEscalation && safeguard.triggerType) {
-				await ctx.runMutation(internal.escalation.create, {
+				await ctx.runMutation(internal.escalation.events.create, {
 					actionTaken: safeguard.actionTaken,
 					emotionalProfileId: session.emotionalProfileId as ReturnType<
 						typeof v.id<"emotional_profiles">

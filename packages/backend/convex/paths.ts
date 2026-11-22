@@ -9,6 +9,8 @@ import { CATALOG_BY_KEY } from "./ai/paths/catalog";
 import { isTryThis } from "./ai/paths/tryThis";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
+import { trackPeaksValidator } from "./lib/validators";
+import { qualifiesForKindling, queueKindling } from "./paths/settingUp";
 import { posthog } from "./posthog";
 import { recordActivity } from "./streaks/activityLog";
 import type { Understanding } from "./understanding";
@@ -162,6 +164,63 @@ export const getActive = query({
 });
 
 /**
+ * How your latest kindling ended up: its status and each twig's state, or null (free user,
+ * or none yet). Today reads it once `getActive` goes null, to tell a kindling that was
+ * tended to its end (`completed`, with which twigs were done) from one put out
+ * (`dismissed`), replaced, or gone with Plus. Premium-gated like `getActive`.
+ */
+export const getLatest = query({
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
+		if (!(await hasPremium(ctx, profile))) {
+			return null;
+		}
+		const path = await ctx.db
+			.query("paths")
+			.withIndex("by_emotionalProfileId_and_generatedAt", (q) =>
+				q.eq("emotionalProfileId", profile._id)
+			)
+			.order("desc")
+			.first();
+		if (!path) {
+			return null;
+		}
+		const steps = await ctx.db
+			.query("path_steps")
+			.withIndex("by_path", (q) => q.eq("pathId", path._id))
+			.collect();
+		return {
+			_id: path._id,
+			status: path.status,
+			twigs: steps.map((s) => ({ _id: s._id, state: s.state })),
+		};
+	},
+	returns: v.union(
+		v.null(),
+		v.object({
+			_id: v.id("paths"),
+			status: v.union(
+				v.literal("active"),
+				v.literal("replaced"),
+				v.literal("dismissed"),
+				v.literal("completed")
+			),
+			twigs: v.array(
+				v.object({
+					_id: v.id("path_steps"),
+					state: v.union(
+						v.literal("pending"),
+						v.literal("done"),
+						v.literal("skipped")
+					),
+				})
+			),
+		})
+	),
+});
+
+/**
  * Whether this session's `supportNeed` is light/active — the same grade
  * `generate.run` gates on (§1), read here so session-end's slot only fires on
  * a genuine trigger moment. Deliberately tier-blind: ADR 0009's free-user
@@ -177,10 +236,7 @@ export const isKindlingQualifyingSession = query({
 			internal.understanding.getUnderstanding,
 			{ sessionId: session._id }
 		);
-		return (
-			understanding?.supportNeed === "light" ||
-			understanding?.supportNeed === "active"
-		);
+		return qualifiesForKindling(understanding);
 	},
 	returns: v.boolean(),
 });
@@ -226,6 +282,9 @@ export const getBoundAudioTrack = query({
 			expiresAt: Date.now() + AUDIO_URL_TTL_SEC * 1000,
 			family: track.family,
 			narrators: track.narrators,
+			// The player's waveform (60 numbers 0–1); absent until measured,
+			// and the player draws a plain line without it.
+			peaks: track.peaks,
 			showCrisisLine: track.tier === 4,
 			slug: track.slug,
 			thumbUrl,
@@ -243,6 +302,7 @@ export const getBoundAudioTrack = query({
 			expiresAt: v.number(),
 			family: v.union(v.literal("support"), v.literal("music")),
 			narrators: v.optional(v.array(v.string())),
+			peaks: v.optional(trackPeaksValidator),
 			showCrisisLine: v.boolean(),
 			slug: v.string(),
 			thumbUrl: v.string(),
@@ -376,10 +436,7 @@ export const requestKindling = mutation({
 			args.sessionId
 		);
 		if (await hasPremium(ctx, profile)) {
-			await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
-				emotionalProfileId: profile._id,
-				sessionId: session._id,
-			});
+			await queueKindling(ctx, profile._id, session._id);
 		} else {
 			await ctx.db.patch("emotional_profiles", profile._id, {
 				pendingKindlingSessionId: session._id,

@@ -1,0 +1,305 @@
+import { ConvexError, type Infer, v } from "convex/values";
+import { internal } from "../_generated/api";
+import type { Doc, Id } from "../_generated/dataModel";
+import { mutation, type QueryCtx, query } from "../_generated/server";
+import { requireAuth } from "../lib/auth";
+import {
+	channelConfig,
+	countryFromRegion,
+	putChannelFirst,
+	routingOrder,
+} from "./channels";
+import { channelUnavailable, loadNotifications } from "./router";
+import { telegramConfigured } from "./telegram/bot";
+import {
+	currentLink,
+	identitiesOf,
+	isLive,
+	lastRevoked,
+	revokeIdentity,
+} from "./telegram/lifecycle";
+import {
+	type OutreachChannel,
+	outreachChannelValidator,
+	revokedReasonValidator,
+} from "./validators";
+
+/**
+ * The client contract behind "Reach me on…" (#766, plan §9): which channels
+ * this person has, in their order, choosing which comes first, pausing and
+ * unlinking (#767). Linking itself is `telegram/link:createLink`.
+ */
+
+const channelStatusValidator = v.union(
+	v.literal("linked"),
+	v.literal("paused"),
+	v.literal("needs_plus"),
+	v.literal("disconnected"),
+	v.literal("not_linked")
+);
+
+/**
+ * The channels "Reach me on…" can show: never email, which comes with the
+ * account and which shipped app builds don't know (#914). Narrower than
+ * `outreachChannelValidator` on purpose, so the return validator refuses it.
+ */
+const reachChannelValidator = v.union(v.literal("push"), v.literal("telegram"));
+type ReachChannel = Infer<typeof reachChannelValidator>;
+
+const channelEntryValidator = v.object({
+	/** Open to this person now: switched on and on their plan. */
+	available: v.boolean(),
+	channel: reachChannelValidator,
+	/** The Telegram `@username` (without the `@`), shown only to its owner. */
+	displayHandle: v.optional(v.string()),
+	/**
+	 * Telegram only: this account has linked it at some point. Unlike
+	 * `status`, it outlives the 30-day purge of revoked rows (#777's offer).
+	 * Absent from older deployments.
+	 */
+	everLinked: v.optional(v.boolean()),
+	/** The channel routing tries first: first in order, linked and open. */
+	isFirst: v.boolean(),
+	/** A link exists (active or paused), whatever the plan says now. */
+	linked: v.boolean(),
+	requiresPlus: v.boolean(),
+	revokedReason: v.optional(revokedReasonValidator),
+	status: channelStatusValidator,
+});
+type ChannelEntry = Infer<typeof channelEntryValidator>;
+
+/** Every channel a deployment can offer, in the default display order. */
+const ALL_CHANNELS: readonly ReachChannel[] = ["push", "telegram"];
+
+/** A live link's status: Plus-only and not Plus wins, then paused. */
+function linkStatus(
+	link: Doc<"channel_identities">,
+	unavailable: string | null
+): ChannelEntry["status"] {
+	if (unavailable === "requires_plus") {
+		return "needs_plus";
+	}
+	return link.status === "paused" ? "paused" : "linked";
+}
+
+/**
+ * Whether this account ever linked Telegram. Every link grants a
+ * `telegram_outreach` consent, and consent rows are append-only and kept until
+ * account deletion, so they outlive the purge of revoked identity rows.
+ */
+async function everLinkedTelegram(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	identities: Doc<"channel_identities">[]
+): Promise<boolean> {
+	if (identities.length > 0) {
+		return true;
+	}
+	const consent = await ctx.db
+		.query("consent_records")
+		.withIndex("by_profile_type", (q) =>
+			q
+				.eq("emotionalProfileId", emotionalProfileId)
+				.eq("consentType", "telegram_outreach")
+		)
+		.first();
+	return consent !== null;
+}
+
+async function channelEntry(
+	ctx: QueryCtx,
+	channel: ReachChannel,
+	profile: Doc<"emotional_profiles">,
+	pushOn: boolean
+): Promise<ChannelEntry> {
+	const unavailable = await channelUnavailable(ctx, channel, profile);
+	const common = {
+		available: unavailable === null,
+		channel,
+		isFirst: false,
+		requiresPlus: (await channelConfig(ctx, channel)).plan === "plus",
+	};
+	if (channel === "push") {
+		// Push is the app itself: nothing to link. With notifications off the
+		// router skips it (`push_off`), so it isn't open now.
+		return {
+			...common,
+			available: common.available && pushOn,
+			linked: true,
+			status: "linked",
+		};
+	}
+	const identities = await identitiesOf(ctx, profile._id, channel);
+	const base = {
+		...common,
+		everLinked: await everLinkedTelegram(ctx, profile._id, identities),
+	};
+	const link = currentLink(identities);
+	if (link) {
+		return {
+			...base,
+			linked: true,
+			status: linkStatus(link, unavailable),
+			...(link.displayHandle && { displayHandle: link.displayHandle }),
+		};
+	}
+	if (unavailable === "requires_plus") {
+		return { ...base, linked: false, status: "needs_plus" };
+	}
+	const revoked = lastRevoked(identities);
+	if (revoked) {
+		return {
+			...base,
+			linked: false,
+			status: "disconnected",
+			...(revoked.revokedReason && {
+				revokedReason: revoked.revokedReason,
+			}),
+		};
+	}
+	return { ...base, linked: false, status: "not_linked" };
+}
+
+/**
+ * One entry per channel this deployment offers (Telegram omitted with no
+ * bot), in the person's order. Reactive, so the link step updates live.
+ */
+export const listChannels = query({
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
+		const notifications = await loadNotifications(ctx, profile._id);
+		const offered = (await telegramConfigured(ctx))
+			? ALL_CHANNELS
+			: ALL_CHANNELS.filter((c) => c !== "telegram");
+		const isOffered = (c: OutreachChannel): c is ReachChannel =>
+			(offered as readonly OutreachChannel[]).includes(c);
+		const shown = [
+			...new Set(
+				[...routingOrder(notifications), ...ALL_CHANNELS].filter(isOffered)
+			),
+		];
+		// As the router reads it: absent preferences are off too.
+		const pushOn = notifications?.enabled === true;
+		const entries: ChannelEntry[] = [];
+		for (const channel of shown) {
+			entries.push(await channelEntry(ctx, channel, profile, pushOn));
+		}
+		// First = the channel routing would try first: the first in the
+		// routing order that is linked and open to them now.
+		const first = entries.find((e) => e.status === "linked" && e.available);
+		return entries.map((e) => ({ ...e, isFirst: e === first }));
+	},
+	returns: v.array(channelEntryValidator),
+});
+
+/**
+ * "Try this first": move a channel to the front of the person's order.
+ * Telegram must be linked (active or paused); `channel_not_linked` if not.
+ */
+export const setFirstChannel = mutation({
+	args: { channel: outreachChannelValidator },
+	handler: async (ctx, { channel }) => {
+		const { profile } = await requireAuth(ctx);
+		if (
+			channel !== "push" &&
+			!currentLink(await identitiesOf(ctx, profile._id, channel))
+		) {
+			throw new ConvexError({ channel, code: "channel_not_linked" });
+		}
+		await putChannelFirst(ctx, profile._id, channel);
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Called when "Reach me on…" opens: the device's region becomes the linked
+ * chat's country, for the crisis resources the bot names. A code that isn't
+ * an ISO 3166-1 alpha-2 region changes nothing.
+ */
+export const refreshCountry = mutation({
+	args: { regionCode: v.string() },
+	handler: async (ctx, { regionCode }) => {
+		const { profile } = await requireAuth(ctx);
+		const country = countryFromRegion(regionCode);
+		if (!country) {
+			return null;
+		}
+		for (const identity of await identitiesOf(ctx, profile._id, "telegram")) {
+			if (isLive(identity) && identity.country !== country) {
+				await ctx.db.patch("channel_identities", identity._id, { country });
+			}
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Push is the app itself, and email comes with the account: neither can be
+ * paused or unlinked here.
+ */
+function linkableChannel(channel: OutreachChannel): "telegram" {
+	if (channel === "push" || channel === "email") {
+		throw new ConvexError({ channel, code: "channel_not_linkable" });
+	}
+	return channel;
+}
+
+/**
+ * Unlink a channel from the app: every live link is revoked `user_app` and
+ * its chat gets one goodbye. Unlinking what isn't linked does nothing.
+ */
+export const unlinkChannel = mutation({
+	args: { channel: outreachChannelValidator },
+	handler: async (ctx, { channel }) => {
+		const { profile } = await requireAuth(ctx);
+		const identities = await identitiesOf(
+			ctx,
+			profile._id,
+			linkableChannel(channel)
+		);
+		const chats: string[] = [];
+		for (const identity of identities) {
+			if (await revokeIdentity(ctx, identity, "user_app")) {
+				chats.push(identity.externalId);
+			}
+		}
+		if (chats.length > 0) {
+			await ctx.scheduler.runAfter(0, internal.outreach.telegram.lines.send, {
+				lines: chats.map((chatId) => ({
+					chatId,
+					kind: "goodbye_app" as const,
+				})),
+			});
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Pause or resume a linked channel. Paused, nothing is sent there, but the
+ * person can still write to the bot. `channel_not_linked` with no live link.
+ */
+export const setChannelPaused = mutation({
+	args: { channel: outreachChannelValidator, paused: v.boolean() },
+	handler: async (ctx, { channel, paused }) => {
+		const { profile } = await requireAuth(ctx);
+		const live = (
+			await identitiesOf(ctx, profile._id, linkableChannel(channel))
+		).filter(isLive);
+		if (live.length === 0) {
+			throw new ConvexError({ channel, code: "channel_not_linked" });
+		}
+		const status = paused ? "paused" : "active";
+		for (const identity of live) {
+			if (identity.status !== status) {
+				await ctx.db.patch("channel_identities", identity._id, { status });
+			}
+		}
+		return null;
+	},
+	returns: v.null(),
+});

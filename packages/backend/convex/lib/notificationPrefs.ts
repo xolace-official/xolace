@@ -1,5 +1,6 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { syncDailyQuoteSchedule } from "../dailyQuotes/schedule";
 
 type NotificationPrefs = Doc<"preferences">["notifications"];
 
@@ -9,6 +10,9 @@ type NotificationPrefs = Doc<"preferences">["notifications"];
  * All writes to notification preferences must go through this helper to
  * avoid a `ctx.db.patch` that accidentally replaces the whole sub-object
  * with a partial — preserving every field the caller didn't touch.
+ *
+ * It also keeps the daily quote push's schedule (`daily_quote_pushes`) in
+ * step when the setting or the time zone changes (B19).
  */
 export async function updateNotificationPrefs(
 	ctx: MutationCtx,
@@ -26,7 +30,13 @@ export async function updateNotificationPrefs(
 		return;
 	}
 
-	await ctx.db.patch("preferences", preferences._id, {
-		notifications: { ...preferences.notifications, ...partial },
-	});
+	const notifications = { ...preferences.notifications, ...partial };
+	await ctx.db.patch("preferences", preferences._id, { notifications });
+
+	const movedZone =
+		"timezone" in partial &&
+		partial.timezone !== preferences.notifications.timezone;
+	if ("dailyQuote" in partial || movedZone) {
+		await syncDailyQuoteSchedule(ctx, emotionalProfileId, notifications);
+	}
 }

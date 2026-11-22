@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { r2 } from "../ai/paths/audioTracks";
+import { audioFormatValidator } from "../audio/formats";
 import { adminMutation } from "../lib/adminAuth";
 import schema from "../schema";
 import { assertSlug } from "./edits";
@@ -45,9 +46,6 @@ export function imageKey(use: ImageUse, sha256: string) {
 
 const imageUse = v.union(v.literal("hubCover"), v.literal("thumb"));
 
-/** What New track accepts: "MP3, M4A or WAV". */
-const audioExt = v.union(v.literal("mp3"), v.literal("m4a"), v.literal("wav"));
-
 const { family: familyValidator } = schema.tables.audio_tracks.validator.fields;
 
 /** Audio keys are unique per upload, like the script's: `<family>/<slug>/<uuid>.<ext>`. */
@@ -77,7 +75,12 @@ export const imageUploadUrl = adminMutation({
 
 /** Upload URL for a track's audio file, under a fresh key. */
 export const audioUploadUrl = adminMutation({
-	args: { ext: audioExt, family: familyValidator, slug: v.string() },
+	// MP3 or WAV: what the player's waveform can be measured from.
+	args: {
+		ext: audioFormatValidator,
+		family: familyValidator,
+		slug: v.string(),
+	},
 	handler: (_ctx, { ext, family, slug }) => {
 		assertSlug(slug);
 		return r2.generateUploadUrl(
@@ -87,7 +90,7 @@ export const audioUploadUrl = adminMutation({
 	returns: uploadUrl,
 });
 
-/** Exactly what `audioUploadUrl` mints, so nothing else can be named for deletion. */
+/** Exactly what `audioUploadUrl` mints (and once minted for M4A), so nothing else can be named for deletion. */
 const UPLOADED_AUDIO_KEY =
 	/^(?:support|music)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/[0-9a-f-]{36}\.(?:mp3|m4a|wav)$/;
 

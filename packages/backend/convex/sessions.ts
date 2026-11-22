@@ -15,11 +15,17 @@ import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { deriveClaimStrength } from "./lib/claimStrength";
 import {
 	abandonRequiresFollowUp,
+	classifierFlaggedFollowUp,
 	computeRequiresFollowUp,
+	followUpDecisionSource,
 } from "./lib/followUpCadence";
 import { hasPremium } from "./lib/premium";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "./lib/rateLimits";
 import { purgeSessions } from "./lib/sessionCascade";
+import {
+	REFLECTION_INPUT_MAX_CHARS,
+	REFLECTION_MAX_TEXTURES,
+} from "./lib/shared";
 import { getDayOfWeek, getTimeOfDay } from "./lib/timeOfDay";
 import {
 	confirmationStateValidator,
@@ -28,7 +34,9 @@ import {
 	pathChosenValidator,
 	postSessionMoodValidator,
 	resourceValidator,
+	sessionErrorCodeValidator,
 } from "./lib/validators";
+import { queueKindling } from "./paths/settingUp";
 import schema from "./schema";
 import { recordActivity } from "./streaks/activityLog";
 import { finalizeTalk } from "./talk/session";
@@ -38,12 +46,38 @@ const ABANDON_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 // for their return this long, not the typed 30 minutes.
 const TALK_MIRROR_WAIT_MS = 24 * 60 * 60 * 1000;
 
-// Hard ceiling on a single reflection's text. The client's TextArea enforces
+// Hard ceiling on a single reflection's text. The client's writing box enforces
 // the same limit via maxLength, so a normal user never reaches this — the
 // server throw only fires against a tampered client. A generous bound (~800
 // words); the mirror rate limit is the real cost containment, this is cheap
-// insurance on token spend. Keep in sync with MAX_RAW_INPUT in typing-state.tsx.
-const MAX_RAW_INPUT = 5000;
+// insurance on token spend.
+const MAX_RAW_INPUT = REFLECTION_INPUT_MAX_CHARS;
+/** Longest picked word kept: the app's longest ("heavy-hearted") with room to spare. */
+const MAX_TEXTURE_CHARS = 32;
+
+/**
+ * The picked feeling words as stored: trimmed, each once, none empty. More
+ * than REFLECTION_MAX_TEXTURES, or a word too long to be one, is refused: the
+ * app never sends either, and they reach every prompt that reads the entry.
+ */
+export function checkedTextures(
+	textures: readonly string[] | undefined
+): string[] | undefined {
+	if (textures === undefined) {
+		return;
+	}
+	const words = [...new Set(textures.map((t) => t.trim()))].filter(Boolean);
+	if (
+		words.length > REFLECTION_MAX_TEXTURES ||
+		words.some((w) => w.length > MAX_TEXTURE_CHARS)
+	) {
+		throw new ConvexError({
+			code: "invalid_textures",
+			max: REFLECTION_MAX_TEXTURES,
+		});
+	}
+	return words.length > 0 ? words : undefined;
+}
 
 // Terminal states — sessions in these states cannot be transitioned further.
 const TERMINAL_STATES = new Set(["completed", "abandoned"]);
@@ -64,14 +98,33 @@ const sessionDocValidator = v.object({
  * - completion paths use `computeRequiresFollowUp` (folds in gave_up);
  * - the abandon path gates strictly on `escalationTriggered` (escalation-then-
  *   abandon is the highest-value check-in; a plain abandon never starts one).
+ *
+ * Also records what decided it (`followUpDecidedBy`), so a missed follow-up
+ * can be traced to the classifier or to this gate. Internal, never shown.
  */
 async function finalizeFollowUp(
 	ctx: MutationCtx,
 	session: Doc<"sessions">,
 	requiresFollowUp: boolean
 ): Promise<void> {
-	if (session.requiresFollowUp !== requiresFollowUp) {
-		await ctx.db.patch("sessions", session._id, { requiresFollowUp });
+	const metadata = await ctx.db
+		.query("emotional_metadata")
+		.withIndex("by_session", (q) => q.eq("sessionId", session._id))
+		.unique();
+	const followUpDecidedBy = followUpDecisionSource({
+		classifierFlagged: classifierFlaggedFollowUp(metadata),
+		confirmationState: session.confirmationState,
+		escalationTriggered: session.escalationTriggered,
+		requiresFollowUp,
+	});
+	if (
+		session.requiresFollowUp !== requiresFollowUp ||
+		session.followUpDecidedBy !== followUpDecidedBy
+	) {
+		await ctx.db.patch("sessions", session._id, {
+			followUpDecidedBy,
+			requiresFollowUp,
+		});
 	}
 	// One-active-per-profile + idempotency are enforced in followUps; here we
 	// only guard against the obvious double-start on the same session. A
@@ -183,12 +236,10 @@ async function finalizeCompletion(
 	// Kindling (docs/paths-v1.md §2.1): genuine completion, any path — solo,
 	// peers, or exit — not the abandoned-session cron's stranded reconciliation
 	// (pathCompleted: false, no pathChosen). Premium gate lives inside
-	// `generate.run`; off the critical path.
+	// `generate.run`; off the critical path. Marks the session as setting up
+	// when the run will try (paths/settingUp.ts).
 	if (opts.pathCompleted && pathChosen) {
-		await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
-			emotionalProfileId: session.emotionalProfileId,
-			sessionId: session._id,
-		});
+		await queueKindling(ctx, session.emotionalProfileId, session._id);
 	}
 
 	// Finalize follow-up gate + maybe start the check-in workflow.
@@ -325,9 +376,16 @@ export const submitInput = mutation({
 		/** @deprecated derived from rawInput server-side; value ignored */
 		rawText: v.optional(v.string()),
 		sessionId: v.id("sessions"),
+		/**
+		 * The feeling words picked on the write screen (B10), at most
+		 * REFLECTION_MAX_TEXTURES. Sent for words only and for words with
+		 * writing; older builds send none and are read as before.
+		 */
+		textures: v.optional(v.array(v.string())),
 	},
 	handler: async (ctx, args) => {
 		const { session } = await requireSessionOwnership(ctx, args.sessionId);
+		const textures = checkedTextures(args.textures);
 
 		if (session.state !== "initiated") {
 			throw new Error(`Cannot submit input in state "${session.state}"`);
@@ -359,6 +417,7 @@ export const submitInput = mutation({
 			rawInput: rawText,
 			rawInputLength: rawText.length,
 			state: "processing",
+			...(textures && { textures }),
 			timeOfDay: getTimeOfDay(now),
 			updatedAt: now.getTime(),
 		});
@@ -673,6 +732,7 @@ async function reprocess(
 	rawText: string
 ) {
 	await ctx.db.patch("sessions", sessionId, {
+		errorCode: undefined,
 		errorMessage: undefined,
 		processingStage: undefined,
 		state: "processing",
@@ -1204,6 +1264,7 @@ export const getMirrorAudioUrl = query({
  */
 export const failSession = internalMutation({
 	args: {
+		errorCode: v.optional(sessionErrorCodeValidator),
 		errorMessage: v.string(),
 		/** The safeguard refused the input: a retry can only fail again. */
 		rejected: v.optional(v.boolean()),
@@ -1222,6 +1283,7 @@ export const failSession = internalMutation({
 		}
 
 		await ctx.db.patch("sessions", args.sessionId, {
+			errorCode: args.errorCode,
 			errorMessage: args.errorMessage,
 			state: "error",
 			updatedAt: Date.now(),

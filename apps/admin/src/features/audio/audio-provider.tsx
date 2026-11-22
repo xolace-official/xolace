@@ -50,6 +50,8 @@ export interface AudioContextValue {
 	actions: {
 		create: (track: NewTrack) => Promise<void>;
 		markSafetyReviewed: (slug: string) => Promise<void>;
+		/** Measure a support track's waveform again, in the background. */
+		measureWaveform: (slug: string) => Promise<void>;
 		publish: (slug: string) => Promise<void>;
 		replaceAudio: (
 			slug: string,
@@ -129,6 +131,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 	const publish = useMutation(api.admin.audio.publish);
 	const retire = useMutation(api.admin.audio.retire);
 	const markReviewed = useMutation(api.admin.audio.markSafetyReviewed);
+	const measureWaveform = useMutation(api.admin.audio.measureWaveform);
 	const createTrack = useMutation(api.admin.audio.create);
 	const replaceAudio = useMutation(api.admin.audio.replaceAudio);
 	const replaceThumb = useMutation(api.admin.audio.replaceThumb);
@@ -161,6 +164,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 			},
 			markSafetyReviewed: async (slug) => {
 				await markReviewed({ slug });
+			},
+			measureWaveform: async (slug) => {
+				await measureWaveform({ slug });
 			},
 			publish: async (slug) => {
 				await publish({ slug });

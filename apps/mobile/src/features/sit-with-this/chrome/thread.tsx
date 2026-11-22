@@ -1,0 +1,63 @@
+import { View } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { LinearGradient } from "@/components/shared/styled";
+import type { SitClock } from "../clock/use-sit-clock";
+import { LAYOUT } from "../sit-look";
+import type { Beat } from "../sit-model";
+import { threadWeights } from "../sit-timing";
+
+const T = LAYOUT.thread;
+
+type Props = {
+	beats: readonly Beat[];
+	current: number;
+	serial: number;
+	colors: readonly [string, string, ...string[]];
+	clock: SitClock;
+};
+
+export function Thread({ beats, current, serial, colors, clock }: Props) {
+	const weights = threadWeights(beats);
+	return (
+		<View className="flex-row" style={{ gap: T.gap, height: T.height }}>
+			{weights.map((flex, i) => (
+				<View
+					className="overflow-hidden rounded-[2px] bg-separator"
+					key={i}
+					style={{ flex, height: T.height }}
+				>
+					{i < current ? <Fill colors={colors} /> : null}
+					{i === current ? (
+						<Fill clock={clock} colors={colors} serial={serial} />
+					) : null}
+				</View>
+			))}
+		</View>
+	);
+}
+
+type FillProps = { colors: Props["colors"]; clock?: SitClock; serial?: number };
+
+function Fill({ colors, clock, serial }: FillProps) {
+	const grow = useAnimatedStyle(() => {
+		if (!clock) {
+			return { transform: [{ scaleX: 1 }] };
+		}
+		return {
+			transform: [{ scaleX: clock.at.get() === serial ? clock.frac.get() : 0 }],
+		};
+	});
+	return (
+		<Animated.View
+			className="absolute inset-0"
+			style={[{ transformOrigin: "left" }, grow]}
+		>
+			<LinearGradient
+				className="flex-1 rounded-[2px]"
+				colors={colors}
+				end={{ x: 1, y: 0.5 }}
+				start={{ x: 0, y: 0.5 }}
+			/>
+		</Animated.View>
+	);
+}

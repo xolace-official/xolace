@@ -1,0 +1,18 @@
+export const STILLS: Readonly<Record<string, number>> = {
+	"deep-forest": require("@/assets/quotes/stills/deep-forest.webp"),
+	dunes: require("@/assets/quotes/stills/dunes.webp"),
+	"first-light": require("@/assets/quotes/stills/first-light.webp"),
+	"ink-wash": require("@/assets/quotes/stills/ink-wash.webp"),
+	moonrise: require("@/assets/quotes/stills/moonrise.webp"),
+	"mountain-air": require("@/assets/quotes/stills/mountain-air.webp"),
+	nebula: require("@/assets/quotes/stills/nebula.webp"),
+	"night-earth": require("@/assets/quotes/stills/night-earth.webp"),
+	"reading-nook": require("@/assets/quotes/stills/reading-nook.webp"),
+	rooftops: require("@/assets/quotes/stills/rooftops.webp"),
+	shallows: require("@/assets/quotes/stills/shallows.webp"),
+	silk: require("@/assets/quotes/stills/silk.webp"),
+	snowfield: require("@/assets/quotes/stills/snowfield.webp"),
+	"still-water": require("@/assets/quotes/stills/still-water.webp"),
+	watercolour: require("@/assets/quotes/stills/watercolour.webp"),
+	wildflowers: require("@/assets/quotes/stills/wildflowers.webp"),
+};

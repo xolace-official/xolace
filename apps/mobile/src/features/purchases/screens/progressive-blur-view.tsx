@@ -11,9 +11,6 @@ type Props = {
 	blurViewProps?: BlurViewProps;
 };
 
-// Top/bottom fade-to-blur edge. The iOS mask gradient is a luminance mask, not UI
-// colour. Android gets an opaque scrim: expo-blur has no working backdrop blur there
-// (`dimezisBlurView` leaves content sharp on API 35).
 export function ProgressiveBlurView({
 	position = "top",
 	height = 100,
@@ -22,9 +19,7 @@ export function ProgressiveBlurView({
 	const backgroundColor = useThemeColor("background") as string;
 	const isTop = position === "top";
 
-	// MaskedView takes the mask as an element; React Compiler memoizes it.
 	const mask = (
-		// eslint-disable-next-line react-perf/jsx-no-jsx-as-prop
 		<LinearGradient
 			colors={
 				isTop

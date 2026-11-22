@@ -1,177 +1,45 @@
-/** Feature layering guard (migration plan Phase 5): no feature cycles, `purchases` imports no
- * feature, no runtime file cycles. */
-import path from "node:path";
-import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import {
+	backendFilesInAppBundle,
+	backendImportsOffList,
+	serverOnlyCodeReached,
+	staleBackendListings,
+} from "@/features/backend-imports";
+import {
+	backendCallsOutsideDataHooks,
+	crossFeatureImportsFromPorted,
+	devCodeInReleaseGraph,
+	devImportsFromOutside,
+	oldFolderImportsFromNewCode,
+	portedFolderImportsFromOldCode,
+	staleListings,
+} from "@/features/feature-shape";
+import {
+	buildGraph,
+	featureOf,
+	findCycles,
+	type ImportGraph,
+	relative,
+} from "@/features/import-graph";
+import {
+	KIT_REPLACEMENTS,
+	replacedPiecesInNewCode,
+	staleKitListings,
+} from "@/features/kit-imports";
+import {
+	easeImportsOutsideEaseTs,
+	osReducedMotionReads,
+	staleEaseListings,
+} from "@/features/motion-imports";
 
-const APP_ROOT = path.resolve(import.meta.dirname, "../..");
-const SRC = path.join(APP_ROOT, "src");
-// Metro's lookup order per platform: `foo.ios.tsx`, then `foo.native.tsx`, then
-// `foo.tsx`. An import is an edge to whatever each platform would load.
-const PLATFORM_SUFFIXES = [
-	[".ios", ".native", ""],
-	[".android", ".native", ""],
-	[".web", ""],
-];
 const ENTITLEMENTS_FEATURE = "purchases";
+const graph = buildGraph();
 
-type Edge = { to: string; typeOnly: boolean };
-
-function readConfig(): ts.ParsedCommandLine {
-	const config = ts.getParsedCommandLineOfConfigFile(
-		path.join(APP_ROOT, "tsconfig.json"),
-		{},
-		{ ...ts.sys, onUnRecoverableConfigFileDiagnostic: () => undefined }
-	);
-	if (!config) {
-		throw new Error("Could not read apps/mobile/tsconfig.json");
-	}
-	return config;
-}
-
-function isTypeOnlyImport(node: ts.ImportDeclaration): boolean {
-	const clause = node.importClause;
-	if (!clause) {
-		return false;
-	}
-	if (clause.isTypeOnly) {
-		return true;
-	}
-	const named = clause.namedBindings;
-	return (
-		!clause.name &&
-		named !== undefined &&
-		ts.isNamedImports(named) &&
-		named.elements.length > 0 &&
-		named.elements.every((e) => e.isTypeOnly)
-	);
-}
-
-function buildGraph(): Map<string, Edge[]> {
-	const config = readConfig();
-	const host = ts.createCompilerHost(config.options);
-	// Resolving per platform also catches an import backed only by
-	// `foo.ios.tsx` + `foo.android.tsx`, which plain resolution drops.
-	const platformOptions = PLATFORM_SUFFIXES.map((moduleSuffixes) => ({
-		...config.options,
-		moduleSuffixes,
-	}));
-	const files = config.fileNames.filter(
-		(f) =>
-			f.startsWith(`${SRC}/`) &&
-			!f.endsWith(".d.ts") &&
-			!/\.(test|spec)\.tsx?$/.test(f)
-	);
-	const graph = new Map<string, Edge[]>();
-	for (const file of files) {
-		const source = ts.createSourceFile(
-			file,
-			ts.sys.readFile(file) ?? "",
-			ts.ScriptTarget.Latest
-		);
-		const edges: Edge[] = [];
-		const add = (specifier: string, typeOnly: boolean) => {
-			const targets = new Set<string>();
-			for (const options of platformOptions) {
-				const resolved = ts.resolveModuleName(
-					specifier,
-					file,
-					options,
-					host
-				).resolvedModule;
-				if (resolved && !resolved.isExternalLibraryImport) {
-					targets.add(resolved.resolvedFileName);
-				}
-			}
-			for (const to of targets) {
-				edges.push({ to, typeOnly });
-			}
-		};
-		const visit = (node: ts.Node) => {
-			if (
-				ts.isImportDeclaration(node) &&
-				ts.isStringLiteral(node.moduleSpecifier)
-			) {
-				add(node.moduleSpecifier.text, isTypeOnlyImport(node));
-			} else if (
-				ts.isExportDeclaration(node) &&
-				node.moduleSpecifier &&
-				ts.isStringLiteral(node.moduleSpecifier)
-			) {
-				add(node.moduleSpecifier.text, node.isTypeOnly);
-			} else if (
-				ts.isCallExpression(node) &&
-				node.arguments.length === 1 &&
-				ts.isStringLiteral(node.arguments[0]) &&
-				(node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-					(ts.isIdentifier(node.expression) &&
-						node.expression.text === "require"))
-			) {
-				add(node.arguments[0].text, false);
-			}
-			ts.forEachChild(node, visit);
-		};
-		visit(source);
-		graph.set(file, edges);
-	}
-	return graph;
-}
-
-/** Strongly connected components with more than one node (Tarjan). */
-function findCycles(nodes: string[], next: (n: string) => string[]) {
-	let counter = 0;
-	const index = new Map<string, number>();
-	const low = new Map<string, number>();
-	const stack: string[] = [];
-	const onStack = new Set<string>();
-	const cycles: string[][] = [];
-	const connect = (v: string) => {
-		index.set(v, counter);
-		low.set(v, counter);
-		counter++;
-		stack.push(v);
-		onStack.add(v);
-		for (const w of next(v)) {
-			if (!index.has(w)) {
-				connect(w);
-				low.set(v, Math.min(low.get(v) ?? 0, low.get(w) ?? 0));
-			} else if (onStack.has(w)) {
-				low.set(v, Math.min(low.get(v) ?? 0, index.get(w) ?? 0));
-			}
-		}
-		if (low.get(v) === index.get(v)) {
-			const component: string[] = [];
-			let w: string | undefined;
-			do {
-				w = stack.pop();
-				if (w !== undefined) {
-					onStack.delete(w);
-					component.push(w);
-				}
-			} while (w !== undefined && w !== v);
-			if (component.length > 1) {
-				cycles.push(component.sort());
-			}
-		}
-	};
-	for (const n of nodes) {
-		if (!index.has(n)) {
-			connect(n);
-		}
-	}
-	return cycles;
-}
-
-const relative = (file: string) => path.relative(SRC, file);
-const featureOf = (file: string) =>
-	relative(file).match(/^features\/([^/]+)\//)?.[1];
-
-/** `a -> b` feature pairs, each with the file imports that create it. */
-function featureEdges(graph: Map<string, Edge[]>): Map<string, string[]> {
+function featureEdges(importGraph: ImportGraph): Map<string, string[]> {
 	const pairs = new Map<string, string[]>();
-	for (const [file, edges] of graph) {
+	for (const [file, imports] of importGraph) {
 		const from = featureOf(file);
-		for (const { to } of edges) {
+		for (const to of imports.flatMap((i) => i.targets)) {
 			const target = featureOf(to);
 			if (!(from && target) || from === target) {
 				continue;
@@ -187,18 +55,17 @@ function featureEdges(graph: Map<string, Edge[]>): Map<string, string[]> {
 }
 
 describe("import graph", () => {
-	const graph = buildGraph();
 	const pairs = featureEdges(graph);
 	const features = [
 		...new Set([...graph.keys()].map(featureOf).filter((f) => f !== undefined)),
 	];
 
-	// The checks below pass trivially on an empty graph (drifted tsconfig
-	// `include`, moved `src/`); pin the inputs so a silent pass cannot hide.
 	it("sees the source tree it is checking", () => {
 		expect(graph.size).toBeGreaterThan(0);
 		expect(features).toContain(ENTITLEMENTS_FEATURE);
 		expect(pairs.size).toBeGreaterThan(0);
+		const packages = [...graph.values()].flat().map((i) => i.specifier);
+		expect(packages).toContain("convex/react");
 	});
 
 	it("has no cycles between feature folders", () => {
@@ -206,7 +73,6 @@ describe("import graph", () => {
 			[...pairs.keys()]
 				.filter((k) => k.startsWith(`${f} -> `))
 				.map((k) => k.slice(`${f} -> `.length));
-		// A failure names the file imports inside each cycle, not just the features.
 		const report = findCycles(features, next).map((cycle) => ({
 			cycle,
 			imports: [...pairs]
@@ -226,11 +92,137 @@ describe("import graph", () => {
 	it("has no runtime import cycles between files", () => {
 		const next = (file: string) =>
 			(graph.get(file) ?? [])
-				.filter((e) => !e.typeOnly && graph.has(e.to))
-				.map((e) => e.to);
+				.filter((i) => !i.typeOnly)
+				.flatMap((i) => i.targets)
+				.filter((to) => graph.has(to));
 		const cycles = findCycles([...graph.keys()], next).map((c) =>
 			c.map(relative)
 		);
 		expect(cycles).toEqual([]);
+	});
+});
+
+describe("feature shape (apps/mobile/AGENTS.md)", () => {
+	it("lists only legacy folders and hubs that still exist", () => {
+		const features = [
+			...new Set(
+				[...graph.keys()].map(featureOf).filter((f) => f !== undefined)
+			),
+		];
+		expect(
+			staleListings(features),
+			"Remove deleted folders from LEGACY_FEATURES / HUBS in feature-shape.ts"
+		).toEqual([]);
+	});
+
+	it("keeps new code off the old folders", () => {
+		expect(
+			oldFolderImportsFromNewCode(graph),
+			"A folder your screen replaces (REPLACED_FEATURES): delete the old code, or replace the folder in place and take it off the list. Any old folder: move the piece new code needs down to src/lib or src/components"
+		).toEqual([]);
+	});
+
+	it("keeps old folders off the ported ones", () => {
+		expect(
+			portedFolderImportsFromOldCode(graph),
+			"Old screens still use a part of a folder that was replaced in place: move that part down to src/lib or src/components/shared and point both at it"
+		).toEqual([]);
+	});
+
+	it("imports a feature's dev/ only from that dev/ or src/dev/", () => {
+		expect(
+			devImportsFromOutside(graph),
+			"Fixtures and dev states never ship: the dev state renders the screen, not the reverse"
+		).toEqual([]);
+	});
+
+	it("reaches dev states only behind __DEV__, so release builds drop them", () => {
+		expect(
+			devCodeInReleaseGraph(graph),
+			'Open src/dev only from a dev route shim, or a fixture adapter seeding itself until its contract lands: `__DEV__ ? require("@/dev/…") : null`. A static import ships it'
+		).toEqual([]);
+		const guarded = [...graph.values()]
+			.flat()
+			.filter((i) => i.devOnly)
+			.flatMap((i) => i.targets.map(relative));
+		expect(guarded).toContain("dev/dev-state-screen.tsx");
+	});
+
+	it("calls Convex, PostHog and the toast only from use-*.ts in ported folders", () => {
+		expect(
+			backendCallsOutsideDataHooks(graph),
+			"Move the call into the feature's data hook (use-<feature>.ts) and pass the result down"
+		).toEqual([]);
+	});
+
+	it("keeps ported folders off each other; shared pieces move down a layer", () => {
+		expect(
+			crossFeatureImportsFromPorted(graph),
+			"Move the shared piece to src/lib, src/components/shared or a kit in src/components/<kit>; compose features in the route, not the screen"
+		).toEqual([]);
+	});
+});
+
+describe("motion (apps/mobile/AGENTS.md)", () => {
+	it("imports react-native-ease only in src/design/ease.ts", () => {
+		expect(
+			easeImportsOutsideEaseTs(graph),
+			"Import EaseView and its types from @/design/ease, loops from @/design/ease-loops or ease-breath"
+		).toEqual([]);
+	});
+
+	it("lists only legacy Ease files that still import it", () => {
+		expect(
+			staleEaseListings(graph),
+			"Remove these from EASE_LEGACY_FILES in motion-imports.ts"
+		).toEqual([]);
+	});
+
+	it("reads reduced motion through useEffectiveReducedMotion in new code", () => {
+		expect(
+			osReducedMotionReads(graph),
+			"Use useEffectiveReducedMotion() from @/lib/motion/use-effective-reduced-motion: it honours the in-app setting"
+		).toEqual([]);
+	});
+});
+
+describe("shared kit (apps/mobile/AGENTS.md)", () => {
+	it("keeps new code on the kit's piece, one of each", () => {
+		expect(
+			replacedPiecesInNewCode(graph),
+			`Use the shared kit instead: ${KIT_REPLACEMENTS}`
+		).toEqual([]);
+	});
+
+	it("lists only legacy kit files that still use an older piece", () => {
+		expect(
+			staleKitListings(graph),
+			"Remove these from KIT_LEGACY_FILES in kit-imports.ts"
+		).toEqual([]);
+	});
+});
+
+describe("backend imports (packages/backend/AGENTS.md)", () => {
+	it("imports values only from the api, the data model, shared and the listed client-safe modules", () => {
+		expect(
+			backendImportsOffList(graph),
+			"Move the client-safe value into packages/backend/convex/lib/shared.ts and import it from @xolace/backend/shared; import types with `import type`"
+		).toEqual([]);
+	});
+
+	it("lists only client-safe modules the app still imports", () => {
+		expect(
+			staleBackendListings(graph),
+			"Remove these from BACKEND_LEGACY_MODULES in backend-imports.ts"
+		).toEqual([]);
+	});
+
+	it("bundles no server-only backend code through those modules", () => {
+		const entries = backendFilesInAppBundle(graph);
+		expect(entries.some((f) => f.endsWith("/convex/lib/shared.ts"))).toBe(true);
+		expect(
+			serverOnlyCodeReached(entries),
+			'A client-safe backend module imports server-only code at runtime: ElevenLabs ids, a "use node" file or process.env. Import it as a type, or move the value it needs into lib/shared.ts'
+		).toEqual([]);
 	});
 });

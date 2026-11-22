@@ -190,7 +190,9 @@ describe("library.search.searchCatalogue", () => {
 		const r = await user.t.query(api.library.search.searchCatalogue, {
 			query: "Piano",
 		});
-		expect(r.music.map((t) => t.slug)).toEqual(["m-piano"]);
+		expect(r.music.map((t) => [t.slug, t.topicTitle])).toEqual([
+			["m-piano", "Sadness"],
+		]);
 		expect(r.support).toEqual([]);
 	});
 
@@ -392,7 +394,9 @@ describe("library.search See all pages (#551)", () => {
 			paginationOpts: first(10),
 			query: "piano",
 		});
-		expect(r.page.map((t) => t.slug)).toEqual(["m1"]);
+		expect(r.page.map((t) => [t.slug, t.topicTitle])).toEqual([
+			["m1", "Sadness"],
+		]);
 	});
 
 	it("searches nothing for a blank query", async () => {

@@ -1,5 +1,3 @@
-import { ProfileScreen } from "@/features/profile/components/screens/ProfileScreen";
+import { MovedRoute } from "@/features/navigation/moved-route";
 
-export default function ProfileRoute() {
-	return <ProfileScreen />;
-}
+export default MovedRoute;

@@ -51,6 +51,9 @@ export async function expectCode(run: () => Promise<unknown>, code: string) {
  * every fixture built through `asNewUser`. It has its own coverage in
  * `users.test.ts`; use `allScheduledCalls` there instead of this.
  *
+ * Excludes `outreach/welcome:sendWelcome` for the same reason: every sign-up
+ * schedules the welcome (#915). Covered by `outreach/welcome.test.ts`.
+ *
  * Excludes `achievements/push:sendMissedPush` for the same reason: the Joined
  * badge every new profile earns schedules it (#700). Covered by
  * `achievements/push.test.ts`. And `achievements/unlock:foldUnseen`, which the
@@ -63,11 +66,22 @@ export async function scheduledCalls(
 		(j) =>
 			!(
 				j.name.endsWith("streamSetup:addToXolaceChannel") ||
+				j.name.endsWith(WELCOME_JOB) ||
 				j.name.endsWith("achievements/push:sendMissedPush") ||
 				j.name.endsWith("achievements/unlock:foldUnseen")
 			)
 	);
 }
+
+/** The welcome every sign-up schedules (#915). */
+const WELCOME_JOB = "outreach/welcome:sendWelcome";
+
+/**
+ * convex-test reports "ai/tts:generateMirrorAudio"; a real deployment reports
+ * "ai/tts.js:generateMirrorAudio". Normalise so an assertion reads the same
+ * either way.
+ */
+const jobName = (name: string) => name.replace(".js:", ":");
 
 /** `scheduledCalls`, without its filters. */
 export async function allScheduledCalls(
@@ -78,11 +92,27 @@ export async function allScheduledCalls(
 	);
 	return jobs.map((j) => ({
 		args: (j.args[0] ?? {}) as Record<string, unknown>,
-		// convex-test reports "ai/tts:generateMirrorAudio"; a real deployment
-		// reports "ai/tts.js:generateMirrorAudio". Normalise so an assertion
-		// reads the same either way.
-		name: j.name.replace(".js:", ":"),
+		name: jobName(j.name),
 	}));
+}
+
+/**
+ * Cancel the welcome `users.getOrCreate` scheduled at sign-up (#915): for a
+ * test that drives outreach itself and counts what went out, or that plays
+ * someone who signed up before the welcome existed.
+ */
+export async function cancelWelcome(root: Root): Promise<void> {
+	await root.run(async (ctx) => {
+		const jobs = await ctx.db.system.query("_scheduled_functions").collect();
+		for (const job of jobs) {
+			if (
+				job.state.kind === "pending" &&
+				jobName(job.name).endsWith(WELCOME_JOB)
+			) {
+				await ctx.scheduler.cancel(job._id);
+			}
+		}
+	});
 }
 
 /**

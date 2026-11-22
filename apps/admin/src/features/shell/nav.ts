@@ -8,6 +8,7 @@ import {
 	LibraryBigIcon,
 	type LucideIcon,
 	PaletteIcon,
+	RadioTowerIcon,
 	ScanSearchIcon,
 	ShapesIcon,
 } from "lucide-react";
@@ -56,6 +57,11 @@ export const NAV: NavGroup[] = [
 	},
 	{
 		items: [
+			{
+				href: "/outreach-channels",
+				icon: RadioTowerIcon,
+				label: "Outreach channels",
+			},
 			{ href: "/search-index", icon: ScanSearchIcon, label: "Search index" },
 			{ href: "/design", icon: PaletteIcon, label: "Design system" },
 		],

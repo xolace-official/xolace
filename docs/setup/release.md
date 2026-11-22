@@ -61,6 +61,9 @@ old repo deployed to prod Convex; after that, never deploy Convex from the old
   `admin.xolaceinc.com`. Clerk's production keys only work on your own domain, not on
   `*.vercel.app`.
 
+- Telegram: prod's bot is set up by hand once (`TELEGRAM_BOT_TOKEN`, then
+  `configureBot`), never by the release. See [telegram.md](./telegram.md).
+
 ## Step 1: Convex deploy key → GitHub
 
 1. Convex dashboard → project `xolace-app` → switch to the **Production** deployment →

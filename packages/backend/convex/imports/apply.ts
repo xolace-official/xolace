@@ -29,7 +29,7 @@ import {
 	upsertSourceRecord,
 	writeEntry,
 } from "../library/write";
-import { versionOf } from "./plan";
+import { trackVersionOf, versionOf } from "./plan";
 import {
 	type ItemPayload,
 	itemPayload,
@@ -136,8 +136,13 @@ export const checkUploads = internalAction({
 /**
  * Compare saw the row at `baseVersion`. If it's moved on (an admin edit, a
  * script run, another import), writing this file would quietly undo that.
+ * `version` is the fingerprint compare used for this kind of row.
  */
-function assertFresh(item: Doc<"import_items">, stored: object | null) {
+function assertFresh<Row extends object>(
+	item: Doc<"import_items">,
+	stored: Row | null,
+	version: (row: Row) => string = versionOf
+) {
 	if (item.baseVersion === undefined) {
 		if (stored) {
 			throw new ConvexError(
@@ -146,7 +151,7 @@ function assertFresh(item: Doc<"import_items">, stored: object | null) {
 		}
 		return;
 	}
-	if (!stored || versionOf(stored) !== item.baseVersion) {
+	if (!stored || version(stored) !== item.baseVersion) {
 		throw new ConvexError(
 			"Changed after this import was compared, so applying would overwrite that change. Start a new import to see the new diff."
 		);
@@ -228,7 +233,9 @@ async function writeItem(
 				await ctx.db
 					.query("audio_tracks")
 					.withIndex("by_slug", (q) => q.eq("slug", item.slug))
-					.unique()
+					.unique(),
+				// Peaks measured since compare don't count as a change.
+				trackVersionOf
 			);
 			const { trackId } = await upsertTrackRecord(ctx, payload.track);
 			const t = await ctx.db.get("audio_tracks", trackId);

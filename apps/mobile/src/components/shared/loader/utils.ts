@@ -43,9 +43,6 @@ const TRANSFORM_DEFAULTS: Record<string, number> = {
 	translateY: 0,
 };
 
-// Value parsing helpers
-
-/** Leading numeric value of a string ("45deg" → 45), or 0 when there is none. */
 const parseAngleValue = (value: string | number): number => {
 	if (typeof value === "number") {
 		return value;
@@ -54,7 +51,6 @@ const parseAngleValue = (value: string | number): number => {
 	return match ? Number.parseFloat(match[1]) : 0;
 };
 
-/** Numeric value for a transform key from one transform entry; angle keys parse "45deg". */
 const extractTransformEntryValue = (
 	entry: Record<string, unknown>,
 	key: string
@@ -69,26 +65,14 @@ const extractTransformEntryValue = (
 	return typeof raw === "number" ? raw : undefined;
 };
 
-// Parsed result type
-
-/** Pre-computed interpolation config produced by parseKeyframes. */
 export interface ParsedKeyframes {
-	/** Color property → output range (string[]). */
 	colorRanges: Record<string, string[]>;
-	/** Normalized input range (0–1). */
 	inputRange: number[];
-	/** Numeric property → output range. */
 	numericRanges: Record<string, number[]>;
-	/** Ordered list of transform keys present in keyframes. */
 	transformOrder: string[];
-	/** Transform key → output range. */
 	transformRanges: Record<string, number[]>;
 }
 
-// Main parser
-
-/** Parses LoaderKeyframes into interpolation ranges. Keys 0-100 normalise to 0-1; needs 2+
- * keyframes. */
 export const parseKeyframes = (keyframes: LoaderKeyframes): ParsedKeyframes => {
 	const rawKeys = Object.keys(keyframes)
 		.map(Number)
@@ -107,7 +91,6 @@ export const parseKeyframes = (keyframes: LoaderKeyframes): ParsedKeyframes => {
 		(k) => (keyframes[k] ?? {}) as Record<string, unknown>
 	);
 
-	// Collect all property keys that appear across keyframes (except transform)
 	const allKeys = new Set<string>();
 	for (const s of styles) {
 		for (const key of Object.keys(s)) {
@@ -117,7 +100,6 @@ export const parseKeyframes = (keyframes: LoaderKeyframes): ParsedKeyframes => {
 		}
 	}
 
-	// Collect all transform keys used
 	const transformKeysUsed = new Set<string>();
 	for (const s of styles) {
 		const transforms = s.transform as Record<string, unknown>[] | undefined;
@@ -135,7 +117,6 @@ export const parseKeyframes = (keyframes: LoaderKeyframes): ParsedKeyframes => {
 		}
 	}
 
-	// ── Numeric ranges ──
 	const numericRanges: Record<string, number[]> = {};
 	for (const key of allKeys) {
 		if (!NUMERIC_PROPERTIES.has(key)) {
@@ -158,7 +139,6 @@ export const parseKeyframes = (keyframes: LoaderKeyframes): ParsedKeyframes => {
 		numericRanges[key] = outputRange;
 	}
 
-	// ── Color ranges ──
 	const colorRanges: Record<string, string[]> = {};
 	for (const key of allKeys) {
 		if (!COLOR_PROPERTIES.has(key)) {
@@ -181,7 +161,6 @@ export const parseKeyframes = (keyframes: LoaderKeyframes): ParsedKeyframes => {
 		colorRanges[key] = outputRange;
 	}
 
-	// ── Transform ranges ──
 	const transformOrder = TRANSFORM_KEY_ORDER.filter((k) =>
 		transformKeysUsed.has(k)
 	);
@@ -205,7 +184,6 @@ export const parseKeyframes = (keyframes: LoaderKeyframes): ParsedKeyframes => {
 				}
 			}
 			if (!found) {
-				// keep lastValue
 			}
 			outputRange.push(lastValue);
 		}

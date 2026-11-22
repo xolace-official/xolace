@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { NATIVE_SPLASH } from "./native-splash.ts";
 import { assertProductionEnvironment } from "./release/production-guard.ts";
 
 function requireEnv(name: string, value: string | undefined): string {
@@ -18,8 +19,6 @@ const IS_DEV = process.env.APP_VARIANT === "development";
 const IS_PREVIEW = process.env.APP_VARIANT === "preview";
 const IS_PRODUCTION = !(IS_DEV || IS_PREVIEW);
 
-// Throws on test config or secret-looking EXPO_PUBLIC_* values, but only for a
-// production EAS build or `eas update` export (see release/production-guard.ts).
 assertProductionEnvironment();
 
 const getUniqueIdentifier = () => {
@@ -65,6 +64,9 @@ const getGoogleServicesPath = () => {
 	return "./google-services.json";
 };
 
+// The public site Lantern shares link to (src/features/lantern/lantern-links.ts).
+const SITE_HOSTS = ["www.xolaceinc.com", "xolaceinc.com"];
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
 	...config,
 	android: {
@@ -84,6 +86,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			"android.permission.SYSTEM_ALERT_WINDOW",
 		],
 		googleServicesFile: getGoogleServicesPath(),
+		// Lantern shares (`https://www.xolaceinc.com/lantern/<slug>`) open the
+		// entry. Verified against the site's /.well-known/assetlinks.json.
+		intentFilters: [
+			{
+				action: "VIEW",
+				autoVerify: true,
+				category: ["BROWSABLE", "DEFAULT"],
+				data: SITE_HOSTS.map((host) => ({
+					host,
+					pathPrefix: "/lantern",
+					scheme: "https",
+				})),
+			},
+		],
 		package: getUniqueIdentifier(),
 		predictiveBackGestureEnabled: false,
 	},
@@ -113,8 +129,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 		},
 		posthogHost: process.env.POSTHOG_HOST,
 		posthogProjectToken: process.env.POSTHOG_PROJECT_TOKEN,
-		// Optional until the RevenueCat dashboard exists — gates stay inert
-		// while appConfig.features.payments is false, so no requireEnv here.
 		revenueCat: {
 			androidKey: process.env.REVENUECAT_ANDROID_KEY,
 			androidTestKey: process.env.REVENUECAT_ANDROID_TEST_KEY,
@@ -125,6 +139,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 	},
 	icon: "./assets/images/icon.png",
 	ios: {
+		// Universal Links for Lantern shares; the site's
+		// /.well-known/apple-app-site-association names the paths.
+		associatedDomains: SITE_HOSTS.map((host) => `applinks:${host}`),
 		bundleIdentifier: getUniqueIdentifier(),
 		icon: "./assets/xolace-app-v2.icon",
 		infoPlist: {
@@ -144,6 +161,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 				"Allow $(PRODUCT_NAME) to save quote images to your photos.",
 			NSPhotoLibraryUsageDescription:
 				"Allow $(PRODUCT_NAME) to access your photos.",
+			// `orientation: "portrait"` only writes UISupportedInterfaceOrientations;
+			// the ~ipad list kept all four, so iPad rotated. Portrait on iPad too.
+			// Expo keeps this list only with `ios.requireFullScreen` (below).
+			"UISupportedInterfaceOrientations~ipad": [
+				"UIInterfaceOrientationPortrait",
+				"UIInterfaceOrientationPortraitUpsideDown",
+			],
 		},
 		privacyManifests: {
 			NSPrivacyCollectedDataTypes: [
@@ -221,13 +245,18 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 				},
 			],
 		},
+		// Writes UIRequiresFullScreen. Without it Expo overwrites the ~ipad list
+		// above with all four orientations (App Store validation: an iPad app
+		// that isn't full screen must support every orientation). Apple
+		// deprecated UIRequiresFullScreen in iPadOS 26; resizable windows ignore
+		// it and the orientation list there.
+		requireFullScreen: true,
 		supportsTablet: true,
 	},
 	name: getAppName(),
 	orientation: "portrait",
 	owner: "xolace-inc-org",
 	plugins: [
-		// First so EAS Android builds cap Gradle workers before other plugins run.
 		"./plugins/with-eas-gradle-workers.js",
 		[
 			"expo-build-properties",
@@ -247,24 +276,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			},
 		],
 		"expo-router",
-		[
-			"expo-splash-screen",
-			{
-				android: {
-					image: "./assets/images/icons/splash-icon-dark.png",
-					imageWidth: 76,
-				},
-				backgroundColor: "#040307",
-				ios: {
-					dark: {
-						backgroundColor: "#040307",
-						image: "./assets/images/icons/splash-icon-light.png",
-					},
-					image: "./assets/images/icons/splash-icon-dark.png",
-					imageWidth: 200,
-				},
-			},
-		],
+		["expo-splash-screen", NATIVE_SPLASH],
 		[
 			"expo-font",
 			{
@@ -305,7 +317,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 		],
 		"expo-video",
 		["expo-audio", { enableBackgroundPlayback: true }],
-		// Companion talks (#591): ElevenLabs agents run over LiveKit WebRTC.
 		"@livekit/react-native-expo-plugin",
 		[
 			"@config-plugins/react-native-webrtc",
@@ -329,27 +340,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			},
 		],
 		[
-			"react-native-share",
-			{
-				android: [
-					"com.whatsapp",
-					"com.instagram.android",
-					"com.facebook.katana",
-					"org.telegram.messenger",
-					"com.twitter.android",
-				],
-				ios: [
-					"whatsapp",
-					"instagram",
-					"instagram-stories",
-					"fb",
-					"facebook-stories",
-					"tg",
-					"twitter",
-				],
-			},
-		],
-		[
 			"@sentry/react-native/expo",
 			{
 				organization: "xolace-inc",
@@ -358,9 +348,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			},
 		],
 	],
-	// Production OTAs only reach binaries with the same native fingerprint. Development and
-	// preview keep appVersion; store builds from before the switch (1.14.0) get no
-	// fingerprint-runtime OTAs.
 	runtimeVersion: {
 		policy: IS_PRODUCTION ? "fingerprint" : "appVersion",
 	},
@@ -370,7 +357,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 		url: "https://u.expo.dev/9b49d23b-d85c-48c9-84a4-db117b864dd3",
 	},
 	userInterfaceStyle: "automatic",
-	version: "1.16.0",
+	version: "1.17.0",
 	web: {
 		favicon: "./assets/images/favicon.png",
 		output: "static",

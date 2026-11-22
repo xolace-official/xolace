@@ -118,6 +118,7 @@ means you can copy the value from the dev deployment `groovy-mandrill-892`.
 | `POSTHOG_HOST` | PostHog API host. Optional | Dev value OK |
 | `POSTHOG_PERSONAL_API_KEY` | PostHog feature-flag evaluation. Optional | Dev value OK |
 | `POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS` | How often flags refresh. Optional | Dev value OK, or leave unset |
+| `REFLECTION_AUTHOR_KEY` | Keys the peer-reflection author tag so a contributor is never shown their own ([ADR 0002](../adr/0002-peer-reflection-author-tag.md)). **Never rotate it**: a new key shows every contributor their own again. Unset, sharing and matching still work, with errors logged. After setting it, run `migrations:tagReflectionAuthorsAll` once | New random value (32+ bytes), never prod's |
 | `CONVEX_ENV` | `production` or `development`; picks cron intervals and gates the nightly quote job | **`development`** (keeps staging cheap; `production` would run prod schedules) |
 
 ### AI and voice
@@ -162,8 +163,12 @@ the agent's **Voice settings** in ElevenLabs. Every agent needs it, prod's inclu
 | `RANK_MIN_POPULATION` | Minimum population before percentiles show (default 50) | A small number like `3`, so ranks show with few testers |
 | `XOLACER_CHAT_ENABLED` | Xolacer chat kill switch | Match dev |
 
-That's **30 names**. Not in the list on purpose: `CONVEX_SITE_URL` (Convex sets it),
+That's **31 names**. Not in the list on purpose: `CONVEX_SITE_URL` (Convex sets it),
 and `EVAL_OUT` / `TALK_EVAL_MODEL` (local eval runs only).
+
+Telegram is outside that count: staging gets its own shared bot, never prod's or a
+dev one. Set `TELEGRAM_BOT_TOKEN` and run `configureBot` as in
+[telegram.md](./telegram.md).
 
 Never use a `sk_live_`/production secret here. Staging is a test environment.
 
@@ -207,11 +212,9 @@ They switch on the next preview OTA (Step 5 or a manual
    `seed:seedReflections`, `seed:seedExercises` and `seed:seedQuotes`. All three are
    safe to re-run: reflections skip existing text, exercises update by title, quotes
    skip when the library has any rows.
-3. The Browse library and Kindling tracks stay empty. Their ingest scripts
-   (`packages/backend/scripts/library/ingest.ts`, `scripts/kindling/ingest.ts`) only
-   know "your dev deployment" and `--prod` (the real prod deployment), not staging,
-   and they need local media and spend OpenAI credits. Don't point them at staging
-   by hand until they grow a staging target; that's a follow-up.
+3. Badge art, quote backgrounds, Kindling tracks and the Browse library stay empty:
+   the seed step doesn't fill them. Fill them from your machine, below in
+   [Seeding staging with test content](#seeding-staging-with-test-content).
 
 After that, every merge into `dev` deploys staging by itself. Seed again only after
 wiping staging.
@@ -226,6 +229,48 @@ wiping staging.
   check `xolace-staging` → **Data** → `users` gets a row. Same for admin.
 - With Step 5 on: expo.dev shows the `preview-update` workflow run and an update on
   the `preview` channel; a `preview` build picks it up after a restart or two.
+
+## Seeding staging with test content
+
+The seed workflow fills only the text catalogues. Everything with media comes from
+the release owner's machine: each script uploads to whichever deployment
+`CONVEX_DEPLOY_KEY` names when you pass `--deploy-key`. Agents never run these
+against staging.
+
+**Before you start**
+
+- A staging deploy key (Step 2) that may run internal functions. Generate a second
+  one for your machine rather than copying the GitHub secret, and revoke it when
+  you're done.
+- The gitignored media on disk: `scripts/badges/media/`,
+  `scripts/quote-backgrounds/media/` (made by `quote-backgrounds:process`),
+  `scripts/kindling/dev/media/` and `scripts/library/dev/media/`.
+- `ffmpeg` and `ffprobe` on `PATH` (Library narration previews).
+- On the staging deployment (Step 4): `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+  `R2_ENDPOINT`, `R2_BUCKET` (Kindling audio and thumbs, Library covers and
+  narration go to R2) and `OPENAI_API_KEY` (both ingests embed what they add, which
+  spends OpenAI credits). Badge art and quote backgrounds go to Convex file
+  storage and need no extra variable.
+
+With `--deploy-key`, Kindling and Library read the small `dev/` trees, not the real
+`prod/` catalogue: staging is for testing. Pass `--manifest` (and `--media` for
+Kindling) to send a different tree. Without `--deploy-key`, a run with
+`CONVEX_DEPLOY_KEY` set refuses, because the Convex CLI would follow the key.
+
+**In order**, from `packages/backend`, in one shell with the key exported (type it
+or read it from your password manager; don't save it to a file):
+
+1. GitHub → **Actions → Staging → Run workflow** on `dev` with **seed** ticked
+   (Step 8): reflections, exercises and quotes.
+2. `bun run badges:upload --deploy-key`: badge art.
+3. `bun run quote-backgrounds:upload --deploy-key`: quote backgrounds.
+4. `bun run kindling:ingest:key`: Kindling topics and tracks. Run it before the
+   Library, whose hubs can point at Kindling audio.
+5. `bun run library:ingest:key`: Library sources, entries, hubs and narration.
+
+Add `--dry-run` to steps 4 and 5 first: it prints the target, the tree and any
+missing media, and calls nothing. Every step is idempotent, so re-run one that
+failed. Afterwards run `unset CONVEX_DEPLOY_KEY`.
 
 ## Troubleshooting
 

@@ -5,7 +5,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
-import { VOICE_CATALOG } from "../lib/voices";
+import { VOICE_CATALOG } from "../lib/elevenLabsVoices";
 import { asNewUser } from "../test/harness.helpers";
 import {
 	aggregatesMock,

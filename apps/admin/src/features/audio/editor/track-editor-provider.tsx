@@ -21,6 +21,7 @@ interface TrackEditorContextValue {
 	actions: {
 		discard: () => void;
 		markSafetyReviewed: () => void;
+		measureWaveform: () => void;
 		publish: () => void;
 		/** Uploads first; `true` once the track points at the new file. */
 		replaceAudio: (file: File, durationSec: number) => Promise<boolean>;
@@ -81,6 +82,11 @@ export function TrackEditorProvider({
 				runAction(
 					() => audio.actions.markSafetyReviewed(saved.slug),
 					"Safety review recorded"
+				),
+			measureWaveform: () =>
+				runAction(
+					() => audio.actions.measureWaveform(saved.slug),
+					"Measuring the waveform"
 				),
 			publish: () =>
 				runAction(

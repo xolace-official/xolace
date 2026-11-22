@@ -3,7 +3,8 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { type QueryCtx, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import { listenMin } from "./audio";
-import { entryIdsWithFacet, listItemValidator, toListItem } from "./entries";
+import { listItemValidator } from "./cards";
+import { entryIdsWithFacet, toListItem } from "./entries";
 import { readRow } from "./reads";
 
 type Entry = Doc<"library_entries">;

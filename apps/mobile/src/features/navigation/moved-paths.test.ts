@@ -1,0 +1,97 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { movedPath, movedRoots } from "@/features/navigation/moved-paths";
+import { navigationScreens } from "@/features/navigation/screens";
+
+const PROTECTED = path.resolve(import.meta.dirname, "../../app/(protected)");
+
+const exists = (route: string) =>
+	existsSync(path.join(PROTECTED, `${route}.tsx`));
+
+const isRoute = (pathname: string) => {
+	const route = pathname.slice(1);
+	return [
+		route,
+		`${route}/index`,
+		`(tabs)/${route}`,
+		`(tabs)/${route}/index`,
+	].some(exists);
+};
+
+const shimsOf = (root: string) =>
+	[root, `${root}/index`, `${root}/[...rest]`].filter(exists);
+
+describe("MOVED", () => {
+	it("keeps a shim at each old path, and a catch-all only where its subpaths moved", () => {
+		for (const { root, subtree } of movedRoots()) {
+			expect(exists(root) || exists(`${root}/index`), root).toBe(true);
+			expect(exists(`${root}/[...rest]`), `${root}/[...rest]`).toBe(subtree);
+		}
+	});
+
+	it("lists every shim in screens.ts, with no animation of its own", () => {
+		const listed = new Map(
+			navigationScreens.map((screen) => [screen.name, screen.options])
+		);
+		for (const { root, paths } of movedRoots()) {
+			for (const shim of [
+				...shimsOf(root),
+				...paths.map((p) => `${root}/${p}`),
+			]) {
+				expect(listed.get(shim), shim).toEqual({ animation: "none" });
+			}
+		}
+	});
+
+	it("keeps a shim at each single moved subpath, sent to a real route", () => {
+		for (const { root, paths } of movedRoots()) {
+			for (const sub of paths) {
+				expect(exists(`${root}/${sub}`), `${root}/${sub}`).toBe(true);
+				const to = movedPath(`/${root}/${sub}`);
+				expect(to && isRoute(to), `/${root}/${sub} -> ${to}`).toBe(true);
+				expect(to && movedPath(to)).toBeNull();
+			}
+		}
+	});
+
+	it("sends each old path to a real route, never to another moved one", () => {
+		for (const { root } of movedRoots()) {
+			const to = movedPath(`/${root}`);
+			expect(to && isRoute(to), `/${root} -> ${to}`).toBe(true);
+			expect(to && movedPath(to)).toBeNull();
+		}
+	});
+});
+
+describe("movedPath", () => {
+	it.each([
+		["/discovery", "/today"],
+		["/browse", "/explore"],
+		["/browse/topics", "/explore/topics"],
+		["/browse/topic/sleep", "/explore/topic/sleep"],
+		["/browse/library/hub/grief", "/explore/library/hub/grief"],
+		["/profile", "/you"],
+		["/profile/insights", "/you/steadiness"],
+		["/kindling-announcement", "/session-end"],
+		["/timeline", "/moments"],
+		["/timeline/session/abc123", "/moments/session/abc123"],
+		["/browse-player", "/player"],
+	])("sends %s to %s", (from, to) => {
+		expect(movedPath(from)).toBe(to);
+	});
+
+	it.each([
+		"/profile/insights/more",
+		"/profile/elsewhere",
+		"/discovery/anything",
+		"/today",
+		"/explore/topics",
+		"/connect",
+		"/player",
+		"/moments",
+		"/",
+	])("leaves %s where it is", (pathname) => {
+		expect(movedPath(pathname)).toBeNull();
+	});
+});

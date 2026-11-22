@@ -1,38 +1,13 @@
-/** The Lantern reader (#407, #393): one route for every way into an entry, incl.
- * `xolace://library/<slug>`. Full-screen, no tab bar. */
-import { api } from "@xolace/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
 import { useLocalSearchParams } from "expo-router";
-import { View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { detectCountry } from "@/features/care/help/detect-country";
+import { ReaderData } from "@/features/lantern/reader/reader-data";
+import { ReaderScreen } from "@/features/lantern/reader/reader-screen";
 
-import { AppText } from "@/components/shared/app-text";
-import { BackButton } from "@/features/library/reader/reader-parts";
-import { ReaderScreen } from "@/features/library/reader/reader-screen";
-import { ReaderSkeleton } from "@/features/library/skeletons";
-
-export default function LibraryReaderRoute() {
+export default function LanternReaderRoute() {
 	const { slug } = useLocalSearchParams<{ slug: string }>();
-	const entry = useQuery(api.library.entries.getEntry, { slug });
-	const insets = useSafeAreaInsets();
-
-	if (entry) {
-		return <ReaderScreen entry={entry} />;
-	}
-	if (entry === undefined) {
-		return <ReaderSkeleton />;
-	}
 	return (
-		<View
-			className="flex-1 bg-background px-4"
-			style={{ paddingTop: insets.top + 6 }}
-		>
-			<BackButton />
-			<View className="flex-1 items-center justify-center px-4">
-				<AppText className="text-center text-muted">
-					This entry isn&apos;t in Lantern anymore.
-				</AppText>
-			</View>
-		</View>
+		<ReaderData showHelpline={detectCountry() !== null} slug={slug}>
+			<ReaderScreen />
+		</ReaderData>
 	);
 }

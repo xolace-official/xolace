@@ -5,6 +5,7 @@ import {
 	type Validator,
 } from "convex/values";
 import { ValidationError, validate } from "convex-helpers/validators";
+import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import type schema from "../schema";
 import { describeInvalid, type FieldChange } from "./diff";
@@ -149,6 +150,19 @@ export function versionOf(row: object) {
 		hash = Math.imul(hash, FNV_PRIME) >>> 0;
 	}
 	return hash.toString(16).padStart(8, "0");
+}
+
+/**
+ * A track's fingerprint, without `peaks`: they're measured in the background
+ * after an upload and by the backfill (`audio/trackPeaks.ts`), never by an
+ * import, and apply keeps them (`upsertTrackRecord`). Counting them would make
+ * apply refuse every item whose track was measured after compare.
+ */
+export function trackVersionOf({
+	peaks: _peaks,
+	...track
+}: Doc<"audio_tracks">) {
+	return versionOf(track);
 }
 
 export const ADMIN_EDIT_WARNING =

@@ -19,6 +19,7 @@ import {
 } from "./_generated/server";
 import { writeFollowUpCard } from "./ai/followUpCard";
 import {
+	ACUTE_NUDGE_BODY,
 	buildFollowUpCardPrompt,
 	fallbackFollowUpCard,
 } from "./ai/prompts/followUpCardWriter";
@@ -28,6 +29,7 @@ import {
 	spendStretch,
 } from "./compounding/stretches";
 import { deleteResponsesForCard } from "./followUpResponses";
+import { resolveCardCore, userResponseValidator } from "./followUps/resolve";
 import { requireAuth } from "./lib/auth";
 import {
 	followUpCadence,
@@ -36,6 +38,7 @@ import {
 	shouldEmitReturn,
 	shouldReshowShownCard,
 	shouldSupersede,
+	WAITING_CARD_LIFETIME_MS,
 } from "./lib/followUpCadence";
 import { hasPremium } from "./lib/premium";
 import { domainOf } from "./lib/understandingVocab";
@@ -43,22 +46,14 @@ import {
 	domainValidator,
 	type safeguardLevelValidator,
 } from "./lib/validators";
+import { collapseCard } from "./outreach/telegram/checkIn";
+import { nudgeFirstLine } from "./outreach/telegram/copy";
 import schema from "./schema";
 import { renderSemanticProfile } from "./semanticProfiles";
 
 const MAX_CARD_CHARS = 200;
 
 export const workflow = new WorkflowManager(components.workflow);
-
-// Card responses the client may send.
-const userResponseValidator = v.union(
-	v.literal("lighter"),
-	v.literal("still_here"),
-	v.literal("heavier"),
-	v.literal("processed"),
-	v.literal("vent"),
-	v.literal("dismissed")
-);
 
 // Active = a card whose lifecycle is still owned by a live workflow.
 // Exported for lib/sessionCascade, which purges cards per-session.
@@ -399,6 +394,7 @@ export const createAndStart = internalMutation({
 			await ctx.db.patch("follow_up_cards", active._id, {
 				status: "superseded",
 			});
+			await collapseCard(ctx, active._id);
 		}
 
 		const workflowId = await workflow.start(
@@ -430,6 +426,8 @@ export const createAndStart = internalMutation({
 
 		await ctx.db.patch("sessions", args.sessionId, {
 			followUpWorkflowId: workflowId,
+			// The close recorded "none"; compounding is what started this one.
+			...(compoundingOnly ? { followUpDecidedBy: "compounding" as const } : {}),
 		});
 		return null;
 	},
@@ -448,14 +446,22 @@ export const markCardExpired = internalMutation({
 			return null;
 		}
 		await ctx.db.patch("follow_up_cards", card._id, { status: "expired" });
+		await collapseCard(ctx, card._id);
 		return null;
 	},
 });
 
+/** A card's workflow nudges twice; this bounds the count read. */
+const MAX_NUDGES_PER_CARD = 10;
+
 /**
- * Deliver a follow-up push. Follow-up-only gating (enabled flag only — no
- * per-type toggle, no quiet window, by deliberate early-stage design). Acute
- * tier sends a recency-anchored, wound-free body; the cardText is in-app only.
+ * Nudge a still-pending card through the outreach layer, which decides whether
+ * and where (#764): the toggle, quiet window, escalation hold and channel are
+ * all its gates. Acute tier sends a recency-anchored, wound-free body; the
+ * cardText is in-app only.
+ *
+ * Args unchanged, so sleeping workflows keep calling it. The nudge number in
+ * the dedupe key comes from the card's earlier nudges, not an arg.
  */
 export const sendFollowUpNudge = internalMutation({
 	args: { workflowId: vWorkflowId },
@@ -465,35 +471,28 @@ export const sendFollowUpNudge = internalMutation({
 			return null;
 		}
 
-		const prefs = await ctx.db
-			.query("preferences")
-			.withIndex("by_profile", (q) =>
-				q.eq("emotionalProfileId", card.emotionalProfileId)
-			)
-			.unique();
-		// The master switch is now held on by either family — chat notifications
-		// or the AI's own reaching out — so it no longer implies a follow-up is
-		// wanted. `gentleReturn` is the nudge family this belongs to, and it moves
-		// with the master on every row written before chat had its own toggle.
-		if (!(prefs?.notifications.enabled && prefs.notifications.gentleReturn)) {
-			return null;
-		}
-
 		// A card naming a compounding domain stays in-app: the lock screen isn't private.
 		const body =
 			card.tier === "acute"
-				? "Just checking in on what you worked through a little while ago. We're here."
+				? ACUTE_NUDGE_BODY
 				: card.compoundingDomain
 					? fallbackFollowUpCard(card.tier)
 					: card.cardText;
 
-		await ctx.scheduler.runAfter(0, internal.notifications.schedule, {
-			content: body,
+		const earlier = await ctx.db
+			.query("outreach")
+			.withIndex("by_follow_up", (q) => q.eq("followUpId", card._id))
+			.take(MAX_NUDGES_PER_CARD);
+		await ctx.runMutation(internal.outreach.enqueue.enqueue, {
+			content: { body },
+			dedupeKey: `nudge:${card._id}:${earlier.length + 1}`,
 			emotionalProfileId: card.emotionalProfileId,
-			followUpTier: card.tier,
-			scheduledFor: Date.now(),
-			triggerReason: `follow_up_${card.tier}`,
-			type: "follow_up",
+			followUpId: card._id,
+			intent: "nudge",
+			provenance: { triggerReason: `follow_up_${card.tier}` },
+			tier: card.tier,
+			// Telegram's history outlives the lock screen: never the card text.
+			variants: { telegram: { body: nudgeFirstLine(card.tier) } },
 		});
 		return null;
 	},
@@ -540,7 +539,10 @@ export const markReturn = mutation({
 				now: Date.now(),
 			})
 		) {
-			await ctx.db.patch("follow_up_cards", card._id, { status: "ready" });
+			await ctx.db.patch("follow_up_cards", card._id, {
+				readyAt: Date.now(),
+				status: "ready",
+			});
 			// Stop the nudge/expiry cadence — the user is back.
 			try {
 				await workflow.cancel(ctx, card.workflowId);
@@ -550,6 +552,7 @@ export const markReturn = mutation({
 		}
 		return null;
 	},
+	returns: v.null(),
 });
 
 // =============================================================
@@ -562,6 +565,9 @@ export const markReturn = mutation({
  * answered, e.g. backgrounded the app mid-check-in — only re-surfaces once its
  * re-show cooldown has elapsed, so it doesn't nag on every launch. Gating here
  * (server) keeps the client render pure — it never has to read the clock.
+ *
+ * @deprecated Shipped builds' v1 check-in only. The app reads
+ * `followUps/waiting.getWaitingCard` since S4 (`DEPRECATIONS.md`).
  */
 export const getReadyCard = query({
 	args: {},
@@ -602,6 +608,10 @@ export const getReadyCard = query({
  * first surface, and re-stamps `shownAt` when an unresolved `shown` card
  * re-surfaces after its cooldown (client-gated) — so the next re-show cooldown
  * is measured from the latest viewing. Any terminal status is left untouched.
+ *
+ * The first showing also stamps `firstShownAt` (never re-stamped) and
+ * schedules the silent 3-day expiry (`followUps/waiting`). A card shown before
+ * that stamp existed starts its 3 days on its next showing.
  */
 export const markShown = mutation({
 	args: { cardId: v.id("follow_up_cards") },
@@ -614,12 +624,23 @@ export const markShown = mutation({
 		if (card.status !== "ready" && card.status !== "shown") {
 			return null;
 		}
+		const now = Date.now();
+		const firstShowing = card.firstShownAt === undefined;
 		await ctx.db.patch("follow_up_cards", args.cardId, {
-			shownAt: Date.now(),
+			shownAt: now,
 			status: "shown",
+			...(firstShowing ? { firstShownAt: now } : {}),
 		});
+		if (firstShowing) {
+			await ctx.scheduler.runAfter(
+				WAITING_CARD_LIFETIME_MS,
+				internal.followUps.waiting.expireShownCard,
+				{ cardId: args.cardId }
+			);
+		}
 		return null;
 	},
+	returns: v.null(),
 });
 
 /** Resolve a card with the user's response (chip tap or backdrop dismiss). */
@@ -627,22 +648,13 @@ export const resolveCard = mutation({
 	args: { cardId: v.id("follow_up_cards"), response: userResponseValidator },
 	handler: async (ctx, args) => {
 		const { profile } = await requireAuth(ctx);
-		const card = await ctx.db.get("follow_up_cards", args.cardId);
-		if (!card || card.emotionalProfileId !== profile._id) {
-			return null;
-		}
-		if (card.status === "resolved") {
-			return null; // idempotent
-		}
-		await ctx.db.patch("follow_up_cards", args.cardId, {
-			resolvedAt: Date.now(),
-			status: "resolved",
-			userResponse: args.response,
-		});
-		// An answer is a reading: it can close a stretch, never open one (#519).
-		// Its own transaction, so it can't fail the answer (#529).
-		await ctx.scheduler.runAfter(0, internal.compounding.stretches.evaluate, {
+		// Any unanswered card the user owns, superseded ones included; a second
+		// answer is a no-op. The outcome stays server-side: this returns null.
+		await resolveCardCore(ctx, {
+			cardId: args.cardId,
 			profileId: profile._id,
+			response: args.response,
+			source: "app",
 		});
 		return null;
 	},
@@ -655,6 +667,11 @@ const PROFILE_FOLLOWUP_LIMIT = 5;
 // Hard ceiling so a client-supplied limit can never request unbounded rows.
 const MAX_FOLLOWUP_LIMIT = 50;
 
+/**
+ * @deprecated No current client calls it: You's Follow-ups read `listForProfilePage` (#666).
+ */
+// DEPRECATED(remove-after: app >= first version with the paged Follow-ups, #666): store builds
+// from before it still call this for the profile's Follow-ups section.
 export const listForProfile = query({
 	args: { limit: v.optional(v.number()) },
 	handler: async (ctx, args) => {
@@ -801,6 +818,8 @@ export const purgeForProfile = internalMutation({
 				// Cancel the live workflow so it stops nudging a deleted user.
 				await cancelFollowUpWorkflow(ctx, card.workflowId);
 			}
+			// Its Telegram check-in goes neutral, buttons gone, before the card.
+			await collapseCard(ctx, card._id);
 			await deleteResponsesForCard(ctx, card._id);
 			await ctx.db.delete("follow_up_cards", card._id);
 		}

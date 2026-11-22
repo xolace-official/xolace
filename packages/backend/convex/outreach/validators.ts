@@ -1,0 +1,273 @@
+import { type Infer, v } from "convex/values";
+
+/**
+ * The outreach layer's literal unions (#760, #763). One place, so the schema,
+ * `enqueue`, the adapters and (later) `listChannels`, admin and analytics all
+ * name the same things.
+ */
+
+/** Why Xolace is reaching out. `affirmation` is provenance, not an intent. */
+export const outreachIntentValidator = v.union(
+	v.literal("nudge"), // was `follow_up`
+	v.literal("gentle_return"),
+	v.literal("pattern_nudge"),
+	v.literal("milestone"),
+	v.literal("kindling_ready"),
+	v.literal("domain_unlock"),
+	v.literal("achievement"),
+	/** Today's quote at the person's chosen time, or the backoff's last line (B19). */
+	v.literal("daily_quote"),
+	/** The one email every new user gets after signing up (#912). Email only. */
+	v.literal("welcome")
+);
+export type OutreachIntent = Infer<typeof outreachIntentValidator>;
+
+/** A place outreach can land. */
+export const outreachChannelValidator = v.union(
+	v.literal("push"),
+	v.literal("telegram"),
+	/** Linked at sign-up; the address stays in Clerk (ADR 0004). */
+	v.literal("email")
+);
+export type OutreachChannel = Infer<typeof outreachChannelValidator>;
+
+/**
+ * Whether email can reach a person (#916). No row means `linked`: signing up
+ * links email. `unreachable` after a hard bounce, `complained` after a spam
+ * complaint; routing treats both as closed.
+ */
+export const closedEmailStatusValidator = v.union(
+	v.literal("unreachable"),
+	v.literal("complained")
+);
+export type ClosedEmailStatus = Infer<typeof closedEmailStatusValidator>;
+
+export const emailChannelStatusValidator = v.union(
+	v.literal("linked"),
+	...closedEmailStatusValidator.members
+);
+export type EmailChannelStatus = Infer<typeof emailChannelStatusValidator>;
+
+/** How many people email can't reach, per closed status (admin, #916). */
+export const notReachableCountsValidator = v.object({
+	complained: v.number(),
+	unreachable: v.number(),
+});
+export type NotReachableCounts = Infer<typeof notReachableCountsValidator>;
+
+/** An email template, rendered by `email/render` (#914). One per email intent. */
+export const emailTemplateValidator = v.union(v.literal("welcome"));
+export type EmailTemplate = Infer<typeof emailTemplateValidator>;
+
+export const followUpTierValidator = v.union(
+	v.literal("acute"),
+	v.literal("elevated"),
+	v.literal("standard")
+);
+export type FollowUpTier = Infer<typeof followUpTierValidator>;
+
+export const outreachOutcomeValidator = v.union(
+	v.literal("queued"),
+	v.literal("suppressed")
+);
+
+/** Why an outreach went nowhere. `escalation_active` also covers the 72 h crisis hold. */
+export const suppressedReasonValidator = v.union(
+	v.literal("rate_limit"),
+	v.literal("escalation_active"),
+	v.literal("user_inactive"),
+	v.literal("toggle_off"),
+	v.literal("no_channel"),
+	v.literal("account_deleted"),
+	/**
+	 * A nudge whose follow-up closed, or the user came back to, before it went
+	 * (answered, dismissed, gone; or ready or shown in the app).
+	 */
+	v.literal("card_closed"),
+	/**
+	 * A missed-beat push whose moment the app showed before it went, or a
+	 * daily quote push whose quote was opened first.
+	 */
+	v.literal("moment_seen")
+);
+export type SuppressedReason = Infer<typeof suppressedReasonValidator>;
+
+/**
+ * Why a channel can't take an outreach right now. Computed, never stored;
+ * shared by routing, `listChannels`, admin and analytics.
+ */
+export const ineligibilityReasonValidator = v.union(
+	v.literal("disabled"),
+	v.literal("requires_plus"),
+	v.literal("not_configured"),
+	v.literal("paused"),
+	v.literal("revoked"),
+	v.literal("no_device"),
+	v.literal("push_off"),
+	v.literal("intent_not_allowed"),
+	v.literal("bucket_full"),
+	/** Email: the address hard-bounced (#916). */
+	v.literal("unreachable"),
+	/** Email: the person marked one as spam (#916). */
+	v.literal("complained")
+);
+export type IneligibilityReason = Infer<typeof ineligibilityReasonValidator>;
+
+export const channelPlanValidator = v.union(
+	v.literal("free"),
+	v.literal("plus")
+);
+export type ChannelPlan = Infer<typeof channelPlanValidator>;
+
+/**
+ * Push-mode: `queued → sending → sent`, ending `failed` or `unreachable`.
+ * `canceled` when the work is dropped before it ran. Pull-mode
+ * (`available → acknowledged`) is reserved; no pull adapter is built.
+ */
+export const deliveryStatusValidator = v.union(
+	v.literal("queued"),
+	v.literal("sending"),
+	v.literal("sent"),
+	v.literal("failed"),
+	v.literal("unreachable"),
+	v.literal("canceled"),
+	v.literal("available"),
+	v.literal("acknowledged")
+);
+export type DeliveryStatus = Infer<typeof deliveryStatusValidator>;
+
+export const channelErrorKindValidator = v.union(
+	v.literal("retry"),
+	v.literal("permanent"),
+	v.literal("unreachable")
+);
+export type ChannelErrorKind = Infer<typeof channelErrorKindValidator>;
+
+export const identityStatusValidator = v.union(
+	v.literal("active"),
+	v.literal("paused"),
+	v.literal("revoked")
+);
+
+export const revokedReasonValidator = v.union(
+	v.literal("user_app"),
+	v.literal("user_telegram"),
+	v.literal("relinked"),
+	v.literal("blocked"),
+	v.literal("unreachable"),
+	v.literal("account_deleted")
+);
+
+/** Where in the app a channel link was started (#774). */
+export const linkSourceValidator = v.union(
+	v.literal("settings"),
+	v.literal("offer_card")
+);
+
+/** What came in on Telegram: a button tap or a text (#774). */
+export const inboundKindValidator = v.union(
+	v.literal("tap"),
+	v.literal("text")
+);
+
+export const inboundStatusValidator = v.union(
+	v.literal("received"),
+	v.literal("processed"),
+	v.literal("failed"),
+	v.literal("ignored")
+);
+
+/**
+ * The in-app moment a missed-beat push stands in for: the badges it names, or
+ * the session whose unlock beat went unseen. The app showing it before the
+ * push goes (a quiet-window deferral can be hours) stands the push down.
+ */
+export const outreachMomentValidator = v.union(
+	v.object({
+		achievementIds: v.array(v.id("user_achievements")),
+		kind: v.literal("badges"),
+	}),
+	v.object({ kind: v.literal("domain_unlock"), sessionId: v.id("sessions") }),
+	/** The daily quote a push carries (B19): opened first, the push stands down. */
+	v.object({ kind: v.literal("daily_quote"), quoteId: v.id("daily_quotes") })
+);
+export type OutreachMoment = Infer<typeof outreachMomentValidator>;
+
+/** Channel-neutral, lock-screen safe. */
+export const outreachContentValidator = v.object({
+	body: v.string(),
+	title: v.optional(v.string()),
+});
+
+export const outreachVariantsValidator = v.object({
+	telegram: v.optional(
+		v.object({
+			body: v.string(),
+			/**
+			 * Shown as a blockquote under `body` (B19's curated quote). Never
+			 * anything drawn from the person: Telegram's history outlives the
+			 * lock screen.
+			 */
+			quote: v.optional(v.string()),
+		})
+	),
+});
+
+export const reachValidator = v.union(
+	v.literal("warm"),
+	v.literal("direct"),
+	v.literal("quiet")
+);
+
+export const generatedByValidator = v.union(
+	v.literal("haiku_personalized"),
+	v.literal("template_cold_start"),
+	v.literal("template_fallback")
+);
+
+export const outreachProvenanceValidator = v.object({
+	/** An affirmation-shaped send (was the `affirmation` type). */
+	affirmation: v.optional(v.boolean()),
+	generatedBy: v.optional(generatedByValidator),
+	patternContextUsed: v.optional(v.boolean()),
+	reachUsed: v.optional(reachValidator),
+	triggerReason: v.string(),
+});
+
+/** A Telegram text's safeguard level once it's past crisis (#771). */
+export const burstLevelValidator = v.union(
+	v.literal("none"),
+	v.literal("gentle"),
+	v.literal("elevated")
+);
+export type BurstLevel = Infer<typeof burstLevelValidator>;
+
+/**
+ * Texts screened on arrival, waiting out a burst for one reply (#771): the
+ * link they came in on, so a relink never inherits them; when the reply is
+ * due (a later text moves it); and the worst of their safeguard results.
+ */
+export const pendingBurstValidator = v.object({
+	/**
+	 * When each of `texts` arrived, in step with them: texts are screened side
+	 * by side and can be queued out of order, but are kept in arrival order.
+	 * Absent on a burst queued before it was kept.
+	 */
+	arrivals: v.optional(v.array(v.number())),
+	dueAt: v.number(),
+	level: burstLevelValidator,
+	linkedAt: v.number(),
+	/** Elevated, or no safeguard, on any of them: Support resources ride along. */
+	support: v.boolean(),
+	texts: v.array(v.string()),
+});
+
+/**
+ * AI replies used on one local day (#771), for the account that used them:
+ * a relink to another account starts from none.
+ */
+export const replyCountValidator = v.object({
+	count: v.number(),
+	day: v.string(),
+	emotionalProfileId: v.id("emotional_profiles"),
+});

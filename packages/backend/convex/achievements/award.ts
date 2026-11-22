@@ -1,6 +1,7 @@
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import type { MilestoneDetail } from "../streaks/milestones";
 import {
 	type Achievement,
 	type AchievementId,
@@ -36,7 +37,8 @@ export async function awardAchievement(
 	ctx: MutationCtx,
 	emotionalProfileId: Id<"emotional_profiles">,
 	achievementId: AchievementId,
-	earnedAt: number = Date.now()
+	earnedAt: number = Date.now(),
+	milestone?: MilestoneDetail
 ): Promise<boolean> {
 	const achievement = findAchievement(achievementId);
 	if (!achievement) {
@@ -52,6 +54,7 @@ export async function awardAchievement(
 		achievementId,
 		earnedAt,
 		source: backfilled ? "live" : "backfill",
+		...(milestone && { milestone }),
 	});
 	if (earned && backfilled) {
 		await scheduleMissedBadgeCheck(ctx, profile);
@@ -79,6 +82,7 @@ export async function insertAward(
 		achievementId: AchievementId;
 		earnedAt: number;
 		source: Doc<"user_achievements">["source"];
+		milestone?: MilestoneDetail;
 	}
 ): Promise<boolean> {
 	const existing = await ctx.db

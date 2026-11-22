@@ -100,7 +100,6 @@ export const LegalBottomSheet = ({ document, onClose }: Props) => {
 const styles = StyleSheet.create({
 	fontMedium: { fontFamily: "Poppins-Medium" },
 	fontRegular: { fontFamily: "Poppins-Regular" },
-	// eslint-disable-next-line react-native/no-color-literals
 	footer: {
 		borderTopColor: "rgba(255,255,255,0.08)",
 		borderTopWidth: 1,

@@ -9,7 +9,6 @@ import {
 
 const CARD_COUNT = 5;
 
-/** Widest run of the track no card covers, across a full belt revolution. */
 const worstGap = (viewport: number) => {
 	const slots = beltSlots(viewport, CARD_COUNT);
 	const beltWidth = slots * CARD_STRIDE;
@@ -35,7 +34,6 @@ const worstGap = (viewport: number) => {
 };
 
 describe("founder marquee belt", () => {
-	// #280: a belt pinned to the card count (615px) never recycled on wider screens.
 	it.each([320, 614, 615, 1280, 2000])(
 		"covers the whole track at viewport %ipx",
 		(viewport) => {

@@ -8,6 +8,7 @@ import { requireAuth } from "./lib/auth";
 import { generateDisplayName } from "./lib/displayName";
 import { rateLimiter } from "./lib/rateLimits";
 import { preferencesDocValidator } from "./lib/validators";
+import { scheduleWelcome } from "./outreach/welcome";
 import schema from "./schema";
 import { streakState } from "./streaks/state";
 
@@ -192,6 +193,8 @@ export const getOrCreate = mutation({
 		await ctx.scheduler.runAfter(0, internal.streamSetup.addToXolaceChannel, {
 			profileId,
 		});
+		// Only here: a returning or reactivated user never gets a second one.
+		await scheduleWelcome(ctx, profileId);
 
 		return userId;
 	},
@@ -242,7 +245,10 @@ export const getMe = query({
 /**
  * Narrow query for the session-end screen's ReachFeedbackCard. Avoids pulling
  * getFullContext into a leaf screen just for one number.
+ *
+ * @deprecated Only the old session end's reach feedback card read it; the redesigned session end shows no card.
  */
+// DEPRECATED(remove-after: app >= first version with the redesigned session end (S3)): Only the old session end's reach feedback card read it; the redesigned session end shows no card.
 export const getSessionCount = query({
 	args: {},
 	handler: async (ctx) => {

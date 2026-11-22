@@ -17,7 +17,7 @@
 //   bun run badges:upload --prod              # release owner only
 //   bun run badges:upload --deploy-key        # release owner: staging or a preview
 //
-// A bare run never reaches prod or staging (target.ts) and first pushes this
+// A bare run never reaches prod or staging (../target.ts) and first pushes this
 // checkout's functions to your dev deployment (`convex dev --once`), so
 // `badge_art` exists there. `--prod` / `--deploy-key` are the release owner's,
 // run after that deployment is live; agents never pass them. Drives Convex via
@@ -25,13 +25,12 @@
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { parseEnv } from "node:util";
 import { BADGE_ART_KEYS } from "../../convex/achievements/catalog";
+import { targetFromArgs } from "../target";
 import { cutBadge, encodeBadge, markerFor, thumbhashOf } from "./cut";
 import { isRecord, type ManifestEntry, parseManifest } from "./manifest";
-import { resolveTarget } from "./target";
 
 type LiveArt = { artKey: string; sha256: string };
 
@@ -48,12 +47,7 @@ const only = flag("only")
 	.map((key) => key.trim())
 	.filter(Boolean);
 
-const envLocalPath = path.join(HERE, "../../.env.local");
-const target = resolveTarget(
-	args,
-	process.env,
-	existsSync(envLocalPath) ? parseEnv(readFileSync(envLocalPath, "utf8")) : {}
-);
+const target = targetFromArgs(args);
 
 function convexRun(fn: string, jsonArgs: Record<string, unknown>): unknown {
 	const out = execFileSync(

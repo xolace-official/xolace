@@ -19,10 +19,12 @@ import { toast } from "sonner";
 import { StatusBadge } from "@/features/content/status-badge";
 import { formatDate, formatDuration } from "@/features/library/types";
 import { PickFileButton } from "@/features/media/pick-file-button";
+import { AUDIO_ACCEPT } from "@/features/media/use-media-upload";
 import { readAudioDuration } from "../audio-file";
 import { useTrackMedia } from "../audio-provider";
 import { FAMILY_LABEL, topicSlug } from "../types";
 import { useTrackEditor } from "./track-editor-provider";
+import { TrackWaveform } from "./track-waveform";
 
 /** The audio file: a player, processing state, Retry, Replace. */
 export function AudioPanel() {
@@ -72,6 +74,7 @@ export function AudioPanel() {
 					src={playingSrc ?? media.audioUrl}
 				/>
 			) : null}
+			<TrackWaveform />
 			{saved.failure ? (
 				<Alert variant="coral">
 					<OctagonAlertIcon />
@@ -87,7 +90,7 @@ export function AudioPanel() {
 					Retry
 				</Button>
 			) : null}
-			<PickFileButton accept="audio/*" onPick={replace}>
+			<PickFileButton accept={AUDIO_ACCEPT} onPick={replace}>
 				Replace audio
 			</PickFileButton>
 		</div>

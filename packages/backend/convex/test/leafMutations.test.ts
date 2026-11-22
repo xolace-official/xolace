@@ -11,7 +11,7 @@
  * flags its session.
  */
 import { describe, expect, it, vi } from "vitest";
-import { internal } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import {
 	classificationArgs,
@@ -215,6 +215,25 @@ describe("sessions.failSession", () => {
 		});
 	});
 
+	it("records the error code beside the message, and the owner reads both", async () => {
+		const user = await asNewUser();
+		const sessionId = await seedSession(user.root, user.profileId);
+
+		await user.root.mutation(internal.sessions.failSession, {
+			errorCode: "reflection_rate_limited",
+			errorMessage: "You've reached the limit for reflections.",
+			sessionId,
+		});
+
+		expect(
+			await user.t.query(api.sessions.getById, { sessionId })
+		).toMatchObject({
+			errorCode: "reflection_rate_limited",
+			errorMessage: "You've reached the limit for reflections.",
+			state: "error",
+		});
+	});
+
 	it("does not overwrite a session that already left processing", async () => {
 		const user = await asNewUser();
 		const sessionId = await seedSession(user.root, user.profileId, {
@@ -258,20 +277,23 @@ describe("escalation.create", () => {
 		const sessionId = await seedSession(user.root, user.profileId);
 		const before = (await readSession(user, sessionId)) as Doc<"sessions">;
 
-		const eventId = await user.root.mutation(internal.escalation.create, {
-			emotionalProfileId: user.profileId,
-			sessionId,
-			...event,
-			resourcesPresented: [
-				{
-					label: "Crisis line",
-					priority: 1,
-					source: "crisis_line",
-					type: "phone",
-					value: "988",
-				},
-			],
-		});
+		const eventId = await user.root.mutation(
+			internal.escalation.events.create,
+			{
+				emotionalProfileId: user.profileId,
+				sessionId,
+				...event,
+				resourcesPresented: [
+					{
+						label: "Crisis line",
+						priority: 1,
+						source: "crisis_line",
+						type: "phone",
+						value: "988",
+					},
+				],
+			}
+		);
 
 		const stored = await user.root.run((ctx) =>
 			ctx.db.get("escalation_events", eventId)
@@ -293,12 +315,15 @@ describe("escalation.create", () => {
 		const user = await asNewUser();
 		const sessionId = await seedSession(user.root, user.profileId);
 
-		const eventId = await user.root.mutation(internal.escalation.create, {
-			emotionalProfileId: user.profileId,
-			sessionId,
-			...event,
-			resourcesPresented: ["988 Suicide & Crisis Lifeline"],
-		});
+		const eventId = await user.root.mutation(
+			internal.escalation.events.create,
+			{
+				emotionalProfileId: user.profileId,
+				sessionId,
+				...event,
+				resourcesPresented: ["988 Suicide & Crisis Lifeline"],
+			}
+		);
 
 		const stored = await user.root.run((ctx) =>
 			ctx.db.get("escalation_events", eventId)

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
 import type { ExerciseSimilarity } from "../exercises/match";
+import { ERROR_CODES } from "../lib/shared";
 import { posthog } from "../posthog";
 import { MAX_TURNS } from "../sessionTurns";
 import { classifierCache, moderationCache } from "./cached";
@@ -19,7 +20,10 @@ import {
 import { resolveMirrorTone } from "./mirrorPlan";
 import {
 	buildAccumulatedInput,
+	entryForAi,
 	type RefinementTurn,
+	writtenSoFar,
+	wroteInRefinement,
 } from "./prompts/accumulatedInput";
 import {
 	buildArticulatorPrompt,
@@ -70,6 +74,7 @@ export const handleClarification = internalAction({
 					entryType?: string;
 					inputDuration?: number;
 					freezeOccurred?: boolean;
+					textures?: string[];
 					escalationTriggered?: boolean;
 					gapNamed?: boolean;
 					[key: string]: unknown;
@@ -88,6 +93,7 @@ export const handleClarification = internalAction({
 				entryType?: string;
 				inputDuration?: number;
 				freezeOccurred?: boolean;
+				textures?: string[];
 				[key: string]: unknown;
 			};
 
@@ -136,8 +142,13 @@ export const handleClarification = internalAction({
 			const userFeedback = currentTurn?.userFeedback;
 			const addedText = (currentTurn?.userInput ?? "").trim();
 
+			// Base: what they wrote and the feeling words they picked (B10).
 			const accumulatedInput = buildAccumulatedInput(
-				(session.rawInput as string | undefined) ?? "",
+				entryForAi({
+					entryType: session.entryType,
+					rawInput: (session.rawInput as string | undefined) ?? "",
+					textures: session.textures,
+				}),
 				turns
 			);
 
@@ -171,7 +182,8 @@ export const handleClarification = internalAction({
 							}),
 							context.isFirstSession,
 							session.entryType ?? "open_prompt",
-							session.timeOfDay as string | undefined
+							session.timeOfDay as string | undefined,
+							session.textures
 						)
 					: null;
 
@@ -244,7 +256,9 @@ export const handleClarification = internalAction({
 
 			if (safeguard?.shouldReject) {
 				await ctx.runMutation(internal.sessions.failSession, {
-					errorMessage: safeguard.rejectionReason ?? "content_policy_violation",
+					errorCode: ERROR_CODES.safeguardRejected,
+					errorMessage:
+						safeguard.rejectionReason ?? ERROR_CODES.safeguardRejected,
 					sessionId: args.sessionId,
 				});
 				await posthog.capture(ctx, {
@@ -252,7 +266,7 @@ export const handleClarification = internalAction({
 					event: "mirror_content_rejected",
 					properties: {
 						rejectionReason:
-							safeguard.rejectionReason ?? "content_policy_violation",
+							safeguard.rejectionReason ?? ERROR_CODES.safeguardRejected,
 						turnNumber: args.turnNumber,
 					},
 				});
@@ -339,9 +353,24 @@ export const handleClarification = internalAction({
 				// refinement is grounded in who this person is, matching process.ts.
 				semanticProfile: context.semanticProfile,
 				spaceName: context.preferences?.spaceName,
+				textures: session.textures,
 				turnCount: args.turnNumber,
 				useAudioTags: context.isPremium,
 				userFeedback,
+				// With picked words the base carries labels, so count only what
+				// they wrote, later turns included (process.ts does the same).
+				...(session.textures?.length
+					? {
+							writtenChars: writtenSoFar(
+								{
+									entryType: session.entryType,
+									rawInput: (session.rawInput as string | undefined) ?? "",
+								},
+								turns
+							),
+							wroteLater: wroteInRefinement(turns),
+						}
+					: {}),
 			});
 
 			// 5. Call Sonnet for revised mirror. Stage hint first (see process.ts).
@@ -444,8 +473,20 @@ export const handleClarification = internalAction({
 								? {}
 								: { episodicTopScore: episodic.topScore }),
 						}),
-				...(reclassified?.followUpReason
-					? { followUpReason: reclassified.followUpReason }
+				// Only a turn that re-classified moves the follow-up read, and only
+				// up (refinedFollowUpRead): it stays on the same side as the
+				// session flag, which deliverMirror above also only raises.
+				...(reclassified
+					? {
+							aiRequiresFollowUp: reclassified.requiresFollowUp,
+							followUpReasonCode: reclassified.followUpReasonCode ?? "unknown",
+							...(reclassified.followUpReason
+								? { followUpReason: reclassified.followUpReason }
+								: {}),
+							...(reclassified.noFollowUpReason
+								? { noFollowUpReason: reclassified.noFollowUpReason }
+								: {}),
+						}
 					: {}),
 				// Refreshed only when this turn actually reclassified — zero-added-
 				// text turns reuse the existing classification (§4 above) and must
@@ -484,7 +525,7 @@ export const handleClarification = internalAction({
 				safeguard.triggerType &&
 				session.escalationTriggered !== true
 			) {
-				await ctx.runMutation(internal.escalation.create, {
+				await ctx.runMutation(internal.escalation.events.create, {
 					actionTaken: safeguard.actionTaken,
 					emotionalProfileId: session.emotionalProfileId as ReturnType<
 						typeof v.id<"emotional_profiles">

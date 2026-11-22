@@ -8,13 +8,10 @@ import {
 	subscribeEpoch,
 } from "./use-resilient-clerk-auth";
 
-// The modules under test are pure, but they sit in files that import the Clerk
-// and Sentry native SDKs at module scope.
 vi.mock("@clerk/expo", () => ({ useAuth: () => ({}) }));
 vi.mock("@sentry/react-native", () => ({ captureMessage: () => {} }));
 vi.mock("convex/react", () => ({ useConvexAuth: () => ({}) }));
 
-/** A mintable token must force a re-auth: Convex latches noAuth and never retries on its own. */
 describe("desyncRecovery", () => {
 	it("forces a re-auth while a token still mints", () => {
 		expect(
@@ -41,8 +38,6 @@ describe("desyncRecovery", () => {
 	});
 });
 
-/** `ConvexProviderWithClerk` keys `fetchAccessToken` on `sessionId`, so a changed sessionId is
- * what re-runs `setAuth`. */
 describe("reauth nonce", () => {
 	it("reports Clerk sessionId untouched before any recovery", () => {
 		expect(sessionIdWithEpoch("sess_a", 0)).toBe("sess_a");

@@ -1,0 +1,91 @@
+import { View } from "react-native";
+import { SectionTitle, SettingsCard } from "@/components/settings-kit/parts";
+import { TileRow } from "@/components/settings-kit/tile-row";
+import type { IconName } from "@/components/shared/icon";
+import { type FollowUpTier, useDevTools } from "@/dev/dev-tools/use-dev-tools";
+
+const I = {
+	age: { android: "cake", ios: "birthday.cake" },
+	awareness: { android: "event_repeat", ios: "calendar.badge.clock" },
+	badge: { android: "military_tech", ios: "medal" },
+	bump: { android: "local_fire_department", ios: "flame" },
+	deferred: { android: "quiz", ios: "questionmark.bubble" },
+	followUp: { android: "notifications_active", ios: "bell.badge" },
+	intake: { android: "restart_alt", ios: "figure.walk.arrival" },
+	plus: { android: "workspace_premium", ios: "sparkles" },
+	reset: { android: "restart_alt", ios: "arrow.counterclockwise" },
+	sentry: { android: "bug_report", ios: "ant.circle" },
+	states: { android: "view_carousel", ios: "rectangle.stack" },
+} as const satisfies Record<string, IconName>;
+
+const FOLLOW_UP_TIERS: readonly FollowUpTier[] = [
+	"standard",
+	"elevated",
+	"acute",
+];
+
+/** @public Reached only through the Account route's `__DEV__` require, which knip can't follow. */
+export function DevToolsSection() {
+	const dev = useDevTools();
+	return (
+		<View>
+			<SectionTitle>Dev tools</SectionTitle>
+			<SettingsCard>
+				<TileRow
+					icon={I.states}
+					label="Dev states"
+					onPress={dev.openDevStates}
+				/>
+				<TileRow
+					icon={I.bump}
+					label="Bump streak +1"
+					onPress={() => dev.runStreak("bump")}
+				/>
+				<TileRow
+					icon={I.reset}
+					label="Reset streak to day 1"
+					onPress={() => dev.runStreak("reset")}
+				/>
+				<TileRow
+					icon={I.awareness}
+					label="Reset awareness events"
+					onPress={dev.resetAwareness}
+				/>
+				{FOLLOW_UP_TIERS.map((tier) => (
+					<TileRow
+						icon={I.followUp}
+						key={tier}
+						label={`Seed follow-up · ${tier}`}
+						onPress={() => dev.seedFollowUp(tier)}
+					/>
+				))}
+				<TileRow
+					icon={I.intake}
+					label="Replay intake"
+					onPress={dev.replayIntake}
+				/>
+				<TileRow
+					icon={I.deferred}
+					label="Replay deferred questions"
+					onPress={dev.replayDeferred}
+				/>
+				<TileRow
+					icon={I.age}
+					label="Clear date of birth"
+					onPress={dev.clearAgeGate}
+				/>
+				<TileRow
+					icon={I.badge}
+					label="Replay badge unlock"
+					onPress={dev.replayBadge}
+				/>
+				<TileRow
+					icon={I.sentry}
+					label="Send Sentry test error"
+					last
+					onPress={dev.sentryTest}
+				/>
+			</SettingsCard>
+		</View>
+	);
+}

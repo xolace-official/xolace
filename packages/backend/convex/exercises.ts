@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
@@ -9,8 +9,45 @@ import {
 	type QueryCtx,
 	query,
 } from "./_generated/server";
-import { matchExercise } from "./exercises/match";
+import {
+	isAtRisk,
+	isFlagged,
+	isGroundingTitle,
+	type MatchInput,
+	matchExercise,
+} from "./exercises/match";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { ERROR_CODES, EXERCISE_MAX_SWAPS } from "./lib/shared";
+import { recordActivity } from "./streaks/activityLog";
+
+/** A session with no metadata yet: nothing known but what the session says. */
+const UNKNOWN: MatchInput = {
+	confirmationState: "confirmed",
+	entryType: "open_prompt",
+	intensity: 0,
+	primaryEmotion: "",
+	userLanguageTags: [],
+};
+
+/** What the matcher reads from a finished session and its metadata. */
+function matchInputFor(
+	session: Doc<"sessions">,
+	metadata: Doc<"emotional_metadata">
+): MatchInput {
+	return {
+		atRisk: isAtRisk({
+			escalated: session.escalationTriggered,
+			riskFlag: metadata.riskFlag,
+			safeguardLevel: metadata.safeguardLevel,
+		}),
+		confirmationState: "confirmed",
+		entryType: session.entryType ?? "open_prompt",
+		granularLabel: metadata.granularLabel,
+		intensity: metadata.intensity,
+		primaryEmotion: metadata.primaryEmotion,
+		userLanguageTags: metadata.userLanguageTags,
+	};
+}
 
 /**
  * Compute allowed swap target IDs for a session: the reset exercise + the
@@ -40,14 +77,7 @@ async function computeSwapOptions(
 	}
 
 	const ranked = matchExercise(
-		{
-			confirmationState: "confirmed",
-			entryType: session.entryType ?? "open_prompt",
-			granularLabel: metadata.granularLabel,
-			intensity: metadata.intensity,
-			primaryEmotion: metadata.primaryEmotion,
-			userLanguageTags: metadata.userLanguageTags,
-		},
+		matchInputFor(session, metadata),
 		session.exerciseSimilarity
 	);
 
@@ -141,19 +171,38 @@ export const getForSession = query({
 				? swapped[swapped.length - 1]
 				: (session.matchedExerciseId ?? null);
 
-		if (!exerciseId) {
-			const fallback = await ctx.db
-				.query("exercises")
-				.withIndex("by_title", (q) => q.eq("title", "let_it_land"))
-				.unique();
-			if (!fallback) {
-				return null;
-			}
-			return { exercise: fallback, slots: {} as Record<string, string> };
-		}
+		const metadata = await ctx.db
+			.query("emotional_metadata")
+			.withIndex("by_session", (q) => q.eq("sessionId", session._id))
+			.unique();
+		const input = metadata ? matchInputFor(session, metadata) : undefined;
+		const flagged = input
+			? isFlagged(input)
+			: session.escalationTriggered === true;
 
-		const exercise = await ctx.db.get("exercises", exerciseId);
-		if (!exercise) {
+		const exercise = exerciseId
+			? await ctx.db.get("exercises", exerciseId)
+			: null;
+		if (exerciseId && !exercise) {
+			return null;
+		}
+		// A session flagged after it matched (clarify raised the risk or the
+		// intensity) still plays only grounding; a grounding swap it chose stays.
+		if (!exercise || (flagged && !isGroundingTitle(exercise.title))) {
+			// Let it land, or for a flagged session the first grounding exercise
+			// there is.
+			const titles: string[] = flagged
+				? matchExercise(input ?? { ...UNKNOWN, atRisk: true })
+				: ["let_it_land"];
+			for (const title of titles) {
+				const fallback = await ctx.db
+					.query("exercises")
+					.withIndex("by_title", (q) => q.eq("title", title))
+					.unique();
+				if (fallback) {
+					return { exercise: fallback, slots: {} as Record<string, string> };
+				}
+			}
 			return null;
 		}
 
@@ -193,25 +242,22 @@ export const matchForSession = query({
 			.withIndex("by_active", (q) => q.eq("active", true))
 			.take(50);
 
-		const matching = exercises.filter((e) => {
-			const emotionMatch = e.targetEmotions.includes(metadata.primaryEmotion);
-			const intensityMatch =
-				metadata.intensity >= e.intensityRange.min &&
-				metadata.intensity <= e.intensityRange.max;
-			return emotionMatch && intensityMatch;
-		});
+		const input = matchInputFor(session, metadata);
+		// A flagged session's list is the grounding four whatever its feeling
+		// or intensity, so their target emotions and ranges don't narrow it.
+		const matching = isFlagged(input)
+			? exercises
+			: exercises.filter((e) => {
+					const emotionMatch = e.targetEmotions.includes(
+						metadata.primaryEmotion
+					);
+					const intensityMatch =
+						metadata.intensity >= e.intensityRange.min &&
+						metadata.intensity <= e.intensityRange.max;
+					return emotionMatch && intensityMatch;
+				});
 
-		const rankedTitles = matchExercise(
-			{
-				confirmationState: "confirmed",
-				entryType: session.entryType ?? "open_prompt",
-				granularLabel: metadata.granularLabel,
-				intensity: metadata.intensity,
-				primaryEmotion: metadata.primaryEmotion,
-				userLanguageTags: metadata.userLanguageTags,
-			},
-			session.exerciseSimilarity
-		);
+		const rankedTitles = matchExercise(input, session.exerciseSimilarity);
 
 		const byTitle = new Map(matching.map((e) => [e.title, e]));
 		const ordered: typeof matching = [];
@@ -256,7 +302,52 @@ export const getById = query({
 });
 
 /**
- * Record an exercise swap for a session (max 2 swaps enforced).
+ * An exercise that runs on its own, outside a session: Sit with this opened from Today
+ * (Three breaths, `reset`). Looked up by its stable internal title, since ids differ per
+ * deployment; null unless the row is active. Only the titles Today offers are accepted,
+ * so the catalogue can't be listed through it. Free, as `getById` is.
+ */
+export const getStandalone = query({
+	args: { title: v.literal("reset") },
+	handler: async (ctx, args) => {
+		await requireAuth(ctx);
+		const exercise = await ctx.db
+			.query("exercises")
+			.withIndex("by_title", (q) => q.eq("title", args.title))
+			.unique();
+		return exercise?.active ? exercise : null;
+	},
+	returns: v.union(exerciseDocValidator, v.null()),
+});
+
+/**
+ * Three breaths from Today ran to its end: the same streak credit as a tended breathing
+ * twig (`paths.completeStep`), through the same helper, so it's a day showed up and can
+ * unlock "sat-with-it" once. Several the same day are still one day and one award; no
+ * sparks beyond the achievement's. Nothing for a missing or inactive exercise.
+ */
+export const completeStandalone = mutation({
+	args: { title: v.literal("reset") },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		const exercise = await ctx.db
+			.query("exercises")
+			.withIndex("by_title", (q) => q.eq("title", args.title))
+			.unique();
+		if (!exercise?.active) {
+			return null;
+		}
+		await recordActivity(ctx, {
+			actionType: "sit_with_this",
+			emotionalProfileId: profile._id,
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Record an exercise swap for a session (max EXERCISE_MAX_SWAPS swaps enforced).
  */
 export const recordSwap = mutation({
 	args: {
@@ -267,8 +358,11 @@ export const recordSwap = mutation({
 		const { session } = await requireSessionOwnership(ctx, args.sessionId);
 
 		const currentSwaps = session.swappedExerciseIds ?? [];
-		if (currentSwaps.length >= 2) {
-			throw new Error("Maximum swaps reached");
+		if (currentSwaps.length >= EXERCISE_MAX_SWAPS) {
+			throw new ConvexError({
+				code: ERROR_CODES.swapLimitReached,
+				message: "Maximum swaps reached",
+			});
 		}
 
 		const { resetId, nextBestId } = await computeSwapOptions(ctx, session);
@@ -276,7 +370,10 @@ export const recordSwap = mutation({
 			[resetId, nextBestId].filter((id): id is Id<"exercises"> => id !== null)
 		);
 		if (!allowed.has(args.newExerciseId)) {
-			throw new Error("Exercise not allowed for this session");
+			throw new ConvexError({
+				code: ERROR_CODES.swapNotAllowed,
+				message: "Exercise not allowed for this session",
+			});
 		}
 
 		const updatedSwaps = [...currentSwaps, args.newExerciseId];

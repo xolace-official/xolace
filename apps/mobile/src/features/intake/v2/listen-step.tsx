@@ -1,5 +1,3 @@
-// `listen`: Flux listening while the user talks, their words showing as they come. Stopping
-// goes to `interpret`; a denied or missing mic goes to `type` (#709).
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { ScrollView, View } from "react-native";

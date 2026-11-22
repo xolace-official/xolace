@@ -4,8 +4,6 @@ import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 
 type TokenCache = NonNullable<typeof clerkTokenCache>;
 
-/** Diagnostic wrapper around Clerk's token cache: Sentry breadcrumbs (`clerk.tokenCache`) for
- * the prod cold-start logout hunt. */
 function breadcrumb(message: string, data?: Record<string, unknown>) {
 	Sentry.addBreadcrumb({
 		category: "clerk.tokenCache",
@@ -15,8 +13,6 @@ function breadcrumb(message: string, data?: Record<string, unknown>) {
 	});
 }
 
-/** A miss only matters for a key previously stored, so a marker (key name only) is written on
- * save and dropped on clear. */
 const SAVED_MARKER_PREFIX = "clerk.tokenCache.saved:";
 
 const markerKey = (key: string) => `${SAVED_MARKER_PREFIX}${key}`;
@@ -24,7 +20,6 @@ const wasEverSaved = (key: string) => {
 	try {
 		return zustandJSONStorage.getItem(markerKey(key)) !== null;
 	} catch {
-		// No marker readable ⇒ treat the miss as expected rather than alerting.
 		return false;
 	}
 };
@@ -53,8 +48,6 @@ function wrap(cache: TokenCache): TokenCache {
 					key,
 					length: token?.length ?? 0,
 				});
-				// A cold start reading nothing for a previously written key is the prod logout
-				// failure mode.
 				if (!token && wasEverSaved(key)) {
 					Sentry.captureMessage(
 						`Clerk tokenCache MISS for "${key}" (previously saved)`,

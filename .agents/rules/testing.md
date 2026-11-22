@@ -4,22 +4,29 @@
 
 | Tier | Command | Covers | Runs |
 |---|---|---|---|
-| Changed only | `bun run check:changed` | Biome on changed files; `check-types` + `lint` for affected packages and their dependents; tests sitting next to changed files | locally, while iterating |
+| Changed only | `bun run check:changed` | Biome on changed files; `check-types` for affected packages and their dependents (incremental); package-wide `lint` only where Biome on changed files can't cover it; tests sitting next to changed files | locally, while iterating |
 | Unit + Convex | `bun run test` (`turbo run test --affected` in CI) | convex-test (edge-runtime), pure TS logic, RN logic with mocks, the security suite. Offline | every PR |
 | Local Convex integration | `bun run test:local` | a local backend; refuses to run against cloud deployments | local, nightly |
 | Web / admin E2E | `bun run test:e2e -F @xolace/web` · `-F @xolace/admin` | Playwright + `@clerk/testing` against the E2E deployment, reset and seeded first | PRs touching web, admin or backend |
 | Mobile E2E (blocking) | `.argent/flows` | the E2E simulator build | PRs touching mobile or backend (EAS Workflow) |
 | Mobile E2E (exploratory) | argent agent run from the PR title/body/diff | same build; reports, never blocks | same PRs |
-| Live evals | `test:evals:*` | model behavior (intensity, talk) | PRs touching `convex/ai/**` |
+| Live evals | `test:evals:*` | model behavior (intensity, talk, letters check) | PRs touching what each gate's workflow lists (`intensity-gate.yml`, `talk-gate.yml`, `letters-gate.yml`) |
 
 Tiers beyond "Changed only" and "Unit" land with Phase 1E/2/3; until a command
 exists, say in the PR that the tier was not run.
 
 ## How `check:changed` decides
 
-- Base: merge-base of `HEAD` with `main` (`--base <ref>` to override). Files =
-  committed since base + staged + unstaged + untracked.
+- Base: merge-base of `HEAD` with `origin/dev` (else `dev`, else `main`;
+  `--base <ref>` to override). Files = committed since base + staged + unstaged
+  + untracked.
 - Inert (no typecheck, no tests): `*.md`, `.agents/**`, root `docs/**`.
+- Typecheck widens to dependents (`--filter=...<pkg>`): a backend change typechecks
+  every client, which guards the Convex contract.
+- Package-wide `lint` runs only for a changed package whose lint is more than
+  `biome check .` (backend's eslint) or whose own `package.json`/`biome.json`
+  changed; the root `biome.json` lints every package. Otherwise Biome on the
+  changed files is the lint; CI runs `biome check .` everywhere.
 - A root config change (`package.json`, `bun.lock`, `turbo.json`, `tsconfig.json`,
   `bunfig.toml`) widens to every package, as CI does.
 - Tests: `foo.ts` → `foo.test.ts` / `foo.spec.tsx` / ... beside it, plus changed test

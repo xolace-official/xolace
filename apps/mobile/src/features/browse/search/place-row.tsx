@@ -1,17 +1,14 @@
-/** A Hubs & topics search result (#550), laid out like a TrackRow. Neither is Plus-gated. */
-
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Pressable, View } from "react-native";
-import { AppText } from "@/components/shared/app-text";
+import { MediaRow } from "@/components/shared/media-row";
 import { playSoftPress } from "@/lib/haptics";
 import { imageSource } from "@/lib/image-source";
 
 type Place = FunctionReturnType<typeof api.library.search.searchPlaces>[number];
 
-const THUMB = 56;
+const COVER = { height: "100%", width: "100%" } as const;
 const KIND_LABEL = { hub: "Lantern hub", topic: "Topic" } as const;
 
 export function PlaceRow({
@@ -22,50 +19,32 @@ export function PlaceRow({
 	onOpen?: () => void;
 }) {
 	const open = () => {
-		playSoftPress();
 		onOpen?.();
 		if (place.kind === "hub") {
 			router.push({
 				params: { slug: place.slug },
-				pathname: "/browse/library/hub/[slug]",
+				pathname: "/explore/library/hub/[slug]",
 			});
 		} else {
 			router.push({
 				params: { slug: place.slug },
-				pathname: "/browse/topic/[slug]",
+				pathname: "/explore/topic/[slug]",
 			});
 		}
 	};
 
 	return (
-		<Pressable
-			accessibilityLabel={`${place.title}, ${KIND_LABEL[place.kind]}`}
-			accessibilityRole="button"
-			className="flex-row items-center gap-3 pl-4 active:opacity-60"
+		<MediaRow
+			className="mx-gutter"
+			cover={
+				place.imageUrl ? (
+					<Image source={imageSource(place.imageUrl)} style={COVER} />
+				) : null
+			}
+			haptic={playSoftPress}
 			onPress={open}
-		>
-			<View
-				className="overflow-hidden rounded-lg bg-surface-tertiary"
-				style={{ height: THUMB, width: THUMB }}
-			>
-				{place.imageUrl && (
-					<Image
-						source={imageSource(place.imageUrl)}
-						style={{ height: THUMB, width: THUMB }}
-					/>
-				)}
-			</View>
-			<View
-				className="flex-1 justify-center border-border/65 border-b py-3 pr-4"
-				style={{ minHeight: THUMB + 12 }}
-			>
-				<AppText className="font-medium text-[16px]" numberOfLines={1}>
-					{place.title}
-				</AppText>
-				<AppText className="mt-0.5 text-[13px] text-muted" numberOfLines={1}>
-					{KIND_LABEL[place.kind]}
-				</AppText>
-			</View>
-		</Pressable>
+			sub={KIND_LABEL[place.kind]}
+			title={place.title}
+		/>
 	);
 }

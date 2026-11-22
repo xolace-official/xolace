@@ -1,0 +1,68 @@
+import type { SessionErrorCode } from "@xolace/backend/shared";
+export type ReflectionStateName =
+	| "idle"
+	| "typing"
+	| "typing-nudge"
+	| "processing"
+	| "mirror"
+	| "clarify"
+	| "gave-up"
+	| "path-selection"
+	| "escalation"
+	| "error";
+
+export type EntryType = "typed" | "scaffold" | "hybrid" | "voice";
+
+export type FeedbackType = "not_quite" | "say_more";
+
+export type MissReason =
+	| "wrong_emotion"
+	| "too_surface_level"
+	| "close_but_not_quite"
+	| "missed_the_main_thing";
+
+export type ReflectionAction =
+	| { type: "TAP_INPUT" }
+	| { type: "DISMISS_TYPING" }
+	| { type: "DISCARD_DRAFT" }
+	| { type: "TEXT_CHANGE"; text: string }
+	| { type: "TOGGLE_TEXTURE"; word: string }
+	| { type: "SCAFFOLD_SUBMIT" }
+	| { type: "PAUSE_TIMEOUT" }
+	| { type: "RESUME_TYPING" }
+	| { type: "SUBMIT" }
+	| { type: "THATS_IT" }
+	| { type: "NOT_QUITE" }
+	| { type: "SAY_MORE" }
+	| { type: "MISS_REASON"; reason: MissReason }
+	| { type: "CLARIFY_TEXT_CHANGE"; text: string }
+	| { type: "RESET" }
+	| { type: "ACCOUNT_SWITCHED"; entryText: string }
+	| { type: "SESSION_ERROR"; message: string; code?: SessionErrorCode }
+	| { type: "SESSION_RESUMED"; screen: ReflectionStateName }
+	| { type: "VOICE_START" }
+	| { type: "VOICE_TRANSCRIPT"; text: string }
+	| { type: "VOICE_APPEND"; text: string }
+	| { type: "BACK_TO_MIRROR" }
+	| { type: "CLEAR_TEXTURES" };
+
+/** When writing started and how long the typing nudge held it, for the submit's telemetry. */
+export type TypingClock = {
+	startedAt: number | null;
+	froze: boolean;
+	frozeAt: number | null;
+	frozeMs: number | undefined;
+};
+
+export interface ReflectionState {
+	clarifyText: string;
+	entryText: string;
+	entryType: EntryType;
+	errorCode: SessionErrorCode | null;
+	errorMessage: string;
+	lastFeedbackType: FeedbackType | null;
+	missReason: MissReason | null;
+	screen: ReflectionStateName;
+	selectedTextures: string[];
+	typing: TypingClock;
+}

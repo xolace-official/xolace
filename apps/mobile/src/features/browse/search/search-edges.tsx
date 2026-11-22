@@ -1,4 +1,3 @@
-/** Browse search's edges (#552): the Need someone now? row and the no-results way-outs. */
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
@@ -50,8 +49,8 @@ export function NeedSomeoneRow() {
 }
 
 const WAY_OUTS = [
-	{ href: "/browse/topics", label: "Browse topics" },
-	{ href: "/browse/library/subjects", label: "Lantern subjects" },
+	{ href: "/explore/topics", label: "Browse topics" },
+	{ href: "/explore/library/subjects", label: "Lantern subjects" },
 ] as const;
 
 export function NoResults({ query }: { query: string }) {

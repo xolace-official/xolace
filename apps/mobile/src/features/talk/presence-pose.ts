@@ -1,7 +1,5 @@
-// How the companion holds itself for what the talk is doing.
-
+import { NEUTRAL, type Pose, PRESETS } from "@/components/xolace-face/pose";
 import type { Presence } from "@/features/talk/use-talk";
-import { NEUTRAL, type Pose, PRESETS } from "@/features/xolace-face/pose";
 
 const MIC_OFF: Pose = { ...NEUTRAL, eyeOpen: 0.7 };
 

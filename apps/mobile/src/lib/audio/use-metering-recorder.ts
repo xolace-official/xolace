@@ -9,31 +9,22 @@ import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { meteringLevel } from "@/lib/audio/metering-level";
 import { AUDIO_SESSION, yieldAudioFocus } from "@/lib/audio/session";
 
-// 50ms polling — smooth enough for per-frame particle animation
 const METERING_POLL_MS = 50;
 
 export type UseMeteringRecorderReturn = {
-	// Resolves true only when recording actually began (permission granted and
-	// the recorder started); false on denial or any setup failure.
 	startRecording: () => Promise<boolean>;
 	stopRecording: () => Promise<string | null>;
-	// SharedValue so animations read it on the UI thread. 0 = silence, 1 = loud.
 	metering: SharedValue<number>;
-	// Read on demand: the take's length is not React state, so a recording
-	// doesn't re-render its screen on every poll.
 	getDurationMs: () => number;
+	getUri: () => string | null;
 };
 
-// Lower bitRate for longer takes that must still fit Convex's 1MB v.bytes().
 export function useMeteringRecorder(
 	bitRate = 48_000
 ): UseMeteringRecorderReturn {
 	const meteringValue = useSharedValue(0);
 	const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-	// Mono 48kbps AAC: voice-quality for Scribe STT while keeping a 2-minute
-	// recording (~720KB) under Convex's 1MB v.bytes() limit. HIGH_QUALITY
-	// (stereo 128kbps) would exceed the limit at ~60 seconds.
 	const recorder = useAudioRecorder({
 		...RecordingPresets.HIGH_QUALITY,
 		bitRate,
@@ -66,13 +57,10 @@ export function useMeteringRecorder(
 				return false;
 			}
 
-			// Recording sets its own session, so it silences any player itself.
 			yieldAudioFocus();
 			await setAudioModeAsync({ ...AUDIO_SESSION, allowsRecording: true });
 			await recorder.prepareToRecordAsync();
 			recorder.record();
-			// Straight into the SharedValue, never React state: the level changes
-			// on every poll and only UI-thread animations read it.
 			stopPolling();
 			pollRef.current = setInterval(() => {
 				meteringValue.set(meteringLevel(recorder.getStatus().metering));
@@ -98,6 +86,7 @@ export function useMeteringRecorder(
 
 	return {
 		getDurationMs: () => recorder.getStatus().durationMillis,
+		getUri: () => recorder.uri ?? null,
 		metering: meteringValue,
 		startRecording,
 		stopRecording,

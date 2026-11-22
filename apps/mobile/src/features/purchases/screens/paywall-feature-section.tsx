@@ -9,7 +9,6 @@ type Props = {
 	children: ReactElement<{ id: PaywallFeatureId }>[];
 };
 
-/** One titled group of feature rows inside the paywall. */
 export function PaywallFeatureSection({ title, children }: Props) {
 	return (
 		<View className="gap-3">

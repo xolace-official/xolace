@@ -1,0 +1,1533 @@
+import { type Infer, v } from "convex/values";
+import { internal } from "../../_generated/api";
+import type { Doc, Id } from "../../_generated/dataModel";
+import {
+	type ActionCtx,
+	internalAction,
+	internalMutation,
+	internalQuery,
+	type QueryCtx,
+} from "../../_generated/server";
+import { checkWordsSafety } from "../../ai/intake/read";
+import type { TalkPeak } from "../../ai/safeguard";
+import { writeReply } from "../../ai/telegram/reply";
+import type {
+	ReplyCard,
+	ReplyTrigger,
+	ReplyTurn,
+	TapAnswer,
+} from "../../ai/telegram/replyPrompt";
+import { raiseEscalation } from "../../escalation/events";
+import {
+	REFLECTION_MAX_LENGTH,
+	resolveCardCore,
+} from "../../followUps/resolve";
+import {
+	type CrisisContacts,
+	crisisContactsFor,
+	IASP_DIRECTORY_URL,
+	type Resource,
+} from "../../lib/crisisResources";
+import { hasPremium } from "../../lib/premium";
+import {
+	domainValidator,
+	reachValidator,
+	triggerTypeValidator,
+} from "../../lib/validators";
+import { localDayKey } from "../../streaks/activityLog";
+import { profileTimezone } from "../../streaks/state";
+import { talkPreload } from "../../talk/remember";
+import { captureOutreach, planOf } from "../analytics";
+import {
+	ESCALATION_HOLD_MS,
+	escalatedRecently,
+	openEscalationCard,
+	telegramCrisisSince,
+} from "../router";
+import {
+	type BurstLevel,
+	burstLevelValidator,
+	inboundKindValidator,
+	pendingBurstValidator,
+} from "../validators";
+import { appLink } from "./appLinks";
+import {
+	botApi,
+	FORBIDDEN,
+	SECOND_MS,
+	TelegramApiError,
+	TOO_MANY_REQUESTS,
+} from "./botApi";
+import {
+	BURST_RECHECK_MS,
+	BURST_WAIT_MS,
+	DAILY_REPLY_CAP,
+	SCREEN_HOLD_MS,
+} from "./caps";
+import { cardOf, isCardOpen, type Keyboard, openCheckInsOf } from "./checkIn";
+import {
+	ANSWER_BUTTONS,
+	CAP_REPLY,
+	CAP_UPSELL,
+	crisisReply,
+	FIND_A_HELPLINE_BUTTON,
+	GET_PLUS_BUTTON,
+	MORE_SUPPORT_BUTTON,
+	OPEN_XOLACE_BUTTON,
+	REPLY_FAILED,
+	SUPPORT_RESOURCES_BUTTON,
+} from "./copy";
+import { identitiesOf, isLive } from "./lifecycle";
+
+/**
+ * AI replies on Telegram (#770): to an answer tap, and to free text from a
+ * linked chat (active or paused). Every text goes through the safeguard
+ * first. The reply is single-turn, on Talk's model and memory preload, read
+ * only: nothing is written to sessions, memory or Understanding. All this
+ * keeps is the chat's last few turns (24 h at most) and, after a Lighter, the
+ * next text as that card's "what helped".
+ *
+ * Caps and bursts (#771): each reply takes one of the day's slots (Plus 50,
+ * free 5, on the user's local day), and past the cap gets a fixed line
+ * instead. Texts are screened as they arrive, then wait out a burst: one
+ * reply, 6 s after the last, answers them all.
+ */
+
+/** After a Lighter, how long the next text counts as what helped. */
+export const REFLECTION_WINDOW_MS = 30 * 60 * 1000;
+/** The turns a reply sees, each way together. */
+const TURNS_KEPT = 6;
+const TURNS_TTL_MS = 24 * 60 * 60 * 1000;
+/** A turn is kept to its opening: enough for context. */
+const TURN_MAX_CHARS = 500;
+/** What the model and the safeguard read of one text. */
+export const TEXT_MAX_CHARS = REFLECTION_MAX_LENGTH;
+/** A burst keeps its latest texts, so a flood can't grow the row. */
+export const BURST_MAX_TEXTS = 10;
+
+const tapAnswerValidator = v.union(
+	v.literal("lighter"),
+	v.literal("still_here"),
+	v.literal("heavier")
+);
+
+/** What a claimed update leaves for a reply, decided in its transaction. */
+export const replyJobValidator = v.object({
+	chatId: v.string(),
+	/**
+	 * When its update was claimed: a wipe or crisis after it overtakes the
+	 * reply, though it lands before the reply starts.
+	 */
+	claimedAt: v.optional(v.number()),
+	identityId: v.id("channel_identities"),
+	/**
+	 * The link this reply is for. A relink reuses the chat's row (another
+	 * account, even), so the row's id alone can't tell an old link from a new.
+	 */
+	linkedAt: v.number(),
+	trigger: v.union(
+		v.object({
+			answer: tapAnswerValidator,
+			cardId: v.id("follow_up_cards"),
+			kind: v.literal("tap"),
+		}),
+		v.object({
+			/** The update it came in on, for a crisis's escalation event (#772). */
+			inboundEventId: v.optional(v.id("inbound_events")),
+			kind: v.literal("text"),
+			/** When the update was claimed: a burst waits from here (#771). */
+			receivedAt: v.optional(v.number()),
+			/** Set when this is the first text inside a Lighter's window. */
+			reflectionCardId: v.optional(v.id("follow_up_cards")),
+			text: v.string(),
+		})
+	),
+});
+export type ReplyJob = Infer<typeof replyJobValidator>;
+
+// ---------------------------------------------------------------------------
+// Context, read only
+// ---------------------------------------------------------------------------
+
+const turnValidator = v.object({
+	role: v.union(v.literal("person"), v.literal("xolace")),
+	text: v.string(),
+});
+
+const contextValidator = v.object({
+	card: v.union(
+		v.null(),
+		v.object({
+			answer: v.optional(tapAnswerValidator),
+			domain: v.optional(domainValidator),
+			text: v.string(),
+		})
+	),
+	memory: v.string(),
+	reach: reachValidator,
+	/** A crisis came in on Telegram in the last 72 h (#772). */
+	recentCrisis: v.boolean(),
+	turns: v.array(turnValidator),
+});
+
+/** The open check-in's card in this chat, else the profile's latest card. */
+async function cardInView(
+	ctx: QueryCtx,
+	identity: Doc<"channel_identities">
+): Promise<Doc<"follow_up_cards"> | null> {
+	for (const delivery of await openCheckInsOf(ctx, identity.externalId)) {
+		const card = await cardOf(ctx, delivery);
+		if (
+			isCardOpen(card) &&
+			card?.emotionalProfileId === identity.emotionalProfileId
+		) {
+			return card;
+		}
+	}
+	return await ctx.db
+		.query("follow_up_cards")
+		.withIndex("by_profile_created", (q) =>
+			q.eq("emotionalProfileId", identity.emotionalProfileId)
+		)
+		.order("desc")
+		.first();
+}
+
+const isTapAnswer = (value: string | undefined): value is TapAnswer =>
+	value === "lighter" || value === "still_here" || value === "heavier";
+
+const asReplyCard = (card: Doc<"follow_up_cards">): ReplyCard => ({
+	text: card.cardText,
+	...(card.compoundingDomain && { domain: card.compoundingDomain }),
+	...(card.status === "resolved" &&
+		isTapAnswer(card.userResponse) && { answer: card.userResponse }),
+});
+
+/** The link a reply was claimed for, still live and not relinked since. */
+const isLinkOf = (
+	identity: Doc<"channel_identities"> | null,
+	linkedAt: number
+): identity is Doc<"channel_identities"> =>
+	identity !== null && isLive(identity) && identity.linkedAt === linkedAt;
+
+/**
+ * Nothing overtook a reply that began at `since`: no data wipe or account
+ * deletion cleared the chat (#773), and no crisis came in (#772), whose
+ * fixed reply an older one mustn't follow. Only then may it send or keep.
+ */
+const keptSince = (identity: Doc<"channel_identities">, since?: number) =>
+	since === undefined ||
+	[identity.historyClearedAt, identity.lastCrisisAt].every(
+		(at) => at === undefined || at < since
+	);
+
+/**
+ * Whether a reply may still go: its link is live and unchanged, and, given
+ * `since`, nothing was cleared from the chat after the reply began.
+ */
+export const isCurrentLink = internalQuery({
+	args: {
+		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+		since: v.optional(v.number()),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		return isLinkOf(identity, args.linkedAt) && keptSince(identity, args.since);
+	},
+	returns: v.boolean(),
+});
+
+/** A turn is context only while it's recent. */
+const recentTurns = (identity: Doc<"channel_identities">, now: number) =>
+	(identity.recentTurns ?? []).filter((t) => t.at > now - TURNS_TTL_MS);
+
+/** What a reply knows, or null once the link is no longer live. */
+export const replyContext = internalQuery({
+	args: {
+		cardId: v.optional(v.id("follow_up_cards")),
+		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+		/** The action's clock: a query never reads its own. */
+		now: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		const profile = await ctx.db.get(
+			"emotional_profiles",
+			identity.emotionalProfileId
+		);
+		if (!profile) {
+			return null;
+		}
+		const tapped = args.cardId
+			? await ctx.db.get("follow_up_cards", args.cardId)
+			: null;
+		const card =
+			tapped?.emotionalProfileId === profile._id
+				? tapped
+				: await cardInView(ctx, identity);
+		const prefs = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+			.unique();
+		const { now } = args;
+		return {
+			card: card ? asReplyCard(card) : null,
+			memory: (await talkPreload(ctx, profile, now)).talkMemory,
+			reach: prefs?.notifications?.reach ?? "warm",
+			recentCrisis: await telegramCrisisSince(
+				ctx,
+				profile._id,
+				now - ESCALATION_HOLD_MS
+			),
+			turns: recentTurns(identity, now).map(({ role, text }) => ({
+				role,
+				text,
+			})),
+		};
+	},
+	returns: v.union(v.null(), contextValidator),
+});
+
+// ---------------------------------------------------------------------------
+// The two writes: what helped, and the recent turns
+// ---------------------------------------------------------------------------
+
+/**
+ * The first text inside a Lighter's window, with a safe safeguard result,
+ * saved as that card's "what helped" through the shared core, never shared.
+ * A reflection already written (in the app) is left alone.
+ */
+export const saveReflection = internalMutation({
+	args: {
+		cardId: v.id("follow_up_cards"),
+		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+		/** When the text's handling began; a wipe after it keeps nothing. */
+		since: v.optional(v.number()),
+		text: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (
+			!(isLinkOf(identity, args.linkedAt) && keptSince(identity, args.since))
+		) {
+			return null;
+		}
+		const existing = await ctx.db
+			.query("follow_up_responses")
+			.withIndex("by_card", (q) => q.eq("cardId", args.cardId))
+			.first();
+		if (existing?.reflectionText) {
+			return null;
+		}
+		await resolveCardCore(ctx, {
+			cardId: args.cardId,
+			details: {
+				...(existing?.heavierChoice && {
+					heavierChoice: existing.heavierChoice,
+				}),
+				reflectionText: args.text.slice(0, REFLECTION_MAX_LENGTH),
+				shareRequested: false,
+			},
+			profileId: identity.emotionalProfileId,
+			source: "telegram",
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Add a reply's turns to the chat's recent ones. */
+export const rememberTurns = internalMutation({
+	args: {
+		identityId: v.id("channel_identities"),
+		/** The AI reply that went out answered this, for analytics. */
+		inbound: v.optional(inboundKindValidator),
+		linkedAt: v.number(),
+		/** When the reply began; a wipe after it keeps nothing. */
+		since: v.optional(v.number()),
+		turns: v.array(turnValidator),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (
+			!(isLinkOf(identity, args.linkedAt) && keptSince(identity, args.since))
+		) {
+			return null;
+		}
+		if (args.inbound) {
+			const kind = args.inbound;
+			const profileId = identity.emotionalProfileId;
+			await captureOutreach(ctx, "telegram_inbound", profileId, async () => ({
+				kind,
+				outcome: "ai_reply",
+				plan: await planOf(ctx, profileId),
+			}));
+		}
+		const now = Date.now();
+		const added = args.turns.map((t) => ({
+			at: now,
+			role: t.role,
+			text: t.text.slice(0, TURN_MAX_CHARS),
+		}));
+		await ctx.db.patch("channel_identities", identity._id, {
+			recentTurns: [...recentTurns(identity, now), ...added].slice(-TURNS_KEPT),
+		});
+		// Nothing outlives its day, even if no message ever comes again.
+		await ctx.scheduler.runAfter(
+			TURNS_TTL_MS,
+			internal.outreach.telegram.reply.expireTurns,
+			{ identityId: identity._id }
+		);
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Drop a chat's turns older than a day. */
+export const expireTurns = internalMutation({
+	args: { identityId: v.id("channel_identities") },
+	handler: async (ctx, { identityId }) => {
+		const identity = await ctx.db.get("channel_identities", identityId);
+		if (!identity?.recentTurns) {
+			return null;
+		}
+		const kept = recentTurns(identity, Date.now());
+		if (kept.length < identity.recentTurns.length) {
+			await ctx.db.patch("channel_identities", identityId, {
+				recentTurns: kept.length > 0 ? kept : undefined,
+			});
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+// ---------------------------------------------------------------------------
+// The daily cap (#771)
+// ---------------------------------------------------------------------------
+
+/** Which line a reply past the cap gets. */
+const capLineValidator = v.union(
+	// Plus, not struggling.
+	v.literal("plain"),
+	// Struggling, on any plan: never sold to.
+	v.literal("support"),
+	// Free, not struggling.
+	v.literal("upsell")
+);
+type CapLine = Infer<typeof capLineValidator>;
+
+/** What a reply may do: go, or which cap line it gets instead. */
+const slotValidator = v.union(
+	/** A slot taken: `day` and the account say which count to give it back to. */
+	v.object({
+		day: v.string(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		kind: v.literal("reply"),
+	}),
+	v.object({ kind: v.literal("capped"), line: capLineValidator })
+);
+
+/** A Heavier answer counts as struggling this long after it was given. */
+const HEAVIER_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+/**
+ * Struggling, beyond this turn: the tapped or open card is elevated, acute
+ * or escalation-derived; the card in view was answered Heavier in the last
+ * 72 h; an escalation-derived card is open; or there was a crisis in the
+ * last 72 h. An old card, long closed, says nothing about today.
+ */
+async function struggling(
+	ctx: QueryCtx,
+	identity: Doc<"channel_identities">,
+	cardId: Id<"follow_up_cards"> | undefined,
+	now: number
+): Promise<boolean> {
+	const profileId = identity.emotionalProfileId;
+	const tapped = cardId ? await ctx.db.get("follow_up_cards", cardId) : null;
+	const card =
+		tapped?.emotionalProfileId === profileId
+			? tapped
+			: await cardInView(ctx, identity);
+	const current = card !== null && (card === tapped || isCardOpen(card));
+	if (
+		card &&
+		((current && (card.tier !== "standard" || card.escalationDerived)) ||
+			(card.userResponse === "heavier" &&
+				(card.resolvedAt ?? 0) > now - HEAVIER_WINDOW_MS))
+	) {
+		return true;
+	}
+	return (
+		(await openEscalationCard(ctx, profileId, now)) !== null ||
+		(await escalatedRecently(ctx, profileId, now))
+	);
+}
+
+/**
+ * Take one of today's replies, counted on the user's local day for the
+ * account linked now; or, at the cap, say which line goes instead. Null once
+ * the link is no longer the one the reply was for.
+ */
+export const takeReplySlot = internalMutation({
+	args: {
+		/** The tapped card, when a tap is being answered. */
+		cardId: v.optional(v.id("follow_up_cards")),
+		/** The safeguard said elevated this turn. */
+		elevated: v.boolean(),
+		/** This turn is a Heavier tap. */
+		heavier: v.boolean(),
+		identityId: v.id("channel_identities"),
+		/** What came in, for analytics. */
+		inbound: v.optional(inboundKindValidator),
+		linkedAt: v.number(),
+		/** Support resources ride with this turn (elevated, or no safeguard). */
+		support: v.optional(v.boolean()),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		const profile = await ctx.db.get(
+			"emotional_profiles",
+			identity.emotionalProfileId
+		);
+		if (!profile) {
+			return null;
+		}
+		const now = Date.now();
+		const day = localDayKey(now, await profileTimezone(ctx, profile));
+		const today = (row: Doc<"channel_identities">) => {
+			const counted = row.replyCount;
+			return counted?.day === day && counted.emotionalProfileId === profile._id
+				? counted.count
+				: 0;
+		};
+		// The cap is the account's: every chat it linked counts, not just this one.
+		let used = 0;
+		for (const row of await identitiesOf(ctx, profile._id, "telegram")) {
+			used += today(row);
+		}
+		const plus = await hasPremium(ctx, profile);
+		if (used < DAILY_REPLY_CAP[plus ? "plus" : "free"]) {
+			await ctx.db.patch("channel_identities", identity._id, {
+				replyCount: {
+					count: today(identity) + 1,
+					day,
+					emotionalProfileId: profile._id,
+				},
+			});
+			return {
+				day,
+				emotionalProfileId: profile._id,
+				kind: "reply" as const,
+			};
+		}
+		if (args.inbound) {
+			await captureOutreach(ctx, "telegram_inbound", profile._id, {
+				kind: args.inbound,
+				outcome: "cap_reached",
+				plan: plus ? "plus" : "free",
+			});
+		}
+		const isStruggling =
+			args.elevated ||
+			args.heavier ||
+			args.support === true ||
+			(await struggling(ctx, identity, args.cardId, now));
+		let line: CapLine = "upsell";
+		if (isStruggling) {
+			line = "support";
+		} else if (plus) {
+			line = "plain";
+		}
+		return { kind: "capped" as const, line };
+	},
+	returns: v.union(v.null(), slotValidator),
+});
+
+/**
+ * Give back a slot whose reply never went out: a failure isn't a reply. Only
+ * to the count that took it: not a later day's, nor another account's.
+ */
+export const returnReplySlot = internalMutation({
+	args: {
+		day: v.string(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		identityId: v.id("channel_identities"),
+	},
+	handler: async (ctx, { day, emotionalProfileId, identityId }) => {
+		const identity = await ctx.db.get("channel_identities", identityId);
+		const counted = identity?.replyCount;
+		if (
+			identity &&
+			counted &&
+			counted.day === day &&
+			counted.emotionalProfileId === emotionalProfileId &&
+			counted.count > 0
+		) {
+			await ctx.db.patch("channel_identities", identityId, {
+				replyCount: { ...counted, count: counted.count - 1 },
+			});
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+// ---------------------------------------------------------------------------
+// Bursts (#771)
+// ---------------------------------------------------------------------------
+
+const worse = (a: BurstLevel, b: BurstLevel): BurstLevel => {
+	const order: BurstLevel[] = ["none", "gentle", "elevated"];
+	return order.indexOf(a) >= order.indexOf(b) ? a : b;
+};
+
+/** One text fewer being screened: what to patch onto its chat. */
+function doneScreening(
+	identity: Doc<"channel_identities">
+): Pick<Doc<"channel_identities">, "screening"> {
+	const held = identity.screening;
+	return {
+		screening:
+			held && held.count > 1 && held.until > Date.now()
+				? { ...held, count: held.count - 1 }
+				: undefined,
+	};
+}
+
+/**
+ * A text is about to be screened: its chat's burst waits for it (up to
+ * `SCREEN_HOLD_MS`), so a slow check can't split one burst into two replies.
+ */
+export const noteScreening = internalMutation({
+	args: { identityId: v.id("channel_identities"), linkedAt: v.number() },
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		const now = Date.now();
+		const held = identity.screening;
+		const count = held && held.until > now ? held.count : 0;
+		await ctx.db.patch("channel_identities", identity._id, {
+			screening: { count: count + 1, until: now + SCREEN_HOLD_MS },
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** A screening that failed: its burst stops waiting for it. */
+export const endScreening = internalMutation({
+	args: { identityId: v.id("channel_identities") },
+	handler: async (ctx, { identityId }) => {
+		const identity = await ctx.db.get("channel_identities", identityId);
+		if (identity?.screening) {
+			await ctx.db.patch(
+				"channel_identities",
+				identityId,
+				doneScreening(identity)
+			);
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Add a screened text to the chat's burst, move its reply to 6 s after the
+ * latest text's arrival, and schedule that reply. An earlier text's reply
+ * finds itself moved and sends nothing; the last one answers the whole burst.
+ */
+export const queueText = internalMutation({
+	args: {
+		chatId: v.string(),
+		identityId: v.id("channel_identities"),
+		level: burstLevelValidator,
+		linkedAt: v.number(),
+		/** When the text arrived; its screening doesn't add to the wait. */
+		receivedAt: v.number(),
+		/** When its handling began: a wipe or crisis since drops it. */
+		since: v.optional(v.number()),
+		support: v.boolean(),
+		text: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		if (!keptSince(identity, args.since)) {
+			// Overtaken while it was screened: it joins no burst.
+			await ctx.db.patch(
+				"channel_identities",
+				identity._id,
+				doneScreening(identity)
+			);
+			return null;
+		}
+		const waiting =
+			identity.pendingBurst?.linkedAt === args.linkedAt
+				? identity.pendingBurst
+				: undefined;
+		// Texts are screened side by side, so one that arrived earlier can be
+		// queued after a later one: it never moves the reply sooner.
+		const dueAt = Math.max(
+			args.receivedAt + BURST_WAIT_MS,
+			waiting?.dueAt ?? 0
+		);
+		// It takes its place by arrival, so the burst reads as it was sent and
+		// a full one lets go of its earliest text. A burst queued before
+		// arrivals were kept has its texts ahead of any new one.
+		const held = waiting?.texts ?? [];
+		const heldArrivals =
+			waiting?.arrivals?.length === held.length
+				? waiting.arrivals
+				: held.map(() => 0);
+		const later = heldArrivals.findIndex((at) => at > args.receivedAt);
+		const place = later === -1 ? held.length : later;
+		const texts = [...held.slice(0, place), args.text, ...held.slice(place)];
+		const arrivals = [
+			...heldArrivals.slice(0, place),
+			args.receivedAt,
+			...heldArrivals.slice(place),
+		];
+		await ctx.db.patch("channel_identities", identity._id, {
+			...doneScreening(identity),
+			pendingBurst: {
+				arrivals: arrivals.slice(-BURST_MAX_TEXTS),
+				dueAt,
+				level: waiting ? worse(waiting.level, args.level) : args.level,
+				linkedAt: args.linkedAt,
+				support: (waiting?.support ?? false) || args.support,
+				texts: texts.slice(-BURST_MAX_TEXTS),
+			},
+		});
+		// Unmoved, the reply already scheduled for it still answers it.
+		if (dueAt !== waiting?.dueAt) {
+			await ctx.scheduler.runAt(
+				Math.max(dueAt, Date.now()),
+				internal.outreach.telegram.reply.answerBurst,
+				{
+					chatId: args.chatId,
+					dueAt,
+					identityId: identity._id,
+					linkedAt: args.linkedAt,
+				}
+			);
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Take the burst whose reply is due at `dueAt`, once: null when a later
+ * text moved it, it was already taken or dropped, or its link has changed;
+ * `waitUntil` while another text of the chat is still being screened.
+ */
+export const takeBurst = internalMutation({
+	args: {
+		dueAt: v.number(),
+		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		const burst = identity?.pendingBurst;
+		if (!(identity && burst) || burst.dueAt !== args.dueAt) {
+			return null;
+		}
+		const now = Date.now();
+		const held = identity.screening;
+		if (held && held.count > 0 && held.until > now) {
+			return { waitUntil: Math.min(held.until, now + BURST_RECHECK_MS) };
+		}
+		await ctx.db.patch("channel_identities", identity._id, {
+			pendingBurst: undefined,
+		});
+		return isLinkOf(identity, args.linkedAt) && burst.linkedAt === args.linkedAt
+			? { burst }
+			: null;
+	},
+	returns: v.union(
+		v.null(),
+		v.object({ burst: pendingBurstValidator }),
+		v.object({ waitUntil: v.number() })
+	),
+});
+
+/** The one reply to a burst, once it has waited 6 s after its last text. */
+export const answerBurst = internalAction({
+	args: {
+		chatId: v.string(),
+		dueAt: v.number(),
+		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+	},
+	handler: async (ctx, args) => {
+		// Before the burst is taken: a wipe from here on overtakes its reply.
+		const since = Date.now();
+		const taken = await ctx.runMutation(
+			internal.outreach.telegram.reply.takeBurst,
+			{
+				dueAt: args.dueAt,
+				identityId: args.identityId,
+				linkedAt: args.linkedAt,
+			}
+		);
+		if (!taken) {
+			return null;
+		}
+		const { burst, waitUntil } = taken;
+		// A text still being screened may join it: look again shortly.
+		if (!burst) {
+			if (waitUntil !== undefined) {
+				await ctx.scheduler.runAt(
+					waitUntil,
+					internal.outreach.telegram.reply.answerBurst,
+					args
+				);
+			}
+			return null;
+		}
+		const whole = burst.texts.join("\n");
+		// Past what fits, the newest words: they're what the reply answers.
+		const text = whole.slice(-TEXT_MAX_CHARS);
+		const trigger = { kind: "text" as const, text };
+		const job: ReplyJob = {
+			chatId: args.chatId,
+			// Its failure line, too, is overtaken by a wipe from here.
+			claimedAt: since,
+			identityId: args.identityId,
+			linkedAt: args.linkedAt,
+			trigger,
+		};
+		const progress: Progress = { sent: false, support: burst.support };
+		await guarded(ctx, job, progress, async () => {
+			await typing(args.chatId);
+			let { level, support } = burst;
+			// Each text was screened alone, and a crisis can be split across
+			// them: screen them together too. A lone text already was.
+			if (burst.texts.length > 1) {
+				const safety = await screen(whole);
+				if (safety.level === "crisis") {
+					progress.sent = true;
+					await answerCrisis(ctx, job, trigger, safety.peak);
+					return;
+				}
+				level = worse(level, safety.level);
+				support ||= safety.support;
+				progress.support = support;
+			}
+			await writeAndSend(
+				ctx,
+				job,
+				progress,
+				{
+					elevated: level === "elevated",
+					heavier: false,
+					open: false,
+					person: text,
+					support,
+					trigger: { kind: "text", level, text },
+				},
+				since
+			);
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+// ---------------------------------------------------------------------------
+// Crisis (#772)
+// ---------------------------------------------------------------------------
+
+/** What the safeguard said raised the crisis: categories only, never words. */
+const crisisTriggerValidator = v.object({
+	triggerConfidence: v.number(),
+	triggerEvidence: v.string(),
+	triggerType: triggerTypeValidator,
+});
+
+/** A crisis verdict that came without its trigger still escalates. */
+const UNKNOWN_TRIGGER = {
+	triggerConfidence: 0,
+	triggerEvidence: "Safeguard crisis verdict without a named trigger.",
+	triggerType: "implicit_risk_language",
+} as const;
+
+const crisisTriggerOf = (peak: TalkPeak | undefined) =>
+	peak
+		? {
+				triggerConfidence: peak.triggerConfidence,
+				triggerEvidence: peak.triggerEvidence,
+				triggerType: peak.triggerType,
+			}
+		: UNKNOWN_TRIGGER;
+
+/** What the crisis reply names, as the event records it. */
+function presented(contacts: CrisisContacts | null): Resource[] {
+	if (!contacts) {
+		return [
+			{
+				label: FIND_A_HELPLINE_BUTTON,
+				priority: 1,
+				source: "online_resource",
+				type: "url",
+				value: IASP_DIRECTORY_URL,
+			},
+		];
+	}
+	return [
+		{
+			label: "Emergency number",
+			priority: 1,
+			source: "crisis_line",
+			type: "phone",
+			value: contacts.emergencyNumber,
+		},
+		...contacts.helplines,
+	];
+}
+
+/**
+ * A crisis text, in one transaction: end any waiting burst, mark an open
+ * card escalation-derived, and write the escalation event (one per open
+ * card, else one per day), which starts the router's 72 h hold. Returns the
+ * chat's country for the reply, or null once the link is no longer the one
+ * the text came in on.
+ */
+export const recordCrisis = internalMutation({
+	args: {
+		identityId: v.id("channel_identities"),
+		inboundEventId: v.optional(v.id("inbound_events")),
+		linkedAt: v.number(),
+		trigger: crisisTriggerValidator,
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		// Any burst or reply already under way is overtaken: none follows this.
+		const now = Date.now();
+		await ctx.db.patch("channel_identities", identity._id, {
+			...doneScreening(identity),
+			lastCrisisAt: now,
+			pendingBurst: undefined,
+		});
+		// The 72 h hold is the account's, wherever the chat goes next.
+		await ctx.db.patch("emotional_profiles", identity.emotionalProfileId, {
+			lastTelegramCrisisAt: now,
+		});
+		const card = await cardInView(ctx, identity);
+		const openCard =
+			isCardOpen(card) &&
+			card?.emotionalProfileId === identity.emotionalProfileId
+				? card
+				: null;
+		if (openCard && !openCard.escalationDerived) {
+			await ctx.db.patch("follow_up_cards", openCard._id, {
+				escalationDerived: true,
+			});
+		}
+		await raiseEscalation(ctx, {
+			actionTaken: "crisis_line_presented",
+			emotionalProfileId: identity.emotionalProfileId,
+			resourcesPresented: presented(crisisContactsFor(identity.country)),
+			source: "telegram",
+			...args.trigger,
+			...(args.inboundEventId && { inboundEventId: args.inboundEventId }),
+			...(openCard && { followUpCardId: openCard._id }),
+		});
+		return { country: identity.country ?? null };
+	},
+	returns: v.union(
+		v.null(),
+		v.object({ country: v.union(v.null(), v.string()) })
+	),
+});
+
+/**
+ * The crisis reply's buttons: IASP's directory first when the country is
+ * unknown, then the app's crisis screen and Open Xolace.
+ */
+const crisisKeyboard = (contacts: CrisisContacts | null): Keyboard => [
+	...(contacts
+		? []
+		: [[{ text: FIND_A_HELPLINE_BUTTON, url: IASP_DIRECTORY_URL }]]),
+	[{ text: MORE_SUPPORT_BUTTON, url: appLink("support") }],
+	[{ text: OPEN_XOLACE_BUTTON, url: appLink("app") }],
+];
+
+/**
+ * Answer a crisis text at once with the fixed reply, never the model. The
+ * reply goes even if recording the crisis fails: the person comes first, and
+ * the recording is tried again after it, so the hold still starts.
+ */
+async function answerCrisis(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	trigger: Extract<ReplyJob["trigger"], { kind: "text" }>,
+	peak: TalkPeak | undefined
+): Promise<void> {
+	const record = {
+		identityId: job.identityId,
+		linkedAt: job.linkedAt,
+		trigger: crisisTriggerOf(peak),
+		...(trigger.inboundEventId && {
+			inboundEventId: trigger.inboundEventId,
+		}),
+	};
+	let country: string | null = null;
+	let recordFailed = false;
+	try {
+		const recorded = await ctx.runMutation(
+			internal.outreach.telegram.reply.recordCrisis,
+			record
+		);
+		if (!recorded) {
+			return;
+		}
+		country = recorded.country;
+	} catch (error) {
+		console.error("[telegram] recording a crisis failed", error);
+		recordFailed = true;
+	}
+	const { chatId, identityId, linkedAt } = job;
+	await sendCrisisReply(ctx, { chatId, country, identityId, linkedAt }, 1);
+	if (recordFailed) {
+		// Scheduled, it commits once; nothing of the failed one did.
+		await ctx.scheduler.runAfter(
+			0,
+			internal.outreach.telegram.reply.recordCrisis,
+			record
+		);
+	}
+}
+
+/** Tries at a crisis reply Telegram didn't take, the first among them. */
+const CRISIS_SEND_ATTEMPTS = 3;
+/** The wait before trying a passing failure again, times the tries so far. */
+const CRISIS_RETRY_MS = 2 * SECOND_MS;
+/** Telegram's own server errors, which may pass. */
+const SERVER_ERROR = 500;
+
+const crisisSendValidator = v.object({
+	chatId: v.string(),
+	/** The chat's country when the crisis was recorded; null if unknown. */
+	country: v.union(v.null(), v.string()),
+	identityId: v.id("channel_identities"),
+	linkedAt: v.number(),
+});
+type CrisisSend = Infer<typeof crisisSendValidator>;
+
+/**
+ * How long to wait before trying a failed crisis reply again, or null when
+ * another try wouldn't help: out of tries, or a refusal that would come
+ * again (a 4xx other than a rate limit).
+ */
+function crisisRetryMs(error: unknown, attempt: number): number | null {
+	if (attempt >= CRISIS_SEND_ATTEMPTS) {
+		return null;
+	}
+	if (!(error instanceof TelegramApiError)) {
+		// No answer at all, or a check before the send failed: it may pass.
+		return CRISIS_RETRY_MS * attempt;
+	}
+	if (error.errorCode === TOO_MANY_REQUESTS) {
+		return (error.retryAfter ?? 1) * SECOND_MS;
+	}
+	if (error.errorCode === undefined || error.errorCode >= SERVER_ERROR) {
+		return CRISIS_RETRY_MS * attempt;
+	}
+	return null;
+}
+
+/**
+ * Send the crisis reply, and if Telegram didn't take it for a reason that
+ * may pass, try again later, a few times at most. Each try checks the link
+ * again; a wipe never stops it (it's kept), and nothing sent is sent again.
+ */
+async function sendCrisisReply(
+	ctx: ActionCtx,
+	crisis: CrisisSend,
+	attempt: number
+): Promise<void> {
+	const contacts = crisisContactsFor(crisis.country);
+	let outcome: SendOutcome;
+	try {
+		// The person comes first: a wipe racing it never takes these numbers away.
+		outcome = await trySend(
+			ctx,
+			crisis,
+			crisisReply(contacts),
+			crisisKeyboard(contacts),
+			undefined,
+			{ keep: true }
+		);
+	} catch (error) {
+		// Thrown before Telegram was asked: nothing went out.
+		outcome = { error };
+	}
+	if (typeof outcome !== "object") {
+		return;
+	}
+	const retryMs = crisisRetryMs(outcome.error, attempt);
+	if (retryMs === null) {
+		console.error(
+			`[telegram] crisis reply not sent after ${attempt} tries`,
+			outcome.error
+		);
+		return;
+	}
+	console.warn("[telegram] crisis reply not sent; trying again", outcome.error);
+	await ctx.scheduler.runAfter(
+		retryMs,
+		internal.outreach.telegram.reply.retryCrisisReply,
+		{ attempt: attempt + 1, crisis }
+	);
+}
+
+/** Another try at a crisis reply Telegram didn't take. */
+export const retryCrisisReply = internalAction({
+	args: { attempt: v.number(), crisis: crisisSendValidator },
+	handler: async (ctx, { attempt, crisis }) => {
+		await sendCrisisReply(ctx, crisis, attempt);
+		return null;
+	},
+	returns: v.null(),
+});
+
+// ---------------------------------------------------------------------------
+// Replying
+// ---------------------------------------------------------------------------
+
+function keyboardOf(buttons: {
+	open: boolean;
+	plus?: boolean;
+	support: boolean;
+}): Keyboard {
+	const rows: Keyboard = [];
+	if (buttons.plus) {
+		rows.push([{ text: GET_PLUS_BUTTON, url: appLink("plus") }]);
+	}
+	if (buttons.support) {
+		rows.push([{ text: SUPPORT_RESOURCES_BUTTON, url: appLink("support") }]);
+	}
+	if (buttons.open) {
+		rows.push([{ text: OPEN_XOLACE_BUTTON, url: appLink("app") }]);
+	}
+	return rows;
+}
+
+/**
+ * Send one reply, `protect_content` always, and only while the link it was
+ * claimed for is live and unchanged: a `/stop`, a block or a relink to
+ * another account can land while the model writes. A 403 ends that link.
+ * Whether it went; any other failure is logged.
+ */
+async function sendReply(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	text: string,
+	keyboard: Keyboard,
+	/** When the reply began: a wipe after it means it carries old context. */
+	since?: number
+): Promise<boolean> {
+	const outcome = await trySend(ctx, job, text, keyboard, since);
+	if (typeof outcome === "object") {
+		console.error("Telegram reply failed", outcome.error);
+		return false;
+	}
+	return outcome === "sent";
+}
+
+/**
+ * What became of a send: it went; it may not go (the link ended or changed,
+ * a wipe overtook it, or a 403 ended the link); or Telegram didn't take it,
+ * for this reason.
+ */
+type SendOutcome = "sent" | "not_sent" | { error: unknown };
+
+/** `sendReply`, telling a failure that may pass from one that won't. */
+async function trySend(
+	ctx: ActionCtx,
+	job: Pick<ReplyJob, "chatId" | "identityId" | "linkedAt">,
+	text: string,
+	keyboard: Keyboard,
+	/** When the reply began: a wipe after it means it carries old context. */
+	since?: number,
+	/**
+	 * A crisis reply: never deleted by a wipe it raced (#772). Account deletion
+	 * still removes it, as it does every message the bot sent.
+	 */
+	{ keep = false }: { keep?: boolean } = {}
+): Promise<SendOutcome> {
+	const { chatId, identityId, linkedAt } = job;
+	const current = await ctx.runQuery(
+		internal.outreach.telegram.reply.isCurrentLink,
+		{ identityId, linkedAt, ...(since !== undefined && { since }) }
+	);
+	if (!current) {
+		return "not_sent";
+	}
+	// From when the reply began, not just the send: a wipe in between counts.
+	const sentSince = since ?? Date.now();
+	let messageId: string;
+	try {
+		const message = await botApi.sendMessage({
+			chat_id: chatId,
+			protect_content: true,
+			text,
+			...(keyboard.length > 0 && {
+				reply_markup: { inline_keyboard: keyboard },
+			}),
+		});
+		messageId = String(message.message_id);
+	} catch (error) {
+		if (error instanceof TelegramApiError && error.errorCode === FORBIDDEN) {
+			await ctx.runMutation(
+				internal.outreach.telegram.lifecycle.markUnreachable,
+				{ chatId, linkedAt }
+			);
+			return "not_sent";
+		}
+		return { error };
+	}
+	// It reached the person: a failure to note it doesn't undo that.
+	try {
+		await ctx.runMutation(internal.outreach.telegram.lifecycle.recordSent, {
+			chatId,
+			// A wipe spares a crisis reply; account deletion doesn't.
+			forLink: true,
+			messageId,
+			...(!keep && { sentSince }),
+		});
+	} catch (error) {
+		console.error("[telegram] noting a sent reply failed", error);
+	}
+	return "sent";
+}
+
+/** Shows "typing…" while the reply is written. A lost one is harmless. */
+async function typing(chatId: string): Promise<void> {
+	try {
+		await botApi.sendChatAction({ action: "typing", chat_id: chatId });
+	} catch {
+		// Nothing to do: the reply still goes.
+	}
+}
+
+/** The safeguard over a text: what it means for the reply. */
+async function screen(text: string) {
+	const verdict = await checkWordsSafety(text);
+	const safe = verdict.level === "none" || verdict.level === "gentle";
+	return {
+		// Only these, with both providers answering, let a text be kept.
+		keepable: safe && !verdict.unavailable,
+		level: verdict.level,
+		peak: verdict.peak,
+		// Elevated, or no safeguard at all: resources ride with the reply.
+		support: !safe || verdict.unavailable,
+	};
+}
+
+/**
+ * Handle a claimed tap or text. Runs after the claim commits, so it never
+ * throws (a retry would find the update claimed and send nothing): anything
+ * that fails before a message went out sends the fixed failure line instead,
+ * and nothing is ever sent twice. A tap is answered now; a text is screened
+ * now and joins the chat's burst, answered once it settles.
+ */
+export async function respond(ctx: ActionCtx, job: ReplyJob): Promise<void> {
+	const progress: Progress = { sent: false, support: false };
+	const { trigger } = job;
+	await guarded(ctx, job, progress, () =>
+		trigger.kind === "tap"
+			? replyToTap(ctx, job, trigger, progress)
+			: receiveText(ctx, job, trigger, progress)
+	);
+}
+
+/**
+ * How far a reply got: whether a message went out (or the text was handed
+ * to its burst), and whether Support resources are already owed (Heavier,
+ * elevated, no safeguard).
+ */
+type Progress = { sent: boolean; support: boolean };
+
+/** Run `work`; if it throws before anything went out, send the failure line. */
+async function guarded(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	progress: Progress,
+	work: () => Promise<void>
+): Promise<void> {
+	try {
+		await work();
+	} catch (error) {
+		console.error("[telegram] reply failed", error);
+		if (!progress.sent) {
+			await sendFailureLine(ctx, job, progress.support);
+		}
+	}
+}
+
+/**
+ * The failure line, with Open Xolace when the app link can be made, and
+ * Support resources when the reply owed them.
+ */
+async function sendFailureLine(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	support: boolean
+): Promise<void> {
+	let keyboard: Keyboard = [];
+	try {
+		keyboard = keyboardOf({ open: true, support });
+	} catch (error) {
+		console.error("[telegram] no app link for the failure line", error);
+	}
+	// A wipe since the claim overtakes the failure line as well.
+	await sendReply(ctx, job, REPLY_FAILED, keyboard, job.claimedAt);
+}
+
+async function replyToTap(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	trigger: Extract<ReplyJob["trigger"], { kind: "tap" }>,
+	progress: Progress
+): Promise<void> {
+	await typing(job.chatId);
+	// Heavier carries support and the way back to the app.
+	const heavier = trigger.answer === "heavier";
+	progress.support = heavier;
+	await writeAndSend(
+		ctx,
+		job,
+		progress,
+		{
+			cardId: trigger.cardId,
+			elevated: false,
+			heavier,
+			open: heavier,
+			person: `Tapped: ${ANSWER_BUTTONS[trigger.answer]}`,
+			support: heavier,
+			trigger: { answer: trigger.answer, kind: "tap" },
+		},
+		job.claimedAt
+	);
+}
+
+/**
+ * A text, on arrival: screened whole (only what is kept or shown is cut). A
+ * crisis is answered at once and ends any burst; anything else may be kept
+ * as what helped, then joins the burst.
+ */
+async function receiveText(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	trigger: Extract<ReplyJob["trigger"], { kind: "text" }>,
+	progress: Progress
+): Promise<void> {
+	const { chatId, identityId, linkedAt } = job;
+	// From the claim: a wipe between it and now overtakes this text too.
+	const since = job.claimedAt ?? Date.now();
+	// The chat's burst waits for this text from now, not once it's screened.
+	await ctx.runMutation(internal.outreach.telegram.reply.noteScreening, {
+		identityId,
+		linkedAt,
+	});
+	await typing(chatId);
+	let safety: Awaited<ReturnType<typeof screen>>;
+	try {
+		safety = await screen(trigger.text);
+	} catch (error) {
+		await ctx.runMutation(internal.outreach.telegram.reply.endScreening, {
+			identityId,
+		});
+		throw error;
+	}
+	progress.support = safety.support;
+	// Crisis has its own path (#772): the fixed reply, never the model.
+	if (safety.level === "crisis") {
+		progress.sent = true;
+		await answerCrisis(ctx, job, trigger, safety.peak);
+		return;
+	}
+	const text = trigger.text.slice(0, TEXT_MAX_CHARS);
+	if (trigger.reflectionCardId && safety.keepable) {
+		await ctx.runMutation(internal.outreach.telegram.reply.saveReflection, {
+			cardId: trigger.reflectionCardId,
+			identityId,
+			linkedAt,
+			since,
+			text,
+		});
+	}
+	await ctx.runMutation(internal.outreach.telegram.reply.queueText, {
+		chatId,
+		identityId,
+		level: safety.level,
+		linkedAt,
+		receivedAt: trigger.receivedAt ?? Date.now(),
+		since,
+		support: safety.support,
+		text,
+	});
+	// The burst's reply owns failures from here.
+	progress.sent = true;
+}
+
+/** One turn to answer: what the model hears, and what rides with it. */
+type Turn = {
+	cardId?: Id<"follow_up_cards">;
+	elevated: boolean;
+	heavier: boolean;
+	open: boolean;
+	person: string;
+	support: boolean;
+	trigger: ReplyTrigger;
+};
+
+/** The cap line a capped reply gets, and its buttons. */
+function capLine(line: CapLine) {
+	return {
+		keyboard: keyboardOf({
+			open: true,
+			plus: line === "upsell",
+			support: line === "support",
+		}),
+		text: line === "upsell" ? CAP_UPSELL : CAP_REPLY,
+	};
+}
+
+/**
+ * Take a slot, then write and send the reply, or the cap line past the cap.
+ * A slot whose reply doesn't reach the person is given back.
+ */
+async function writeAndSend(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	progress: Progress,
+	turn: Turn,
+	/** When the reply began, if earlier than now (a burst, before it was taken). */
+	began?: number
+): Promise<void> {
+	const { identityId, linkedAt } = job;
+	// Anything cleared from the chat after this, the reply may not send or keep.
+	const since = began ?? Date.now();
+	const send = async (text: string, keyboard: Keyboard, from?: number) => {
+		progress.sent = true;
+		return await sendReply(ctx, job, text, keyboard, from);
+	};
+	const slot = await ctx.runMutation(
+		internal.outreach.telegram.reply.takeReplySlot,
+		{
+			elevated: turn.elevated,
+			heavier: turn.heavier,
+			identityId,
+			inbound: turn.trigger.kind,
+			linkedAt,
+			support: turn.support,
+			...(turn.cardId && { cardId: turn.cardId }),
+		}
+	);
+	if (!slot) {
+		return;
+	}
+	if (slot.kind === "capped") {
+		const { keyboard, text } = capLine(slot.line);
+		// Overtaken by a wipe, even the cap line stays unsent.
+		await send(text, keyboard, since);
+		return;
+	}
+	let givenBack = false;
+	/** Once at most: a slot whose reply never reached the person. */
+	const giveBack = async () => {
+		if (givenBack) {
+			return;
+		}
+		givenBack = true;
+		await ctx.runMutation(internal.outreach.telegram.reply.returnReplySlot, {
+			day: slot.day,
+			emotionalProfileId: slot.emotionalProfileId,
+			identityId,
+		});
+	};
+
+	const { open, support } = turn;
+	let written: string | null;
+	let delivered: boolean;
+	// Anything thrown before Telegram took the reply gives the slot back;
+	// `sendReply` itself throws only before the send.
+	try {
+		const context = await ctx.runQuery(
+			internal.outreach.telegram.reply.replyContext,
+			{
+				identityId,
+				linkedAt,
+				now: Date.now(),
+				...(turn.cardId && { cardId: turn.cardId }),
+			}
+		);
+		if (!context) {
+			await giveBack();
+			return;
+		}
+		written = await writeReply({
+			card: context.card,
+			memory: context.memory,
+			reach: context.reach,
+			recentCrisis: context.recentCrisis,
+			resources: support,
+			trigger: turn.trigger,
+			turns: context.turns satisfies ReplyTurn[],
+		});
+		if (written === null) {
+			await giveBack();
+			await send(REPLY_FAILED, keyboardOf({ open: true, support }), since);
+			return;
+		}
+		delivered = await send(written, keyboardOf({ open, support }), since);
+	} catch (error) {
+		await giveBack();
+		throw error;
+	}
+	if (!delivered) {
+		await giveBack();
+		return;
+	}
+	await ctx.runMutation(internal.outreach.telegram.reply.rememberTurns, {
+		identityId,
+		inbound: turn.trigger.kind,
+		linkedAt,
+		since,
+		turns: [
+			{ role: "person", text: turn.person },
+			{ role: "xolace", text: written },
+		],
+	});
+}
+
+/** A tap's reflection window: Lighter opens one; any other answer none. */
+export const reflectionWindow = (
+	answer: TapAnswer,
+	cardId: Id<"follow_up_cards">,
+	now: number
+) =>
+	answer === "lighter"
+		? { cardId, until: now + REFLECTION_WINDOW_MS }
+		: undefined;

@@ -10,6 +10,7 @@ import {
 	flagStreamMessage,
 	sendStreamSystemMessage,
 } from "../../integrations/stream";
+import { CRISIS_RESOURCES_KIND } from "../../lib/shared";
 import {
 	chatModerationCategoryValidator,
 	conversationRoleValidator,
@@ -34,7 +35,7 @@ import {
 } from "./classify";
 
 /** The custom `kind` the client's `MessageSystem` override renders as a card. */
-export const CRISIS_RESOURCES_KIND = "crisis_resources";
+export { CRISIS_RESOURCES_KIND };
 
 /** Which resource set a level earns in a DM. `elevated` gets the support set —
  * the same threshold at which the reflect flow shows resources. */

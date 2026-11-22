@@ -5,9 +5,9 @@ docs site, all on **one Convex backend with Clerk auth**. bun 1.3.14 workspaces
 (isolated linker) + Turborepo + Biome/Ultracite. Many people and agents work here at
 once: stay inside your task, your worktree and your Convex dev deployment.
 
-The mobile app and backend are real (moved in Phase 2). Web, admin, desktop, CLI and
-docs are still placeholders until Phase 4. Plan and decisions:
-`docs/plan/workspace-migration-plan.md`.
+The mobile app, backend and internal admin are real (mobile and backend moved in
+Phase 2). Web, desktop, CLI and docs are still placeholders until Phase 4. Plan and
+decisions: `docs/plan/workspace-migration-plan.md`.
 
 ## Repo map
 
@@ -61,6 +61,50 @@ Put a dependency in the package that uses it; shared versions come from the root
   revive covered is not one. **Days showed up** is the lifetime total, gaps
   allowed, never resets. Same days as the **streak**, which counts them only in a
   row.
+- **follow-up**: the check-in card Xolace keeps for a session that ended unresolved,
+  from creation until it's answered, dismissed or expires.
+- **answer**: a user's response to a follow-up (lighter, still with it, heavier),
+  given in the app or on a channel. Dismissing a follow-up or letting it expire is
+  not an answer.
+- **outreach**: a message Xolace itself initiates to a user outside the app. Its
+  reason is its **intent** (a nudge, a gentle return, a pattern nudge…). A message
+  relaying something another person did (a chat message) is a notification, not
+  outreach.
+- **channel**: a place outreach can land: push, Telegram, email, later SMS and others. A user
+  **links** a channel before Xolace may reach them there; signing up links email,
+  since the address comes verified from the sign-in provider. Each channel is open to
+  free users or only to Plus, and that can change at any time.
+- **delivery**: one outreach landing, or failing to land, on one channel. One outreach
+  can have several deliveries.
+- **nudge**: an outreach a follow-up sends to invite the user back to its card.
+  Gentle returns and pattern nudges are other intents, not nudges.
+- **welcome**: the one outreach every user gets once, after signing up. Never sent
+  twice, never to someone who signed up before it existed.
+- **gist**: a weekly piece of mental-health reading that every subscriber gets in the
+  same form. Drafted by AI, sent only once a person at Xolace approves it; a week
+  with no approved gist sends nothing. Nothing in it is about the user. Opt-in.
+- **recap**: an outreach summarizing one user's own week. It carries only
+  showing-up facts (days showed up, streak, achievements, sparks), never what the
+  user said, felt or struggled with. Opt-in. Not a gist, which is the same for
+  everyone.
+- **account notice**: a message about the user's account itself (data export ready,
+  deletion confirmed, trial ending). Sent because something happened to the account,
+  not to bring the user back, so it is not outreach and ignores outreach opt-outs.
+- **letter**: a short, anonymous message of encouragement that one user (the
+  **sender**) writes for a stranger, and Xolace chooses who receives it (the
+  **recipient**, always someone who opted in to receive letters). A letter is
+  **received** once Xolace places it with its recipient, whether or not they have
+  read it (not "delivered": that is outreach's word). The recipient can
+  **acknowledge** a letter once, without words, and never reply to it. Not a peer
+  reflection (Xolace distils that from a user's own session) and not outreach (a
+  person writes a letter, not Xolace). The push telling someone a letter reached them, or that
+  theirs was received or acknowledged, is a notification.
+- **peer reflection**: a short first-person line Xolace distils from one user's
+  session or follow-up answer and, with their consent, adds anonymously to a shared
+  pool that others feeling something similar are shown. The user it came from is
+  its **contributor**; a contributor is never shown their own. Not a letter (a
+  person writes that to a stranger, Xolace only distils a peer reflection).
+  Avoid "echo", an early name for these.
 
 ## Hit every surface
 
@@ -138,7 +182,7 @@ Desktop dev (`tauri dev`) still expects web on 3001; run it from one worktree at
 
 | When | Run |
 |---|---|
-| Iterating | `bun run check:changed` (Biome on changed files, `check-types`+`lint` for affected packages and dependents, sibling tests). `--base <ref>` to compare elsewhere, `--list` to dry-run |
+| Iterating | `bun run check:changed` (Biome on changed files, `check-types` for affected packages and dependents, sibling tests) since the merge-base with `origin/dev`. `--base <ref>` to compare elsewhere, `--list` to dry-run |
 | One test file | `bunx vitest run <file>` inside the package, or `bunx turbo run test -F <pkg> -- <file>`; root scripts: `bun test scripts/` |
 | Before a PR | `bunx turbo run check-types lint test`, `bun run check` and `bun run knip` (unused files, exports and dependencies; mobile only for now) |
 
@@ -166,8 +210,8 @@ Full rules: `.agents/rules/convex.md` and `packages/backend/AGENTS.md`.
 - Auth through the shared helper (`requireAuth`), never ad-hoc identity checks.
 - Admin functions only in `convex/admin/*`, built with `adminQuery` / `adminMutation` /
   `adminAction`. Clients other than `apps/admin` never import `api.admin.*`.
-- Clients import only `@xolace/backend/api` (+ `dataModel` and allowlisted shared
-  modules). Never server-only code (`"use node"`, `ai/providers`, `jobs`).
+- Clients import only `@xolace/backend/api` (+ `dataModel`, `shared` and allowlisted
+  client-safe modules). Never server-only code (`"use node"`, `ai/providers`, `jobs`).
 - **Store-gap rule:** backend deploys before store review clears, so old app builds run
   against the new backend. Only additive changes: new functions, new optional args,
   widened arg types. Scheduled functions run the *current* code with *old* args.

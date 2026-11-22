@@ -1,6 +1,3 @@
-// Intake v2 ("Talk to Flux", #704) on screen: the reducer's step, drawn. The typed (#707) or
-// spoken (#709) answer is read by Flux (#708): chips, one follow-up, or crisis support. Then
-// the name, and Xolace+ once (#713).
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useEffectEvent, useReducer, useRef } from "react";
 import {
@@ -11,7 +8,7 @@ import {
 	trackSafetyLate,
 	trackSafetyRouted,
 } from "@/features/intake/analytics";
-import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { FirstLookStep } from "@/features/intake/first-look/first-look-step";
 import { AskStep } from "@/features/intake/v2/ask-step";
 import { FollowUpStep } from "@/features/intake/v2/follow-up-step";
 import {
@@ -21,23 +18,23 @@ import {
 	suggestionsTaken,
 } from "@/features/intake/v2/heard";
 import { HeardStep } from "@/features/intake/v2/heard-step";
+import { IntakeScreen } from "@/features/intake/v2/intake-screen";
 import { InterpretStep } from "@/features/intake/v2/interpret-step";
 import { ListenStep } from "@/features/intake/v2/listen-step";
 import {
+	firstAnswerToOffer,
 	initialIntakeV2State,
 	intakeV2Reducer,
 	micOn,
 	voiceAnswer,
 } from "@/features/intake/v2/machine";
 import { NameStep } from "@/features/intake/v2/name-step";
-import { PlusStep } from "@/features/intake/v2/plus/plus-step";
 import { IntakeV2Progress } from "@/features/intake/v2/progress";
 import { SafetyStep } from "@/features/intake/v2/safety-step";
 import { TypeStep } from "@/features/intake/v2/type-step";
 import { useIntakeV2Complete } from "@/features/intake/v2/use-intake-v2-complete";
 import { useReadFirstAnswer } from "@/features/intake/v2/use-read-first-answer";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
-import { useAppStore } from "@/store/store";
 
 export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	const [state, dispatch] = useReducer(
@@ -50,29 +47,17 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	const readAnswer = useReadFirstAnswer();
 	const { isPlus } = usePlusEntitlement();
 
-	// A fallback gave up waiting, not on the person: a safety verdict still counts, wherever
-	// they've got to (the reducer holds it through a purchase or a save).
 	const onLateRead = useEffectEvent((reading: Reading | null) => {
 		if (reading?.route !== "safety" || state.safetyRouted) {
 			return;
 		}
 		trackSafetyLate(posthog, reading.safeguardLevel, state.step);
-		// Past the reducer's reach once a save has started, or has already left the intake.
-		useAppStore.getState().setIntakeFirstAnswer(null);
 		dispatch({ resources: reading.resources, type: "LATE_SAFETY" });
 	});
 
-	// One read per arrival at `interpret`; a result after unmount is dropped.
-	useEffect(() => {
-		if (state.step !== "interpret") {
-			return;
-		}
-		let live = true;
-		const read = async () => {
-			const outcome = await readAnswer(state);
-			if (!live) {
-				return;
-			}
+	const startRead = useEffectEvent(() => readAnswer(state));
+	const onRead = useEffectEvent(
+		(outcome: Awaited<ReturnType<typeof readAnswer>>) => {
 			if ("fallback" in outcome) {
 				trackReadFallback(posthog, outcome.fallback);
 				dispatch({ type: "READ_FAILED" });
@@ -85,49 +70,52 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 				trackSafetyRouted(posthog, outcome.reading.safeguardLevel);
 			}
 			dispatch({ reading: outcome.reading, type: "READ_DONE" });
-		};
-		void read();
+		}
+	);
+	// Reads the first answer on arrival at `interpret`, from the state it arrived with.
+	useEffect(() => {
+		if (state.step !== "interpret") {
+			return;
+		}
+		let live = true;
+		void startRead().then((outcome) => {
+			if (live) {
+				onRead(outcome);
+			}
+		});
 		return () => {
 			live = false;
 		};
-		// `state` is read as it arrives at `interpret`; nothing changes it until the read lands.
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.step]);
 
-	// The reducer decides whether the follow-up is asked; this only records that it was.
+	// `followUp` is set only together with the step (FRESH_READ), so this fires once per arrival.
 	useEffect(() => {
 		if (state.step === "followUp" && state.followUp) {
 			trackFollowUpShown(posthog, state.followUp.field);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [state.step]);
+	}, [posthog, state.step, state.followUp]);
 
-	// One write per arrival at `done`; a failure hands the name step back.
 	const writing = useRef(false);
+	const write = useEffectEvent(async () => {
+		const written = await complete(state);
+		writing.current = false;
+		if (!written) {
+			dispatch({ type: "COMPLETE_FAILED" });
+		}
+	});
+	// Saves on arrival at `done`; `writing` keeps a re-render from saving twice.
 	useEffect(() => {
 		if (state.step !== "done" || writing.current) {
 			return;
 		}
 		writing.current = true;
-		const write = async () => {
-			const written = await complete(state);
-			writing.current = false;
-			if (!written) {
-				dispatch({ type: "COMPLETE_FAILED" });
-			}
-		};
 		void write();
-		// `state` is read at the moment it reaches `done`; nothing after that changes it.
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.step]);
 
-	// Xolace+ is its own screen, after the three stops the bar counts. `done` stays on the
-	// screen the save left from, busy, until it lands.
 	const offering =
 		state.step === "plus" ||
 		(state.step === "done" && state.plusShown && !state.safetyRouted);
 
-	// Dispatched before the store is called, so no verdict can land ahead of it.
 	const onStoreCall = (active: boolean) =>
 		dispatch({ active, type: "STORE_CALL" });
 
@@ -229,32 +217,13 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 						suggested={state.suggested}
 					/>
 				);
-			case "plus":
-				return (
-					<PlusStep
-						busy={false}
-						onExit={(outcome) => dispatch({ outcome, type: "PLUS_EXIT" })}
-						onSafetyExit={(outcome) =>
-							dispatch({ outcome, type: "PLUS_SAFETY_EXIT" })
-						}
-						onStoreCall={onStoreCall}
-					/>
-				);
 			case "name":
 			case "done":
-				return offering ? (
-					<PlusStep
-						busy
-						onExit={() => undefined}
-						onSafetyExit={() => undefined}
-						onStoreCall={onStoreCall}
-					/>
-				) : (
+				return (
 					<NameStep
 						busy={state.step === "done"}
 						name={state.name}
 						onChange={(name) => dispatch({ name, type: "NAME_CHANGE" })}
-						// An unresolved entitlement reads as free; `plus` steps aside once it resolves.
 						onKeep={() => dispatch({ entitled: isPlus, type: "KEEP_NAME" })}
 						skipped={state.mode === "skipped"}
 					/>
@@ -264,9 +233,23 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 		}
 	};
 
+	if (offering) {
+		const busy = state.step === "done";
+		return (
+			<FirstLookStep
+				answer={firstAnswerToOffer(state)}
+				busy={busy}
+				onExit={(outcome) => busy || dispatch({ outcome, type: "PLUS_EXIT" })}
+				onSafetyExit={(outcome) =>
+					busy || dispatch({ outcome, type: "PLUS_SAFETY_EXIT" })
+				}
+				onStoreCall={onStoreCall}
+			/>
+		);
+	}
 	return (
 		<IntakeScreen>
-			{!offering && <IntakeV2Progress step={state.step} />}
+			<IntakeV2Progress step={state.step} />
 			{body()}
 		</IntakeScreen>
 	);

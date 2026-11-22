@@ -7,9 +7,11 @@ import {
 	useMemo,
 	useReducer,
 	useRef,
+	useState,
 } from "react";
 import { AppState, type AppStateStatus } from "react-native";
-import { Uniwind } from "uniwind";
+import { setThemeWithFonts, targetTheme } from "@/design/fonts";
+import { findVariant, NIGHT_VARIANT, themeVariant } from "@/design/themes";
 import { useAppStore } from "@/store/store";
 
 export type SessionMode = "day" | "night";
@@ -23,17 +25,31 @@ const SessionModeContext = createContext<SessionModeContextType | undefined>(
 	undefined
 );
 
-/** Returns true if the given hour (0–23) falls in the night window (22:00–04:00). */
-function isNightHour(hour: number): boolean {
-	return hour >= 22 || hour < 4;
+const NIGHT_START = 22;
+const NIGHT_END = 4;
+const HOURS_IN_DAY = 24;
+
+export function isNightHour(hour: number): boolean {
+	return hour >= NIGHT_START || hour < NIGHT_END;
+}
+
+function msToNextBoundary(now: Date): number {
+	const hour = now.getHours();
+	let target = NIGHT_END + HOURS_IN_DAY;
+	if (hour < NIGHT_END) {
+		target = NIGHT_END;
+	} else if (hour < NIGHT_START) {
+		target = NIGHT_START;
+	}
+	const next = new Date(now);
+	next.setHours(target, 0, 1, 0);
+	return next.getTime() - now.getTime();
 }
 
 function computeMode(): SessionMode {
 	return isNightHour(new Date().getHours()) ? "night" : "day";
 }
 
-/** Session mode from the device clock, recomputed on foreground. Night stashes the theme and
- * sets `nightly-dark`; day restores it. */
 export function SessionModeProvider({
 	children,
 }: {
@@ -42,11 +58,9 @@ export function SessionModeProvider({
 	const nightModeEnabled = useAppStore((s) => s.nightModeEnabled);
 	const setPreviousTheme = useAppStore((s) => s.setPreviousTheme);
 
-	// mode always reflects the clock regardless of nightModeEnabled.
 	const [, forceRefresh] = useReducer((n: number) => n + 1, 0);
 	const mode: SessionMode = computeMode();
 
-	// Guards against double-stashing on repeated AppState events within the window.
 	const nightAppliedRef = useRef(false);
 
 	const applyNightTheme = useCallback(() => {
@@ -54,9 +68,9 @@ export function SessionModeProvider({
 			return;
 		}
 		nightAppliedRef.current = true;
-		const current = Uniwind.currentTheme;
+		const current = targetTheme();
 		setPreviousTheme(current);
-		Uniwind.setTheme("nightly-dark");
+		setThemeWithFonts(NIGHT_VARIANT);
 	}, [setPreviousTheme]);
 
 	const restoreDayTheme = useCallback(() => {
@@ -71,20 +85,16 @@ export function SessionModeProvider({
 		} = useAppStore.getState();
 		setPreviousTheme(null);
 
-		if (previousTheme) {
-			Uniwind.setTheme(previousTheme as never);
+		const stashed = findVariant(previousTheme);
+		if (stashed) {
+			setThemeWithFonts(stashed.name);
 			return;
 		}
 
-		const modeStr = storedTheme === "system" ? "dark" : storedTheme;
-		const nextTheme =
-			colorThemeId === "default"
-				? modeStr
-				: (`${colorThemeId}-${modeStr}` as never);
-		Uniwind.setTheme(nextTheme);
+		const mode = storedTheme === "system" ? "dark" : storedTheme;
+		setThemeWithFonts(themeVariant(colorThemeId, mode));
 	}, [setPreviousTheme]);
 
-	// Theme swap is gated by the user's night mode preference; session mode is not.
 	useEffect(() => {
 		if (nightModeEnabled && mode === "night") {
 			applyNightTheme();
@@ -93,9 +103,10 @@ export function SessionModeProvider({
 		}
 	}, [mode, nightModeEnabled, applyNightTheme, restoreDayTheme]);
 
-	// On app foreground, re-render so mode recomputes with the current hour
+	const [active, setActive] = useState(AppState.currentState === "active");
 	useEffect(() => {
 		const handler = (state: AppStateStatus) => {
+			setActive(state === "active");
 			if (state === "active") {
 				forceRefresh();
 			}
@@ -103,6 +114,14 @@ export function SessionModeProvider({
 		const sub = AppState.addEventListener("change", handler);
 		return () => sub.remove();
 	}, []);
+
+	useEffect(() => {
+		if (!active) {
+			return;
+		}
+		const id = setTimeout(forceRefresh, msToNextBoundary(new Date()));
+		return () => clearTimeout(id);
+	}, [active, mode]);
 
 	const value = useMemo(
 		() => ({ isNight: nightModeEnabled && mode === "night", mode }),
@@ -116,7 +135,6 @@ export function SessionModeProvider({
 	);
 }
 
-/** Access the current session mode anywhere inside SessionModeProvider. */
 export function useSessionMode(): SessionModeContextType {
 	const ctx = useContext(SessionModeContext);
 	if (!ctx) {

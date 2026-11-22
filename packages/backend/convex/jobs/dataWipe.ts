@@ -1,9 +1,19 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
+import { drainListenProgress } from "../audio/progress";
+import { forgetDailyQuotePushHistory } from "../dailyQuotes/schedule";
 import { purgeReplyEntries } from "../episodicMemory";
+import { wipeLetters } from "../letters/erasure";
 import { rankReplace } from "../lib/aggregates";
 import { purgeSessions } from "../lib/sessionCascade";
+import { drainPromptStates } from "../monthlyEvents/prompt";
+import {
+	drainInbound,
+	drainOutreach,
+	drainUnusedLinkTokens,
+	eraseForWipe,
+} from "../outreach/erasure";
 
 const BATCH_SIZE = 100;
 
@@ -12,11 +22,19 @@ const BATCH_SIZE = 100;
  * preferences, and consent records.
  *
  * Deletes: sessions, emotional_metadata, session_turns,
- *          reflection_resonances, notification_log, library_reads, activity_log,
- *          frozen_days, compounding_stretches, steadiness_insights
+ *          reflection_resonances, notification_log, library_reads,
+ *          listen_progress,
+ *          monthly_event_states, activity_log,
+ *          frozen_days, compounding_stretches, steadiness_insights, outreach,
+ *          the letters they sent and received (letters/erasure.ts),
+ *          outreach_deliveries, the email_channel_states row (#916), the
+ *          linked chats' inbound_events, an unused channel_link_tokens row,
+ *          and the bot's last 48 h of Telegram messages (#773)
  * Anonymizes: escalation_events (strip profileId for safety audit)
- * Resets: emotional_profile counters, the companion's preferred name
- * Keeps: user_achievements, spark_spends, both spark counters, daysShowedUp,
+ * Resets: emotional_profile counters, the companion's preferred name, the
+ *         Continue cards removed from Explore (`exploreHiddenContinue`)
+ * Keeps: channel_identities (the link, its chat history and reflection
+ *        window cleared) and their consent rows (#773); user_achievements, spark_spends, both spark counters, daysShowedUp,
  *        lastShowedUpDay and achievementsBackfilledAt — they record showing up,
  *        not what was said (#685, #694); age_declarations, keyed on the user
  *        and never reached from here, so a wipe can't restate an age past a
@@ -31,6 +49,17 @@ export const wipe = internalMutation({
 	handler: async (ctx, args) => {
 		const { emotionalProfileId } = args;
 		let hasMore = false;
+
+		// ── Outreach and linked chats (#773) ─────────────────────────
+		// First, while the check-ins still exist to collapse. A no-op once done.
+		await eraseForWipe(ctx, emotionalProfileId);
+		if (await drainOutreach(ctx, emotionalProfileId)) {
+			hasMore = true;
+		}
+		if (await drainInbound(ctx, emotionalProfileId)) {
+			hasMore = true;
+		}
+		await drainUnusedLinkTokens(ctx, emotionalProfileId);
 
 		// ── Delete sessions + associated data ────────────────────────
 		const sessions = await ctx.db
@@ -99,6 +128,9 @@ export const wipe = internalMutation({
 		for (const q of quotes) {
 			await ctx.db.delete("daily_quotes", q._id);
 		}
+		// The push's backoff points at quotes just deleted and records what was
+		// opened: it starts over. The setting itself is a preference, and stays.
+		await forgetDailyQuotePushHistory(ctx, emotionalProfileId);
 
 		// ── Delete Library reads ─────────────────────────────────────
 		// Private rows only; the public totals stay up (ADR 0016).
@@ -114,6 +146,25 @@ export const wipe = internalMutation({
 		}
 		for (const r of reads) {
 			await ctx.db.delete("library_reads", r._id);
+		}
+
+		// ── Delete listening positions (B6) ──────────────────────────
+		// Where they are in each track: history, like the reads above.
+		if (await drainListenProgress(ctx, emotionalProfileId)) {
+			hasMore = true;
+		}
+
+		// ── Delete monthly prompt choices (B2) ───────────────────────
+		// What they chose on a month's prompt is theirs too. The current
+		// month's prompt waits for them again.
+		if (await drainPromptStates(ctx, emotionalProfileId)) {
+			hasMore = true;
+		}
+
+		// ── Letters (B12, decision B) ────────────────────────────────
+		// What they sent and received; the opt-in and day cap stay.
+		if (await wipeLetters(ctx, emotionalProfileId)) {
+			hasMore = true;
 		}
 
 		// ── Delete activity log ──────────────────────────────────────
@@ -235,7 +286,11 @@ export const wipe = internalMutation({
 		}
 
 		// ── Forget the companion's private name for them (#602) ──────
-		// The next talk asks again.
+		// The next talk asks again. And the Continue cards they removed from
+		// Explore (B7): each names something they listened to or read, the
+		// history `library_reads` above already goes with. The rest of
+		// preferences are choices, not history, and stay (including
+		// `exploreUsesSessions`, which is a consent).
 		const preferences = await ctx.db
 			.query("preferences")
 			.withIndex("by_profile", (q) =>
@@ -244,9 +299,12 @@ export const wipe = internalMutation({
 			.unique();
 		if (
 			preferences &&
-			(preferences.preferredName || preferences.talkNameAsked)
+			(preferences.preferredName ||
+				preferences.talkNameAsked ||
+				preferences.exploreHiddenContinue)
 		) {
 			await ctx.db.patch("preferences", preferences._id, {
+				exploreHiddenContinue: undefined,
 				preferredName: undefined,
 				talkNameAsked: undefined,
 			});

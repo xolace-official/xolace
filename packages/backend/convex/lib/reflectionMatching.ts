@@ -1,12 +1,49 @@
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
+import type { NotOwn } from "./reflectionAuthor";
 import { emotionFamily } from "./understandingVocab";
 
 // =============================================================
 // Peer-reflection matching helpers for reflections.matchForSession.
 // The handler stays a thin orchestrator: semantic (Xolace+) first,
 // topped up from the tag cascade to four results.
+//
+// Every helper takes `notOwn` (lib/reflectionAuthor.notContributedBy) and
+// drops the viewer's own reflections while reading, so a contributor is
+// never shown theirs and own rows never use up a read's quota.
 // =============================================================
+
+type Reflection = Doc<"reflections">;
+
+/** Own rows one read may skip past before it stops; keeps every read bounded. */
+const OWN_ROWS_SKIPPED_MAX = 50;
+
+/** Read up to `n` rows that pass `notOwn`, in the query's order. */
+export async function takeKept(
+	rows: AsyncIterable<Reflection>,
+	n: number,
+	notOwn: NotOwn
+): Promise<Reflection[]> {
+	const kept: Reflection[] = [];
+	if (n <= 0) {
+		return kept;
+	}
+	let skipped = 0;
+	for await (const r of rows) {
+		if (notOwn(r)) {
+			kept.push(r);
+			if (kept.length >= n) {
+				break;
+			}
+		} else {
+			skipped++;
+			if (skipped >= OWN_ROWS_SKIPPED_MAX) {
+				break;
+			}
+		}
+	}
+	return kept;
+}
 
 /**
  * Resolve a session's precomputed semantic match ids to live docs,
@@ -15,18 +52,23 @@ import { emotionFamily } from "./understandingVocab";
  */
 export async function loadSemanticMatches(
 	ctx: QueryCtx,
-	session: Doc<"sessions">
-): Promise<Doc<"reflections">[]> {
+	session: Doc<"sessions">,
+	notOwn: NotOwn
+): Promise<Reflection[]> {
 	if (!session.semanticMatchIds?.length) {
 		return [];
 	}
 	const docs = await Promise.all(
 		session.semanticMatchIds.map((id) => ctx.db.get("reflections", id))
 	);
+	// Ids precomputed before #790 may still name the viewer's own.
 	return docs.filter(
-		(r): r is Doc<"reflections"> => r !== null && r.status === "active"
+		(r): r is Reflection => r !== null && r.status === "active" && notOwn(r)
 	);
 }
+
+/** Rows each cascade step reads, after own rows are dropped. */
+const CASCADE_READ = 10;
 
 /**
  * Tag-cascade matching: granular label first, broadened to the primary
@@ -35,8 +77,9 @@ export async function loadSemanticMatches(
  */
 export async function matchByTags(
 	ctx: QueryCtx,
-	sessionId: Doc<"sessions">["_id"]
-): Promise<Doc<"reflections">[]> {
+	sessionId: Doc<"sessions">["_id"],
+	notOwn: NotOwn
+): Promise<Reflection[]> {
 	const metadata = await ctx.db
 		.query("emotional_metadata")
 		.withIndex("by_session", (q) => q.eq("sessionId", sessionId))
@@ -47,14 +90,17 @@ export async function matchByTags(
 	}
 
 	// Try granular match first
-	const reflections = await ctx.db
-		.query("reflections")
-		.withIndex("by_granular", (q) =>
-			q
-				.eq("granularLabel", metadata.granularLabel ?? undefined)
-				.eq("status", "active")
-		)
-		.take(10);
+	const reflections = await takeKept(
+		ctx.db
+			.query("reflections")
+			.withIndex("by_granular", (q) =>
+				q
+					.eq("granularLabel", metadata.granularLabel ?? undefined)
+					.eq("status", "active")
+			),
+		CASCADE_READ,
+		notOwn
+	);
 
 	// Fall back to broad emotion match. A finer primary ("loneliness") also
 	// matches older rows that carried it as a granular label, then its parent
@@ -62,29 +108,38 @@ export async function matchByTags(
 	if (reflections.length < 3) {
 		const [emotion, ...parents] = emotionFamily(metadata.primaryEmotion);
 		const broadMatches = [
-			...(await ctx.db
-				.query("reflections")
-				.withIndex("by_emotion", (q) =>
-					q.eq("primaryEmotion", emotion).eq("status", "active")
-				)
-				.take(10)),
+			...(await takeKept(
+				ctx.db
+					.query("reflections")
+					.withIndex("by_emotion", (q) =>
+						q.eq("primaryEmotion", emotion).eq("status", "active")
+					),
+				CASCADE_READ,
+				notOwn
+			)),
 			...(parents.length > 0
-				? await ctx.db
-						.query("reflections")
-						.withIndex("by_granular", (q) =>
-							q.eq("granularLabel", emotion).eq("status", "active")
-						)
-						.take(10)
+				? await takeKept(
+						ctx.db
+							.query("reflections")
+							.withIndex("by_granular", (q) =>
+								q.eq("granularLabel", emotion).eq("status", "active")
+							),
+						CASCADE_READ,
+						notOwn
+					)
 				: []),
 		];
 		for (const parent of parents) {
 			broadMatches.push(
-				...(await ctx.db
-					.query("reflections")
-					.withIndex("by_emotion", (q) =>
-						q.eq("primaryEmotion", parent).eq("status", "active")
-					)
-					.take(10))
+				...(await takeKept(
+					ctx.db
+						.query("reflections")
+						.withIndex("by_emotion", (q) =>
+							q.eq("primaryEmotion", parent).eq("status", "active")
+						),
+					CASCADE_READ,
+					notOwn
+				))
 			);
 		}
 

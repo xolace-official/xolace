@@ -5,14 +5,47 @@ import {
 	NoEventPriority,
 } from "react-reconciler/constants";
 
-/** Mounts a hook once (effects included) and unmounts it, with no DOM. A throwing effect
- * propagates out of `act`. */
 export function mountHook(hook: () => unknown): void {
-	(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
-	const Probe = () => {
-		hook();
+	renderHook(hook, undefined).unmount();
+}
+
+export type RenderedHook<P, R> = {
+	result: () => R;
+	rerender: (props: P) => void;
+	unmount: () => void;
+};
+
+/** Keeps the hook mounted, so a test can re-render it with new props. */
+export function renderHook<P, R>(
+	hook: (props: P) => R,
+	props: P
+): RenderedHook<P, R> {
+	let latest: { value: R } | null = null;
+	const Probe = (p: { props: P }) => {
+		latest = { value: hook(p.props) };
 		return null;
 	};
+	const tree = renderTree(createElement(Probe, { props }));
+	return {
+		rerender: (next: P) => tree.rerender(createElement(Probe, { props: next })),
+		result: () => {
+			if (!latest) {
+				throw new Error("The hook has not rendered");
+			}
+			return latest.value;
+		},
+		unmount: tree.unmount,
+	};
+}
+
+export type RenderedTree = {
+	rerender: (node: ReactNode) => void;
+	unmount: () => void;
+};
+
+/** Mounts components that render no host elements, so a test can see what mounts and remounts. */
+export function renderTree(node: ReactNode): RenderedTree {
+	(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 	const container = { children: [] as unknown[] };
 	const root = reconciler.createContainer(
 		container,
@@ -26,20 +59,18 @@ export function mountHook(hook: () => unknown): void {
 		noop,
 		null
 	);
-	act(() =>
-		reconciler.updateContainer(
-			createElement(Probe) as ReactNode,
-			root,
-			null,
-			null
-		)
-	);
-	act(() => reconciler.updateContainer(null, root, null, null));
+	const render = (next: ReactNode) =>
+		act(() => reconciler.updateContainer(next, root, null, null));
+	render(node);
+	return {
+		rerender: render,
+		unmount: () =>
+			act(() => reconciler.updateContainer(null, root, null, null)),
+	};
 }
 
 const noop = () => {};
 let currentUpdatePriority: number = NoEventPriority;
-// Bare host config: nothing here renders, so every host op is a no-op.
 const reconciler = Reconciler({
 	afterActiveInstanceBlur: noop,
 	appendChild: noop,

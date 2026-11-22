@@ -1,8 +1,0 @@
-steps:
-  - echo: 'Starter suggestions (#459) end to end. Each case is its own e2e flow and sets its own state; session-user runs last so the device is left on the real server gate.'
-  - run: starter-intake-order
-  - run: starter-rows
-  - run: starter-resolve-sticks
-  - run: starter-force-quit
-  - run: starter-no-stack
-  - run: starter-session-user

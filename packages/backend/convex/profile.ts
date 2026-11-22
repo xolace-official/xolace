@@ -4,7 +4,14 @@ import { reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
 import { seededDisplayName, validateDisplayName } from "./lib/displayName";
 import { hasPremium } from "./lib/premium";
+import { WEEKS_BACK_MAX } from "./lib/shared";
 import { insightFeatureValidator } from "./lib/validators";
+import {
+	type DayDetail,
+	dayDetail,
+	dayDetailValidator,
+	WEEK_MAX_MOMENTS,
+} from "./profile/weekDetail";
 import { streakState } from "./streaks/state";
 
 /**
@@ -228,7 +235,7 @@ export const getReflectionRank = query({
 
 // How far back a Plus user can page. Matches the longest data-retention
 // tier ("1_year") — beyond this, earlier sessions are already purged.
-const MAX_WEEKS_BACK = 52;
+const MAX_WEEKS_BACK = WEEKS_BACK_MAX;
 const MONTH_LABELS = [
 	"Jan",
 	"Feb",
@@ -258,9 +265,18 @@ function formatWeekLabel(weekStart: Date, weekEnd: Date): string {
  * Intensity data for the P2 chart teaser (Mon–Sun), current week by default.
  * Free tier can only ever request the current week (weekOffset forced to 0
  * server-side); Plus can page up to MAX_WEEKS_BACK weeks into history.
+ *
+ * `withDetail` (redesign B17) adds each day with moments a `detail`: how many,
+ * the top domain and emotion, and how the day ended (`profile/weekDetail.ts`).
+ * Opt-in, so shipped builds, which never ask, read and re-run exactly as before:
+ * the detail reads up to seven sessions (each day's last), and a query that
+ * reads a session re-runs whenever that session changes.
  */
 export const getWeekIntensity = query({
-	args: { weekOffset: v.optional(v.number()) },
+	args: {
+		weekOffset: v.optional(v.number()),
+		withDetail: v.optional(v.boolean()),
+	},
 	handler: async (ctx, args) => {
 		const { profile } = await requireAuth(ctx);
 		const premium = await hasPremium(ctx, profile);
@@ -285,7 +301,8 @@ export const getWeekIntensity = query({
 		);
 		const weekEnd = new Date(weekStart.getTime() + 7 * 86_400_000);
 
-		const metadata = await ctx.db
+		// One row past the cap says whether the week ran over it (see partialDay).
+		const read = await ctx.db
 			.query("emotional_metadata")
 			.withIndex("by_profile_createdAt", (q) =>
 				q
@@ -293,7 +310,11 @@ export const getWeekIntensity = query({
 					.gte("createdAt", weekStart.getTime())
 					.lt("createdAt", weekEnd.getTime())
 			)
-			.take(300);
+			.take(WEEK_MAX_MOMENTS + 1);
+		// The bars are drawn from the first WEEK_MAX_MOMENTS rows, as always.
+		const metadata = read.slice(0, WEEK_MAX_MOMENTS);
+		const dayIndexOf = (createdAt: number) =>
+			(new Date(createdAt).getDay() + 6) % 7;
 
 		const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 		const DAY_NAMES = [
@@ -306,11 +327,38 @@ export const getWeekIntensity = query({
 			"Sunday",
 		];
 		const buckets: number[][] = [[], [], [], [], [], [], []];
+		const moments: (typeof metadata)[] = [[], [], [], [], [], [], []];
 
 		for (const m of metadata) {
-			const idx = (new Date(m.createdAt).getDay() + 6) % 7;
+			const idx = dayIndexOf(m.createdAt);
 			buckets[idx].push(m.intensity);
+			moments[idx].push(m);
 		}
+
+		// Read oldest first. When the week ran over the cap and the first row left
+		// out falls on the same day as the last row kept, that day was read only
+		// in part: it gets no detail rather than a short count. At exactly the
+		// cap, or when the next row starts a later day, every day kept is whole.
+		const lastKept = metadata.at(-1);
+		const firstLeft = read.at(WEEK_MAX_MOMENTS);
+		const partialDay =
+			lastKept &&
+			firstLeft &&
+			dayIndexOf(firstLeft.createdAt) === dayIndexOf(lastKept.createdAt)
+				? dayIndexOf(lastKept.createdAt)
+				: -1;
+		const details: (DayDetail | undefined)[] = args.withDetail
+			? await Promise.all(
+					moments.map(async (dayMoments, i) => {
+						const last = dayMoments.at(-1);
+						if (last === undefined || i === partialDay) {
+							return;
+						}
+						const session = await ctx.db.get("sessions", last.sessionId);
+						return dayDetail(dayMoments, session?.postSessionMood ?? null);
+					})
+				)
+			: [];
 
 		const todayIdx = weekOffset === 0 ? (new Date(now).getDay() + 6) % 7 : -1;
 
@@ -318,8 +366,10 @@ export const getWeekIntensity = query({
 			const vals = buckets[i];
 			const avg =
 				vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+			const detail = details[i];
 			return {
 				dayName: DAY_NAMES[i],
+				...(detail ? { detail } : {}),
 				intensity: avg,
 				isToday: i === todayIdx,
 				label,
@@ -351,6 +401,8 @@ export const getWeekIntensity = query({
 		days: v.array(
 			v.object({
 				dayName: v.string(),
+				// Only with `withDetail`, and only on days with moments.
+				detail: v.optional(dayDetailValidator),
 				intensity: v.union(v.number(), v.null()),
 				isToday: v.boolean(),
 				label: v.string(),
@@ -368,7 +420,10 @@ export const getWeekIntensity = query({
 /**
  * Record intent-only waitlist interest for a premium insight teaser.
  * Pre-billing desire signal — no price, no IAP. Idempotent per profile+feature.
+ * @deprecated No current client calls it: the RevenueCat paywall replaced the waitlist teaser.
  */
+// DEPRECATED(remove-after: app >= first version with the RevenueCat paywall): old builds' insight
+// teaser still joins the waitlist here.
 export const joinInsightWaitlist = mutation({
 	args: { feature: insightFeatureValidator },
 	handler: async (ctx, args) => {
@@ -398,7 +453,10 @@ export const joinInsightWaitlist = mutation({
 /**
  * Features the authenticated profile has already joined the waitlist for.
  * Lets the teaser show an "already on the list" state on re-tap.
+ * @deprecated No current client calls it: the RevenueCat paywall replaced the waitlist teaser.
  */
+// DEPRECATED(remove-after: app >= first version with the RevenueCat paywall): old builds' insight
+// teaser still reads it.
 export const listInsightWaitlist = query({
 	args: {},
 	handler: async (ctx) => {

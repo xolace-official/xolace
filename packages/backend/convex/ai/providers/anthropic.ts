@@ -1,4 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
+import {
+	type FollowUpReasonCode,
+	parseFollowUpReasonCode,
+} from "../../lib/followUpCadence";
 import { PRIMARY_EMOTIONS, THEMATIC_TAGS } from "../../lib/understandingVocab";
 
 // --- Client Singleton ---
@@ -78,8 +82,14 @@ export function thinkingOff(model: string): Anthropic.ThinkingConfigParam {
 
 export interface ClassificationResult {
 	followUpReason?: string;
+	// The rubric line behind requiresFollowUp, yes or no. The parser always
+	// sets it ("unknown" when the model gave none, or one that contradicts its
+	// flag); optional only for results built by hand.
+	followUpReasonCode?: FollowUpReasonCode;
 	granularLabel?: string;
 	intensity: number;
+	// One internal sentence on why requiresFollowUp is false; only when it is.
+	noFollowUpReason?: string;
 	primaryEmotion: string;
 	primaryEmotionConfidence: number;
 	// Follow-up system: does this session warrant a later check-in? Defaults to
@@ -210,6 +220,18 @@ export function parseClassificationResponse(raw: string): ClassificationResult {
 	) {
 		result.followUpReason = parsed.followUpReason.trim();
 	}
+	// And a "no" reason only on a no, so the card writer never sees one.
+	if (
+		!result.requiresFollowUp &&
+		typeof parsed.noFollowUpReason === "string" &&
+		parsed.noFollowUpReason.trim()
+	) {
+		result.noFollowUpReason = parsed.noFollowUpReason.trim();
+	}
+	result.followUpReasonCode = parseFollowUpReasonCode(
+		result.requiresFollowUp,
+		parsed.followUpReasonCode
+	);
 
 	return result;
 }

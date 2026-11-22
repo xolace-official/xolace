@@ -1,3 +1,3 @@
-import { PlayerScreen } from "@/features/browse/player/player-screen";
+import { MovedRoute } from "@/features/navigation/moved-route";
 
-export default PlayerScreen;
+export default MovedRoute;

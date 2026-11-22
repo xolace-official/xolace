@@ -64,6 +64,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// points at support rather than at tomorrow.
 	concernReport: { kind: "fixed window", period: DAY, rate: 2 },
 
+	// daily_quote (B19) — one a day, its own bucket so it never spends a
+	// gentle return's. 20 hours, not a day: a clock change brings the next
+	// slot round in 23, and a day-long bucket would drop it.
+	dailyQuote: { capacity: 1, kind: "token bucket", period: 20 * HOUR, rate: 1 },
+
 	// Data wipe — once per 7 days (wipeInProgress flag handles in-flight dedup)
 	dataWipe: { kind: "fixed window", period: 7 * DAY, rate: 1 },
 
@@ -106,8 +111,18 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// `notification` bucket.
 	kindlingReady: { kind: "fixed window", period: DAY, rate: 1 },
 
+	// The letters check at send (#750): a model call and moderation per try.
+	// One letter a day, so this only bounds fixable resends: a sender past it
+	// keeps their words and tries again later.
+	letterCheck: { kind: "fixed window", period: DAY, rate: 20 },
+
 	// Notification spam prevention — 1 per 24 hours
 	notification: { kind: "fixed window", period: DAY, rate: 1 },
+
+	// Telegram outreach (#760): at most three a day across every intent on
+	// the channel, so the bot never feels pushy. An acute nudge counts toward
+	// it but is never blocked; full → the router tries the next channel.
+	outreachTelegram: { kind: "fixed window", period: DAY, rate: 3 },
 
 	// Kindling generation (docs/paths-v1.md §2.2), Plus only. One kindling per
 	// profile per day: the first qualifying session of the day generates, every
@@ -162,6 +177,46 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// milestone is often the one a gentle_return brought back the same day, and
 	// the shared bucket would swallow the milestone. Cadence caps it anyway.
 	streakMilestone: { kind: "fixed window", period: DAY, rate: 1 },
+
+	// The "this link has expired" reply (#766), per chat: enough for a person
+	// retrying an old link, not a way around the stranger reply's 24 h limit.
+	telegramExpiredLinkReply: {
+		capacity: 5,
+		kind: "token bucket",
+		period: HOUR,
+		rate: 5,
+	},
+
+	// Telegram link tokens (#766): a person mints one each time they tap "Link
+	// Telegram"; ten an hour is far past a real retry loop.
+	telegramLinkMint: { kind: "fixed window", period: HOUR, rate: 10 },
+
+	// A linked chat's voice note, sticker or uncaptioned photo gets the "I can
+	// only read text" line at most once per 24 h, keyed by chat id.
+	telegramMediaOnlyReply: {
+		capacity: 1,
+		kind: "token bucket",
+		period: DAY,
+		rate: 1,
+	},
+
+	// A chat whose link was revoked gets the "how to link again" reply at most
+	// once per 24 h (#767), keyed by chat id.
+	telegramRevokedReply: {
+		capacity: 1,
+		kind: "token bucket",
+		period: DAY,
+		rate: 1,
+	},
+
+	// A chat with no linked account gets the fixed stranger reply at most once
+	// per 24 h (#765), keyed by chat id.
+	telegramStrangerReply: {
+		capacity: 1,
+		kind: "token bucket",
+		period: DAY,
+		rate: 1,
+	},
 
 	// Xolacer suggestion (#570) — each call embeds the session via OpenAI. Fired
 	// on every close-offer mount and xolacer twig tap; a normal day is a handful.

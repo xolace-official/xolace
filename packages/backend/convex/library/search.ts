@@ -9,12 +9,13 @@ import {
 	activeTopics,
 	familyValidator,
 	thumbUrlFor,
-	toTrackItem,
+	trackItems,
 	trackItemValidator,
-} from "../browse";
+} from "../browse/catalogue";
 import { requireAuth } from "../lib/auth";
+import { cardItemValidator } from "./cards";
 import { isCrisisQuery } from "./crisisTerms";
-import { cardItemValidator, coverOf, toListItem } from "./entries";
+import { coverOf, toListItem } from "./entries";
 import { withCardSignals } from "./reads";
 import { asWords } from "./searchText";
 
@@ -114,7 +115,10 @@ export const searchTracksPage = query({
 		const result = await tracksMatching(ctx, args.family, text).paginate(
 			args.paginationOpts
 		);
-		return { ...result, page: await Promise.all(result.page.map(toTrackItem)) };
+		return {
+			...result,
+			page: await Promise.all(result.page.map(trackItems(ctx))),
+		};
 	},
 	returns: paginationResultValidator(trackItemValidator),
 });
@@ -208,12 +212,13 @@ export const searchCatalogue = query({
 			placesMatching(ctx, text),
 		]);
 
+		const toItem = trackItems(ctx);
 		return {
-			music: await Promise.all(music.map(toTrackItem)),
+			music: await Promise.all(music.map(toItem)),
 			// Full raw query: the index cap must not hide a crisis term past it.
 			needSomeone: isCrisisQuery(args.query),
 			places,
-			support: await Promise.all(support.map(toTrackItem)),
+			support: await Promise.all(support.map(toItem)),
 		};
 	},
 	returns: v.object({

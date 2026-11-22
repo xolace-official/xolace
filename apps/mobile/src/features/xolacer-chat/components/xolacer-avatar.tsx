@@ -12,8 +12,6 @@ const SIZES = {
 
 const CAMPFIRE_IMAGE = require("@/assets/images/flux/campfire-mini.jpeg");
 
-/** Initial-or-photo avatar. `muted` is the resting/unavailable look; `campfire` is the Xolace
- * broadcast identity only, never a general fallback. */
 export function XolacerAvatar({
 	name,
 	photoUrl,

@@ -12,7 +12,6 @@ export interface Parts {
 	y: React.ReactElement<{ width?: number }> | null;
 }
 
-/** Sorts the children into the places the layout has for them. */
 export function splitParts(children: ReactNode): Parts {
 	const parts: Parts = {
 		cells: [],
@@ -30,8 +29,6 @@ export function splitParts(children: ReactNode): Parts {
 			return;
 		}
 		const slot = (child.type as { slot?: Slot }).slot ?? "cells";
-		// Children are a static composition list, so position is their identity.
-		// eslint-disable-next-line react/no-array-index-key
 		const keyed = <ChildSlot key={index}>{child}</ChildSlot>;
 
 		if (slot === "x-axis") {
@@ -54,7 +51,6 @@ export function splitParts(children: ReactNode): Parts {
 	return parts;
 }
 
-/** Identity wrapper, purely so the partitioned arrays can carry keys. */
 function ChildSlot({ children }: { children: ReactNode }) {
 	return <>{children}</>;
 }

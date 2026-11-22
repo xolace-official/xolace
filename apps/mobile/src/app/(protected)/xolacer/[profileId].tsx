@@ -1,19 +1,27 @@
-import { useLocalSearchParams } from "expo-router";
-import { XolacerProfileScreen } from "@/features/xolacer-chat/components/xolacer-profile-screen";
+import { useLocalSearchParams, usePathname, useRouter } from "expo-router";
+import { XolacerData } from "@/features/connect/xolacer/xolacer-data";
+import { XolacerScreen } from "@/features/connect/xolacer/xolacer-screen";
+import { concernParams } from "@/features/feedback/feedback-model";
 
 export default function XolacerProfileRoute() {
-	// `specialty` is optional context for the "others listen to this too" exit;
-	// `stepId` is the kindling twig that led here, tended once a request is sent.
 	const { profileId, specialty, stepId } = useLocalSearchParams<{
 		profileId: string;
 		specialty?: string;
 		stepId?: string;
 	}>();
+	const router = useRouter();
+	const pathname = usePathname();
 	return (
-		<XolacerProfileScreen
-			profileId={profileId}
-			specialty={specialty}
-			stepId={stepId}
-		/>
+		<XolacerData
+			reportTo={(subject) =>
+				router.push({
+					params: concernParams(subject, pathname),
+					pathname: "/feedback",
+				})
+			}
+			route={{ profileId, specialty, stepId }}
+		>
+			<XolacerScreen />
+		</XolacerData>
 	);
 }

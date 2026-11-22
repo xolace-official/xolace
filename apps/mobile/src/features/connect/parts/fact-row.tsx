@@ -1,0 +1,27 @@
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { useThemeColor } from "heroui-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/components/shared/app-text";
+
+const styles = StyleSheet.create({
+	icon: { marginTop: 2 },
+});
+
+export function Fact({
+	icon,
+	children,
+}: {
+	icon: SymbolViewProps["name"];
+	children: React.ReactNode;
+}) {
+	const muted = useThemeColor("muted") as string;
+
+	return (
+		<View className="flex-row gap-3">
+			<SymbolView name={icon} size={15} style={styles.icon} tintColor={muted} />
+			<AppText className="flex-1 text-[13px] text-foreground/85 leading-5">
+				{children}
+			</AppText>
+		</View>
+	);
+}

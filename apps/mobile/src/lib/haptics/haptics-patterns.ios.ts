@@ -1,8 +1,5 @@
 import type { HapticPatternData } from "@/modules/native-core-haptics";
 
-/** Xolace haptic patterns: warm and present, never aggressive or gamified. */
-
-/** Mirrors BreathingOrb's inhale/exhale. Plays once on processing-state mount. */
 export const processingBreath: HapticPatternData = {
 	events: [
 		{
@@ -30,7 +27,6 @@ export const processingBreath: HapticPatternData = {
 	],
 };
 
-/** Soft acknowledgment. Onboarding transitions. */
 export const gentlePresence: HapticPatternData = {
 	events: [
 		{
@@ -44,7 +40,6 @@ export const gentlePresence: HapticPatternData = {
 	],
 };
 
-/** Three-beat crescendo. "You've been heard." Peak haptic moment. Mirror-state mount. */
 export const mirrorArrival: HapticPatternData = {
 	events: [
 		{
@@ -74,7 +69,6 @@ export const mirrorArrival: HapticPatternData = {
 	],
 };
 
-/** Two-beat period. Session-end mount. */
 export const sessionComplete: HapticPatternData = {
 	events: [
 		{
@@ -107,7 +101,6 @@ export const sessionComplete: HapticPatternData = {
 	],
 };
 
-/** Warm transient for peer resonance toggle. */
 export const resonanceToggle: HapticPatternData = {
 	events: [
 		{
@@ -121,7 +114,6 @@ export const resonanceToggle: HapticPatternData = {
 	],
 };
 
-/** Two-beat commitment. Path-selection button presses. */
 export const pathChoice: HapticPatternData = {
 	events: [
 		{
@@ -143,7 +135,6 @@ export const pathChoice: HapticPatternData = {
 	],
 };
 
-/** Naming a feeling — slightly crisp. Texture tag toggles. */
 export const textureSelect: HapticPatternData = {
 	events: [
 		{
@@ -157,7 +148,6 @@ export const textureSelect: HapticPatternData = {
 	],
 };
 
-/** Placing your hand on a surface. Tap-to-type press. */
 export const typingBegin: HapticPatternData = {
 	events: [
 		{
@@ -171,7 +161,6 @@ export const typingBegin: HapticPatternData = {
 	],
 };
 
-/** Default button press. Dismiss, navigation, secondary actions. */
 export const softPress: HapticPatternData = {
 	events: [
 		{
@@ -185,7 +174,6 @@ export const softPress: HapticPatternData = {
 	],
 };
 
-/** Primary action press. "That's it", "Let it out", OAuth sign-in. */
 export const affirmativePress: HapticPatternData = {
 	events: [
 		{
@@ -199,7 +187,6 @@ export const affirmativePress: HapticPatternData = {
 	],
 };
 
-/** Sharp double-tap. Error-state mount. Distinct from emotional vocabulary. */
 export const errorNotice: HapticPatternData = {
 	events: [
 		{
@@ -221,7 +208,6 @@ export const errorNotice: HapticPatternData = {
 	],
 };
 
-/** Deeply round fade. Gave-up state mount. "Even this is okay." */
 export const compassionateHold: HapticPatternData = {
 	events: [
 		{
@@ -247,7 +233,6 @@ export const compassionateHold: HapticPatternData = {
 	],
 };
 
-/** Single warm pulse. Soften-toward-it haptic beat — holds space without startling. */
 export const softenPulse: HapticPatternData = {
 	events: [
 		{
@@ -273,7 +258,6 @@ export const softenPulse: HapticPatternData = {
 	],
 };
 
-/** Synced with PromiseScreen's staggered FadeInDown. First thing the user feels. */
 export const onboardingEntrance: HapticPatternData = {
 	events: [
 		{
@@ -322,9 +306,6 @@ export const onboardingEntrance: HapticPatternData = {
 	],
 };
 
-// Synced with PacedOrb phases; the physiological-sigh top-up is the only transient.
-
-/** Warm swell matching orb expansion. Duration matches the inhale phase. */
 export function breathInhalePattern(
 	durationSeconds: number
 ): HapticPatternData {
@@ -354,7 +335,6 @@ export function breathInhalePattern(
 	};
 }
 
-/** Tiny second-inhale pop — physiological sigh's signature. */
 export const breathTopHold: HapticPatternData = {
 	events: [
 		{
@@ -368,7 +348,6 @@ export const breathTopHold: HapticPatternData = {
 	],
 };
 
-/** Long release matching orb contraction. The decay is the cue. */
 export function breathExhalePattern(
 	durationSeconds: number
 ): HapticPatternData {
@@ -398,7 +377,6 @@ export function breathExhalePattern(
 	};
 }
 
-/** Warm landing for idle-state mount. "I'm here, ready when you are." */
 export const homeEntrance: HapticPatternData = {
 	events: [
 		{

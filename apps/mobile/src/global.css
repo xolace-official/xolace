@@ -1,124 +1,191 @@
-/*
- * Global CSS — Xolace theme configuration.
- *
- * Tailwind CSS v4 + Uniwind (RN adapter) + HeroUI Native.
- *
- * The base light/dark overrides below define the Xolace identity:
- * - Dark: Deep warm indigo with soft lavender accents and amber warmth
- * - Light: Warm parchment with violet undertones
- *
- * Additional switchable themes live in src/themes/.
- * Register new themes in metro.config.js `extraThemes`
- * and add variant names to ThemeName in src/context/app-theme-context.tsx
- */
-
 @import "tailwindcss";
 @import "uniwind";
-/*@source './components';
-@source './lib';
-@source './helpers';*/
 
 @import "heroui-native/styles";
-
-/* Custom color themes — user-selectable alternatives */
-@import "./themes/quiet.css";
-@import "./themes/reverie.css";
-@import "./themes/human.css";
-/* Night mode palette — activated automatically by SessionModeProvider */
-@import "./themes/nightly.css";
-
-/* xolace+ premium themes — gated behind an active Plus entitlement.
- * See src/lib/themes.ts (tier: 'premium') and use-appearance-settings.ts. */
-@import "./themes/xolace-plus/emerald.css";
-@import "./themes/xolace-plus/rose.css";
-@import "./themes/xolace-plus/platinum.css";
-@import "./themes/xolace-plus/velvet.css";
-@import "./themes/xolace-plus/noir.css";
-@import "./themes/xolace-plus/playful.css";
+@import "./themes/themes.generated.css";
+@import "./themes/type.generated.css";
 /* Playful restyles HeroUI component classes; must come after heroui-native/styles. */
-@import "./themes/xolace-plus/playful-components.css";
+@import "./themes/playful-components.css";
 
-/* @theme {
-  --font-sans: 'SpaceGrotesk-Regular';
-  --font-sans-medium: 'SpaceGrotesk-Medium';
-  --font-sans-bold: 'SpaceGrotesk-Bold';
-  --font-mono: 'SpaceGrotesk-SemiBold';
-} */
+/*
+ * Class names for the variables HeroUI doesn't map itself. Static, so JS can
+ * read one (useCSSVariable, useThemeColor) before any class uses it; Uniwind
+ * still resolves each var() per theme. (Not `@theme inline static`: Biome
+ * can't parse two modifiers.)
+ */
+@theme static {
+	--color-subtle: var(--subtle);
+	--color-accent-ink: var(--accent-ink);
+	--color-accent-wash: var(--accent-wash);
+	--color-success-ink: var(--success-ink);
+	--color-success-wash: var(--success-wash);
+	--color-danger-ink: var(--danger-ink);
+	--color-danger-wash: var(--danger-wash);
+	--color-ember: var(--ember);
+	--color-ember-ink: var(--ember-ink);
+	--color-ember-wash: var(--ember-wash);
+	--color-heavy-wash: var(--heavy-wash);
+	--color-heavy-ink: var(--heavy-ink);
+	--color-frost: var(--frost);
+	--color-glass: var(--glass);
+	--color-glass-edge: var(--glass-edge);
+	--color-backdrop: var(--backdrop);
+	--color-tab-on: var(--tab-on);
+	--color-eink: var(--eink);
+	--color-mk: var(--mk);
+	--color-offer-ink: var(--offer-ink);
+	--color-tone-poetic: var(--tone-poetic);
+	--color-tone-gentle: var(--tone-gentle);
+	--color-tone-direct: var(--tone-direct);
+	--color-tone-witnessed: var(--tone-witnessed);
+	--color-tone-poetic-text: var(--tone-poetic-text);
+	--color-tone-gentle-text: var(--tone-gentle-text);
+	--color-tone-direct-text: var(--tone-direct-text);
+	--color-tone-witnessed-text: var(--tone-witnessed-text);
+	--color-browse-audio: var(--browse-audio);
+	--color-browse-audio-foreground: var(--browse-audio-foreground);
+	--color-browse-music: var(--browse-music);
+	--color-browse-music-foreground: var(--browse-music-foreground);
+	--color-browse-topics: var(--browse-topics);
+	--color-browse-topics-foreground: var(--browse-topics-foreground);
+}
 
 @theme static {
-	--color-resonance: oklch(0.796 0.0347 167.72 / 15%);
-	--resonance-foreground: oklch(0.796 0.0347 167.72);
+	--spacing-gutter: 16px;
+	--spacing-module: 14px;
+	--spacing-section: 22px;
+	--shadow-card: 0 10px 28px rgb(60 30 120 / 0.1);
+	--shadow-sheet: 0 -10px 60px rgb(40 20 90 / 0.3);
+	--shadow-dialog: 0 24px 60px -24px rgb(0 0 0 / 0.45);
+	--color-scrim: rgb(0 0 0 / 0.28);
+	/* Invisible text for layers that only hold space (a TextInput over WarmText,
+	   a sizer under a rolling number). Not `transparent`: Android's Fabric reads
+	   colour 0 as "unset" and draws the theme's default dark text instead. */
+	--color-clear: rgba(255, 255, 255, 0);
+}
 
-	--color-ember: oklch(78% 0.13 75);
-	/* Frost — a day a streak freeze held (contribution graph). Static, so text
-	 * uses the themed --frost-text instead: this one is 2.3:1 on light surfaces. */
-	--color-frost: oklch(72% 0.12 240);
-	/* Plus night — the Xolace+ offer's own sky (postcard art, path-stack
-     * layer). Dark in every theme because the art is. */
-	--color-plus-night: #0b0716;
+@utility rounded-row {
+	border-radius: 12px;
+	border-curve: continuous;
+}
+
+@utility rounded-tile {
+	border-radius: 20px;
+	border-curve: continuous;
+}
+
+@utility rounded-card {
+	border-radius: 24px;
+	border-curve: continuous;
+}
+
+@utility rounded-hero {
+	border-radius: 36px;
+	border-curve: continuous;
+}
+
+@theme static {
+	--color-on-art: #ffffff;
 
 	--font-poppins-medium: "Poppins-Medium";
 
-	/* Poster — the quotes poster is a printed object: its palette is the
-     * content, not the container, so it does not follow the active theme.
-     * Fixed on purpose; see the fixed-palette convention in CLAUDE.md.
-     * The two values a token cannot express (the gradient stop array and the
-     * Skia grain opacity) live in src/features/quotes/poster-palette.ts. */
-	--color-poster-paper: #f4f3f1;
-	--color-poster-plate: #ffffff;
-	--color-poster-ink: #141414;
-	--color-poster-ink-soft: #5d5d5d;
-	--color-poster-ink-faint: #6b6b6b;
-	--color-poster-hairline: rgba(0, 0, 0, 0.1);
-	--color-poster-shadow: #000000;
-	/* the design's Resonate fill and the deeper ink it sets its label in */
-	--color-poster-resonate: #f5726a;
-	--color-poster-ink-deep: #2b1414;
-	/* The deck: the poster's second sheet, not themed chrome. It is what keeps
-     * the hero from being an isolated lit rectangle on a dark chrome (#305). */
-	--color-poster-deck: #cbc9c5;
-	/* The composer on the deck: the field it is typed into, and the send pill
-     * — the only saturated colour outside the hero, so it takes the poster's
-     * own yellow rather than the accent (#305/#313). */
-	--color-poster-field: #e4e2de;
-	--color-poster-send: #f0e94d;
-
-	/* Player — the Browse player (#340) is lit by the track's own artwork,
-     * blurred into the backdrop, so its ink is fixed white-on-black whatever
-     * the theme. Fixed on purpose; see the fixed-palette convention in
-     * CLAUDE.md. The scrim gradient stops live in
-     * src/features/browse/player/player-palette.ts. */
 	--color-player-ink: #ffffff;
 	--color-player-scrim: #000000;
-	/* Lantern reader cover (#407): title and controls sit on the entry's
-     * photo, so the same fixed white-on-black. Scrim stops live in
-     * src/features/library/reader/cover-palette.ts. */
+	--color-player-glass: #2a2633;
+	--color-player-shadow: rgba(0, 0, 0, 0.6);
 	--color-cover-ink: #ffffff;
 	--color-cover-scrim: #000000;
-	/* Lantern reader pages (#408): the reading modes' own sheets, laid over
-     * the light/dark base by ScopedVariables in reader-page.tsx. Warm and
-     * low-blue; Night is for reading in the dark. Classic has no tokens here —
-     * its page is the app theme. */
+	--color-lantern-chip: rgba(14, 10, 22, 0.55);
+	--color-lantern-welcome-1: #2a2347;
+	--color-lantern-welcome-2: #4a3b6e;
+	--color-lantern-welcome-3: #9a6f86;
+	--color-lantern-welcome-glow: rgba(255, 196, 120, 0.55);
+
+	--color-you-aura-warm: #f5b04f;
+	--color-you-aura-cool: #b7a3ff;
+	--color-today-flame-core: #ffe2ae;
+	--color-today-ignite-glow: rgba(242, 163, 58, 0.6);
+	--color-today-gleam: rgba(255, 214, 170, 0.95);
+	--color-launch-light: #f7f5fb;
+	--color-launch-dark: #0e0c15;
+	--color-first-run-ground: rgb(7, 6, 5);
+	--color-first-run-button-shadow: rgb(245, 150, 60);
+	--color-first-run-drift-1: rgba(245, 178, 124, 0.1);
+	--color-first-run-drift-2: rgba(168, 132, 178, 0.06);
+	--color-first-run-drift-3: rgba(54, 70, 110, 0.12);
+	--color-first-run-underglow-day-1: rgba(242, 163, 58, 0.26);
+	--color-first-run-underglow-day-2: rgba(242, 163, 58, 0.08);
+	--color-first-run-underglow-day-3: rgba(242, 163, 58, 0);
+	--color-first-run-underglow-dusk-1: rgba(245, 150, 60, 0.24);
+	--color-first-run-underglow-dusk-2: rgba(245, 120, 40, 0.08);
+	--color-first-run-underglow-dusk-3: rgba(245, 120, 40, 0);
+	--color-first-run-mood-foot-1: rgba(0, 0, 0, 0);
+	--color-first-run-mood-foot-2: rgba(0, 0, 0, 0.55);
+	--color-first-run-mood-lift: rgb(245, 160, 70);
+	--color-first-run-mood-glow: rgba(255, 190, 110, 0.8);
+	--color-first-run-coal-1: rgb(255, 244, 220);
+	--color-first-run-coal-2: rgb(255, 181, 74);
+	--color-first-run-coal-3: rgba(255, 140, 40, 0);
+	--color-first-run-ember-flare: rgb(247, 190, 100);
+	--color-first-run-spark: rgb(255, 203, 120);
+	--color-first-run-spark-glow: rgba(255, 160, 60, 0.8);
+	--color-first-run-card-1: rgb(42, 28, 36);
+	--color-first-run-card-2: rgb(26, 18, 24);
+	--color-first-run-card-edge: rgba(255, 220, 210, 0.16);
+	--color-first-run-card-shadow: rgba(0, 0, 0, 0.7);
+	--color-first-run-knot-fill: rgb(122, 74, 42);
+	--color-first-run-knot-ring: rgb(90, 52, 28);
+	--color-first-run-log-1: rgb(107, 65, 38);
+	--color-first-run-log-2: rgb(62, 36, 20);
+	--color-first-run-log-edge: rgba(255, 210, 160, 0.18);
+	--color-first-run-mask: rgb(18, 13, 20);
+	--color-first-run-online: rgb(143, 214, 160);
+	--color-first-run-panel-dot: rgb(228, 218, 255);
+	--color-first-run-panel-fill-1: rgba(120, 95, 210, 0.18);
+	--color-first-run-panel-fill-2: rgba(120, 95, 210, 0.04);
+	--color-first-run-panel-line: rgb(214, 200, 255);
+	--color-first-run-panel-note: rgb(237, 230, 255);
+	--color-first-run-quote-dot: rgb(255, 231, 176);
+	--color-first-run-quote-dot-ring: rgba(247, 213, 140, 0.12);
+	--color-first-run-quote-dot-glow: rgba(247, 180, 90, 0.4);
+	--color-first-run-reflect-mask-1: rgb(0, 0, 0);
+	--color-first-run-reflect-mask-2: rgba(0, 0, 0, 0);
+	--color-first-run-ripple: rgba(200, 230, 242, 0.7);
+	--color-first-run-seat-fire-1: rgba(245, 150, 60, 0.42);
+	--color-first-run-seat-fire-2: rgba(245, 120, 40, 0.12);
+	--color-first-run-seat-fire-3: rgba(245, 120, 40, 0);
+	--color-first-run-seat-glow-1: rgba(255, 200, 120, 0.55);
+	--color-first-run-seat-glow-2: rgba(255, 170, 80, 0);
+	--color-first-run-shoulders: rgb(58, 46, 68);
+	--color-first-run-water: rgba(200, 230, 242, 0.5);
+	--color-first-run-you-fill: rgba(255, 255, 255, 0.035);
+	--color-first-run-face-1-bg: rgb(233, 185, 140);
+	--color-first-run-face-1-hair: rgb(31, 23, 18);
+	--color-first-run-face-1-skin: rgb(139, 90, 67);
+	--color-first-run-face-2-bg: rgb(183, 163, 255);
+	--color-first-run-face-2-hair: rgb(20, 16, 14);
+	--color-first-run-face-2-skin: rgb(94, 59, 44);
+	--color-first-run-face-3-bg: rgb(143, 195, 240);
+	--color-first-run-face-3-hair: rgb(58, 36, 22);
+	--color-first-run-face-3-skin: rgb(192, 138, 104);
 	--color-reader-paper-bg: #fbf8f1;
 	--color-reader-paper-ink: #2b2724;
 	--color-reader-paper-muted: #6f6760;
+	--color-reader-paper-subtle: #8a8079;
+	--color-reader-paper-card: #ffffff;
+	--color-reader-paper-well: #f1ece1;
+	--color-reader-paper-line: rgba(43, 39, 36, 0.12);
+	--color-reader-paper-accent: #6b4ee6;
+	--color-reader-paper-on-accent: #ffffff;
 	--color-reader-night-bg: #1b1714;
 	--color-reader-night-ink: #e6dccb;
 	--color-reader-night-muted: #9c9080;
-	/* The archive card's chip fill — ink at 7%, so one value sits on every tint */
-	--color-poster-chip: rgba(20, 20, 20, 0.07);
-	/* The archive card tints, cycled by item index (#296). Fixed objects inside
-     * a themed container — only the index picks one, so the array that walks
-     * them is assembled at the call site. */
-	--color-archive-tint-1: #f4e9b8;
-	--color-archive-tint-2: #f3d3dc;
-	--color-archive-tint-3: #e7e5e2;
-	--color-archive-tint-4: #dce6de;
-
-	/* The Xolace face is a printed brand object: its features are the logo's,
-     * whatever the theme, so a worried look reads the same everywhere. Fixed
-     * on purpose; see the fixed-palette convention in CLAUDE.md. The body
-     * gradients (stop arrays) live in src/features/xolace-face/face-palette.ts. */
+	--color-reader-night-subtle: #857a6c;
+	--color-reader-night-card: #24201c;
+	--color-reader-night-well: #2d2823;
+	--color-reader-night-line: rgba(230, 220, 203, 0.12);
+	--color-reader-night-accent: #c9b6ff;
+	--color-reader-night-on-accent: #1b1714;
 	--color-face-sclera: #ffffff;
 	--color-face-pupil: #1a1426;
 	--color-face-brow: rgba(110, 50, 40, 0.55);
@@ -126,9 +193,6 @@
 	--color-face-highlight: rgba(255, 255, 255, 0.55);
 	--color-face-highlight-clear: rgba(255, 255, 255, 0);
 
-	/* Talk's voice orbs are printed objects too: the same dark glass in either
-     * theme, each voice in its own light → mid → deep colours. Fixed on purpose;
-     * see the fixed-palette convention in apps/mobile/AGENTS.md. */
 	--color-orb-base: #1b1721;
 	--color-orb-rim: rgba(229, 229, 229, 0.13);
 	--color-orb-sheen: rgba(255, 255, 255, 0.1);
@@ -146,362 +210,495 @@
 	--color-orb-wren-mid: #f59ac0;
 	--color-orb-wren-deep: #d6467a;
 
-	/* The poster's voice is fixed too: `--font-*` is a per-theme variable
-     * (nightly swaps the whole family to SN Pro), and a printed object does not
-     * change typeface with the chrome behind it. */
-	--font-poster-display: "SpaceGrotesk-Bold";
-	--font-poster-body: "SpaceGrotesk-Regular";
+	--color-talk-glow-flux: #ee8fc4;
+	--color-talk-glow-tide: #43c6e8;
+	--color-talk-glow-moss: #8fd18b;
+	--color-talk-glow-dusk: #c56cf0;
+	--color-talk-glow-marigold: #ff8a5c;
+	--color-talk-aurora-a-dark: rgba(140, 110, 255, 0.55);
+	--color-talk-aurora-b-dark: rgba(90, 150, 255, 0.35);
+	--color-talk-aurora-a-light: rgba(140, 110, 255, 0.32);
+	--color-talk-aurora-b-light: rgba(90, 170, 255, 0.22);
+	--color-talk-aurora-clear: rgba(140, 110, 255, 0);
+	--color-talk-scrim: rgba(0, 0, 0, 0.42);
+
+	--color-plus-card-from: #2a1f4a;
+	--color-plus-card-to: #4b32c2;
+	--color-plus-card-ink: #3a2a8c;
+	--color-plus-card-glow: rgba(60, 40, 160, 0.7);
+	--color-mirror-adaptive-a: #26265a;
+	--color-mirror-adaptive-b: #3f44a8;
+	--color-mirror-adaptive-c: #6a79dc;
+	--color-mirror-adaptive-glow: #a0afff;
+	--color-mirror-poetic-a: #100e24;
+	--color-mirror-poetic-b: #231b48;
+	--color-mirror-poetic-c: #3a2b66;
+	--color-mirror-poetic-glow: #7864dc;
+	--color-mirror-gentle-a: #ffe3d6;
+	--color-mirror-gentle-b: #f9cbcf;
+	--color-mirror-gentle-c: #f0b5c4;
+	--color-mirror-gentle-glow: #fff3ea;
+	--color-mirror-direct: #f1f0f4;
+	--color-mirror-direct-dark: #1c1b22;
+	--color-mirror-witnessed-a: #1c120c;
+	--color-mirror-witnessed-b: #2b1a10;
+	--color-mirror-witnessed-c: #3a2010;
+	--color-mirror-witnessed-glow: #f28c30;
+	--color-mirror-witnessed-ember: #be461e;
+	--color-mirror-ink-gentle: #2a1a22;
+	--color-mirror-ink-direct: #17151e;
+	--color-mirror-ink-direct-dark: #edecf2;
+	--color-mirror-on-light: rgba(25, 21, 36, 0.08);
+	--color-mirror-shadow: rgba(30, 20, 70, 0.55);
+	--color-mirror-orb-shade: #000000;
+	--color-orb-auto-light: #f4f1ff;
+	--color-orb-auto-mid: #b7b0d8;
+	--color-orb-auto-deep: #6d6890;
+	--color-notify-dusk-top: #151838;
+	--color-notify-dusk-mid: #2b2458;
+	--color-notify-dusk-low: #5a3a6e;
+	--color-notify-glow: #7878ff;
+	--color-notify-warm: #ffaa6e;
+	--color-notify-rose: #dc6e78;
+	--color-notify-shadow: rgba(30, 20, 70, 0.6);
+	--color-notify-pill: rgba(10, 10, 30, 0.42);
+	--color-notify-bubble: rgba(245, 240, 255, 0.2);
+	--color-notify-mark-from: #7b62f0;
+	--color-notify-mark-to: #4b32c2;
+	--color-notify-night-edge: #2b2a63;
+	--color-notify-night-mid: #3b3080;
+	--color-notify-sun: #ffd58a;
+	--color-notify-sun-edge: rgba(245, 184, 97, 0.22);
+	--color-notify-sun-clear: rgba(245, 184, 97, 0);
+	--color-notify-dot: #f2a33a;
+	--color-privacy-shadow: rgba(40, 25, 100, 0.35);
+	--color-account-google-blue: #4285f4;
+	--color-account-google-green: #34a853;
+	--color-account-google-yellow: #fbbc05;
+	--color-account-google-red: #ea4335;
+
+	--color-telegram: #2aabee;
+	--color-on-telegram: #ffffff;
+
+	--color-vent-page: #0a0a0d;
+	--color-vent-cream: #f5f0e8;
+	--color-vent-ash: #9399a8;
+	--color-vent-ember: #c4883f;
+	--color-vent-amber: #e8a84c;
 }
 
-@layer theme {
-	:root {
-		/* ============================================================
-	   * XOLACE — BASE LIGHT THEME
-	   * ============================================================
-	   * Warm parchment. Not sterile white. Not cool gray.
-	   * Like a page in a journal left near a window at golden hour.
-	   *
-	   * The violet undertone in the neutrals keeps the light theme
-	   * connected to the dark theme's identity — they feel like
-	   * the same room at different times of day.
-	   * ============================================================ */
-		@variant light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+@theme static {
+	--color-peach: #ffb38a;
+	--color-rose: #ff8db4;
+	--color-lilac: #b49bff;
+	--color-sky: #7dd3e8;
 
-			--radius: 0.625rem;
+	--color-night-page: #0e0c15;
+	--color-night-card: #17141f;
+	--color-night-ink: #f3f0fa;
+	--color-night-ink-2: #b0a9c2;
+	--color-night-ink-3: #8c85a0;
+	--color-night-ember: #f5b04f;
 
-			/* Base — warm near-white with a faint violet breath */
-			--background: oklch(97.5% 0.006 285);
-			--foreground: oklch(16.5% 0.02 285);
+	--color-warm-page: #fff8f4;
 
-			/* Surface — clean but never sterile */
-			--surface: oklch(99.5% 0.003 285);
-			--surface-foreground: oklch(16.5% 0.02 285);
-
-			--surface-secondary: oklch(95.5% 0.008 285);
-			--surface-secondary-foreground: oklch(16.5% 0.02 285);
-
-			--surface-tertiary: oklch(93% 0.01 285);
-			--surface-tertiary-foreground: oklch(16.5% 0.02 285);
-
-			/* Overlay — for modals, popovers, sheets */
-			--overlay: oklch(99.5% 0.003 285);
-			--overlay-foreground: oklch(16.5% 0.02 285);
-
-			/* Muted — secondary text, placeholders */
-			--muted: oklch(52% 0.02 285);
-
-			/* Default — neutral interactive surfaces */
-			--default: oklch(94% 0.008 285);
-			--default-foreground: oklch(16.5% 0.02 285);
-
-			/* Accent — soft lavender, the Xolace signature.
-	     * Slightly deeper on light backgrounds for contrast. */
-			--accent: oklch(62% 0.14 285);
-			--accent-foreground: oklch(99% 0.005 285);
-
-			/* Form fields */
-			--field-background: oklch(99.5% 0.003 285);
-			--field-foreground: oklch(16.5% 0.02 285);
-			--field-placeholder: var(--muted);
-			--field-border: transparent;
-
-			/* Resonance — quiet shared-feeling signal */
-			--resonance: oklch(0.796 0.0347 167.72 / 15%);
-			--resonance-foreground: oklch(0.796 0.0347 167.72);
-
-			/* Ink for text on a saturated tone-colored panel — see the dark block. */
-			--offer-ink: oklch(18% 0.02 285);
-
-			/* Mirror tone badge colors — each tone has its own hue family */
-			--tone-poetic: oklch(70% 0.18 305);
-			--tone-gentle: oklch(68% 0.17 15);
-			--tone-direct: oklch(68% 0.15 225);
-			--tone-witnessed: oklch(72% 0.15 75);
-
-			/* Text variants of the tone hues — the badge lightness (68-72%) reads as
-	     * text on a light background, so the texture pill labels need a deeper
-	     * pull of the same hue. Dark theme keeps the badge value (see below). */
-			--tone-poetic-text: oklch(48% 0.18 305);
-			--frost-text: oklch(52% 0.12 240);
-			--tone-gentle-text: oklch(46% 0.17 15);
-			--tone-direct-text: oklch(46% 0.15 225);
-			--tone-witnessed-text: oklch(48% 0.15 75);
-
-			/* Browse hub entry icons (#338) — fixed per-entry hues, same across
-	     * every theme (like --tone-*), so Support audio / Music / Topics stay
-	     * visually distinct without borrowing --accent. */
-			--browse-audio: oklch(70% 0.15 25 / 16%);
-			--browse-audio-foreground: oklch(70% 0.15 25);
-			--browse-music: oklch(68% 0.12 200 / 16%);
-			--browse-music-foreground: oklch(68% 0.12 200);
-			--browse-topics: oklch(72% 0.13 130 / 16%);
-			--browse-topics-foreground: oklch(72% 0.13 130);
-
-			/* Event — monthly awareness marker */
-			--event: oklch(60% 0.15 350);
-			--event-foreground: oklch(99% 0.005 350);
-
-			/* Status — muted but clear */
-			--success: oklch(65% 0.16 155);
-			--success-foreground: oklch(16.5% 0.01 155);
-
-			--warning: oklch(75% 0.12 75);
-			--warning-foreground: oklch(16.5% 0.01 75);
-
-			/* Ember — campfire glow. Distinct from --warning (status) to avoid
-	     * semantic overload. Same amber hue family, slightly richer on light. */
-			--ember: oklch(78% 0.13 75);
-
-			/* Danger — soft coral, not alarming red.
-	     * Even destructive actions shouldn't feel aggressive
-	     * in an emotional safety app. */
-			--danger: oklch(62% 0.16 22);
-			--danger-foreground: oklch(99% 0 0);
-
-			/* Components */
-			--segment: oklch(99.5% 0.003 285);
-			--segment-foreground: oklch(16.5% 0.02 285);
-
-			/* Borders & lines — barely there, like pencil marks */
-			--border: oklch(90% 0.008 285);
-			--separator: oklch(84% 0.01 285);
-			--focus: oklch(62% 0.14 285);
-			--link: oklch(55% 0.12 285);
-
-			/* Shadows — soft, warm, never harsh */
-			--surface-shadow:
-				0 2px 4px 0 rgba(60, 40, 80, 0.04), 0 1px 2px 0 rgba(60, 40, 80, 0.05),
-				0 0 1px 0 rgba(60, 40, 80, 0.05);
-			--overlay-shadow:
-				0 4px 16px 0 rgba(60, 40, 80, 0.06),
-				0 -2px 8px 0 rgba(60, 40, 80, 0.02),
-				0 12px 24px 0 rgba(60, 40, 80, 0.04);
-			--field-shadow:
-				0 1px 3px 0 rgba(60, 40, 80, 0.04), 0 0 1px 0 rgba(60, 40, 80, 0.06);
-
-			--backdrop: oklch(0% 0 0 / 20%);
-			/* Playful-only controls (see xolace-plus/playful.css); off here. */
-			--field-border-width: 0px;
-			--playful-lip: 0px;
-			--playful-lip-chip: 0px;
-			--playful-stroke: 0px;
-			--outline-stroke: 1px;
-			--outline-lip: 1px;
-			--accent-lip: transparent;
-			--default-lip: transparent;
-			--danger-lip: transparent;
-			--warning-lip: transparent;
-			/* Surface (card) outline: a hairline here, Playful's 2px stroke there. */
-			--surface-stroke: 1px;
-			--surface-stroke-color: color-mix(
-				in oklab,
-				var(--border) 65%,
-				transparent
-			);
-		}
-
-		/* ============================================================
-	   * XOLACE — BASE DARK THEME (Default)
-	   * ============================================================
-	   * A quiet room at night. A candle is lit.
-	   *
-	   * The background is deep warm indigo — not cold tech-black,
-	   * not blue-black. It has a violet warmth that makes the
-	   * screen feel inhabited, not empty.
-	   *
-	   * The accent (soft lavender) is present but never demanding.
-	   * Like twilight through a window.
-	   *
-	   * The warm amber is reserved for moments of presence —
-	   * the gentle nudge, the presence dot, the campfire glow.
-	   * It appears as the accent here because in the emotional
-	   * processing context, warmth is the action color.
-	   * ============================================================ */
-		@variant dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
-
-			--radius: 0.625rem;
-
-			/* Base — deep warm indigo, not cold black
-	     * Hue 285 = violet. Low chroma keeps it from being
-	     * purple — it reads as warm dark, not colored dark. */
-			--background: oklch(10.5% 0.012 285);
-			--foreground: oklch(93% 0.01 285);
-
-			/* Surface — elevated cards, timeline entries.
-	     * Each tier is a subtle step up from the background.
-	     * The chroma increases slightly with lightness to
-	     * maintain the warm violet undertone as surfaces
-	     * get brighter. */
-			--surface: oklch(15% 0.014 285);
-			--surface-foreground: oklch(93% 0.01 285);
-
-			--surface-secondary: oklch(19% 0.016 285);
-			--surface-secondary-foreground: oklch(93% 0.01 285);
-
-			--surface-tertiary: oklch(22% 0.018 285);
-			--surface-tertiary-foreground: oklch(93% 0.01 285);
-
-			/* Overlay — modals and sheets.
-	     * Slightly different from surface to create
-	     * a sense of floating above the background. */
-			--overlay: oklch(16% 0.015 285);
-			--overlay-foreground: oklch(93% 0.01 285);
-
-			/* Muted — secondary text, timestamps, labels.
-	     * Not gray — warm violet muted. */
-			--muted: oklch(48% 0.022 285);
-
-			/* Default — neutral interactive surfaces.
-	     * Buttons that aren't primary or accent. */
-			--default: oklch(22% 0.014 285);
-			--default-foreground: oklch(93% 0.01 285);
-
-			/* Accent — soft lavender. The Xolace signature.
-	     *
-	     * This is the color of "That's it" / "Let it out" /
-	     * active states / the timeline icon. Present but calm.
-	     * Chroma 0.10 is deliberately moderate — not washed
-	     * out, not vibrant. Like twilight, not neon. */
-			--accent: oklch(75% 0.1 285);
-			--accent-foreground: oklch(10.5% 0.012 285);
-
-			/* Form fields — input areas, the writing space */
-			--field-background: oklch(13.5% 0.013 285);
-			--field-foreground: oklch(93% 0.01 285);
-			--field-placeholder: var(--muted);
-			--field-border: transparent;
-
-			/* Resonance — quiet shared-feeling signal */
-			--resonance: oklch(0.796 0.0347 167.72 / 15%);
-			--resonance-foreground: oklch(0.796 0.0347 167.72);
-
-			/* Ink for text sitting on a saturated tone-colored panel (the intake offer
-	     * cards). Deliberately theme-invariant: every --tone-* is a light surface
-	     * (L ≈ 70–76%) in BOTH schemes, so the readable ink is dark either way. */
-			--offer-ink: oklch(18% 0.02 285);
-
-			/* Mirror tone badge colors — slightly brighter on dark for legibility */
-			--tone-poetic: oklch(74% 0.18 305);
-			--tone-gentle: oklch(72% 0.17 15);
-			--tone-direct: oklch(72% 0.15 225);
-			--tone-witnessed: oklch(76% 0.15 75);
-
-			/* Dark theme reads fine at the badge lightness, so the text variant is
-	     * the same value — unlike light theme, no deeper pull is needed. */
-			--tone-poetic-text: var(--tone-poetic);
-			--frost-text: oklch(72% 0.12 240);
-			--tone-gentle-text: var(--tone-gentle);
-			--tone-direct-text: var(--tone-direct);
-			--tone-witnessed-text: var(--tone-witnessed);
-
-			/* Browse hub entry icons (#338) — same hues as light, bumped for dark */
-			--browse-audio: oklch(74% 0.15 25 / 14%);
-			--browse-audio-foreground: oklch(74% 0.15 25);
-			--browse-music: oklch(72% 0.12 200 / 14%);
-			--browse-music-foreground: oklch(72% 0.12 200);
-			--browse-topics: oklch(76% 0.13 130 / 14%);
-			--browse-topics-foreground: oklch(76% 0.13 130);
-
-			/* Event — monthly awareness marker */
-			--event: oklch(76% 0.12 350);
-			--event-foreground: oklch(15% 0.01 350);
-
-			/* Status colors — present but never alarming.
-	     * In an emotional safety app, even system colors
-	     * should feel held, not urgent. */
-			--success: oklch(70% 0.14 155);
-			--success-foreground: oklch(15% 0.01 155);
-
-			/* Warning uses the warm amber — the campfire color.
-	     * In Xolace, warmth IS the warning: gentle, present,
-	     * "I'm here, pay attention to this." */
-			--warning: oklch(80% 0.1 75);
-			--warning-foreground: oklch(15% 0.01 75);
-
-			/* Ember — campfire glow. Same hue as --warning but semantically distinct.
-	     * Used for the profile arc halo and active-day intensity bars. */
-			--ember: oklch(80% 0.1 75);
-
-			/* Danger — soft coral, not screaming red.
-	     * Someone in crisis doesn't need their app
-	     * yelling at them with saturated red. */
-			--danger: oklch(65% 0.14 22);
-			--danger-foreground: oklch(99% 0 0);
-
-			/* Components */
-			--segment: oklch(25% 0.014 285);
-			--segment-foreground: oklch(93% 0.01 285);
-
-			/* Borders — barely visible. Like pencil lines
-	     * on dark paper. They define structure without
-	     * demanding attention. */
-			--border: oklch(22% 0.012 285);
-			--separator: oklch(30% 0.014 285);
-			--focus: oklch(75% 0.1 285);
-			--link: oklch(72% 0.1 285);
-
-			/* Shadows — invisible on dark. Using subtle
-	     * inner glow on overlays instead. */
-			--surface-shadow: 0 0 0 0 transparent inset;
-			--overlay-shadow: 0 0 1px 0 rgba(184, 169, 232, 0.08) inset;
-			--field-shadow: 0 0 0 0 transparent inset;
-
-			--backdrop: oklch(0% 0 0 / 20%);
-			/* Playful-only controls (see xolace-plus/playful.css); off here. */
-			--field-border-width: 0px;
-			--playful-lip: 0px;
-			--playful-lip-chip: 0px;
-			--playful-stroke: 0px;
-			--outline-stroke: 1px;
-			--outline-lip: 1px;
-			--accent-lip: transparent;
-			--default-lip: transparent;
-			--danger-lip: transparent;
-			--warning-lip: transparent;
-			/* Surface (card) outline: a hairline here, Playful's 2px stroke there. */
-			--surface-stroke: 1px;
-			--surface-stroke-color: color-mix(
-				in oklab,
-				var(--border) 65%,
-				transparent
-			);
-		}
-	}
+	--color-evening-sky-1: #e3ccf0;
+	--color-evening-sky-2: #f6d3e2;
+	--color-evening-sky-3: #fde4da;
+	--color-evening-sky-end: rgba(247, 245, 251, 0);
+	--color-dusk-sky-1: #151029;
+	--color-dusk-sky-2: #1b1530;
+	--color-dusk-sky-end: rgba(14, 12, 21, 0);
+	--color-write-gleam: #ffc896;
 }
 
-@theme inline {
-	--color-resonance: var(--resonance);
-	--color-resonance-foreground: var(--resonance-foreground);
+@theme static {
+	--color-door-talk: #ffe2cf;
+	--color-door-talk-ink: #b4561e;
+	--color-door-vent: #ffddea;
+	--color-door-vent-ink: #b23a6b;
+	--color-door-sit: #e6deff;
+	--color-door-sit-ink: #4b32c2;
+	--color-door-label: #2a2140;
+	--color-door-sub: rgba(42, 33, 64, 0.7);
+	--color-month-rose: #a02a5c;
+	--color-month-rose-dark: #f58ab4;
+	--color-today-card-edge-late-1: #f5b04f;
+	--color-today-card-edge-late-2: #ec7a66;
+	--color-today-card-inner-1: rgba(255, 141, 180, 0.16);
+	--color-today-card-inner-2: rgba(255, 179, 138, 0.24);
+	--color-today-card-inner-late-1: rgba(236, 122, 102, 0.08);
+	--color-today-card-inner-late-2: rgba(245, 176, 79, 0.13);
+	--color-today-card-shadow: rgba(60, 30, 120, 0.22);
+	--color-today-kindling-check: #ffffff;
+	--color-today-kindling-glow: #ffb36b;
+	--color-today-kindling-pulse: #fff4da;
+	--color-today-kindling-spark: #ffc27a;
+	--color-today-kindling-wisp-glow: rgba(255, 190, 110, 0.75);
+	--color-today-kindling-wisp-core: #fff1d6;
+	--color-today-campfire-ember: #ffc46b;
+	--color-today-campfire-ember-glow: rgba(255, 170, 80, 0.6);
+	--color-today-campfire-glow: rgba(255, 168, 90, 0.34);
+	--color-kindling-road: #e8e4f1;
+	--color-kindling-road-dark: #211d2c;
+	--color-kindling-mark: rgba(93, 87, 110, 0.42);
+	--color-kindling-mark-dark: rgba(243, 240, 250, 0.36);
+	--color-kindling-rim: rgba(25, 21, 36, 0.08);
+	--color-kindling-rim-dark: rgba(255, 255, 255, 0.13);
+	--color-kindling-on-ember: #ffffff;
+	--color-kindling-on-ember-dark: #17141f;
+	--color-kindling-glow: rgba(242, 163, 58, 0.42);
+	--color-kindling-glow-dark: rgba(245, 176, 79, 0.5);
+	--color-kindling-glow-mid: rgba(242, 163, 58, 0.12);
+	--color-kindling-glow-mid-dark: rgba(245, 176, 79, 0.14);
+	--color-kindling-glow-clear: rgba(242, 163, 58, 0);
+	--color-kindling-glow-clear-dark: rgba(245, 176, 79, 0);
+	--color-kindling-sit: #d7f0e6;
+	--color-kindling-sit-dark: #1b2a27;
+	--color-kindling-hear: #e3dbff;
+	--color-kindling-hear-dark: #25203a;
+	--color-kindling-tell: #fde9c6;
+	--color-kindling-tell-dark: #2e2419;
+	--color-kindling-try: #d9ecf7;
+	--color-kindling-try-dark: #1a2633;
+	--color-kindling-fire: #fff1dc;
+	--color-kindling-fire-dark: #2e2216;
+	--color-kindling-fx-glow: #fff6e0;
+	--color-kindling-fx-glow-warm: #ffd27a;
+	--color-kindling-fx-glow-edge: rgba(255, 106, 46, 0.45);
+	--color-kindling-fx-glow-clear: rgba(255, 106, 46, 0);
+	--color-kindling-fx-core: #fffaf0;
+	--color-kindling-fx-hot: #fff0c2;
+	--color-kindling-fx-warm: #ff9a3c;
+	--color-kindling-fx-ember: #ff6a2e;
+	--color-kindling-fx-flash: #fff4dc;
+	--color-kindling-fx-fire-ember: #ffc27a;
+	--color-kindling-fx-smoke: #b9b2c9;
+	--color-kindling-fx-smoke-dark: #9aa3c4;
+	--color-today-moment-shadow: rgba(20, 16, 40, 0.05);
+	--color-today-rail-lift-shadow: rgba(60, 30, 120, 0.4);
+}
 
-	--color-browse-audio: var(--browse-audio);
-	--color-browse-audio-foreground: var(--browse-audio-foreground);
-	--color-browse-music: var(--browse-music);
-	--color-browse-music-foreground: var(--browse-music-foreground);
-	--color-browse-topics: var(--browse-topics);
-	--color-browse-topics-foreground: var(--browse-topics-foreground);
+@theme static {
+	--color-month-rose-wash: #fce4ee;
+	--color-month-rose-wash-dark: #3b2030;
+	--color-month-banner-1: #ffe9d6;
+	--color-month-banner-2: #f9d7e6;
+	--color-month-banner-3: #e4dbff;
+	--color-pill-dark: rgba(23, 20, 31, 0.82);
+	--color-pill-shadow: #281e5a;
+	--color-check-in-paper: #f2eff8;
+	--color-check-in-shadow: #28145a;
+	--color-answer-lighter: #ddf3e8;
+	--color-answer-lighter-ink: #1e7a61;
+	--color-answer-lighter-dusk: #173229;
+	--color-answer-still: #dce9fa;
+	--color-answer-still-ink: #1f5a9e;
+	--color-answer-still-dusk: #1a2738;
+	--color-answer-heavier: #e6deff;
+	--color-answer-heavier-ink: #4b32c2;
+	--color-answer-heavier-dusk: #2a2440;
+	--color-answer-processed: #ffe6cc;
+	--color-answer-processed-ink: #9a5600;
+	--color-answer-processed-dusk: #35251a;
+}
 
-	--color-event: var(--event);
-	--color-event-foreground: var(--event-foreground);
+@theme static {
+	--color-reflect-sky-1: #e3ccf0;
+	--color-reflect-sky-2: #f6d3e2;
+	--color-reflect-sky-3: #fde4da;
+	--color-reflect-sky-4: rgba(247, 245, 251, 0);
+	--color-reflect-sky-late-1: #151029;
+	--color-reflect-sky-late-2: #1b1530;
+	--color-reflect-sky-late-3: rgba(14, 12, 21, 0);
+	--color-reflect-glow-1: rgba(255, 179, 138, 0.95);
+	--color-reflect-glow-2: rgba(255, 141, 180, 0.55);
+	--color-reflect-glow-3: rgba(180, 155, 255, 0);
+	--color-reflect-glow-late-1: rgba(245, 176, 79, 0.9);
+	--color-reflect-glow-late-2: rgba(236, 122, 102, 0.45);
+	--color-reflect-glow-late-3: rgba(236, 122, 102, 0);
+	--color-reflect-tide-1: rgba(255, 190, 140, 0.42);
+	--color-reflect-tide-2: rgba(255, 160, 120, 0.18);
+	--color-reflect-tide-3: rgba(255, 160, 120, 0.06);
+	--color-reflect-tide-late-1: rgba(245, 176, 79, 0.22);
+	--color-reflect-tide-late-2: rgba(236, 122, 102, 0.1);
+	--color-reflect-tide-late-3: rgba(236, 122, 102, 0.04);
+	--color-reflect-warm: #d9822b;
+	--color-reflect-warm-glow: rgba(242, 163, 58, 0.55);
+	--color-reflect-mic-glow: rgba(255, 179, 138, 0.5);
+	--color-reflect-mic-glow-end: rgba(255, 141, 180, 0);
+	/* wait: the ensō's ink (enso.tsx; the board's `eink`, printed here because the shader takes
+	   RGB and a theme may set it in oklch) and the alpha ramp that fades its paper to the edge */
+	--color-reflect-ink: #b8621e;
+	--color-reflect-ink-late: #f5b04f;
+	--color-reflect-paper-fade-1: rgba(0, 0, 0, 1);
+	--color-reflect-paper-fade-2: rgba(0, 0, 0, 0.6);
+	--color-reflect-paper-fade-3: rgba(0, 0, 0, 0);
+	--color-reflect-mirror-halo: rgba(255, 200, 150, 0.9);
+	--color-reflect-mirror-panel-shadow: rgba(60, 30, 120, 0.3);
+	--color-reflect-care-shadow: rgba(120, 50, 30, 0.4);
+	--color-reflect-breath-ring: rgba(242, 163, 58, 0.32);
+	--color-reflect-breath-1: rgba(255, 179, 138, 0.5);
+	--color-reflect-breath-2: rgba(255, 141, 180, 0.16);
+	--color-reflect-breath-3: rgba(255, 141, 180, 0);
+	--color-reflect-tile-shadow: rgba(180, 90, 30, 0.45);
+	--color-reflect-trace-glow: rgba(242, 163, 58, 0.7);
+	--color-reflect-trace-core: #ffffff;
+	--color-reflect-heard-halo: rgba(255, 200, 150, 0.9);
+}
 
-	--color-offer-ink: var(--offer-ink);
+@theme static {
+	--color-after-light-neutral: rgba(226, 218, 246, 0.95);
+	--color-after-light-cool: rgba(160, 178, 212, 0.95);
+	--color-after-light-warm: rgba(255, 196, 156, 0.95);
+	--color-after-late-light-neutral: rgba(120, 60, 30, 0.55);
+	--color-after-late-light-cool: rgba(52, 64, 96, 0.9);
+	--color-after-late-light-warm: rgba(150, 80, 40, 0.8);
+	--color-after-shadow: rgba(44, 26, 90, 0.3);
+	--color-after-late-shadow: rgba(0, 0, 0, 0.55);
 
-	--color-tone-poetic: var(--tone-poetic);
-	--color-tone-gentle: var(--tone-gentle);
-	--color-tone-direct: var(--tone-direct);
-	--color-tone-witnessed: var(--tone-witnessed);
+	--color-after-rail-heavier: #a3b4d4;
+	--color-after-rail-same: #e4deee;
+	--color-after-rail-lighter: #ffc59e;
+	--color-after-late-rail-heavier: #4a5a80;
+	--color-after-late-rail-same: #3a3350;
+	--color-after-late-rail-lighter: #c27a3e;
+	--color-after-thumb: #ffffff;
+	--color-after-late-thumb: #f3f0fa;
+	--color-after-thumb-shadow: rgba(25, 21, 36, 0.22);
+	--color-after-thumb-ring: rgba(25, 21, 36, 0.08);
 
-	--color-frost-text: var(--frost-text);
+	--color-after-late-star-1: #f5b04f;
+	--color-after-late-star-2: #ec7a66;
+	--color-after-late-star-3: #f7c77a;
+	--color-after-late-star-4: #e8956b;
+	--color-after-you-core: #fff1e6;
+	--color-after-late-you-core: #fff3d6;
+	--color-after-you-warm: #ff9f7a;
+	--color-after-point: #ffffff;
+	--color-after-late-point: #ffecc8;
+	--color-after-point-glow: rgba(255, 170, 140, 0.95);
+	--color-after-late-point-glow: rgba(245, 176, 79, 0.95);
+	--color-after-point-halo: rgba(255, 141, 180, 0.5);
+	--color-after-late-point-halo: rgba(236, 122, 102, 0.5);
 
-	--color-tone-poetic-text: var(--tone-poetic-text);
-	--color-tone-gentle-text: var(--tone-gentle-text);
-	--color-tone-direct-text: var(--tone-direct-text);
-	--color-tone-witnessed-text: var(--tone-witnessed-text);
+	--color-after-floor: rgba(255, 179, 138, 0.5);
+	--color-after-floor-mid: rgba(255, 141, 180, 0.18);
+	--color-after-late-floor: rgba(245, 176, 79, 0.28);
+	--color-after-late-floor-mid: rgba(236, 122, 102, 0.1);
+	--color-after-ready-ring: rgba(255, 160, 130, 0.5);
+	--color-after-ready-glow: rgba(255, 120, 110, 0.45);
+	--color-after-late-ready-ring: rgba(245, 176, 79, 0.45);
+	--color-after-late-ready-glow: rgba(245, 176, 79, 0.3);
+	--color-after-gleam: rgba(255, 180, 140, 0.85);
+	--color-after-late-gleam: rgba(245, 176, 79, 0.8);
+	--color-after-dot-glow: rgba(255, 160, 140, 0.5);
+	--color-after-late-dot-glow: rgba(245, 176, 79, 0.35);
+	--color-after-card-shadow: rgba(60, 30, 120, 0.22);
+
+	--color-after-kindling-1: #d7f0e6;
+	--color-after-kindling-2: #e3dbff;
+	--color-after-kindling-3: #fde9c6;
+	--color-after-late-kindling-1: #2a4a42;
+	--color-after-late-kindling-2: #3a3260;
+	--color-after-late-kindling-3: #4e3d22;
+	--color-after-listen: #e2f2f6;
+	--color-after-listen-ink: #2e7f93;
+	--color-after-late-listen: rgba(125, 211, 232, 0.14);
+}
+
+@theme static {
+	--color-sit-bottom: #f1ecff;
+	--color-sit-late-bottom: #1d1730;
+	--color-sit-wash: rgba(236, 231, 255, 0.95);
+	--color-sit-late-wash: rgba(183, 163, 255, 0.08);
+	--color-sit-floor: rgba(255, 179, 138, 0.58);
+	--color-sit-floor-mid: rgba(255, 141, 180, 0.28);
+	--color-sit-late-floor: rgba(245, 176, 79, 0.34);
+	--color-sit-late-floor-mid: rgba(236, 122, 102, 0.15);
+	--color-sit-rim: rgba(255, 236, 224, 1);
+	--color-sit-rim-mid: rgba(255, 141, 180, 0.55);
+	--color-sit-late-rim: rgba(255, 220, 160, 1);
+	--color-sit-late-rim-mid: rgba(236, 122, 102, 0.5);
+	--color-sit-core: #ffffff;
+	--color-sit-late-core: #ffecc8;
+	--color-sit-late-ember-2: #ec7a66;
+}
+
+@theme static {
+	--color-peers-late-star-2: #ec7a66;
+	--color-peers-late-star-3: #f7c77a;
+	--color-peers-late-star-4: #e8956b;
+	--color-peers-you-core: #fff1e6;
+	--color-peers-late-you-core: #fff3d6;
+	--color-peers-point: #ffffff;
+	--color-peers-late-point: #ffecc8;
+	--color-peers-point-near: rgba(255, 170, 140, 1);
+	--color-peers-late-point-near: rgba(245, 176, 79, 1);
+	--color-peers-point-far: rgba(255, 141, 180, 1);
+	--color-peers-late-point-far: rgba(236, 122, 102, 1);
+	--color-peers-chip: rgba(255, 255, 255, 0.78);
+	--color-peers-late-chip: rgba(245, 176, 79, 0.13);
+	--color-peers-chip-edge: rgba(255, 160, 130, 0.55);
+	--color-peers-late-chip-edge: rgba(245, 176, 79, 0.45);
+	--color-peers-chip-shadow: rgba(255, 120, 110, 0.6);
+	--color-peers-late-chip-shadow: rgba(245, 176, 79, 0);
+	--color-peers-glyph-ring: rgba(255, 150, 130, 0.9);
+	--color-peers-late-glyph-ring: rgba(245, 176, 79, 0.9);
+	--color-peers-glyph-glow: rgba(255, 160, 140, 0.5);
+	--color-peers-late-glyph-glow: rgba(245, 176, 79, 0.35);
+	--color-peers-floor: rgba(255, 179, 138, 0.44);
+	--color-peers-floor-mid: rgba(255, 141, 180, 0.16);
+	--color-peers-late-floor: rgba(245, 176, 79, 0.24);
+	--color-peers-late-floor-mid: rgba(236, 122, 102, 0.09);
+	--color-peers-dot-glow: rgba(255, 160, 140, 0.45);
+	--color-peers-late-dot-glow: rgba(245, 176, 79, 0.35);
+	--color-peers-card-shadow: rgba(60, 30, 120, 0.22);
+}
+
+@theme static {
+	--color-badge-night-dusk: #1b1d48;
+	--color-badge-night-day: #e7e7f7;
+	--color-badge-night-glow: #f5a03a;
+	--color-badge-dawn-dusk: #4a1f35;
+	--color-badge-dawn-day: #f9e5ec;
+	--color-badge-dawn-glow: #ff9fb4;
+	--color-badge-green-dusk: #1b3223;
+	--color-badge-green-day: #e5efe4;
+	--color-badge-green-glow: #e8c35c;
+	--color-badge-teal-dusk: #132d44;
+	--color-badge-teal-day: #dfeaf4;
+	--color-badge-teal-glow: #ffd27a;
+	--color-badge-aurora-dusk: #1f1947;
+	--color-badge-aurora-day: #ebe5fb;
+	--color-badge-aurora-glow: #c4a8ff;
+
+	--color-badge-engrave: #f6cf8a;
+	--color-badge-engrave-edge: rgba(0, 0, 0, 0.55);
+	--color-badge-shadow-dusk: rgba(0, 0, 0, 0.55);
+	--color-badge-shadow-day: rgba(40, 24, 60, 0.35);
+	--color-badge-band: rgba(255, 255, 255, 0.55);
+	--color-badge-band-clear: rgba(255, 255, 255, 0);
+	/* The badge share card: printed on the family's dusk, the same in every theme. */
+	--color-badge-card-ink: #fbf6ee;
+	--color-badge-card-muted: rgba(251, 246, 238, 0.74);
+
+	--color-arrival-fire-dusk: #17111a;
+	--color-arrival-fire-day: #fff6ea;
+	--color-arrival-cta-dusk: #f3f0fa;
+	--color-arrival-cta-ink-dusk: #17102f;
+	--color-arrival-count-ghost-dusk: #3a3140;
+	--color-arrival-count-lit-dusk: #f5b04f;
+	--color-arrival-count-ghost-day: #e9decf;
+	--color-arrival-count-lit-day: #b86a10;
+	--color-arrival-check-dusk: #2a1600;
+	--color-arrival-today-ring: rgba(242, 163, 58, 0.32);
+	--color-arrival-frost-wash-dusk: rgba(143, 195, 240, 0.14);
+	--color-arrival-frost-wash-day: #e3effb;
+	--color-arrival-dot-off-dusk: rgba(255, 255, 255, 0.09);
+	--color-arrival-dot-off-day: rgba(25, 21, 36, 0.09);
+}
+
+@theme static {
+	--color-connect-art-violet-from: #9e8cf2;
+	--color-connect-art-violet-to: #5b47c9;
+	--color-connect-art-teal-from: #7fd3e6;
+	--color-connect-art-teal-to: #2f8fa8;
+	--color-connect-art-rose-from: #f7b7c8;
+	--color-connect-art-rose-to: #d6467a;
+	--color-connect-flame-1: #ffd9a8;
+	--color-connect-flame-2: #f2a33a;
+	--color-connect-flame-3: #c46a12;
+}
+
+@theme static {
+	--color-letter-paper-day: #fbf5e9;
+	--color-letter-back-day: #f0e5d0;
+	--color-letter-shadow-day: rgba(80, 45, 10, 0.45);
+	--color-letter-edge-day: rgba(120, 80, 30, 0.14);
+	--color-letter-paper-dusk: #f2eadb;
+	--color-letter-back-dusk: #e3d6be;
+	--color-letter-paper-night: #e6dcc8;
+	--color-letter-back-night: #d4c5aa;
+	--color-letter-shadow-dark: rgba(0, 0, 0, 0.8);
+	--color-letter-ink: #2b2233;
+	--color-letter-ink-faint: rgba(43, 34, 51, 0.42);
+	--color-letter-crease: rgba(120, 80, 30, 0.07);
+	--color-letter-ember-1: #f7b567;
+	--color-letter-ember-2: #e9822f;
+	--color-letter-ember-3: #b4532a;
+	--color-letter-seal-shadow: rgba(120, 50, 10, 0.6);
+	--color-letter-mark-glow: rgba(245, 160, 70, 0.45);
+	--color-letter-ack-ring: rgba(233, 130, 47, 0.45);
+	--color-letter-mark-edge: rgba(120, 80, 30, 0.38);
+	--color-letter-glow-1: rgba(245, 160, 70, 0.8);
+	--color-letter-glow-2: rgba(236, 122, 102, 0.3);
+	--color-letter-glow-clear: rgba(236, 122, 102, 0);
+	--color-letter-heart-1: #ffe6b8;
+	--color-letter-heart-2: #f4a24a;
+	--color-letter-heart-clear: rgba(233, 130, 47, 0);
+	--color-letter-stamp-1: #f9c27a;
+	--color-letter-stamp-rim: rgba(255, 235, 200, 0.35);
+	--color-letter-on-ember: #2a1805;
+}
+
+@theme static {
+	--color-quote-light-text: #fffdf8;
+	--color-quote-light-text-2: rgba(255, 253, 248, 0.84);
+	--color-quote-light-glass: rgba(24, 20, 32, 0.3);
+	--color-quote-light-glass-line: rgba(255, 255, 255, 0.2);
+	--color-quote-light-glass-icon: #ffffff;
+	--color-quote-light-sheet: rgba(24, 20, 32, 0.82);
+	--color-quote-light-sheet-text: #f6f3fb;
+	--color-quote-light-sheet-text-2: rgba(246, 243, 251, 0.68);
+	--color-quote-light-fill: rgba(255, 255, 255, 0.08);
+	--color-quote-light-line: rgba(255, 255, 255, 0.1);
+	--color-quote-light-button: #f6f3fb;
+	--color-quote-light-button-text: #17141c;
+	--color-quote-dark-text: #17141c;
+	--color-quote-dark-text-2: rgba(23, 20, 28, 0.72);
+	--color-quote-dark-glass: rgba(255, 255, 255, 0.55);
+	--color-quote-dark-glass-line: rgba(255, 255, 255, 0.8);
+	--color-quote-dark-glass-icon: #17141c;
+	--color-quote-dark-sheet: rgba(255, 253, 249, 0.9);
+	--color-quote-dark-sheet-text: #17141c;
+	--color-quote-dark-sheet-text-2: rgba(23, 20, 28, 0.64);
+	--color-quote-dark-fill: rgba(23, 20, 28, 0.06);
+	--color-quote-dark-line: rgba(23, 20, 28, 0.09);
+	--color-quote-dark-button: #17141c;
+	--color-quote-dark-button-text: #fffdf8;
+	--color-quote-night: #15121c;
+	--color-quote-resonate: #ff6f82;
+	--color-quote-plus: #f5b04f;
+	--color-quote-plus-ink: #2b1600;
+	--color-quote-shadow: rgba(0, 0, 0, 0.34);
+	--color-quote-drop: #000000;
+	--color-quote-kept-veil: rgba(10, 8, 16, 0.32);
+	--color-quote-kept-ink: #fffdf8;
+	--color-quote-kept-pill-ink: #17141c;
+	--color-quote-kept-soft: rgba(255, 255, 255, 0.14);
+}
+
+@theme static {
+	--color-rate-page: #070605;
+	--color-rate-ink: #fff6ea;
+	--color-rate-cream: #fff1dc;
+	--color-rate-body: rgba(255, 241, 220, 0.74);
+	--color-rate-label: rgba(255, 241, 220, 0.62);
+	--color-rate-close-fill: rgba(255, 241, 220, 0.08);
+	--color-rate-close-edge: rgba(255, 241, 220, 0.12);
+	--color-rate-pill: #fff6ea;
+	--color-rate-pill-ink: #1a120c;
+	--color-rate-glow-core: rgba(217, 130, 43, 0.5);
+	--color-rate-glow-mid: rgba(154, 67, 21, 0.24);
+	--color-rate-leaf: #f5b04f;
+	--color-rate-stem: #e9a04a;
+	--color-rate-star-1: #f5b04f;
+	--color-rate-star-2: #ffc56e;
+	--color-rate-star-3: #ffe2b0;
+	--color-rate-note-paper: #fff4e4;
+	--color-rate-note-ink: #2a1e14;
+	--color-rate-note-mark: #c2581c;
+	--color-rate-note-by: #6b5440;
+	--color-rate-note-shadow: rgba(0, 0, 0, 0.35);
 }

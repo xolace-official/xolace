@@ -1,7 +1,3 @@
-// Flux, live (README § Live Flux, #710): the Xolace face posed by the step's mood, with the
-// mood's own motion on top. Talking holds its pose (the typed words say it), happy hops once
-// as it arrives, warm nods once, listening sends sound rings out, thinking shows three thought
-// dots. Under reduced motion the pose alone says it: no hop or nod, still rings and dots.
 import { useEffect, useEffectEvent, useState } from "react";
 import { View } from "react-native";
 import Animated, {
@@ -14,10 +10,10 @@ import Animated, {
 	withSequence,
 	withTiming,
 } from "react-native-reanimated";
-import type { PaletteName } from "@/features/xolace-face/face-palette";
-import { MOOD_POSES, type Mood } from "@/features/xolace-face/pose";
-import { useFace } from "@/features/xolace-face/use-face";
-import { XolaceFace } from "@/features/xolace-face/xolace-face";
+import type { PaletteName } from "@/components/xolace-face/face-palette";
+import { MOOD_POSES, type Mood } from "@/components/xolace-face/pose";
+import { useFace } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const RING_MS = 1800;
@@ -25,18 +21,15 @@ const RING_FROM = 0.75;
 const RING_GROW = 0.6;
 const RING_OPACITY = 0.55;
 const RING_STILL_OPACITY = 0.3;
-// The rings sit on the body, a little inside the face's box (the prototype's 0.86).
 const RING_INSET = 0.07;
 const DOT_MS = 600;
 const DOT_STAGGER_MS = 300;
 const DOT_DIM = 0.15;
-// Smallest first, rising to the top right like a thought bubble, as fractions of the face.
 const DOTS = [
 	{ r: 0.025, x: 0.8, y: 0.2 },
 	{ r: 0.03, x: 0.87, y: 0.13 },
 	{ r: 0.035, x: 0.95, y: 0.05 },
 ] as const;
-/** How long each character of a line takes to say; `ask` types its question at this pace. */
 export const SAY_MS_PER_CHAR = 38;
 
 type Props = { mood: Mood; palette?: PaletteName; size: number };
@@ -46,7 +39,6 @@ export function Flux({ mood, palette, size }: Props) {
 	const face = useFace(MOOD_POSES[mood]);
 
 	useEffect(() => face.to(MOOD_POSES[mood]), [face.to, mood]);
-	// Once per arrival at the mood: the motion setting loading later mustn't play it again.
 	const arrive = useEffectEvent(() => {
 		if (mood === "happy") {
 			face.hop();
@@ -62,7 +54,6 @@ export function Flux({ mood, palette, size }: Props) {
 			importantForAccessibility="no-hide-descendants"
 			style={{ height: size, width: size }}
 		>
-			{/* One still ring under reduced motion; two would stack into a darker one. */}
 			{mood === "listening" &&
 				(reduced ? [0] : [0, RING_MS / 2]).map((delay) => (
 					<SoundRing
@@ -91,8 +82,6 @@ export function Flux({ mood, palette, size }: Props) {
 	);
 }
 
-/** True while a line of this length is being said, from when it first shows. Never under
- * reduced motion, where `ask` shows its line at once too. */
 export function useSaying(line: string) {
 	const reduced = useEffectiveReducedMotion();
 	const [saying, setSaying] = useState(true);

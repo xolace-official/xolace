@@ -1,5 +1,10 @@
-import { AaSheet } from "@/features/library/reader/aa-sheet";
+import { AaSheet } from "@/features/lantern/reader/sheets/aa-sheet";
+import { AppearanceData } from "@/features/lantern/reader/sheets/sheets-data";
 
 export default function ReaderAppearanceRoute() {
-	return <AaSheet />;
+	return (
+		<AppearanceData>
+			<AaSheet />
+		</AppearanceData>
+	);
 }

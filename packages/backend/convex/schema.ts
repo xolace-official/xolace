@@ -1,23 +1,48 @@
 import { vWorkflowId } from "@convex-dev/workflow";
+import { vWorkIdValidator } from "@convex-dev/workpool";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { dailyQuoteSettingValidator } from "./dailyQuotes/validators";
+import {
+	bandValidator,
+	lateRiskValidator,
+	letterAimValidator,
+	letterStatusValidator,
+	optInValidator,
+	poolValidator,
+	reportReasonValidator,
+	senderSeenValidator,
+} from "./letters/validators";
 import { specialtyValidator } from "./lib/specialties";
 import {
 	activityActionTypeValidator,
 	chatModerationCategoryValidator,
 	conversationRoleValidator,
+	dataRetentionPreferenceValidator,
 	domainValidator,
+	escalationSourceValidator,
+	exploreHiddenContinueValidator,
+	explorePhaseValidator,
+	followUpDecisionSourceValidator,
+	followUpReasonCodeValidator,
 	insightFeatureValidator,
 	intakeRowAnswerValidators,
 	licenceValidator,
 	motionPreferenceValidator,
 	platformValidator,
+	profileCardValidator,
+	quoteBackgroundFileValidator,
+	quoteBackgroundInkValidator,
+	quoteBackgroundKindValidator,
+	quoteBackgroundValidator,
 	resourceValidator,
 	safeguardLevelValidator,
+	sessionErrorCodeValidator,
 	supportNeedValidator,
 	talkIssueValidator,
 	talkPeakValidator,
 	trackLoudnessValidator,
+	trackPeaksValidator,
 	trackSoundValidator,
 	triggerTypeValidator,
 } from "./lib/validators";
@@ -28,6 +53,28 @@ import {
 	talkViewValidator,
 	voiceSlugValidator,
 } from "./lib/voices";
+import {
+	channelErrorKindValidator,
+	channelPlanValidator,
+	deliveryStatusValidator,
+	emailChannelStatusValidator,
+	followUpTierValidator,
+	identityStatusValidator,
+	inboundStatusValidator,
+	linkSourceValidator,
+	outreachChannelValidator,
+	outreachContentValidator,
+	outreachIntentValidator,
+	outreachMomentValidator,
+	outreachOutcomeValidator,
+	outreachProvenanceValidator,
+	outreachVariantsValidator,
+	pendingBurstValidator,
+	replyCountValidator,
+	revokedReasonValidator,
+	suppressedReasonValidator,
+} from "./outreach/validators";
+import { milestoneDetailValidator } from "./streaks/milestones";
 
 // =============================================================
 // XOLACE BETA
@@ -69,6 +116,31 @@ export default defineSchema({
 	]),
 
 	// ===========================================================
+	// ADMIN AUDIT LOG (#775)
+	// ===========================================================
+	//
+	// One row each time an admin looks at a user's private records: which
+	// admin, whose records, when. Clerk ids, not profile ids, so a row says
+	// who it was about after the account is gone. Append-only.
+	//
+	admin_audit_log: defineTable({
+		action: v.union(v.literal("outreach_viewed"), v.literal("letter_viewed")),
+		adminClerkUserId: v.string(),
+		at: v.number(),
+		// letter_viewed: the review whose letter was read (letters spec §9).
+		letterReviewId: v.optional(v.id("letter_reviews")),
+		// Whose outreach or words were looked at. Absent for a letter whose
+		// sender has since deleted their account.
+		targetClerkUserId: v.optional(v.string()),
+	})
+		.index("by_target", ["targetClerkUserId", "at"])
+		.index("by_admin", ["adminClerkUserId", "at"])
+		// letter_viewed rows go after a year (letters spec §10).
+		.index("by_action_at", ["action", "at"])
+		// A sender's deletion clears their id from letter_viewed rows.
+		.index("by_action_target", ["action", "targetClerkUserId"]),
+
+	// ===========================================================
 	// AGE DECLARATIONS (#716)
 	// ===========================================================
 	//
@@ -92,7 +164,7 @@ export default defineSchema({
 		promptVersion: v.string(),
 		source: v.literal("self"),
 		// Which gate asked.
-		surface: v.literal("xolacer_chat"),
+		surface: v.union(v.literal("xolacer_chat"), v.literal("letters")),
 		userId: v.id("users"),
 	}).index("by_user_declared", ["userId", "declaredAt"]),
 
@@ -112,6 +184,10 @@ export default defineSchema({
 	//
 	audio_tracks: defineTable({
 		active: v.boolean(), // retire (licence lapse) without deleting
+		// Explore's "For the hour" (B6): the times of day this track suits. Set
+		// by the ingest manifest or `browse/forHour:setBestAt`; no admin screen.
+		// Untagged tracks only fill the shelf when too few are tagged.
+		bestAt: v.optional(v.array(explorePhaseValidator)),
 		durationSec: v.number(),
 		// Admin edits (admin v1 step 6): the staff member's Clerk subject on the
 		// latest admin write, and when. A file import replaces the row and drops
@@ -120,7 +196,7 @@ export default defineSchema({
 		episodeNumber: v.optional(v.number()),
 		family: v.union(v.literal("support"), v.literal("music")),
 		featured: v.optional(v.boolean()), // hand-picked Browse hero; set from the Convex dashboard
-		key: v.string(), // R2 object key, e.g. `${family}/${slug}.m4a`
+		key: v.string(), // R2 object key, e.g. `${family}/${slug}/<uuid>.mp3`
 
 		// music-family
 		licence: v.optional(licenceValidator), // required at write for family="music"
@@ -129,6 +205,9 @@ export default defineSchema({
 		// support-family
 		narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]
 		newUntil: v.optional(v.number()), // ms epoch; in the Browse "New" shelf while > now
+		// Both families: the player's waveform, 60 numbers 0–1, of the audio at
+		// `sha256` (lib/validators.ts trackPeaksValidator, audio/measurePeaks.ts).
+		peaks: v.optional(trackPeaksValidator),
 		retiredAt: v.optional(v.number()), // set when taken down after being live; tells Retired from Draft
 		safetyReviewedAt: v.optional(v.number()),
 
@@ -163,6 +242,12 @@ export default defineSchema({
 		.index("by_family_and_topic", ["family", "topic"])
 		.index("by_family_and_secondaryTopic", ["family", "secondaryTopic"])
 		.index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
+		// Explore's "Five minutes or less" (B6): short active tracks of a family.
+		.index("by_family_and_active_and_durationSec", [
+			"family",
+			"active",
+			"durationSec",
+		])
 		.index("by_thumbKey", ["thumbKey"])
 		.searchIndex("search_searchText", {
 			filterFields: ["active", "family"],
@@ -219,6 +304,102 @@ export default defineSchema({
 		thumbhash: v.string(),
 		updatedAt: v.number(),
 	}).index("by_artKey", ["artKey"]),
+
+	// ===========================================================
+	// OUTREACH CHANNELS (#760, #763)
+	// ===========================================================
+	//
+	// A chat a user linked on a channel (Telegram first). One row per
+	// (channel, externalId): a relink reactivates it. Push has no row here.
+	// Written by the link lifecycle; read by the outreach router.
+	//
+	channel_identities: defineTable({
+		awaitingReflection: v.optional(
+			v.object({ cardId: v.id("follow_up_cards"), until: v.number() })
+		),
+		channel: outreachChannelValidator,
+		country: v.optional(v.string()),
+		// Shown only to the user; never to PostHog or admin.
+		displayHandle: v.optional(v.string()),
+		emotionalProfileId: v.id("emotional_profiles"),
+		// A string: Telegram ids are 64-bit.
+		externalId: v.string(),
+		// When a data wipe or account deletion last cleared this chat's history
+		// (#773): a reply begun before it may not send or keep anything.
+		historyClearedAt: v.optional(v.number()),
+		// The latest crisis text from this chat (#772): an AI reply begun before
+		// it isn't sent. The account's 72 h hold reads the profile's own time.
+		lastCrisisAt: v.optional(v.number()),
+		lastInboundAt: v.optional(v.number()),
+		linkedAt: v.number(),
+		// Texts screened on arrival and waiting out a burst for one reply
+		// (#771). Gone within seconds, and dropped when the link ends.
+		pendingBurst: v.optional(pendingBurstValidator),
+		// The last few messages each way, for the next AI reply's context
+		// (#770). Kept 24 h at most, and dropped when the link ends.
+		recentTurns: v.optional(
+			v.array(
+				v.object({
+					at: v.number(),
+					role: v.union(v.literal("person"), v.literal("xolace")),
+					text: v.string(),
+				})
+			)
+		),
+		// AI replies used on the user's local day, against the plan's cap (#771).
+		replyCount: v.optional(replyCountValidator),
+		revokedAt: v.optional(v.number()),
+		revokedReason: v.optional(revokedReasonValidator),
+		// Texts still being screened (#771): a burst waits for them, until
+		// `until` at the latest, so a slow check can't split it.
+		screening: v.optional(v.object({ count: v.number(), until: v.number() })),
+		// The bot's messages to this chat in the last 48 h, the window Telegram
+		// lets a bot delete them in: account deletion and a data wipe delete
+		// them (#773). Older entries drop off as new ones are added.
+		sentMessages: v.optional(
+			v.array(v.object({ at: v.number(), id: v.string() }))
+		),
+		status: identityStatusValidator,
+		telegramUserId: v.optional(v.string()),
+		tokenIdentifier: v.string(),
+		// Reserved for WhatsApp's 24 h window.
+		windowExpiresAt: v.optional(v.number()),
+	})
+		.index("by_channel_external", ["channel", "externalId"])
+		.index("by_profile_channel", ["emotionalProfileId", "channel"])
+		.index("by_profile_channel_status", [
+			"emotionalProfileId",
+			"channel",
+			"status",
+		])
+		.index("by_status_revokedAt", ["status", "revokedAt"]),
+
+	// A minted link token. Only the SHA-256 is stored; 15-minute TTL, one use.
+	channel_link_tokens: defineTable({
+		channel: outreachChannelValidator,
+		consentLanguageVersion: v.optional(v.string()),
+		emotionalProfileId: v.id("emotional_profiles"),
+		expiresAt: v.number(),
+		regionCode: v.optional(v.string()),
+		/** Where in the app the link was started (#774). */
+		source: v.optional(linkSourceValidator),
+		tokenHash: v.string(),
+		usedAt: v.optional(v.number()),
+	})
+		.index("by_hash", ["tokenHash"])
+		.index("by_profile_channel", ["emotionalProfileId", "channel"]),
+
+	// The bot's messages to a chat under the account it just moved from, so
+	// that account's deletion or wipe still deletes them, and the new
+	// account's doesn't (#773). Dropped 48 h after the move, when Telegram
+	// no longer lets a bot delete any of them.
+	channel_moved_messages: defineTable({
+		channel: outreachChannelValidator,
+		emotionalProfileId: v.id("emotional_profiles"),
+		externalId: v.string(),
+		movedAt: v.number(),
+		sentMessages: v.array(v.object({ at: v.number(), id: v.string() })),
+	}).index("by_profile_channel", ["emotionalProfileId", "channel"]),
 
 	// ===========================================================
 	// CHAT MODERATION VERDICTS (#344)
@@ -344,7 +525,9 @@ export default defineSchema({
 			v.literal("pattern_analysis"),
 			v.literal("anonymized_research"),
 			v.literal("voice_processing"), // Phase 2
-			v.literal("therapy_summary_sharing") // Phase 3
+			v.literal("therapy_summary_sharing"), // Phase 3
+			v.literal("telegram_outreach"), // Linking Telegram (#760)
+			v.literal("letters_receive") // Receiving letters (#748)
 		),
 
 		createdAt: v.number(),
@@ -392,6 +575,29 @@ export default defineSchema({
 		// Account deletion sweeps the rows a xolacer received.
 		.index("by_xolacer", ["xolacerProfileId"]),
 
+	// The daily quote push's schedule and backoff (B19), one row per profile
+	// while `preferences.notifications.dailyQuote.enabled`. The setting is the
+	// truth; this is kept in step with it by `updateNotificationPrefs`, so the
+	// sweep reads due rows by index instead of scanning preferences. No text:
+	// ids and times only.
+	daily_quote_pushes: defineTable({
+		// When the sweep next looks at this profile: the start of the next local
+		// slot hour, or a retry a few minutes on while today's quote is made.
+		dueAt: v.number(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		// Sends in a row that reached the person and whose quote they didn't
+		// open by the next slot. 5 → every other day; 10 → paused. Opening a
+		// quote sets it back to 0.
+		ignored: v.number(),
+		// The last send still to be settled as opened or ignored.
+		lastOutreachId: v.optional(v.id("outreach")),
+		lastQuoteId: v.optional(v.id("daily_quotes")),
+		// When the last quote went to the person, for every other day.
+		lastSentAt: v.optional(v.number()),
+	})
+		.index("by_profile", ["emotionalProfileId"])
+		.index("by_due", ["dueAt"]),
+
 	// ===========================================================
 	// 14. DAILY QUOTES
 	// ===========================================================
@@ -411,6 +617,18 @@ export default defineSchema({
 		// true for session-derived (personalized) quotes, gated to Xolace+ via
 		// hasPremium() in dailyQuotes.getToday. Always false for curated quotes.
 		isPremium: v.boolean(),
+
+		// The quote background (a `quote_backgrounds` key) the user had on when
+		// they kept this quote, so Words you kept shows each card as it was kept
+		// (S11). Set by `save`, cleared by `unsave`. A key the catalogue no longer
+		// lists is drawn as Poster by the app.
+		keptBackground: v.optional(v.string()),
+
+		// When the user first opened this quote (B19): the app's `markOpened`,
+		// a reaction, a save or a reply, or a tap on the daily quote push.
+		// Undefined on rows from before it. The daily quote push skips a day whose
+		// quote is already open, and counts an unopened one toward its backoff.
+		openedAt: v.optional(v.number()),
 
 		// User reaction. Null until the user reacts.
 		// DEPRECATED(remove-after: app >= 1.10.0): the "not_today" literal only —
@@ -484,6 +702,17 @@ export default defineSchema({
 		// what keeps them out of the paginated list, with no filter pass.
 		.index("by_profile_saved", ["emotionalProfileId", "savedAt"]),
 
+	// Whether email can reach a person (#916): set by Resend's bounce and
+	// complaint events (outreach/email/events.ts), read by the router. At
+	// most one row per profile; none means linked. Never holds an address.
+	email_channel_states: defineTable({
+		changedAt: v.number(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		status: emailChannelStatusValidator,
+	})
+		.index("by_profile", ["emotionalProfileId"])
+		.index("by_status", ["status"]),
+
 	// ===========================================================
 	// 6. EMOTIONAL METADATA
 	// ===========================================================
@@ -497,6 +726,9 @@ export default defineSchema({
 	// One metadata record per session. 1:1 relationship.
 	//
 	emotional_metadata: defineTable({
+		// The classifier's own requiresFollowUp, before escalation or gave_up
+		// joined it on the session. A re-classification only raises it.
+		aiRequiresFollowUp: v.optional(v.boolean()),
 		// Which classifier version produced this interpretation.
 		// Enables re-classification when models improve —
 		// create a new metadata record with the new version,
@@ -540,6 +772,10 @@ export default defineSchema({
 		// tuning only. Co-located here with all other classifier output.
 		// null/undefined when the classifier did not request a follow-up.
 		followUpReason: v.optional(v.string()),
+		// The rubric line the classifier applied, yes or no (lib/followUpCadence.ts).
+		// Filled for every classification since it was added; absent on older
+		// rows. Same internal-only rule as followUpReason.
+		followUpReasonCode: v.optional(followUpReasonCodeValidator),
 
 		// More nuanced label within the broad category.
 		// "frustration" under "anger", "grief" under "sadness",
@@ -557,6 +793,9 @@ export default defineSchema({
 
 		// 1-10. How intense is this feeling?
 		intensity: v.number(),
+		// One sentence on why the classifier said no. Kept apart from
+		// followUpReason so the check-in card writer never sees a "no" reason.
+		noFollowUpReason: v.optional(v.string()),
 
 		// --- Emotion Classification ---
 
@@ -769,6 +1008,11 @@ export default defineSchema({
 		// The local day ("YYYY-MM-DD") daysShowedUp last counted. Survives a data
 		// wipe with it, so a day the wipe emptied of activity can't count again.
 		lastShowedUpDay: v.optional(v.string()),
+		// The latest crisis text this account sent the Telegram bot (#772). A
+		// repeat shares the first one's escalation event, and a chat can move to
+		// another account, so the 72 h hold counts from this. Written only by
+		// outreach/telegram/reply.ts.
+		lastTelegramCrisisAt: v.optional(v.number()),
 
 		// Longest streak ever reached. A record — it never decays, only grows
 		// via Math.max on session completion. Optional for rows created before
@@ -871,6 +1115,10 @@ export default defineSchema({
 		createdAt: v.number(),
 		// Optional: stripped during account deletion anonymization.
 		emotionalProfileId: v.optional(v.id("emotional_profiles")),
+		// The follow-up open when a channel crisis came in (#772).
+		followUpCardId: v.optional(v.id("follow_up_cards")),
+		// The inbound update a channel crisis came in on (#772).
+		inboundEventId: v.optional(v.id("inbound_events")),
 
 		// Which specific resources were presented.
 		// Accepts both legacy string entries and structured Resource objects.
@@ -881,7 +1129,11 @@ export default defineSchema({
 		// For safety team oversight.
 		reviewedByHuman: v.boolean(),
 		reviewerNotes: v.optional(v.string()),
-		sessionId: v.id("sessions"),
+		// The session that escalated. Absent for a channel message (#772).
+		sessionId: v.optional(v.id("sessions")),
+
+		// Where the crisis was raised. Absent = "session" (rows before #772).
+		source: v.optional(escalationSourceValidator),
 
 		// 0.0-1.0. AI's confidence in the risk assessment.
 		triggerConfidence: v.number(),
@@ -915,6 +1167,9 @@ export default defineSchema({
 
 		// Lookup all events for a session.
 		.index("by_session", ["sessionId"])
+
+		// One channel crisis event per open follow-up (#772).
+		.index("by_card", ["followUpCardId"])
 
 		// Unreviewed events queue.
 		.index("by_review_status", ["reviewedByHuman", "createdAt"])
@@ -1071,17 +1326,25 @@ export default defineSchema({
 		// Whether the triggering session was escalation-derived. Gates the
 		// "resources are still here" link in the UI.
 		escalationDerived: v.boolean(),
+		// First viewing, never re-stamped: a shown card expires
+		// WAITING_CARD_LIFETIME_MS after it. Absent on cards shown before B1.
+		firstShownAt: v.optional(v.number()),
+		// When `markReturn` flipped it to ready (the person came back).
+		// Absent on cards made ready before B1.
+		readyAt: v.optional(v.number()),
 		resolvedAt: v.optional(v.number()),
 
 		// The session that triggered this follow-up.
 		sessionId: v.id("sessions"),
+		// Latest viewing; `markShown` re-stamps it on every re-show.
 		shownAt: v.optional(v.number()),
 
 		// "pending"    — workflow active, card not yet due
 		// "ready"      — user returned (or nudge fired); show on next open
 		// "shown"      — card was rendered in-app, awaiting user response
 		// "resolved"   — user tapped a response or dismissed
-		// "expired"    — workflow timed out with no return
+		// "expired"    — workflow timed out with no return, or shown and
+		//                unanswered for WAITING_CARD_LIFETIME_MS (silent)
 		// "superseded" — a newer, equal-or-higher-weight session replaced it;
 		//                stays visible/tappable until an explicit user dismiss
 		status: v.union(
@@ -1121,6 +1384,13 @@ export default defineSchema({
 
 		// Profile screen: follow-up history, newest first.
 		.index("by_profile_created", ["emotionalProfileId", "createdAt"])
+
+		// Outreach router: is an escalation-derived card still open? (#760)
+		.index("by_profile_escalation_status", [
+			"emotionalProfileId",
+			"escalationDerived",
+			"status",
+		])
 
 		// Workflow cancellation / onComplete lookup.
 		.index("by_workflow", ["workflowId"])
@@ -1292,6 +1562,32 @@ export default defineSchema({
 		target: v.union(v.literal("library"), v.literal("audio")),
 	}).index("by_number", ["number"]),
 
+	// One row per provider update a channel's webhook received (Telegram
+	// first), deduped on (channel, providerEventId). Payload text is stripped
+	// once processed; rows are deleted after 30 days.
+	inbound_events: defineTable({
+		channel: outreachChannelValidator,
+		externalId: v.string(),
+		// SHA-256 of a `/start <token>` link token (#766). The webhook strips
+		// the token from the payload before storing; cleared once processed.
+		linkTokenHash: v.optional(v.string()),
+		payload: v.any(),
+		providerEventId: v.string(),
+		receivedAt: v.number(),
+		// Set when the stuck-row cron put it back on the pool (#773); a row
+		// still stuck after that is marked `failed`.
+		requeuedAt: v.optional(v.number()),
+		status: inboundStatusValidator,
+		// The pool job handling it (#773): while that is still queued or
+		// running, the stuck-row cron leaves the row alone.
+		workId: v.optional(vWorkIdValidator),
+	})
+		.index("by_channel_event", ["channel", "providerEventId"])
+		// A chat's updates, for account deletion and a data wipe (#773).
+		.index("by_channel_external", ["channel", "externalId"])
+		.index("by_status_received", ["status", "receivedAt"])
+		.index("by_received", ["receivedAt"]),
+
 	// Intent-only premium teaser waitlist. During the pre-billing phase, tapping a
 	// blurred insight teaser records a "notify me" intent here (no price, no IAP).
 	// One row per profile per feature; idempotent on re-tap.
@@ -1338,6 +1634,191 @@ export default defineSchema({
 		...intakeRowAnswerValidators,
 	}).index("by_profile", ["emotionalProfileId"]),
 
+	// Who blocked whom: hiding or reporting a letter means its sender is
+	// never matched to that recipient again (#750). Unhide keeps it.
+	letter_blocks: defineTable({
+		cause: v.union(v.literal("hide"), v.literal("report")),
+		createdAt: v.number(),
+		recipientProfileId: v.id("emotional_profiles"),
+		senderProfileId: v.id("emotional_profiles"),
+	})
+		.index("by_pair", ["recipientProfileId", "senderProfileId"])
+		// A sender's account deletion (decision B).
+		.index("by_sender", ["senderProfileId"]),
+
+	// One row per person who has answered the offer or sent a letter: the
+	// opt-in, the matching pool state, and the sender's caps. No row = opt-in
+	// unset, never sent. Server-only: no client reads it whole.
+	letter_profiles: defineTable({
+		// Copied from the latest eligible session (§5); cleared when not.
+		aim: v.optional(letterAimValidator),
+		band: v.optional(bandValidator),
+		emotionalProfileId: v.id("emotional_profiles"),
+		// Resolved recipient language: their sessions' (slice 6), else their
+		// locale's. Absent = unknown, never matched.
+		language: v.optional(v.string()),
+		// 0 until their first letter, so never-received sorts first.
+		lastReceivedAt: v.number(),
+		// The sender's local day (YYYY-MM-DD) of their last stored letter: the
+		// 1-a-day cap. A withdraw doesn't give it back.
+		lastSentDay: v.optional(v.string()),
+		// A late re-check found this sender at risk after they were told their
+		// letter was on its way: intake's care shows at their next open, then
+		// `letters.status.lateRiskShown` clears it.
+		lateRisk: v.optional(lateRiskValidator),
+		// The device locale sent with Yes.
+		locale: v.optional(v.string()),
+		metadataAt: v.optional(v.number()),
+		optIn: v.optional(optInValidator),
+		optInAt: v.optional(v.number()),
+		pausedBy: v.optional(v.union(v.literal("strikes"), v.literal("admin"))),
+		// A silent pause on placing this sender's letters.
+		pausedUntil: v.optional(v.number()),
+		// Whether matching may pick them now. Always "out" unless optIn is yes.
+		pool: poolValidator,
+		// When `pool` may next change on its own.
+		poolCheckAt: v.optional(v.number()),
+		// Random, redrawn at each placement: the last rank.
+		tiebreak: v.number(),
+		// The letter waiting to be opened; it blocks another.
+		unopenedLetterId: v.optional(v.id("letters")),
+	})
+		.index("by_profile", ["emotionalProfileId"])
+		.index("by_pool_check", ["poolCheckAt"])
+		.index("by_pool_aim", [
+			"pool",
+			"language",
+			"aim",
+			"band",
+			"lastReceivedAt",
+			"tiebreak",
+		])
+		.index("by_pool_band", [
+			"pool",
+			"language",
+			"band",
+			"lastReceivedAt",
+			"tiebreak",
+		])
+		// Active pauses, for the admin list.
+		.index("by_paused_until", ["pausedUntil"]),
+
+	// What a person may read (#750): reported letters and held ones, nothing
+	// else.
+	letter_reviews: defineTable({
+		createdAt: v.number(),
+		decidedAt: v.optional(v.number()),
+		// The deciding admin's Clerk subject.
+		decidedBy: v.optional(v.string()),
+		kind: v.union(v.literal("held"), v.literal("report")),
+		letterId: v.id("letters"),
+		// A report's reason.
+		reason: v.optional(reportReasonValidator),
+		// Cut when the reporter deletes their account (decision B).
+		reporterProfileId: v.optional(v.id("emotional_profiles")),
+		// The sender, once a wipe or their retention setting cut them from the
+		// letter while this review was open (or a report came after their wipe,
+		// from `letters.wipedSenderProfileId`), so a decision can still strike
+		// them. Cleared when they delete their account.
+		senderProfileId: v.optional(v.id("emotional_profiles")),
+		state: v.union(
+			v.literal("open"),
+			v.literal("confirmed"),
+			v.literal("dismissed")
+		),
+	})
+		.index("by_state_created", ["state", "createdAt"])
+		.index("by_letter", ["letterId"])
+		// A reporter's deletion or wipe cuts them from their reports.
+		.index("by_reporter", ["reporterProfileId"])
+		// A sender's deletion closes the reviews a wipe moved them onto.
+		.index("by_sender", ["senderProfileId"])
+		// Reviewed text goes 30 days after the decision (decision B).
+		.index("by_decided", ["decidedAt"]),
+
+	// One row: what the hourly sweep last worked out for every client (§9).
+	letter_stats: defineTable({
+		// False while more letters wait than a week of placements.
+		invite: v.boolean(),
+		updatedAt: v.number(),
+	}),
+
+	// A held letter, or a report a person confirmed. Two in 90 days pause the
+	// sender's letters for 30 (§8). No text.
+	letter_strikes: defineTable({
+		at: v.number(),
+		cause: v.union(v.literal("held"), v.literal("report")),
+		reviewId: v.id("letter_reviews"),
+		senderProfileId: v.id("emotional_profiles"),
+	})
+		.index("by_sender_at", ["senderProfileId", "at"])
+		// Strikes past `STRIKE_KEEP_DAYS` go (decision B).
+		.index("by_at", ["at"]),
+
+	// ===========================================================
+	// LETTERS (B12, #743)
+	// ===========================================================
+	//
+	// Short anonymous letters one person writes for a stranger; Xolace picks
+	// who receives each. Spec: docs/plan/letters.md. Keyed on emotional
+	// profiles, like every content table. Nothing here is ever returned that
+	// tells a recipient who wrote a letter, or a sender who received it.
+	//
+	// One row per letter that was stored: passed, couldn't be checked, or held
+	// as hostile. Fixable and at-risk letters are never stored (#750).
+	letters: defineTable({
+		// Received or acknowledged, the recipient side's last change.
+		acknowledgedAt: v.optional(v.number()),
+		// The sender's "For"; absent = anyone. Steers matching only.
+		aim: v.optional(letterAimValidator),
+		// When it passed the check: the FIFO key and the aim window's start.
+		checkedAt: v.optional(v.number()),
+		createdAt: v.number(),
+		// Held by a late re-check, after the sender was told it was on its way:
+		// its Sent row reads "This letter can't be sent" until they dismiss it.
+		heldLate: v.optional(v.boolean()),
+		hiddenAt: v.optional(v.number()),
+		// From the check ("en" at launch).
+		language: v.string(),
+		openedAt: v.optional(v.number()),
+		receivedAt: v.optional(v.number()),
+		// Background re-checks spent on an unchecked letter.
+		recheckCount: v.optional(v.number()),
+		// When an unchecked letter's next re-check should have run. The sweep
+		// re-checks one well past it, so a re-check that failed before writing
+		// its outcome isn't lost until the letter is returned.
+		recheckDueAt: v.optional(v.number()),
+		// Set at placement.
+		recipientProfileId: v.optional(v.id("emotional_profiles")),
+		// Gone from the recipient at once; kept for review.
+		reportedAt: v.optional(v.number()),
+		// Optional so a deleted sender's received letter can stay with its
+		// recipient, cut from the account (decision B).
+		senderProfileId: v.optional(v.id("emotional_profiles")),
+		// The latest Sent status the sender has seen.
+		senderSeen: v.optional(senderSeenValidator),
+		status: letterStatusValidator,
+		// Trimmed, 40 to 500 characters.
+		text: v.string(),
+		// Held letters only: SHA-256 of the trimmed text, so the same words are
+		// refused again without a model call or a second strike.
+		textHash: v.optional(v.string()),
+		// Server-only: the sender of a received letter their data wipe cut from
+		// it (owner, 19 Nov 2026). Read only by the recipient's hide and report,
+		// so the block is still written and a confirmed report still strikes.
+		// Never returned, thrown or pushed; cleared on the sender's deletion.
+		wipedSenderProfileId: v.optional(v.id("emotional_profiles")),
+	})
+		.index("by_sender_created", ["senderProfileId", "createdAt"])
+		.index("by_sender_status", ["senderProfileId", "status"])
+		.index("by_sender_hash", ["senderProfileId", "textHash"])
+		.index("by_recipient_received", ["recipientProfileId", "receivedAt"])
+		.index("by_status_checked", ["status", "checkedAt"])
+		// Recent placements, for the invite backlog (§9).
+		.index("by_received", ["receivedAt"])
+		// A sender's deletion clears the link their wipe left (decision B).
+		.index("by_wiped_sender", ["wipedSenderProfileId"]),
+
 	library_entries: defineTable({
 		active: v.boolean(),
 		// Curator-only — never returned to readers (#387, #404).
@@ -1380,6 +1861,8 @@ export default defineSchema({
 	})
 		.index("by_slug", ["slug"])
 		.index("by_active_and_kind", ["active", "kind"])
+		// Explore's "Five minutes or less" (B6): short active reads.
+		.index("by_active_and_readMin", ["active", "readMin"])
 		.searchIndex("search_searchText", {
 			filterFields: ["active"],
 			searchField: "searchText",
@@ -1487,11 +1970,18 @@ export default defineSchema({
 		lastReadAt: v.optional(v.number()), // last open or position write — orders Continue reading (#419)
 		position: v.optional(v.number()), // resume: 0–1 of the scrollable body
 		saved: v.boolean(),
+		savedAt: v.optional(v.number()), // set on save, cleared on unsave — orders Saved, newest first
 		viewedAt: v.optional(v.number()), // first reader open — the one view
 	})
 		.index("by_emotionalProfileId_and_entryId", [
 			"emotionalProfileId",
 			"entryId",
+		])
+		// Saved, newest first. Rows saved before `savedAt` existed sort last until backfilled.
+		.index("by_emotionalProfileId_and_saved_and_savedAt", [
+			"emotionalProfileId",
+			"saved",
+			"savedAt",
 		])
 		// finishedAt first so Continue reading only walks unfinished rows (#419).
 		.index("by_emotionalProfileId_and_finishedAt_and_lastReadAt", [
@@ -1529,13 +2019,63 @@ export default defineSchema({
 		url: v.optional(v.string()),
 	}).index("by_slug", ["slug"]),
 
+	// Where someone is in a support track (B6), for Explore's "Pick up where
+	// you left off". Written by the player (`audio/progress:record`); music
+	// isn't kept (it loops). Private: one row per (profile, track), purged by
+	// wipe and account deletion like `library_reads`.
+	listen_progress: defineTable({
+		emotionalProfileId: v.id("emotional_profiles"),
+		finishedAt: v.optional(v.number()), // reached the end; cleared if started again
+		positionSec: v.number(),
+		trackId: v.id("audio_tracks"),
+		updatedAt: v.number(), // last position write; orders Continue
+	})
+		.index("by_emotionalProfileId_and_trackId", [
+			"emotionalProfileId",
+			"trackId",
+		])
+		// finishedAt first so Continue only walks unfinished rows.
+		.index("by_emotionalProfileId_and_finishedAt_and_updatedAt", [
+			"emotionalProfileId",
+			"finishedAt",
+			"updatedAt",
+		]),
+
+	// What a user chose on a monthly event's prompt (redesign "Coming back",
+	// B2). No row = still waiting. One row per (profile, event), written once:
+	// "read" can only become "written"; "passed" is final, so the prompt never
+	// comes back. `carryUntil` is set while the prompt rides Today's reflect
+	// card (7 days from the first read or write) and cleared when it expires
+	// (scheduled), is used, or is let go. Private: purged by wipe and account
+	// deletion.
+	monthly_event_states: defineTable({
+		carryUntil: v.optional(v.number()),
+		choice: v.union(
+			v.literal("read"),
+			v.literal("passed"),
+			v.literal("written")
+		),
+		chosenAt: v.number(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		eventId: v.id("monthlyEvents"),
+	})
+		.index("by_emotionalProfileId_and_eventId", [
+			"emotionalProfileId",
+			"eventId",
+		])
+		.index("by_emotionalProfileId_and_carryUntil", [
+			"emotionalProfileId",
+			"carryUntil",
+		]),
+
 	// ===========================================================
 	// 17. MONTHLY EVENTS ("Moments" layer — Phase 1)
 	// ===========================================================
 	//
 	// Team-managed awareness events shown once per user per event.
 	// Seed of the "Moments" infrastructure layer.
-	// No server-side date filtering — client filters in local timezone.
+	// Dates are local calendar days: `getActive` leaves the filtering to the
+	// client; `monthlyEvents/prompt.getWaiting` takes the client's local day.
 	//
 	monthlyEvents: defineTable({
 		body: v.string(),
@@ -1576,7 +2116,10 @@ export default defineSchema({
 		updatedAt: v.optional(v.number()),
 	})
 		.index("by_slug", ["slug"])
-		.index("by_priority", ["priority", "startDate"]),
+		.index("by_priority", ["priority", "startDate"])
+		// The app's reads take the latest-ending events, so ended ones drop out
+		// without the server reading the clock (B2).
+		.index("by_endDate", ["endDate"]),
 
 	// ===========================================================
 	// 10. NOTIFICATION LOG
@@ -1612,6 +2155,10 @@ export default defineSchema({
 				v.literal("not_enough")
 			)
 		),
+
+		// The outreach this push delivered (ADR 0001). Absent on rows written
+		// before the outreach layer.
+		outreachId: v.optional(v.id("outreach")),
 
 		// Whether session/pattern data was available at generation time.
 		patternContextUsed: v.optional(v.boolean()),
@@ -1658,7 +2205,10 @@ export default defineSchema({
 			v.literal("domain_unlock"),
 			// Badges earned and the unlock moment went unseen (#700). Names the
 			// badge, never sparks; own daily bucket.
-			v.literal("achievement")
+			v.literal("achievement"),
+			// Today's quote, at the person's chosen time (B19). A curated quote's
+			// opening words; a personalised one's never leave the app.
+			v.literal("daily_quote")
 		),
 	})
 		// Check: have we already nudged this user recently?
@@ -1672,6 +2222,97 @@ export default defineSchema({
 
 		// Per-user Reach effectiveness queries (Phase 2 learning layer).
 		.index("by_profile_and_reach", ["emotionalProfileId", "reachUsed"]),
+
+	// ===========================================================
+	// OUTREACH (#760, #763)
+	// ===========================================================
+	//
+	// One row per `outreach.enqueue` call: the record of everything Xolace
+	// sends a user outside the app, suppressions included. `notification_log`
+	// stays as push's compatibility record only (ADR 0001).
+	//
+	outreach: defineTable({
+		answeredAt: v.optional(v.number()),
+		content: outreachContentValidator,
+		createdAt: v.number(),
+		dedupeKey: v.optional(v.string()),
+		emotionalProfileId: v.id("emotional_profiles"),
+		followUpId: v.optional(v.id("follow_up_cards")),
+		intent: outreachIntentValidator,
+		// A missed-beat push's in-app moment; absent on rows before it.
+		moment: v.optional(outreachMomentValidator),
+		outcome: outreachOutcomeValidator,
+		provenance: outreachProvenanceValidator,
+		resultedInSession: v.optional(v.boolean()),
+		// Quiet-window deferral: delivery runs at this time.
+		sendAt: v.optional(v.number()),
+		suppressedReason: v.optional(suppressedReasonValidator),
+		tier: v.optional(followUpTierValidator),
+		variants: v.optional(outreachVariantsValidator),
+	})
+		.index("by_dedupe", ["dedupeKey"])
+		.index("by_profile_created", ["emotionalProfileId", "createdAt"])
+		.index("by_follow_up", ["followUpId"]),
+
+	// A channel's config: the kill switch and its plan. A missing row means
+	// the coded default (convex/outreach/channels.ts). Written only by
+	// convex/admin/outreachChannels.ts.
+	outreach_channels: defineTable({
+		channel: outreachChannelValidator,
+		enabled: v.boolean(),
+		plan: channelPlanValidator,
+		updatedAt: v.number(),
+		updatedBy: v.optional(v.string()),
+	}).index("by_channel", ["channel"]),
+
+	// One attempt to land an outreach on one channel.
+	outreach_deliveries: defineTable({
+		attempts: v.number(),
+		channel: outreachChannelValidator,
+		/**
+		 * Telegram: this message is a live check-in (its buttons still work).
+		 * Cleared, never set false, when it collapses (#768).
+		 */
+		checkInOpen: v.optional(v.literal(true)),
+		/** Telegram: when the check-in was edited to its neutral line (#768). */
+		collapsedAt: v.optional(v.number()),
+		createdAt: v.number(),
+		// The ChannelError kind and a provider code; never raw provider text.
+		error: v.optional(
+			v.object({
+				code: v.optional(v.string()),
+				kind: channelErrorKindValidator,
+			})
+		),
+		finishedAt: v.optional(v.number()),
+		isFallback: v.boolean(),
+		// Push: the compatibility row this delivery wrote.
+		notificationLogId: v.optional(v.id("notification_log")),
+		outreachId: v.id("outreach"),
+		providerChatId: v.optional(v.string()),
+		providerMessageId: v.optional(v.string()),
+		/**
+		 * Email: Resend's own id for the email, copied from the first webhook
+		 * event. Outlives the component's copy, so a late bounce or complaint
+		 * still finds its delivery. An opaque id, never an address (ADR 0004).
+		 */
+		resendEmailId: v.optional(v.string()),
+		/** Telegram: when "What was this about?" added the card text (#768). */
+		revealedAt: v.optional(v.number()),
+		sentAt: v.optional(v.number()),
+		status: deliveryStatusValidator,
+		// The workpool item carrying it, so a reroute can cancel it.
+		workId: v.optional(v.string()),
+	})
+		.index("by_outreach", ["outreachId"])
+		// An email's id in the Resend component, to find its delivery when
+		// a bounce or complaint comes in (#916).
+		.index("by_channel_provider_message", ["channel", "providerMessageId"])
+		// Resend's id for an email, for an event that arrives after the
+		// component's daily cleanup deleted its copy.
+		.index("by_channel_resend_email", ["channel", "resendEmailId"])
+		// A chat's live check-ins, to collapse them when its link ends (#768).
+		.index("by_chat_check_in", ["providerChatId", "checkInOpen"]),
 
 	path_steps: defineTable({
 		actionType: v.string(), // catalog key
@@ -1752,17 +2393,29 @@ export default defineSchema({
 
 		// How long to keep session data before auto-purge.
 		// "indefinite" is default. Gives users explicit control.
-		dataRetentionPreference: v.union(
-			v.literal("indefinite"),
-			v.literal("6_months"),
-			v.literal("1_year")
-		),
+		dataRetentionPreference: dataRetentionPreferenceValidator,
 
 		// Profile identity fields (added for profile screen v1).
 		// displayName: warm auto-generated default (nature/light vocabulary), user-editable. Max 30 chars.
 		// avatarId: key into the defined totem set. Defaults to "default". Change flow is Wave 2.
 		displayName: v.optional(v.string()),
 		emotionalProfileId: v.id("emotional_profiles"),
+
+		// Explore's "Pick up where you left off" cards taken off with "Remove
+		// from here" (redesign B7), newest last, at most
+		// `MAX_HIDDEN_CONTINUE`. `hiddenAt` lets Continue show a card again
+		// once the person goes back to it after hiding it, if it chooses to.
+		exploreHiddenContinue: v.optional(v.array(exploreHiddenContinueValidator)),
+		// "Don't use my sessions here": false = Explore suggests nothing from
+		// their sessions ("Because you named…"). Undefined = true. A privacy
+		// promise: any server-side Explore personalisation (B6's
+		// `browse.forYou`) must read it and must not use their sessions, or
+		// anything derived from them, when it's false.
+		exploreUsesSessions: v.optional(v.boolean()),
+
+		// You cards taken off the profile in Settings › Appearance (redesign
+		// B7). Undefined = none hidden. Display only: nothing else changes.
+		hiddenProfileCards: v.optional(v.array(profileCardValidator)),
 
 		// Lantern "Reading as…" (#409): audience facet slugs the reader chose.
 		// Undefined = never answered (the home shows the one-time card); [] =
@@ -1798,13 +2451,24 @@ export default defineSchema({
 			// Badge pushes (#700). Optional; absent follows `milestone` — see
 			// `achievementPushAllowed` (convex/achievements/push.ts).
 			achievement: v.optional(v.boolean()),
+			// Which channel the outreach layer tries first, then next. Absent
+			// means [push]. Written only on linking or "Try this first".
+			channelOrder: v.optional(v.array(outreachChannelValidator)),
 			// Xolacer chat: requests, accepts, declines, messages. Optional because
 			// every row written before it existed has to keep working, and absent
 			// means enabled — see `chatNotificationsAllowed`. One toggle for the
 			// whole feature; nobody wants to mute "accepted" but keep "new message".
 			chat: v.optional(v.boolean()),
+			// The daily quote push (B19) and its time. Absent = never chosen,
+			// which is off. Written only through `updateNotificationPrefs`, which
+			// keeps `daily_quote_pushes` in step. Supersedes
+			// `quotes.notificationEnabled` / `notificationTime`.
+			dailyQuote: v.optional(dailyQuoteSettingValidator),
 			enabled: v.boolean(),
 			gentleReturn: v.boolean(), // "It's been a while..."
+			// Letter pushes: one reached you, yours was received or acknowledged.
+			// Optional; absent means on, like `chat`.
+			letters: v.optional(v.boolean()),
 			milestone: v.boolean(), // "30 days of showing up"
 			patternNudge: v.boolean(), // "Sunday evening..."
 			// Quiet Window: suppress notifications outside these local hours (0–23).
@@ -1842,15 +2506,24 @@ export default defineSchema({
 		// private, never shown to other Xolacers. Cleared by a data wipe.
 		preferredName: v.optional(v.string()),
 
+		// The background behind the daily quote (redesign B7): a key in
+		// `quote_backgrounds` (B18). Undefined = Poster. Kept apart from `quotes`, whose presence opts the account into
+		// the nightly generator and whose `themes` are content slugs.
+		quoteBackground: v.optional(quoteBackgroundValidator),
+
 		// Daily Quotes feature preferences.
 		// Undefined until the user first visits the quotes screen.
 		// Nightly cron only processes users where this is defined OR
 		// they have at least 1 session in the last 30 days.
 		quotes: v.optional(
 			v.object({
-				// Whether the user opted into daily quote notifications.
+				// Whether the user opted into the old on-device daily quote
+				// reminders. DEPRECATED(remove-after: app >= the first build that
+				// adopts them into `notifications.dailyQuote`, B19): read once, by
+				// `dailyQuotes/pushSettings.adoptLegacyReminders`. See DEPRECATIONS.md.
 				notificationEnabled: v.boolean(),
-				// "morning" | "afternoon" | "evening" | "none"
+				// "morning" | "afternoon" | "evening" | "none". Deprecated with
+				// `notificationEnabled`.
 				notificationTime: v.optional(v.string()),
 				// IDs of curated quotes already shown — avoids repeats for 6+ months.
 				shownQuoteIds: v.array(v.id("quotes")),
@@ -2009,6 +2682,28 @@ export default defineSchema({
 		// Single ownership: who currently holds this token.
 		.index("by_token", ["expoPushToken"]),
 
+	// The daily quote's backgrounds (B18), ordered as the Background sheet
+	// shows them. Stills carry no media: the app maps their key to a bundled
+	// image (or draws Poster and Night in code) and skips keys it doesn't know.
+	// A loop's video, first-frame poster and ambient sound are hosted here, put
+	// by scripts/quote-backgrounds/upload.ts. `plus` is the tier, so a
+	// background moves between free and Xolace+ without a release.
+	quote_backgrounds: defineTable({
+		active: v.boolean(),
+		audio: v.optional(quoteBackgroundFileValidator),
+		ink: quoteBackgroundInkValidator,
+		key: v.string(),
+		kind: quoteBackgroundKindValidator,
+		name: v.string(),
+		order: v.number(),
+		plus: v.boolean(),
+		poster: v.optional(quoteBackgroundFileValidator),
+		updatedAt: v.number(),
+		video: v.optional(quoteBackgroundFileValidator),
+	})
+		.index("by_key", ["key"])
+		.index("by_active_and_order", ["active", "order"]),
+
 	// ===========================================================
 	// 13. QUOTES LIBRARY
 	// ===========================================================
@@ -2032,6 +2727,15 @@ export default defineSchema({
 	})
 		.index("by_theme_0", ["themes"])
 		.searchIndex("search_text", { searchField: "text" }),
+
+	// Scratch for migrations:tagReflectionAuthors (#790): one row per distinct
+	// (pooled text, author) pair seen on sessions, so a text two profiles both
+	// wrote is left untagged instead of credited to whichever ran first.
+	// Server-only, like reflections.authorTag; unused once the backfill is done.
+	reflection_author_claims: defineTable({
+		authorTag: v.string(),
+		displayText: v.string(),
+	}).index("by_displayText_and_authorTag", ["displayText", "authorTag"]),
 
 	// ===========================================================
 	// 11. REFLECTION REPORTS
@@ -2081,11 +2785,17 @@ export default defineSchema({
 	//
 	// The anonymized peer reflection pool.
 	//
-	// CRITICAL: NO reference to users, profiles, or sessions.
-	// When a user contributes a reflection, the link is severed
-	// at creation time. This is structural, not policy. Even
-	// with full database access, you cannot trace a reflection
-	// back to its author.
+	// NO reference to users, profiles, or sessions. What this
+	// guarantees, and no more (ADR 0002): a reflection cannot be
+	// traced to its contributor without REFLECTION_AUTHOR_KEY,
+	// which only the server holds. Two caveats a feature must not
+	// build past:
+	// - `authorTag` is an HMAC of the contributor's profile id
+	//   under that key, so the key plus the profiles table links
+	//   a tagged row to its contributor.
+	// - A session keeps an exact copy of the text it contributed
+	//   (`distilledText`), so database access alone can link a
+	//   session-sourced row to its session by matching text.
 	//
 	// The content is AI-distilled — not raw user text.
 	// The AI rewrites to capture emotional essence while
@@ -2095,6 +2805,11 @@ export default defineSchema({
 		// Deliberately imprecise — rounded to nearest day
 		// to prevent timing-based de-anonymization.
 		addedAt: v.number(),
+		// Keyed hash of the contributor's profile id (lib/reflectionAuthor.ts),
+		// so a contributor is never shown their own. Server-only: stripped from
+		// every client and admin response. Unset on seeds, on rows pooled while
+		// the key was missing, and on follow-up shares pooled before #790.
+		authorTag: v.optional(v.string()),
 		// The AI-distilled reflection text.
 		// Written by the articulation engine to capture emotional
 		// essence without identifying details. 1-3 sentences.
@@ -2332,6 +3047,7 @@ export default defineSchema({
 			v.literal("voice"),
 			v.literal("talk") // A companion talk (#592): rawInput is the person's lines only
 		),
+		errorCode: v.optional(sessionErrorCodeValidator),
 
 		// Error message when state is "error" (AI processing failure).
 		errorMessage: v.optional(v.string()),
@@ -2357,6 +3073,11 @@ export default defineSchema({
 
 		// Claude-filled slot values for the matched exercise (e.g. user_phrase).
 		exerciseSlots: v.optional(v.record(v.string(), v.string())),
+		// What decided requiresFollowUp when the session closed: the classifier,
+		// gave_up, escalation, or none; compounding when it alone started one
+		// later (followUps.createAndStart). Internal, never shown. Absent on
+		// sessions closed before it existed.
+		followUpDecidedBy: v.optional(followUpDecisionSourceValidator),
 
 		// Workflow ID returned by workflow.start(). Stored here so:
 		// (1) markReturn can target the right workflow on app open
@@ -2396,6 +3117,13 @@ export default defineSchema({
 		// undefined → Mirror session (always kept until toggle ships).
 		// false → ephemeral / vent-originated → distiller/anonymizer skip it.
 		kept: v.optional(v.boolean()),
+
+		// When this session's kindling started being set up: stamped where
+		// `generate.run` is queued for a Plus member whose session qualifies
+		// (paths/settingUp.ts), removed when that run ends, whatever the outcome,
+		// or by the backstop. Present only while setting up, so Today's card can
+		// say so (`paths.settingUp.get`). Never set on older rows.
+		kindlingSettingUpAt: v.optional(v.number()),
 
 		// Which exercise the matcher picked at mirror time.
 		matchedExerciseId: v.optional(v.id("exercises")),
@@ -2565,6 +3293,11 @@ export default defineSchema({
 		talkSafety: v.optional(talkPeakValidator),
 		talkSlowed: v.optional(v.boolean()),
 
+		// The feeling words the person picked on the write screen (B10), apart
+		// from what they wrote: a "word_cloud" entry picked only words, a
+		// "guided_entry" picked words and wrote. Absent from older builds.
+		textures: v.optional(v.array(v.string())),
+
 		// --- Temporal Context ---
 		// Stored explicitly for fast pattern queries without
 		// needing to compute from timestamps every time.
@@ -2634,7 +3367,14 @@ export default defineSchema({
 		])
 
 		// After-talk review queue (#606): flagged talks, newest first.
-		.index("by_talkFlaggedAt", ["talkFlaggedAt"]),
+		.index("by_talkFlaggedAt", ["talkFlaggedAt"])
+
+		// Today's kindling card: this profile's session whose kindling is being
+		// set up, newest first, in one read (`paths.settingUp.get`).
+		.index("by_emotionalProfileId_and_kindlingSettingUpAt", [
+			"emotionalProfileId",
+			"kindlingSettingUpAt",
+		]),
 
 	// What a profile spent sparks on (#698), one row per purchase. Written only
 	// through convex/achievements/sparks.ts, in the transaction that lowers
@@ -2765,6 +3505,19 @@ export default defineSchema({
 		text: v.string(),
 	}).index("by_session_and_seq", ["sessionId", "seq"]),
 
+	// This deployment's Telegram bot (#765): a single row, absent on a
+	// deployment with no bot. Written by outreach/telegram/bot.ts's
+	// `configureBot` (run by hand), plus the drift cron's last pending count.
+	telegram_bot: defineTable({
+		configuredAt: v.number(),
+		// What the daily drift check last saw, to tell a growing backlog.
+		lastPendingUpdateCount: v.optional(v.number()),
+		// SHA-256 of the webhook `secret_token`; the secret itself is never stored.
+		secretHash: v.string(),
+		// From `getMe`, without the `@`.
+		username: v.string(),
+	}),
+
 	// Topic decoration (#353): a shared topic suffix (`sadness`) may carry its
 	// own cover and display title for the Browse topic grid. One row per slug
 	// across both families; membership stays "≥ 1 active track" — a row here
@@ -2790,6 +3543,9 @@ export default defineSchema({
 		achievementId: v.string(),
 		earnedAt: v.number(),
 		emotionalProfileId: v.id("emotional_profiles"),
+		// A streak milestone's rung only: what that day added and its week
+		// (B14, achievements/milestoneDetail.ts). Rows from before B14 have none.
+		milestone: v.optional(milestoneDetailValidator),
 		// When the user pinned it to their profile row (#699); unset when not pinned.
 		// Set only through convex/achievements/pins.ts.
 		pinnedAt: v.optional(v.number()),
@@ -2875,7 +3631,10 @@ export default defineSchema({
 		.index("by_token", ["tokenIdentifier"])
 
 		// Find accounts pending deletion for the purge job.
-		.index("by_deletion", ["accountStatus", "deletionRequestedAt"]),
+		.index("by_deletion", ["accountStatus", "deletionRequestedAt"])
+
+		// Account status from a profile (the outreach router's deletion gate).
+		.index("by_emotional_profile", ["emotionalProfileId"]),
 
 	// ===========================================================
 	// XOLACE CHANNEL CACHE (#376)

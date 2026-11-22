@@ -4,6 +4,7 @@ import type { MutationCtx } from "../_generated/server";
 import { purgeEpisodicEntries } from "../episodicMemory";
 import { deleteResponsesForCard } from "../followUpResponses";
 import { ACTIVE_STATUSES, cancelFollowUpWorkflow } from "../followUps";
+import { collapseCard } from "../outreach/telegram/checkIn";
 
 /**
  * The reference graph for "what dies when a session dies."
@@ -31,10 +32,18 @@ export const SESSION_CASCADE_TABLES = [
 
 /** Tables carrying a sessionId that intentionally outlive their session. */
 export const SESSION_ID_EXEMPT = {
+	daily_quote_pushes:
+		"The daily quote push's schedule (B19), no text: reaches a session only through the ids of its last send. A data wipe clears those; a dangling one is skipped when the send is settled.",
 	escalation_events:
 		"Safety-audit tombstone — retained (profileId stripped) even past account deletion; holds no user text by policy.",
 	feedback:
 		"Profile-scoped structural signal — anonymized in place on account deletion (owner link + text stripped), not cascaded with its session.",
+	notification_log:
+		"Push's compatibility record (ADR 0001); reaches a session only through its optional `outreachId`. Kept per profile like it was before the outreach layer.",
+	outreach:
+		"The per-profile record of what Xolace sent (#760); `followUpId` is provenance and reads as absent once the card is purged. Drained per profile by account deletion and data wipe (#760 slice 9, purge guard #735).",
+	outreach_deliveries:
+		"One row per channel attempt of an `outreach` row; follows that row's lifecycle, not its session's.",
 	talk_charges:
 		"An open talk-time reservation (#596), no text: it must still be released after its session is wiped. The talk-time sweeper removes it within ~2 h.",
 } as const;
@@ -145,6 +154,9 @@ export async function purgeSessions(
 			if (ACTIVE_STATUSES.has(card.status)) {
 				await cancelFollowUpWorkflow(ctx, card.workflowId);
 			}
+			// A ready or shown card never expires, so its Telegram check-in
+			// (card text revealed, buttons live) would outlive the purge.
+			await collapseCard(ctx, card._id);
 			await deleteResponsesForCard(ctx, card._id);
 			await ctx.db.delete("follow_up_cards", card._id);
 		}

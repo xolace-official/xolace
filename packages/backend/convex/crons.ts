@@ -1,5 +1,8 @@
 import { cronJobs } from "convex/server";
 import { internal } from "./_generated/api";
+import { SWEEP_EVERY_MINUTES } from "./dailyQuotes/schedule";
+import { RETENTION_EVERY_HOURS, SWEEP_EVERY_HOURS } from "./letters/rules";
+import { retentionRunIntervalHours } from "./privacy/retentionCutoff";
 
 // Set CONVEX_ENV=production on the prod deployment, leave unset (or "development") on dev.
 // Dev gets much longer intervals to avoid burning resources during development.
@@ -28,7 +31,8 @@ crons.interval(
 // Enforce data retention policies
 crons.interval(
 	"enforce data retention",
-	isProd ? { hours: 24 } : { hours: 72 },
+	// Shared with privacy/retention's count, which counts up to the next run.
+	{ hours: retentionRunIntervalHours(isProd) },
 	internal.jobs.dataRetention.enforce,
 	{}
 );
@@ -50,6 +54,22 @@ crons.interval(
 );
 
 // Retry deleting ElevenLabs' copy of talks the webhook missed (#595).
+// Letters: refresh the pool, place waiting letters, return old ones (letters spec §5.3).
+crons.interval(
+	"sweep letters",
+	isProd ? { hours: SWEEP_EVERY_HOURS } : { hours: 12 },
+	internal.letters.sweep.run,
+	{}
+);
+
+// Letters: reviewed text and old strikes past their time (letters spec §10).
+crons.interval(
+	"letters retention",
+	{ hours: RETENTION_EVERY_HOURS },
+	internal.letters.retention.run,
+	{}
+);
+
 crons.interval(
 	"sweep talk provider copies",
 	isProd ? { hours: 1 } : { hours: 12 },
@@ -127,6 +147,57 @@ crons.cron(
 	"0 0 * * *",
 	internal.jobs.quotesGenerator.generateForNextBatch,
 	{ cursor: null }
+);
+
+// The daily quote push (B19): profiles whose local slot has come. Mostly an
+// empty index read; a quarter hour is how late a slot can be picked up.
+crons.interval(
+	"send daily quote pushes",
+	{ minutes: SWEEP_EVERY_MINUTES },
+	internal.dailyQuotes.push.sweep,
+	{}
+);
+
+// Telegram webhook drift (#765): logs an error when the bot points elsewhere,
+// errors or backs up. Never re-points it; does nothing on a deployment with no bot.
+crons.interval(
+	"check telegram webhook",
+	{ hours: 24 },
+	internal.outreach.telegram.bot.checkWebhook,
+	{}
+);
+
+// Revoked Telegram links are deleted 30 days after revokedAt (#767); the chat
+// is a stranger again after that.
+crons.interval(
+	"purge revoked telegram links",
+	{ hours: 24 },
+	internal.outreach.telegram.lifecycle.purgeRevoked,
+	{}
+);
+
+// The Resend component's copy of each email (#917, ADR 0004): finished ones
+// after 7 days, abandoned ones after 28. Daily, never more often.
+crons.interval(
+	"clean up sent emails",
+	{ hours: 24 },
+	internal.outreach.email.retention.cleanup,
+	{}
+);
+
+// Inbound Telegram updates (#773): rows go 30 days after they arrive; one
+// the pool lost is put back after 5 minutes, and failed if it sticks again.
+crons.interval(
+	"purge old inbound events",
+	{ hours: 24 },
+	internal.outreach.telegram.retention.purgeOldInbound,
+	{}
+);
+crons.interval(
+	"requeue stuck inbound events",
+	{ minutes: 5 },
+	internal.outreach.telegram.retention.requeueStuck,
+	{}
 );
 
 export default crons;

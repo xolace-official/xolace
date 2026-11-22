@@ -9,7 +9,9 @@ import { Migrations } from "@convex-dev/migrations";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { backfillProfile } from "./achievements/backfill";
+import { measurePeaksLater } from "./audio/trackPeaks";
 import { reflectionRank } from "./lib/aggregates";
+import { authorTagFor } from "./lib/reflectionAuthor";
 import { FREEZE_CAP } from "./lib/streakFreezes";
 import { searchTextOf, trackSearchTextOf } from "./library/searchText";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
@@ -192,6 +194,99 @@ export const backfillTrackSearchText = migrations.define({
 	table: "audio_tracks",
 });
 
+// Lantern's Saved list: dates rows saved before `savedAt` existed, so they
+// sort among the rest instead of after them. Nothing recorded the save itself;
+// the row's creation is the earliest it can have happened, and exact for a
+// save made from a card. (A later read would push an old save to the top.)
+// Writes only saved rows still missing it — safe to re-run.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillLibrarySavedAt"}'
+export const backfillLibrarySavedAt = migrations.define({
+	migrateOne: async (_ctx, doc) => {
+		if (doc.saved && doc.savedAt === undefined) {
+			return { savedAt: doc._creationTime };
+		}
+	},
+	table: "library_reads",
+});
+
+// Peer-reflection author tags (#790, ADR 0002): tags the session reflections
+// pooled before the tag existed, so their contributors stop being shown them.
+// The anonymizer pooled `distilledText ?? mirrorText` verbatim, so an exact
+// match finds the row. Two passes, run in order by `tagReflectionAuthorsAll`:
+// claim every (text, author) pair from sessions, then tag each untagged row
+// whose text has exactly one author. A text two profiles both wrote can't be
+// attributed, so its untagged rows are left alone and logged for review.
+// Not gated on `contributedReflection`: a later opt-out left the row pooled.
+// Seeds are skipped; follow-up shares were re-distilled before pooling, can't
+// be matched, and stay untagged. Idempotent.
+// Run once per deployment, after REFLECTION_AUTHOR_KEY is set (throws if not):
+//   bunx convex run migrations:tagReflectionAuthorsAll
+export const claimReflectionAuthors = migrations.define({
+	migrateOne: async (ctx, session) => {
+		const text = session.distilledText ?? session.mirrorText;
+		if (!text) {
+			return;
+		}
+		const pooled = await ctx.db
+			.query("reflections")
+			.withIndex("by_seed_displayText", (q) =>
+				q.eq("isSeed", false).eq("displayText", text)
+			)
+			.first();
+		if (!pooled) {
+			return;
+		}
+		const authorTag = await authorTagFor(session.emotionalProfileId);
+		if (!authorTag) {
+			throw new Error("Set REFLECTION_AUTHOR_KEY before tagging reflections");
+		}
+		const claimed = await ctx.db
+			.query("reflection_author_claims")
+			.withIndex("by_displayText_and_authorTag", (q) =>
+				q.eq("displayText", text).eq("authorTag", authorTag)
+			)
+			.unique();
+		if (!claimed) {
+			await ctx.db.insert("reflection_author_claims", {
+				authorTag,
+				displayText: text,
+			});
+		}
+	},
+	table: "sessions",
+});
+
+export const tagReflectionAuthors = migrations.define({
+	migrateOne: async (ctx, reflection) => {
+		if (reflection.isSeed || reflection.authorTag !== undefined) {
+			return;
+		}
+		// Claims are unique per (text, author), so two rows mean two authors.
+		const claims = await ctx.db
+			.query("reflection_author_claims")
+			.withIndex("by_displayText_and_authorTag", (q) =>
+				q.eq("displayText", reflection.displayText)
+			)
+			.take(2);
+		if (claims.length > 1) {
+			console.warn(
+				`tagReflectionAuthors: reflection ${reflection._id} has text from more than one profile; left untagged for manual review`
+			);
+			return;
+		}
+		const [claim] = claims;
+		if (claim) {
+			return { authorTag: claim.authorTag };
+		}
+	},
+	table: "reflections",
+});
+
+export const tagReflectionAuthorsAll = migrations.runner([
+	internal.migrations.claimReflectionAuthors,
+	internal.migrations.tagReflectionAuthors,
+]);
+
 // ponytail: random spread, not a rate limiter — ~200 rows over 5 min stays well
 // under OpenAI's embedding limits; move to @convex-dev/workpool if the corpus
 // grows past a few thousand. A failed embed logs its id; re-running is the fix.
@@ -231,6 +326,30 @@ export const backfillTrackIndex = migrations.define({
 	table: "audio_tracks",
 });
 
+// Player waveform (B4): measures `peaks` on every support track uploaded
+// before they were measured at upload (music draws the plain line, so it's
+// left out: 10 of 442 tracks in prod today). A migration is a mutation and
+// decoding needs an action, so each row still missing them schedules its own
+// measure (audio/measurePeaks.ts), spread like the index backfills; a few
+// seconds of decoding each. Drafts and retired tracks too: they can go live.
+// A track that won't fetch, decodes to the wrong length, or won't decode logs
+// `measurePeaks: <slug> ... has no peaks: <why>` and stays without them (the
+// player draws its line; the admin marks it "No waveform"); nothing fails the
+// run. R2 being briefly unavailable gets one retry ten minutes later. Idempotent: rows with peaks are skipped here and again in the
+// action, so re-running measures only what's still missing (after a completed
+// run, pass `"reset": true`). Run once per deployment, after the deploy:
+//   bunx convex run migrations:run '{"fn": "migrations:backfillTrackPeaks"}'
+// Add to runAll only once it has completed on prod.
+export const backfillTrackPeaks = migrations.define({
+	migrateOne: async (ctx, doc) => {
+		// Support tracks only: music draws the plain line (audio/trackPeaks.ts).
+		if (doc.peaks === undefined) {
+			await measurePeaksLater(ctx, doc, spread());
+		}
+	},
+	table: "audio_tracks",
+});
+
 // Achievements backfill (#686, #701): each existing profile quietly gets what
 // it already earned, dated where a source has a date, sparks credited, and
 // `daysShowedUp` seeded; then `achievementsBackfilledAt` makes its awards live.
@@ -260,6 +379,8 @@ export const runAll = migrations.runner([
 	// nothing for pre-#549/#550 rows until they run.
 	internal.migrations.backfillLibrarySearchText,
 	internal.migrations.backfillTrackSearchText,
+	// Idempotent; until it runs, older saves sit at the end of Saved.
+	internal.migrations.backfillLibrarySavedAt,
 	// Library re-ingest can't fill these: its sha gate skips unchanged rows.
 	internal.migrations.backfillLibraryIndex,
 	internal.migrations.backfillTrackIndex,

@@ -1,0 +1,199 @@
+import { Canvas, Path } from "@shopify/react-native-skia";
+import { useEffect, useRef } from "react";
+import { View } from "react-native";
+import { Presets } from "react-native-pulsar";
+import {
+	Easing,
+	useSharedValue,
+	withDelay,
+	withTiming,
+} from "react-native-reanimated";
+import { AppText } from "@/components/shared/app-text";
+import { RollDigits } from "@/components/shared/roll-digits";
+import { PRESETS, poseForSteadiness } from "@/components/xolace-face/pose";
+import { useFace } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
+import { PLAY_AS_CHOSEN } from "@/design/springs";
+import { COPY } from "@/features/you/copy";
+import {
+	DIAL_TICKS,
+	type DialView,
+	litTicks,
+} from "@/features/you/steadiness/steadiness-model";
+import {
+	tickPath,
+	useSnappedEnd,
+	useTrack,
+} from "@/features/you/steadiness/ticks";
+import {
+	LockedTrendChip,
+	TrendChip,
+} from "@/features/you/steadiness/trend-chip";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useTokenColor } from "@/lib/use-token-color";
+
+const GAUGE = 240;
+const START = 135;
+const SWEEP = 270;
+const R_OUT = 118;
+const TICK_LEN = 20;
+const TICK_W = 4;
+const FILL_MS = 1100;
+const FILL_DELAY_MS = 120;
+const SETTLE_MS = 900;
+const GAP_TOP = 193;
+const FACE = 60;
+const FACE_WAITING = 76;
+const NUMBER_LINE = 54;
+const TICKS = tickPath(
+	DIAL_TICKS,
+	START,
+	SWEEP,
+	R_OUT,
+	TICK_LEN,
+	GAUGE / 2,
+	GAUGE / 2
+);
+
+export function Gauge({
+	dial,
+	plus,
+	doors,
+	now,
+	running,
+	onLocked,
+}: {
+	dial: DialView;
+	plus: boolean;
+	doors: boolean;
+	now: Date;
+	running: boolean;
+	onLocked: () => void;
+}) {
+	const accent = useTokenColor("accent");
+	const track = useTrack();
+	const reduced = useEffectiveReducedMotion();
+	const score = dial.lit ? dial.score : null;
+	const lit = score === null ? 0 : litTicks(score);
+	const progress = useSharedValue(reduced ? 1 : 0);
+	const { end, opacity } = useSnappedEnd(progress, lit, DIAL_TICKS);
+	const face = useFace(PRESETS.waiting, running);
+	const { to, hold } = face;
+	const filled = useRef(false);
+
+	useEffect(() => {
+		if (score === null) {
+			return;
+		}
+		if (reduced) {
+			progress.set(1);
+			hold(poseForSteadiness(score));
+			return;
+		}
+		if (filled.current) {
+			to(poseForSteadiness(score));
+			return;
+		}
+		filled.current = true;
+		let settled = false;
+		progress.set(
+			withDelay(
+				FILL_DELAY_MS,
+				withTiming(1, {
+					duration: FILL_MS,
+					easing: Easing.out(Easing.cubic),
+					...PLAY_AS_CHOSEN,
+				})
+			)
+		);
+		const swell = setTimeout(() => Presets.swell(), FILL_DELAY_MS);
+		const settle = setTimeout(() => {
+			settled = true;
+			to(poseForSteadiness(score));
+		}, SETTLE_MS);
+		return () => {
+			clearTimeout(swell);
+			clearTimeout(settle);
+			if (!settled) {
+				filled.current = false;
+			}
+		};
+	}, [score, reduced, progress, to, hold]);
+
+	return (
+		<View style={{ height: GAUGE, width: GAUGE }}>
+			<View
+				accessibilityLabel={dial.label}
+				accessibilityRole="image"
+				accessible
+				className="flex-1"
+			>
+				<Canvas style={{ height: GAUGE, position: "absolute", width: GAUGE }}>
+					<Path
+						color={track}
+						path={TICKS}
+						strokeCap="round"
+						strokeWidth={TICK_W}
+						style="stroke"
+					/>
+					{score === null ? null : (
+						<Path
+							color={accent}
+							end={end}
+							opacity={opacity}
+							path={TICKS}
+							start={0}
+							strokeCap="round"
+							strokeWidth={TICK_W}
+							style="stroke"
+						/>
+					)}
+				</Canvas>
+				<View
+					className="absolute inset-0 items-center justify-center"
+					pointerEvents="none"
+				>
+					<View className={score === null ? "" : "-mt-1"}>
+						<XolaceFace
+							face={face}
+							size={score === null ? FACE_WAITING : FACE}
+						/>
+					</View>
+					{score === null ? null : (
+						<View className="mt-0.5 flex-row items-end gap-0.75">
+							<RollDigits
+								className="font-display-bold text-[52px] tabular-nums tracking-[-1.56px]"
+								durationMs={reduced ? 0 : FILL_MS}
+								lineHeight={NUMBER_LINE}
+								value={score}
+								variant="display"
+							/>
+							<AppText
+								className="mb-2.25 text-[14px] leading-[18px]"
+								color="subtle"
+								variant="footnote"
+								weight="medium"
+							>
+								{COPY.steadiness.outOf}
+							</AppText>
+						</View>
+					)}
+				</View>
+			</View>
+			{score === null ? null : (
+				<View
+					className="absolute right-0 left-0 items-center"
+					style={{ top: GAP_TOP }}
+				>
+					{plus ? (
+						dial.lit && dial.trend ? (
+							<TrendChip arrow now={now} trend={dial.trend} />
+						) : null
+					) : doors ? (
+						<LockedTrendChip onPress={onLocked} />
+					) : null}
+				</View>
+			)}
+		</View>
+	);
+}

@@ -1,0 +1,26 @@
+export const VENT_COPY = {
+	capAfter: "You’ve used today’s voice replies. They return tomorrow.",
+	capBefore: "Today’s voice replies are used. It still burns.",
+	close: "Close",
+	closeLabel: "Close and return",
+	gone: "Gone.",
+	hint: "Tap the mic and speak your weight",
+	intro: [
+		"This is a space to say the unsaid.",
+		"Your voice is never stored.",
+		"It goes when you close.",
+	],
+	micIdle: "Speak your weight",
+	micOff: {
+		action: "Open Settings",
+		body: "Turn on the microphone in Settings to vent.",
+		title: "Xolace can’t hear you.",
+	},
+	micRecording: "Let it go",
+	said: { letting: "Letting go", listening: "Listening" },
+	support: "Support is here if you want it",
+	supportLabel: "Open crisis resources",
+	underRecording: "Tap to let it go",
+	underSoon: "It lets go on its own in a moment",
+	understand: "I understand",
+} as const;

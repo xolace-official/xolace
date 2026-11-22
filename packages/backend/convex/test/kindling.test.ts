@@ -6,6 +6,7 @@
  */
 
 import type { WorkflowId } from "@convex-dev/workflow";
+import workpoolTest from "@convex-dev/workpool/test";
 import { MockEmbeddingModelV3 } from "ai/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import manifest from "../../scripts/kindling/dev/manifest.json";
@@ -172,6 +173,10 @@ vi.mock("../revenuecat", () =>
 // Sibling jobs `finalizeCompletion` enqueues — neutered so a job firing after
 // the test body can't reach an unregistered component.
 vi.mock("../jobs/profileStats", () => ({ updateAfterSession: noopJob() }));
+vi.mock("../streamSetup", async (orig) => ({
+	...(await orig<typeof import("../streamSetup")>()),
+	addToXolaceChannel: noopJob(),
+}));
 vi.mock("../ai/reflectionAgent/trigger", () => ({
 	onSessionComplete: noopJob(),
 }));
@@ -242,6 +247,8 @@ async function setNotifications(user: SeededUser, enabled: boolean) {
 /** A new user's master switch is off until a push token registers. */
 async function asNotifiableUser() {
 	const user = await asNewUser();
+	// The kindling push goes out through the outreach layer's push pool (#764).
+	workpoolTest.register(user.root, "outreachPush");
 	await setNotifications(user, true);
 	return user;
 }
@@ -521,10 +528,33 @@ describe("ai/paths/generate.run", () => {
 	});
 });
 
-const readNotifications = (user: SeededUser) =>
-	user.root.run((ctx) => ctx.db.query("notification_log").take(10));
+const readNotifications = async (user: SeededUser) => {
+	// Deliveries run on the push workpool, after the mutation that queued them.
+	await user.root.finishAllScheduledFunctions(vi.runAllTimers);
+	return await user.root.run((ctx) =>
+		ctx.db.query("notification_log").take(10)
+	);
+};
+
+/** What the outreach layer decided; suppressions live only here (#764). */
+const readOutreach = (user: SeededUser) =>
+	user.root.run((ctx) =>
+		ctx.db
+			.query("outreach")
+			.withIndex("by_profile_created", (q) =>
+				q.eq("emotionalProfileId", user.profileId)
+			)
+			.take(10)
+	);
 
 describe("the kindling_ready notification (#335)", () => {
+	beforeEach(() => {
+		vi.useFakeTimers({ now: Date.now() });
+	});
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
 	it("fires only after the kindling is written, deep-linking via type alone", async () => {
 		const user = await asNotifiableUser();
 		await generate(user, await seedQualifying(user));
@@ -557,9 +587,13 @@ describe("the kindling_ready notification (#335)", () => {
 
 		expect(await readNotifications(user)).toEqual([]);
 		expect(sentPushes).toEqual([]);
+		// Push is the only channel, and the global switch is push's.
+		expect(await readOutreach(user)).toMatchObject([
+			{ outcome: "suppressed", suppressedReason: "no_channel" },
+		]);
 	});
 
-	it("suppresses for a user dormant 30+ days, logging the existing reason", async () => {
+	it("suppresses for a user dormant 30+ days, recorded on the outreach", async () => {
 		const user = await asNotifiableUser();
 		const sessionId = await seedQualifying(user);
 		await user.root.run(async (ctx) => {
@@ -570,12 +604,14 @@ describe("the kindling_ready notification (#335)", () => {
 
 		await generate(user, sessionId);
 
-		const [log] = await readNotifications(user);
-		expect(log).toMatchObject({
-			delivered: false,
-			suppressedReason: "user_inactive",
-			type: "kindling_ready",
-		});
+		expect(await readNotifications(user)).toEqual([]);
+		expect(await readOutreach(user)).toMatchObject([
+			{
+				intent: "kindling_ready",
+				outcome: "suppressed",
+				suppressedReason: "user_inactive",
+			},
+		]);
 		expect(sentPushes).toEqual([]);
 	});
 
@@ -597,12 +633,14 @@ describe("the kindling_ready notification (#335)", () => {
 
 		await generate(user, sessionId);
 
-		const [log] = await readNotifications(user);
-		expect(log).toMatchObject({
-			delivered: false,
-			suppressedReason: "escalation_active",
-			type: "kindling_ready",
-		});
+		expect(await readNotifications(user)).toEqual([]);
+		expect(await readOutreach(user)).toMatchObject([
+			{
+				intent: "kindling_ready",
+				outcome: "suppressed",
+				suppressedReason: "escalation_active",
+			},
+		]);
 		expect(sentPushes).toEqual([]);
 	});
 
@@ -624,12 +662,14 @@ describe("the kindling_ready notification (#335)", () => {
 
 		await generate(user, sessionId);
 
-		const [log] = await readNotifications(user);
-		expect(log).toMatchObject({
-			delivered: false,
-			suppressedReason: "escalation_active",
-			type: "kindling_ready",
-		});
+		expect(await readNotifications(user)).toEqual([]);
+		expect(await readOutreach(user)).toMatchObject([
+			{
+				intent: "kindling_ready",
+				outcome: "suppressed",
+				suppressedReason: "escalation_active",
+			},
+		]);
 		expect(sentPushes).toEqual([]);
 	});
 
@@ -645,6 +685,7 @@ describe("the kindling_ready notification (#335)", () => {
 			triggerReason: "test",
 			type: "milestone",
 		});
+		await user.root.finishAllScheduledFunctions(vi.runAllTimers);
 		sentPushes.length = 0;
 
 		await generate(user, sessionId);
@@ -690,9 +731,11 @@ describe("the completion hook", () => {
 			await scheduledCalls(user.root),
 			"ai/paths/generate:run"
 		);
+		// A qualifying Plus session is marked as setting up (paths/settingUp.ts).
 		expect(call?.args).toEqual({
 			emotionalProfileId: user.profileId,
 			sessionId,
+			settingUpAt: expect.any(Number),
 		});
 	});
 
@@ -739,7 +782,11 @@ describe("requestKindling (free → Plus at session-end)", () => {
 			c.name.endsWith("ai/paths/generate:run")
 		);
 		expect(runs.map((c) => c.args)).toEqual([
-			{ emotionalProfileId: user.profileId, sessionId },
+			{
+				emotionalProfileId: user.profileId,
+				sessionId,
+				settingUpAt: expect.any(Number),
+			},
 		]);
 	});
 
@@ -755,6 +802,7 @@ describe("requestKindling (free → Plus at session-end)", () => {
 		expect(call?.args).toEqual({
 			emotionalProfileId: user.profileId,
 			sessionId,
+			settingUpAt: expect.any(Number),
 		});
 	});
 });
@@ -900,6 +948,42 @@ describe("the active-kindling screen API (#333)", () => {
 		).toBe(true);
 	});
 
+	it("getLatest says how the latest kindling ended, with each twig's state", async () => {
+		const { user, active } = await withKindling();
+		const [breathing, xolacer, bridge] = active.twigs;
+		expect(await user.t.query(api.paths.getLatest, {})).toMatchObject({
+			_id: active._id,
+			status: "active",
+		});
+
+		await user.t.mutation(api.paths.completeStep, { stepId: breathing._id });
+		await user.t.mutation(api.paths.completeStep, { stepId: xolacer._id });
+		await user.t.mutation(api.paths.skipStep, { stepId: bridge._id });
+		expect(await user.t.query(api.paths.getActive, {})).toBeNull();
+		const latest = await user.t.query(api.paths.getLatest, {});
+		expect(latest?.status).toBe("completed");
+		expect(
+			Object.fromEntries((latest?.twigs ?? []).map((t) => [t._id, t.state]))
+		).toEqual({
+			[breathing._id]: "done",
+			[bridge._id]: "skipped",
+			[xolacer._id]: "done",
+		});
+	});
+
+	it("getLatest reports a dismissed kindling, and is null for a free user or with none", async () => {
+		const fresh = await asNewUser();
+		expect(await fresh.t.query(api.paths.getLatest, {})).toBeNull();
+
+		const { user, active } = await withKindling();
+		await user.t.mutation(api.paths.dismiss, { pathId: active._id });
+		expect((await user.t.query(api.paths.getLatest, {}))?.status).toBe(
+			"dismissed"
+		);
+		stub.isPlus = false;
+		expect(await user.t.query(api.paths.getLatest, {})).toBeNull();
+	});
+
 	it("another user cannot touch my twigs", async () => {
 		const { user, active } = await withKindling();
 		const other = await asNewUser(2, user.root);
@@ -955,7 +1039,7 @@ describe("a browse play beside a bound twig (§9.6, #341)", () => {
 
 		// Everything "Browse more like this" and the strip can reach: the topic
 		// list, and the player's mint for a *different* track in that topic.
-		const topic = await user.t.query(api.browse.getTopic, {
+		const topic = await user.t.query(api.browse.topics.getTopic, {
 			slug: CATALOGUE_TOPIC.replace(/^(audio|music)_topic_/, ""),
 		});
 		const other =
@@ -1022,6 +1106,23 @@ describe("paths.getBoundAudioTrack (#334)", () => {
 		});
 		expect(track?.attributionText).toBeUndefined();
 		expect(track?.expiresAt).toBeGreaterThan(before);
+	});
+
+	it("carries the waveform's peaks when they've been measured, and reads tracks from before them", async () => {
+		const user = await asNewUser();
+		const peaks = Array.from({ length: 60 }, (_, i) => (i % 10) / 10);
+		await seedRow(user, { peaks, slug: "measured" });
+		await seedRow(user, { slug: "old" });
+
+		expect(
+			(await user.t.query(api.paths.getBoundAudioTrack, { slug: "measured" }))
+				?.peaks
+		).toEqual(peaks);
+		const old = await user.t.query(api.paths.getBoundAudioTrack, {
+			slug: "old",
+		});
+		expect(old).toMatchObject({ slug: "old", title: "Track" });
+		expect(old && "peaks" in old && old.peaks !== undefined).toBe(false);
 	});
 
 	it("carries verbatim attributionText only when the licence requires it", async () => {
@@ -1950,7 +2051,7 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 		const track = {
 			durationSec: 60,
 			family: "support" as const,
-			key: "k1",
+			key: "k1.mp3",
 			sha256: "a",
 			slug: "s1",
 			sourceTags: [],
@@ -1971,10 +2072,10 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 
 		await upsert({});
 		expect(await reindexes()).toBe(1);
-		await upsert({ durationSec: 61, key: "k2" }); // same audio, a field the index never reads
-		await upsert({ key: "k3", sha256: "b" }); // new audio, same index text
+		await upsert({ durationSec: 61, key: "k2.mp3" }); // same audio, a field the index never reads
+		await upsert({ key: "k3.mp3", sha256: "b" }); // new audio, same index text
 		expect(await reindexes()).toBe(1);
-		await upsert({ key: "k4", title: "Slower breath" });
+		await upsert({ key: "k4.mp3", title: "Slower breath" });
 		expect(await reindexes()).toBe(2);
 		deleteObject.mockRestore();
 	});
@@ -1990,7 +2091,7 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 		const track = {
 			durationSec: 60,
 			family: "music" as const,
-			key: "k1",
+			key: "k1.mp3",
 			licence: {
 				acquiredAt: 0,
 				artist: "Artist",

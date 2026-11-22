@@ -1,5 +1,3 @@
-import { InsightsScreen } from "@/features/insights/insights-screen";
+import { MovedRoute } from "@/features/navigation/moved-route";
 
-export default function InsightsRoute() {
-	return <InsightsScreen />;
-}
+export default MovedRoute;

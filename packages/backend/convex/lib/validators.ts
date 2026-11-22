@@ -1,4 +1,11 @@
 import { v } from "convex/values";
+import { dailyQuoteSettingValidator } from "../dailyQuotes/validators";
+import { outreachChannelValidator } from "../outreach/validators";
+import {
+	FOLLOW_UP_DECISION_SOURCES,
+	FOLLOW_UP_REASON_CODES,
+} from "./followUpCadence";
+import { ERROR_CODES } from "./shared";
 import { DOMAINS } from "./understandingVocab";
 import {
 	talkDirectnessValidator,
@@ -10,6 +17,13 @@ import {
 
 /** One of the 8 scored domains (CONTEXT.md). */
 /** The client platform a row came from. */
+/** How a person asked Xolace to sound (`notifications.reach`). */
+export const reachValidator = v.union(
+	v.literal("warm"),
+	v.literal("direct"),
+	v.literal("quiet")
+);
+
 export const platformValidator = v.union(
 	v.literal("ios"),
 	v.literal("android"),
@@ -17,6 +31,11 @@ export const platformValidator = v.union(
 );
 
 export const domainValidator = v.union(...DOMAINS.map((d) => v.literal(d)));
+
+export const sessionErrorCodeValidator = v.union(
+	v.literal(ERROR_CODES.safeguardRejected),
+	v.literal(ERROR_CODES.reflectionRateLimited)
+);
 
 export const resourceValidator = v.object({
 	description: v.optional(v.string()),
@@ -122,6 +141,17 @@ export const supportNeedValidator = v.union(
 	v.literal("active")
 );
 
+// Which rubric line the classifier applied to requiresFollowUp (internal,
+// never shown). lib/followUpCadence.ts has the codes and what each means.
+export const followUpReasonCodeValidator = v.union(
+	...FOLLOW_UP_REASON_CODES.map((c) => v.literal(c))
+);
+
+// What decided a session's follow-up at close (internal, never shown).
+export const followUpDecisionSourceValidator = v.union(
+	...FOLLOW_UP_DECISION_SOURCES.map((s) => v.literal(s))
+);
+
 export const triggerTypeValidator = v.union(
 	v.literal("explicit_crisis_language"),
 	v.literal("implicit_risk_language"),
@@ -147,6 +177,15 @@ export const talkIssueValidator = v.object({
 	seq: v.optional(v.number()),
 });
 
+/** Where an escalation was raised (#772). */
+export const escalationSourceValidator = v.union(
+	v.literal("session"),
+	v.literal("telegram"),
+	// The check at send found the letter's writer may be at risk (#750). No
+	// sessionId, and never the letter's words.
+	v.literal("letter")
+);
+
 export const actionTakenValidator = v.union(
 	v.literal("resources_shown"),
 	v.literal("warm_handoff_offered"),
@@ -160,7 +199,8 @@ export const consentTypeValidator = v.union(
 	v.literal("pattern_analysis"),
 	v.literal("anonymized_research"),
 	v.literal("voice_processing"),
-	v.literal("therapy_summary_sharing")
+	v.literal("therapy_summary_sharing"),
+	v.literal("telegram_outreach")
 );
 
 export const userFeedbackValidator = v.union(
@@ -236,6 +276,15 @@ export const trackLoudnessValidator = v.object({
 	/** True peak, dBTP. */
 	truePeak: v.number(),
 });
+
+/**
+ * A track's waveform for the player's scrubber: `PEAK_BARS` (60) numbers, 0–1,
+ * one per equal slice of the audio, measured on the server
+ * (`audio/measurePeaks.ts`; the maths in `audio/peaks.ts`). Like loudness it
+ * belongs to the audio: new audio drops it until it is measured again. The
+ * length and range are checked where it's written (`audio/trackPeaks.ts`).
+ */
+export const trackPeaksValidator = v.array(v.number());
 
 /**
  * Music-family: what a listening review heard in the track
@@ -412,6 +461,79 @@ export const chatModerationCategoryValidator = v.union(
 	v.literal("contact")
 );
 
+/** `preferences.dataRetentionPreference`: how long sessions are kept. */
+export const dataRetentionPreferenceValidator = v.union(
+	v.literal("indefinite"),
+	v.literal("6_months"),
+	v.literal("1_year")
+);
+
+// The redesign's preferences (B7). Each closed set is a literal union so
+// clients get typed values. Only ever add a literal: the schema validates
+// every stored row against it, so dropping one would fail the push while a
+// row still holds it, and the backend deploys before the client that sends a
+// new value, so a widened union is always live first. Clients should skip a
+// value they don't know (a newer build may have written it).
+
+/** A You card someone can take off their profile (Settings › Appearance › Profile).
+ * Production's ids, so the device-local choice carries over unchanged. */
+export const profileCardValidator = v.union(
+	v.literal("calendar"),
+	v.literal("rank"),
+	v.literal("week")
+);
+
+/**
+ * The background behind the daily quote: a key in the `quote_backgrounds`
+ * catalogue (B18). Widened from B7's fixed list of ten so backgrounds can be
+ * added, retired or moved between free and Xolace+ without a release; every
+ * key that list accepted is still a string, so the change is additive.
+ */
+export const quoteBackgroundValidator = v.string();
+
+/** A background is a photo (`still`) or a hosted video loop (`loop`). */
+export const quoteBackgroundKindValidator = v.union(
+	v.literal("still"),
+	v.literal("loop")
+);
+
+/** The words' colour over it: `dark` on the light Poster, `light` over the scrim. */
+export const quoteBackgroundInkValidator = v.union(
+	v.literal("light"),
+	v.literal("dark")
+);
+
+/** One hosted file of a loop, with the SHA-256 the upload script compares. */
+export const quoteBackgroundFileValidator = v.object({
+	sha256: v.string(),
+	storageId: v.id("_storage"),
+});
+
+/**
+ * Explore's time of day (B6, `explore.md` §7), the same four phases as
+ * Today's clock (`useTodayPhase`): dawn 4–9, day 9–17, evening 17–22, late
+ * 22–4. Also what an `audio_tracks.bestAt` tag holds.
+ */
+export const explorePhaseValidator = v.union(
+	v.literal("dawn"),
+	v.literal("day"),
+	v.literal("evening"),
+	v.literal("late")
+);
+
+/** A card on Explore's "Pick up where you left off": a track (an episode
+ * included) or a Lantern entry. */
+export const exploreContinueItemValidator = v.union(
+	v.object({ id: v.id("audio_tracks"), kind: v.literal("track") }),
+	v.object({ id: v.id("library_entries"), kind: v.literal("entry") })
+);
+
+/** A Continue card taken off with "Remove from here", and when. */
+export const exploreHiddenContinueValidator = v.object({
+	hiddenAt: v.number(),
+	item: exploreContinueItemValidator,
+});
+
 // Full `preferences` document shape, mirroring schema.ts's `preferences` table.
 // Shared by preferences.ts and users.ts so the two return validators can never drift.
 export const preferencesDocValidator = v.object({
@@ -420,21 +542,23 @@ export const preferencesDocValidator = v.object({
 	avatarId: v.optional(v.string()),
 	colorTheme: v.optional(v.string()),
 	contributeByDefault: v.boolean(),
-	dataRetentionPreference: v.union(
-		v.literal("indefinite"),
-		v.literal("6_months"),
-		v.literal("1_year")
-	),
+	dataRetentionPreference: dataRetentionPreferenceValidator,
 	displayName: v.optional(v.string()),
 	emotionalProfileId: v.id("emotional_profiles"),
+	exploreHiddenContinue: v.optional(v.array(exploreHiddenContinueValidator)),
+	exploreUsesSessions: v.optional(v.boolean()),
+	hiddenProfileCards: v.optional(v.array(profileCardValidator)),
 	libraryAudiences: v.optional(v.array(v.string())),
 	mirrorTone: mirrorToneValidator,
 	motionPreference: v.optional(motionPreferenceValidator),
 	notifications: v.object({
 		achievement: v.optional(v.boolean()),
+		channelOrder: v.optional(v.array(outreachChannelValidator)),
 		chat: v.optional(v.boolean()),
+		dailyQuote: v.optional(dailyQuoteSettingValidator),
 		enabled: v.boolean(),
 		gentleReturn: v.boolean(),
+		letters: v.optional(v.boolean()),
 		milestone: v.boolean(),
 		patternNudge: v.boolean(),
 		quietWindow: v.optional(
@@ -443,15 +567,14 @@ export const preferencesDocValidator = v.object({
 				dontReachBefore: v.number(),
 			})
 		),
-		reach: v.optional(
-			v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))
-		),
+		reach: v.optional(reachValidator),
 		streakMilestone: v.optional(v.boolean()),
 		timezone: v.optional(v.string()),
 	}),
 	personalMemoryEnabled: v.optional(v.boolean()),
 	preferredInputType: v.union(v.literal("text"), v.literal("voice")),
 	preferredName: v.optional(v.string()),
+	quoteBackground: v.optional(quoteBackgroundValidator),
 	quotes: v.optional(
 		v.object({
 			notificationEnabled: v.boolean(),

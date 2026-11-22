@@ -4,14 +4,16 @@
  * flat v1 file depends on it and never the reverse: once no supported build
  * calls `api.intake.complete`, that file goes and nothing here changes.
  */
+
 import { ConvexError, type Infer } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { validateDisplayName } from "../lib/displayName";
+import { INTAKE_MAX_SELECTIONS } from "../lib/shared";
 import type { intakeAnswerValidators } from "../lib/validators";
 
 /** Max options a multi-select question accepts. A validator can't express it. */
-const MAX_SELECTIONS = 3;
+const MAX_SELECTIONS = INTAKE_MAX_SELECTIONS;
 
 /** Q1, trimmed, or a `invalid_display_name` error. */
 export function requireDisplayName(displayName: string): string {

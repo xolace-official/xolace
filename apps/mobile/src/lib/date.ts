@@ -4,8 +4,6 @@ export function startOfDay(date: Date): Date {
 	return copy;
 }
 
-/** Wraps `weekStartsOn` into 0..6 in both directions, since `(day + weekStartsOn) % 7` goes
- * negative otherwise. */
 export function normalizeWeekStart(weekStartsOn: number): number {
 	if (!Number.isFinite(weekStartsOn)) {
 		return 0;

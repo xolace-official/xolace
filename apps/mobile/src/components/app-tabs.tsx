@@ -1,84 +1,79 @@
 import { isLiquidGlassAvailable } from "expo-glass-effect";
-import { NativeTabs } from "expo-router/native-tabs";
+import {
+	NativeTabs,
+	type NativeTabsTriggerIconProps,
+} from "expo-router/native-tabs";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { MiniPlayerAccessory } from "@/features/browse/now-playing/mini-player-accessory";
 import { MiniPlayerOverlay } from "@/features/browse/now-playing/mini-player-overlay";
-import { useMiniPlayerShown } from "@/features/browse/now-playing/now-playing-store";
-import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
+import { TABS } from "@/features/navigation/tabs";
+import { useYouTabIcon } from "@/features/you/avatar/use-you-tab-icon";
 import { playSoftPress } from "@/lib/haptics";
-import { useTabBarHidden } from "@/lib/tab-bar";
+import { useMiniPlayerShown } from "@/lib/now-playing/now-playing-store";
+import { useUnreadBadge } from "@/lib/stream-chat/use-unread-badge";
 
-/** Tab surface: a sibling stack entry to reflect (index), reached via router.replace so "/"
- * stays the landing. */
+const SCREEN_LISTENERS = {
+	tabPress: () => {
+		playSoftPress();
+	},
+};
+
+/**
+ * The avatar over a tab's own icon. Android keeps the Material glyph: there `md` wins over
+ * `src`. No `sf`, since on iOS `sf` would win over the avatar.
+ */
+function withAvatar(
+	icon: NativeTabsTriggerIconProps,
+	avatar: NativeTabsTriggerIconProps
+): NativeTabsTriggerIconProps {
+	return "md" in icon && icon.md ? { ...avatar, md: icon.md } : avatar;
+}
+
 export default function AppTabs() {
-	const background = useThemeColor("background");
 	const accent = useThemeColor("accent");
-	// Yielded to a screen raising a bottom toolbar — the two share the same strip.
-	const hidden = useTabBarHidden();
-	// Stream's total across every conversation, the same number as the app icon. Null reads as
-	// nothing.
+	const background = useThemeColor("background");
 	const unread = useUnreadBadge();
 	const showPlayer = useMiniPlayerShown();
-	// iOS 26 docks the player in the bar; elsewhere it floats above it.
-	const nativeAccessory = isLiquidGlassAvailable();
-
-	const screenListeners = {
-		tabPress: () => {
-			playSoftPress();
-		},
-	};
+	const avatarIcon = useYouTabIcon();
+	const glass = isLiquidGlassAvailable();
 
 	return (
 		<View className="flex-1">
 			<NativeTabs
-				backgroundColor={background}
-				disableTransparentOnScrollEdge
-				hidden={hidden}
+				backgroundColor={glass ? undefined : background}
+				disableTransparentOnScrollEdge={!glass}
 				minimizeBehavior="onScrollDown"
-				screenListeners={screenListeners}
+				screenListeners={SCREEN_LISTENERS}
 				tintColor={accent}
 			>
-				{showPlayer && nativeAccessory && (
+				{showPlayer && glass && (
 					<NativeTabs.BottomAccessory>
 						<MiniPlayerAccessory />
 					</NativeTabs.BottomAccessory>
 				)}
-				<NativeTabs.Trigger name="discovery">
-					<NativeTabs.Trigger.Icon
-						md="explore"
-						sf={{ default: "safari", selected: "safari.fill" }}
-					/>
-					<NativeTabs.Trigger.Label>Discovery</NativeTabs.Trigger.Label>
-				</NativeTabs.Trigger>
-				{/* Catalogue browse (#338, paths-v1.md §9.3): the one override of the no-new-tab
-			    map rule (decision 19). */}
-				<NativeTabs.Trigger name="browse">
-					<NativeTabs.Trigger.Icon
-						md="grid_view"
-						sf={{
-							default: "square.grid.2x2",
-							selected: "square.grid.2x2.fill",
-						}}
-					/>
-					<NativeTabs.Trigger.Label>Browse</NativeTabs.Trigger.Label>
-				</NativeTabs.Trigger>
-				<NativeTabs.Trigger name="connect">
-					<NativeTabs.Trigger.Icon
-						md="forum"
-						sf={{
-							default: "bubble.left.and.bubble.right",
-							selected: "bubble.left.and.bubble.right.fill",
-						}}
-					/>
-					<NativeTabs.Trigger.Label>Connect</NativeTabs.Trigger.Label>
-					{/* No children at zero: `hidden` alone still painted a "0". */}
-					<NativeTabs.Trigger.Badge hidden={!unread}>
-						{unread ? String(unread) : undefined}
-					</NativeTabs.Trigger.Badge>
-				</NativeTabs.Trigger>
+				{TABS.map((tab) => (
+					<NativeTabs.Trigger
+						disableAutomaticContentInsets={tab.ownInsets}
+						key={tab.name}
+						name={tab.name}
+					>
+						<NativeTabs.Trigger.Icon
+							{...(tab.avatar && avatarIcon
+								? withAvatar(tab.icon, avatarIcon)
+								: tab.icon)}
+						/>
+						<NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>
+						{tab.badge === "unread" && (
+							// No children at zero: `hidden` alone still painted a "0".
+							<NativeTabs.Trigger.Badge hidden={!unread}>
+								{unread ? String(unread) : undefined}
+							</NativeTabs.Trigger.Badge>
+						)}
+					</NativeTabs.Trigger>
+				))}
 			</NativeTabs>
-			{showPlayer && !nativeAccessory && <MiniPlayerOverlay />}
+			{showPlayer && !glass && <MiniPlayerOverlay />}
 		</View>
 	);
 }

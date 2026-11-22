@@ -1,5 +1,14 @@
-import { NotificationsScreen } from "@/features/settings/components/screens/NotificationsScreen";
+import { useLettersPushSwitch } from "@/features/letters/settings/use-letters-settings";
+import { useReachMeOnRow } from "@/features/reach-me-on/use-reach-me-on-row";
+import { NotificationsData } from "@/features/settings/notifications/notifications-data";
+import { NotificationsScreen } from "@/features/settings/notifications/notifications-screen";
 
 export default function NotificationsRoute() {
-	return <NotificationsScreen />;
+	const reachMeOn = useReachMeOnRow();
+	const letters = useLettersPushSwitch();
+	return (
+		<NotificationsData letters={letters} reachMeOn={reachMeOn}>
+			<NotificationsScreen />
+		</NotificationsData>
+	);
 }

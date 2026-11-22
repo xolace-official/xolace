@@ -15,7 +15,6 @@ function response(
 	return { notification: { request: { content: { body, data }, identifier } } };
 }
 
-/** A fake emitter that lets a test choose cold-start or warm delivery ordering. */
 function source(launch: TapResponse | null) {
 	let listener: ((r: TapResponse) => void) | null = null;
 	let cached = launch;
@@ -47,8 +46,6 @@ function source(launch: TapResponse | null) {
 	return src;
 }
 
-/** The cold-start bug: the launch tap fires before `(protected)` subscribes, so only `getLast`
- * still holds it. */
 describe("subscribeToNotificationTaps", () => {
 	it("delivers the launch tap the listener never fires for (cold start)", () => {
 		const onTap = vi.fn();
@@ -57,7 +54,6 @@ describe("subscribeToNotificationTaps", () => {
 			type: "chat_message",
 		});
 
-		// The defining property of a cold start: nothing is ever emitted.
 		subscribeToNotificationTaps(source(launch), onTap);
 
 		expect(onTap).toHaveBeenCalledTimes(1);
@@ -125,12 +121,15 @@ describe("subscribeToNotificationTaps", () => {
 	});
 });
 
+const ON_TABS = "/today";
+
 describe("notificationTapPlan", () => {
 	it("routes a message to the thread", () => {
 		const plan = notificationTapPlan(
 			{ conversationId: "c1", type: "chat_message" },
 			"Sent you a message",
-			1000
+			1000,
+			ON_TABS
 		);
 		expect(plan.navigation).toEqual({
 			action: "navigate",
@@ -139,7 +138,6 @@ describe("notificationTapPlan", () => {
 				pathname: "/chat/[conversationId]",
 			},
 		});
-		// Conversation notifications carry no analytics row.
 		expect(plan.logId).toBeUndefined();
 	});
 
@@ -147,7 +145,8 @@ describe("notificationTapPlan", () => {
 		const plan = notificationTapPlan(
 			{ type: "xolace_message" },
 			"Posted a new message",
-			1000
+			1000,
+			ON_TABS
 		);
 		expect(plan.navigation).toEqual({
 			action: "navigate",
@@ -158,51 +157,131 @@ describe("notificationTapPlan", () => {
 	it("drops a thread route with no usable conversation id", () => {
 		for (const type of ["chat_accepted", "chat_message"]) {
 			expect(
-				notificationTapPlan({ type }, null, 1000).navigation
+				notificationTapPlan({ type }, null, 1000, ON_TABS).navigation
 			).toBeUndefined();
 			expect(
-				notificationTapPlan({ conversationId: 42, type }, null, 1000).navigation
+				notificationTapPlan({ conversationId: 42, type }, null, 1000, ON_TABS)
+					.navigation
 			).toBeUndefined();
 			expect(
-				notificationTapPlan({ conversationId: "", type }, null, 1000).navigation
+				notificationTapPlan({ conversationId: "", type }, null, 1000, ON_TABS)
+					.navigation
 			).toBeUndefined();
 		}
-		// The Connect-tab types never read the id, so they still route.
 		expect(
-			notificationTapPlan({ type: "chat_expired" }, null, 1000).navigation
+			notificationTapPlan({ type: "chat_expired" }, null, 1000, ON_TABS)
+				.navigation
 		).toEqual({
 			action: "navigate",
 			href: { params: { t: "1000", view: "xolacers" }, pathname: "/connect" },
 		});
 	});
 
+	it("opens Quotes on the daily quote push's quote", () => {
+		expect(
+			notificationTapPlan(
+				{ logId: "log1", quoteId: "q1", screen: "quotes", type: "daily_quote" },
+				"“Rest is part of it.”",
+				1,
+				ON_TABS
+			)
+		).toEqual({
+			logId: "log1",
+			navigation: {
+				action: "push",
+				href: { params: { quote: "q1" }, pathname: "/(protected)/quotes" },
+			},
+		});
+	});
+
 	it("routes quotes and nudges", () => {
 		expect(
-			notificationTapPlan({ screen: "quotes" }, null, 1).navigation
+			notificationTapPlan({ screen: "quotes" }, null, 1, ON_TABS).navigation
 		).toEqual({
 			action: "push",
 			href: "/(protected)/quotes",
 		});
-		for (const type of ["gentle_return", "pattern_nudge", "milestone"]) {
-			expect(notificationTapPlan({ type }, null, 1).navigation).toEqual({
-				action: "push",
-				href: "/(protected)",
-			});
+		for (const type of [
+			"gentle_return",
+			"pattern_nudge",
+			"milestone",
+			"streak_milestone",
+		]) {
+			expect(
+				notificationTapPlan({ type }, null, 1, ON_TABS).navigation
+			).toEqual({ action: "home" });
 		}
 	});
 
 	it("routes kindling_ready to the active-kindling screen", () => {
 		expect(
-			notificationTapPlan({ type: "kindling_ready" }, null, 1).navigation
+			notificationTapPlan({ type: "kindling_ready" }, null, 1, ON_TABS)
+				.navigation
 		).toEqual({
 			action: "push",
 			href: "/(protected)/kindling",
 		});
 	});
 
-	it("routes domain_unlock to the insights screen", () => {
+	it("opens a letter placed with you in the reader, by id", () => {
 		expect(
-			notificationTapPlan({ type: "domain_unlock" }, null, 1).navigation
+			notificationTapPlan(
+				{ letterId: "lt1", type: "letter_for_you" },
+				"Someone wrote you a letter",
+				1,
+				ON_TABS
+			)
+		).toEqual({
+			navigation: {
+				action: "push",
+				href: {
+					params: { from: "push", id: "lt1" },
+					pathname: "/letters/read/[id]",
+				},
+			},
+		});
+	});
+
+	it("drops a letter tap with no usable id", () => {
+		for (const letterId of [undefined, "", 7]) {
+			expect(
+				notificationTapPlan(
+					{ letterId, type: "letter_for_you" },
+					null,
+					1,
+					ON_TABS
+				).navigation
+			).toBeUndefined();
+		}
+	});
+
+	it("opens the Letters screen when yours is received or acknowledged, without stacking a copy", () => {
+		for (const type of ["letter_received", "letter_acknowledged"]) {
+			expect(
+				notificationTapPlan({ type }, null, 1, ON_TABS).navigation
+			).toEqual({ action: "navigate", href: "/(protected)/letters" });
+		}
+	});
+
+	it("opens letters over a held screen, since those stack rather than dismiss", () => {
+		expect(
+			notificationTapPlan(
+				{ letterId: "lt1", type: "letter_for_you" },
+				null,
+				1,
+				"/voice-vent"
+			).navigation?.action
+		).toBe("push");
+		expect(
+			notificationTapPlan({ type: "letter_received" }, null, 1, "/talk")
+				.navigation
+		).toEqual({ action: "navigate", href: "/(protected)/letters" });
+	});
+
+	it("routes domain_unlock to Steadiness through the old path's shim", () => {
+		expect(
+			notificationTapPlan({ type: "domain_unlock" }, null, 1, ON_TABS)
+				.navigation
 		).toEqual({
 			action: "push",
 			href: "/profile/insights",
@@ -211,7 +290,7 @@ describe("notificationTapPlan", () => {
 
 	it("routes achievement to the achievements screen, without stacking a copy", () => {
 		expect(
-			notificationTapPlan({ type: "achievement" }, null, 1).navigation
+			notificationTapPlan({ type: "achievement" }, null, 1, ON_TABS).navigation
 		).toEqual({
 			action: "navigate",
 			href: "/(protected)/achievements",
@@ -220,7 +299,12 @@ describe("notificationTapPlan", () => {
 
 	it("gives a badge push no banner and no session credit", () => {
 		expect(
-			notificationTapPlan({ logId: "l1", type: "achievement" }, "Joined", 1)
+			notificationTapPlan(
+				{ logId: "l1", type: "achievement" },
+				"Joined",
+				1,
+				ON_TABS
+			)
 		).toEqual({
 			navigation: { action: "navigate", href: "/(protected)/achievements" },
 		});
@@ -228,22 +312,32 @@ describe("notificationTapPlan", () => {
 
 	it("carries the banner only when there is both a log id and a body", () => {
 		expect(
-			notificationTapPlan({ logId: "l1", type: "milestone" }, "Ten days", 1)
+			notificationTapPlan(
+				{ logId: "l1", type: "milestone" },
+				"Ten days",
+				1,
+				ON_TABS
+			)
 		).toMatchObject({
 			banner: { content: "Ten days", notificationId: "l1" },
 			logId: "l1",
 		});
 		expect(
-			notificationTapPlan({ logId: "l1" }, null, 1).banner
+			notificationTapPlan({ logId: "l1" }, null, 1, ON_TABS).banner
 		).toBeUndefined();
 		expect(
-			notificationTapPlan({ type: "milestone" }, "Ten days", 1).banner
+			notificationTapPlan({ type: "milestone" }, "Ten days", 1, ON_TABS).banner
 		).toBeUndefined();
 	});
 
 	it("holds the banner back when the tap opens another screen", () => {
 		for (const type of ["domain_unlock", "kindling_ready"]) {
-			const plan = notificationTapPlan({ logId: "l1", type }, "Ready", 1);
+			const plan = notificationTapPlan(
+				{ logId: "l1", type },
+				"Ready",
+				1,
+				ON_TABS
+			);
 			expect(plan.banner).toBeUndefined();
 			expect(plan.logId).toBe("l1");
 		}
@@ -251,7 +345,12 @@ describe("notificationTapPlan", () => {
 
 	it("keeps the banner for a tap with no route of its own", () => {
 		expect(
-			notificationTapPlan({ logId: "l1", type: "follow_up" }, "Still there?", 1)
+			notificationTapPlan(
+				{ logId: "l1", type: "follow_up" },
+				"Still there?",
+				1,
+				ON_TABS
+			)
 		).toEqual({
 			banner: { content: "Still there?", notificationId: "l1" },
 			logId: "l1",
@@ -259,7 +358,54 @@ describe("notificationTapPlan", () => {
 	});
 
 	it("plans nothing for an unrecognised or absent payload", () => {
-		expect(notificationTapPlan({ type: "something_new" }, "hi", 1)).toEqual({});
-		expect(notificationTapPlan(undefined, undefined, 1)).toEqual({});
+		expect(
+			notificationTapPlan({ type: "something_new" }, "hi", 1, ON_TABS)
+		).toEqual({});
+		expect(notificationTapPlan(undefined, undefined, 1, ON_TABS)).toEqual({});
+	});
+
+	it("goes home from anywhere nothing is in progress", () => {
+		for (const pathname of ["/", "/today", "/explore/topics", "/quotes"]) {
+			expect(
+				notificationTapPlan({ type: "milestone" }, null, 1, pathname).navigation
+			).toEqual({ action: "home" });
+		}
+	});
+
+	it("leaves a held screen alone: a home tap there goes nowhere and keeps its banner", () => {
+		for (const pathname of [
+			"/voice-vent",
+			"/talk",
+			"/crisis-resources",
+			"/reflect",
+			"/chat/c1",
+			"/xolace-channel",
+		]) {
+			expect(
+				notificationTapPlan(
+					{ logId: "l1", type: "gentle_return" },
+					"Still here",
+					1,
+					pathname
+				)
+			).toEqual({
+				banner: { content: "Still here", notificationId: "l1" },
+				logId: "l1",
+			});
+		}
+	});
+
+	it("leaves a held screen alone for domain_unlock, whose shim returns to the tabs", () => {
+		expect(
+			notificationTapPlan({ type: "domain_unlock" }, null, 1, "/voice-vent")
+				.navigation
+		).toBeUndefined();
+	});
+
+	it("still opens other screens from a held one, since those stack rather than dismiss", () => {
+		expect(
+			notificationTapPlan({ screen: "quotes" }, null, 1, "/voice-vent")
+				.navigation
+		).toEqual({ action: "push", href: "/(protected)/quotes" });
 	});
 });

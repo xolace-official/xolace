@@ -1,9 +1,10 @@
 import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { query } from "../_generated/server";
-import { toTrackItem, trackItemValidator } from "../browse";
+import { trackItems, trackItemValidator } from "../browse/catalogue";
 import { requireAuth } from "../lib/auth";
-import { cardItemValidator, coverOf, toListItem } from "./entries";
+import { cardItemValidator } from "./cards";
+import { coverOf, toListItem } from "./entries";
 import { cardSignals } from "./reads";
 
 /** Library hubs (#405): editorial, ordered reading lists (ADR 0015). */
@@ -52,6 +53,7 @@ export const getHub = query({
 			return null;
 		}
 
+		const toTrack = trackItems(ctx);
 		const items = await Promise.all(
 			hub.items.map(async (item) => {
 				if (item.kind === "entry") {
@@ -69,7 +71,7 @@ export const getHub = query({
 				}
 				const t = await ctx.db.get("audio_tracks", item.audioTrackId);
 				return t?.active
-					? { kind: "audio" as const, track: await toTrackItem(t) }
+					? { kind: "audio" as const, track: await toTrack(t) }
 					: null;
 			})
 		);

@@ -1,6 +1,3 @@
-// A search section's See all (#551): every match, paged on scroll except Hubs
-// & topics, which shows whole. Taps report only section and position (#552).
-
 import { LegendList } from "@legendapp/list/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { PaginationStatus } from "convex/browser";
@@ -8,17 +5,17 @@ import { usePaginatedQuery, useQuery } from "convex/react";
 import { Stack, useLocalSearchParams } from "expo-router";
 import type { ReactElement } from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
-import { AppText } from "@/components/shared/app-text";
+import { EmptyState } from "@/components/shared/empty-state";
 import { TrackRow } from "@/features/browse/components/track-row";
-import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { EntryRow, RowsSkeleton } from "@/features/browse/search/library-row";
 import { PlaceRow } from "@/features/browse/search/place-row";
 import { useSearchTap } from "@/features/browse/search/search-analytics";
 import {
 	SECTION_TITLE,
 	type SearchSection,
 } from "@/features/browse/search/search-sections";
-import { EntryRow } from "@/features/library/home/entry-cards";
-import { RowsSkeleton } from "@/features/library/skeletons";
+import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const PAGE_SIZE = 20;
 
@@ -35,24 +32,29 @@ function Paged<T extends { _id: string }>({
 	row: (item: T, position: number) => ReactElement;
 }) {
 	const playerInset = useMiniPlayerInset();
-	if (status === "LoadingFirstPage") {
-		return <RowsSkeleton count={4} />;
-	}
+	const muted = useTokenColor("muted");
+	const loading = status === "LoadingFirstPage";
 	return (
 		<LegendList
 			contentContainerStyle={{ paddingBottom: 40 + playerInset }}
 			contentInsetAdjustmentBehavior="automatic"
-			data={results}
+			data={loading ? [] : results}
 			estimatedItemSize={80}
 			keyExtractor={(item) => item._id}
 			ListEmptyComponent={
-				<AppText className="px-4 pt-8 text-[15px] text-muted">
-					Nothing matches that.
-				</AppText>
+				loading ? (
+					<RowsSkeleton count={4} />
+				) : (
+					<EmptyState
+						body="Try a feeling, like “can’t sleep”."
+						className="pt-10"
+						title="Nothing matches that"
+					/>
+				)
 			}
 			ListFooterComponent={
 				isLoading && results.length > 0 ? (
-					<ActivityIndicator className="py-4" />
+					<ActivityIndicator className="py-4" color={muted} />
 				) : null
 			}
 			onEndReached={
@@ -74,9 +76,7 @@ function Entries({ query }: { query: string }) {
 	return (
 		<Paged
 			page={page}
-			row={(e, i) => (
-				<EntryRow entry={e} from="search" onOpen={tap("lantern", i)} />
-			)}
+			row={(e, i) => <EntryRow entry={e} onOpen={tap("lantern", i)} />}
 		/>
 	);
 }

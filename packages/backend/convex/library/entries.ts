@@ -5,6 +5,7 @@ import { r2 } from "../ai/paths/audioTracks";
 import { requireAuth } from "../lib/auth";
 import schema from "../schema";
 import { listenMin } from "./audio";
+import { cardItemValidator, listItemValidator } from "./cards";
 import { readRow, withCardSignals } from "./reads";
 import { entrySource, readSources } from "./sources";
 
@@ -17,28 +18,6 @@ import { entrySource, readSources } from "./sources";
 
 const { kind: kindValidator, reuse: reuseValidator } =
 	schema.tables.library_entries.validator.fields;
-
-export const listItemValidator = v.object({
-	_id: v.id("library_entries"),
-	coverThumbhash: v.optional(v.string()), // base64 ThumbHash placeholder (#507)
-	coverThumbUrl: v.optional(v.string()), // 512px cover, when ingest resized it (#506)
-	coverUrl: v.optional(v.string()),
-	dek: v.string(),
-	kind: kindValidator,
-	newUntil: v.optional(v.number()),
-	primarySubject: v.string(),
-	readMin: v.number(),
-	slug: v.string(),
-	title: v.string(),
-});
-
-/** A list item as the entry cards draw it: plus views and this reader's saved state (#410). */
-export const cardItemValidator = v.object({
-	...listItemValidator.fields,
-	listenMin: v.optional(v.number()),
-	saved: v.boolean(),
-	views: v.number(),
-});
 
 const COVER_URL_TTL_SEC = 3600;
 

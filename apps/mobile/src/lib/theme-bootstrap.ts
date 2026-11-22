@@ -1,13 +1,13 @@
-/** Applies the persisted theme to Uniwind before React renders; storage is synchronous so
- * `getState()` is hydrated. Mirrors use-appearance-settings.ts. */
+import "@/lib/native-appearance";
 import { Appearance } from "react-native";
-import { Uniwind } from "uniwind";
+import { themeVariant } from "@/design/themes";
+import { applyTheme } from "@/lib/native-appearance";
 import { useAppStore } from "@/store/store";
 
 const { theme, colorThemeId } = useAppStore.getState();
 
 if (colorThemeId === "default" && theme === "system") {
-	Uniwind.setTheme("system" as never);
+	applyTheme("system");
 } else {
 	const mode =
 		theme === "system"
@@ -15,6 +15,5 @@ if (colorThemeId === "default" && theme === "system") {
 				? "dark"
 				: "light"
 			: theme;
-	const variant = colorThemeId === "default" ? mode : `${colorThemeId}-${mode}`;
-	Uniwind.setTheme(variant as never);
+	applyTheme(themeVariant(colorThemeId, mode));
 }

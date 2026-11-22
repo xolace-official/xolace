@@ -1,0 +1,140 @@
+import type { DevState } from "@/dev/dev-state";
+import { FixtureArchived, FixtureConnect } from "./fixture-connect";
+import {
+	ARCHIVED_ONLY,
+	CHANNEL_ROW,
+	CONVERSATIONS,
+	DIRECT_REQUEST,
+	ESI,
+	KOJO,
+	MANY,
+	MAYA,
+	NO_CHATS,
+	SEEKER_REQUEST,
+	XOLACER,
+	XOLACER_UNPUBLISHED,
+} from "./fixtures";
+
+const OWN = { headerShown: true, title: "" };
+
+/** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
+export const devStates: readonly DevState[] = [
+	{
+		id: "chats",
+		options: OWN,
+		Screen: () => <FixtureConnect />,
+		title: "Chats: the channel, talking, waiting, resting, Archived · 2",
+	},
+	{
+		id: "chats-xolacer",
+		options: OWN,
+		Screen: () => (
+			<FixtureConnect
+				conversations={[CHANNEL_ROW, SEEKER_REQUEST, MAYA, KOJO, ESI]}
+				status={XOLACER}
+			/>
+		),
+		title: "Chats as a Xolacer: a new request, the profile button",
+	},
+	{
+		id: "chats-xolacer-direct",
+		options: OWN,
+		Screen: () => (
+			<FixtureConnect
+				conversations={[CHANNEL_ROW, DIRECT_REQUEST, SEEKER_REQUEST, MAYA]}
+				status={XOLACER}
+			/>
+		),
+		title: "Chats as a Xolacer: a direct request beside one after a session",
+	},
+	{
+		id: "chats-xolacer-setup",
+		options: OWN,
+		Screen: () => <FixtureConnect status={XOLACER_UNPUBLISHED} />,
+		title: "Chats as a Xolacer before publishing: the setup banner",
+	},
+	{
+		id: "chats-200",
+		options: OWN,
+		Screen: () => <FixtureConnect conversations={MANY} />,
+		title: "Chats at the server's ceiling: 200 rows",
+	},
+	{
+		id: "chats-offline",
+		options: OWN,
+		Screen: () => <FixtureConnect stream={{}} />,
+		title: "Chats offline: Convex's rows, nothing from Stream",
+	},
+	{
+		id: "no-chats",
+		options: OWN,
+		Screen: () => <FixtureConnect conversations={NO_CHATS} />,
+		title: "No chats yet: the channel and a way to the roster",
+	},
+	{
+		id: "archived-only",
+		options: OWN,
+		Screen: () => <FixtureConnect conversations={ARCHIVED_ONLY} />,
+		title: "Every chat archived",
+	},
+	{
+		id: "loading",
+		options: OWN,
+		Screen: () => <FixtureConnect loading />,
+		title: "Connect loading",
+	},
+	{
+		id: "disabled",
+		options: OWN,
+		Screen: () => <FixtureConnect status={{ enabled: false }} />,
+		title: "Chat switched off",
+	},
+	{
+		id: "xolacers",
+		options: OWN,
+		Screen: () => <FixtureConnect segment="xolacers" />,
+		title: "Xolacers: here now, new, full",
+	},
+	{
+		id: "xolacers-filtered",
+		options: OWN,
+		Screen: () => <FixtureConnect filter="grief" segment="xolacers" />,
+		title: "Xolacers filtered to Grief",
+	},
+	{
+		id: "xolacers-no-match",
+		options: OWN,
+		Screen: () => <FixtureConnect filter="burnout" segment="xolacers" />,
+		title: "Xolacers filtered to a tag nobody lists",
+	},
+	{
+		id: "xolacers-loading",
+		options: OWN,
+		Screen: () => <FixtureConnect directory={null} segment="xolacers" />,
+		title: "Xolacers loading",
+	},
+	{
+		id: "xolacers-empty",
+		options: OWN,
+		Screen: () => <FixtureConnect directory={[]} segment="xolacers" />,
+		title: "No Xolacers yet",
+	},
+	{
+		id: "archived",
+		options: OWN,
+		Screen: () => <FixtureArchived />,
+		title: "Archived: a wrapped-up chat and a declined request",
+	},
+	{
+		id: "archived-loading",
+		options: OWN,
+		Screen: () => <FixtureArchived loading />,
+		title: "Archived loading: the row skeleton",
+	},
+	{
+		id: "archived-empty",
+		options: OWN,
+		Screen: () => <FixtureArchived conversations={CONVERSATIONS.slice(0, 4)} />,
+		title: "Archived, nothing there",
+	},
+];

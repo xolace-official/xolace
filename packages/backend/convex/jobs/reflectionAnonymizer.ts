@@ -79,6 +79,7 @@ export const anonymize = internalAction({
 		}
 
 		await ctx.runMutation(internal.reflections.contribute, {
+			contributorProfileId: session.emotionalProfileId,
 			displayText,
 			granularLabel: metadata.granularLabel,
 			intensity: metadata.intensity,

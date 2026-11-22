@@ -13,13 +13,21 @@ type AudioArgs = FunctionArgs<typeof api.admin.uploads.audioUploadUrl>;
 /** Longest side of each processed image, as the ingest scripts size them. */
 const IMAGE_PX: Record<ImageUse, number> = { hubCover: 1280, thumb: 1080 };
 
-const AUDIO_EXTENSIONS: readonly AudioArgs["ext"][] = ["m4a", "mp3", "wav"];
+/**
+ * MP3 or WAV: the formats the player's waveform can be measured from
+ * (`convex/audio/formats.ts`). M4A has no decoder there, so it isn't taken.
+ */
+const AUDIO_EXTENSIONS: readonly AudioArgs["ext"][] = ["mp3", "wav"];
+
+/** For a file input's `accept`: by type as well as extension, which the dropzone matches case-sensitively. */
+export const AUDIO_ACCEPT =
+	".mp3,.wav,audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/wave";
 
 function audioExtension(name: string): AudioArgs["ext"] {
 	const ext = name.slice(name.lastIndexOf(".") + 1).toLowerCase();
 	const known = AUDIO_EXTENSIONS.find((option) => option === ext);
 	if (!known) {
-		throw new Error(`${name}: use an MP3, M4A or WAV file`);
+		throw new Error(`${name}: use an MP3 or WAV file`);
 	}
 	return known;
 }

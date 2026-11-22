@@ -1,0 +1,61 @@
+import { router } from "expo-router";
+import { usePostHog } from "posthog-react-native";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/lib/haptics";
+import type { BrowseFrom } from "@/lib/now-playing/now-playing-store";
+import { usePushOnce } from "@/lib/use-push-once";
+import type { RailTile } from "./rail/rail-model";
+import type { Today } from "./today-data";
+
+const FROM: BrowseFrom = "discovery-strip";
+
+export function useTodayActions(): Pick<
+	Today["actions"],
+	"openTrack" | "openExplore" | "openMoment" | "openMoments" | "openQuotes"
+> {
+	const posthog = usePostHog();
+	const pushOnce = usePushOnce();
+	const locked = usePlusEntitlement().status === "free";
+
+	const openTrack = (tile: RailTile) => {
+		playSoftPress();
+		const track = { family: tile.family, from: FROM, slug: tile.slug };
+		if (locked) {
+			posthog.capture("browse_paywall_tapped", track);
+			posthog.capture("browse_paywall_shown", { from: FROM, slug: tile.slug });
+			usePaywall.getState().open("browse");
+			return;
+		}
+		posthog.capture("browse_track_opened", track);
+		pushOnce(() =>
+			router.push({
+				params: { from: FROM, slug: tile.slug },
+				pathname: "/player",
+			})
+		);
+	};
+
+	return {
+		openExplore: () => {
+			playSoftPress();
+			posthog.capture("discovery_library_strip_tapped");
+			pushOnce(() => router.push("/explore"));
+		},
+		openMoment: (id) => {
+			playSoftPress();
+			pushOnce(() =>
+				router.push({ params: { id }, pathname: "/moments/session/[id]" })
+			);
+		},
+		openMoments: () => {
+			playSoftPress();
+			pushOnce(() => router.push("/moments"));
+		},
+		openQuotes: () => {
+			playSoftPress();
+			pushOnce(() => router.push("/quotes"));
+		},
+		openTrack,
+	};
+}

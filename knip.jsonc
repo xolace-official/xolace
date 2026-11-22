@@ -5,6 +5,16 @@
       // Entry files' exports count too: an unused export in a route or a
       // config file is still dead code.
       "includeEntryExports": true,
+      "entry": [
+        // Permanent: each feature's dev states, found by `require.context` in
+        // src/dev/discovered.ts, which knip can't follow.
+        "src/features/**/dev/states.tsx",
+        // The redesign's shared kit (F5) lands before the screens that use it.
+        // Each file is an entry until its first screen PR imports it: delete its
+        // line then. These lines only shrink. Their exports carry `@public`.
+        "src/lib/keyboard/keyboard-spacer.tsx",
+        "src/lib/keyboard/use-keyboard-shown.ts"
+      ],
       // Read by @expo/fingerprint, and by path from metro.config.js: their
       // exports are consumed by tools knip can't follow.
       "ignore": ["fingerprint.config.js", "metro-stubs/**"],
@@ -19,7 +29,6 @@
       "ignoreDependencies": [
         // Peer dependencies of stream-chat-react-native-core (stream-chat-expo).
         "@op-engineering/op-sqlite",
-        "@react-native-community/netinfo",
         "react-native-teleport",
         // Turned on with EXPO_ATLAS=1; never imported.
         "expo-atlas",

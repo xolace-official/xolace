@@ -1,13 +1,9 @@
 import { createElement, useEffect, useState } from "react";
 
 export interface ChartAccessibilityProps<Datum> {
-	/** Additional guidance spoken after the chart summary. */
 	accessibilityHint?: string;
-	/** Spoken summary. Defaults to the chart family and number of data entries. */
 	accessibilityLabel?: string;
-	/** Overrides the spoken label for one data entry. */
 	accessibilityLabelForDatum?: (datum: Datum, index: number) => string;
-	/** Makes each data entry actionable without making the SVG geometry focusable. */
 	onAccessibilityDatumPress?: (datum: Datum, index: number) => void;
 }
 
@@ -31,7 +27,6 @@ function chartSummary(chart: string, count: number): string {
 	return `${chart}, ${count} ${count === 1 ? "data entry" : "data entries"}`;
 }
 
-/** Pure semantic projection, shared by tests and the native accessibility tree. */
 export function chartAccessibilityModel<Datum>(
 	chart: string,
 	data: Datum[],
@@ -64,12 +59,9 @@ export interface ChartAccessibilityDataProps<Datum>
 	valueOf: (datum: Datum) => [string, unknown][];
 }
 
-/** Whether VoiceOver / TalkBack is on; per-datum elements cost a native view each, so they are
- * gated on it. */
 function useScreenReaderEnabled(): boolean {
 	const [enabled, setEnabled] = useState(false);
 	useEffect(() => {
-		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const { AccessibilityInfo } =
 			require("react-native") as typeof import("react-native");
 		let settled = false;
@@ -80,7 +72,6 @@ function useScreenReaderEnabled(): boolean {
 				setEnabled(next);
 			}
 		);
-		// A change event that lands first is newer than this answer.
 		AccessibilityInfo.isScreenReaderEnabled().then((next) => {
 			if (!settled) {
 				setEnabled(next);
@@ -94,8 +85,6 @@ function useScreenReaderEnabled(): boolean {
 	return enabled;
 }
 
-/** Semantic sibling to the plot: one summary, plus one entry per datum while a screen reader is
- * on. */
 export function ChartAccessibilityData<Datum>({
 	chart,
 	data,
@@ -110,9 +99,6 @@ export function ChartAccessibilityData<Datum>({
 	if (disabled) {
 		return null;
 	}
-	// Keep the pure semantic projection importable by Node tests without asking
-	// Node to parse React Native's Flow entry point.
-	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	const { Pressable, View } =
 		require("react-native") as typeof import("react-native");
 	const items = screenReader

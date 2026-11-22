@@ -1,10 +1,5 @@
-// In-app purchases via RevenueCat: SDK init, entitlement status, purchase and restore.
-// Inert while `appConfig.features.payments` is false (`devIsPlus` is the switch).
-// RC appUserId is `emotionalProfileId` from api.premium.getEntitlement, as the server checks.
-
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
-import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import {
 	createContext,
@@ -21,8 +16,12 @@ import Purchases, {
 	type PurchasesOfferings,
 	type PurchasesPackage,
 } from "react-native-purchases";
+import { toast } from "@/components/shared/toast";
 import { appConfig } from "@/config/app";
-import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
+import { playAffirmativePress } from "@/lib/haptics";
+import { useAppStore } from "@/store/store";
+import { logInIfNeeded } from "./revenuecat-identity";
+import { startRevenueCat } from "./revenuecat-start";
 
 function hasActiveEntitlement(customerInfo: CustomerInfo | null): boolean {
 	if (!customerInfo) {
@@ -70,17 +69,16 @@ export function RevenueCatProvider({
 	children: React.ReactNode;
 }) {
 	const posthog = usePostHog();
-	const { toast } = useToast();
 	const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+	const accountPending = useAppStore((s) => s.accountPending);
 	const entitlement = useQuery(
 		api.premium.getEntitlement,
-		isAuthenticated ? {} : "skip"
+		isAuthenticated && !accountPending ? {} : "skip"
 	);
 	const appUserId = entitlement?.appUserId ?? null;
 
 	const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
 	const [offerings, setOfferings] = useState<PurchasesOfferings | null>(null);
-	// Loading only when the SDK will be configured (payments on and a key for this build).
 	const [isLoading, setIsLoading] = useState(
 		appConfig.features.payments && getApiKey() !== ""
 	);
@@ -104,29 +102,30 @@ export function RevenueCatProvider({
 
 		let cancelled = false;
 		async function init() {
-			try {
-				if (__DEV__) {
-					Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
-				}
-				Purchases.configure({ apiKey: getApiKey() });
-
-				const [info, offers] = await Promise.all([
-					Purchases.getCustomerInfo(),
-					Purchases.getOfferings(),
-				]);
-				if (cancelled) {
-					return;
-				}
-				setCustomerInfo(info);
-				setOfferings(offers);
-				setConfigured(true);
-			} catch (error) {
+			const start = await startRevenueCat({
+				configure: () => {
+					if (__DEV__) {
+						Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+					}
+					Purchases.configure({ apiKey: getApiKey() });
+				},
+				getCustomerInfo: () => Purchases.getCustomerInfo(),
+				getOfferings: () => Purchases.getOfferings(),
+			});
+			for (const error of start.errors) {
 				console.error("[RevenueCat] init failed:", error);
-			} finally {
-				if (!cancelled) {
-					setIsLoading(false);
-				}
 			}
+			if (cancelled) {
+				return;
+			}
+			if (start.customerInfo) {
+				setCustomerInfo(start.customerInfo);
+			}
+			if (start.offerings) {
+				setOfferings(start.offerings);
+			}
+			setConfigured(start.configured);
+			setIsLoading(false);
 		}
 		init();
 
@@ -142,12 +141,19 @@ export function RevenueCatProvider({
 		if (!(configured && appUserId)) {
 			return;
 		}
+		let cancelled = false;
 		Purchases.logIn(appUserId)
-			.then(({ customerInfo: info }) => setCustomerInfo(info))
+			.then(({ customerInfo: info }) => {
+				if (!cancelled) {
+					setCustomerInfo(info);
+				}
+			})
 			.catch((error) => console.error("[RevenueCat] logIn failed:", error));
+		return () => {
+			cancelled = true;
+		};
 	}, [configured, appUserId]);
 
-	// On sign-out, detach the SDK so cached entitlements cannot leak to the next sign-in.
 	useEffect(() => {
 		if (!configured || isAuthLoading || isAuthenticated) {
 			return;
@@ -171,12 +177,12 @@ export function RevenueCatProvider({
 		};
 	}, [configured, isAuthLoading, isAuthenticated]);
 
-	// useCallback keeps the memoized Provider value stable (context exception).
 	const purchase = useCallback(
 		async (pkg: PurchasesPackage, rawSurface?: string): Promise<boolean> => {
 			const surface = rawSurface ?? null;
 			posthog.capture("purchase_started", { package: pkg.identifier, surface });
 			try {
+				await logInIfNeeded(Purchases, appUserId);
 				const { customerInfo: info } = await Purchases.purchasePackage(pkg);
 				setCustomerInfo(info);
 
@@ -186,10 +192,7 @@ export function RevenueCatProvider({
 						surface,
 					});
 					playAffirmativePress();
-					toast.show({
-						description: "It's yours now.",
-						label: "Welcome to Xolace+",
-					});
+					toast("Welcome to Xolace+", { description: "It's yours now." });
 					return true;
 				}
 				return false;
@@ -208,16 +211,14 @@ export function RevenueCatProvider({
 					surface,
 				});
 				console.error("[RevenueCat] purchase failed:", error);
-				playErrorNotice();
-				toast.show({
+				toast("Purchase didn't go through", {
 					description: "Please try again.",
-					label: "Purchase didn't go through",
 					variant: "danger",
 				});
 				return false;
 			}
 		},
-		[posthog, toast]
+		[posthog, appUserId]
 	);
 
 	const refreshOfferings = useCallback(async (): Promise<boolean> => {
@@ -241,22 +242,20 @@ export function RevenueCatProvider({
 
 			if (hasActiveEntitlement(info)) {
 				playAffirmativePress();
-				toast.show({ label: "Purchases restored" });
+				toast("Purchases restored");
 				return true;
 			}
-			toast.show({ label: "No active purchases found" });
+			toast("No active purchases found");
 			return false;
 		} catch (error) {
 			console.error("[RevenueCat] restore failed:", error);
-			playErrorNotice();
-			toast.show({
+			toast("Restore failed", {
 				description: "Please try again.",
-				label: "Restore failed",
 				variant: "danger",
 			});
 			return false;
 		}
-	}, [toast]);
+	}, []);
 
 	const value = useMemo(
 		() => ({

@@ -2,6 +2,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { awardAchievement } from "../achievements/award";
 import { awardShowingUpRung, awardStreakRungs } from "../achievements/ladders";
+import type { MilestoneDetail } from "./milestones";
 import { isStreakMilestone } from "./milestones";
 import { earnFreeze, SAVER_CAP, settleStreak } from "./state";
 
@@ -144,6 +145,7 @@ export async function recordActivity(
 	let freezes = state.freezes;
 	let savers = profile.streakSavers ?? 0;
 	let brokenStreak: Doc<"emotional_profiles">["brokenStreak"];
+	let added: MilestoneDetail["added"] | undefined;
 	if (previousDayKey === undefined) {
 		newStreak = 1;
 	} else if (dayKey <= previousDayKey) {
@@ -154,7 +156,9 @@ export async function recordActivity(
 		// Silently (#700): the streak badge's push stands in for the old
 		// milestone push, and a milestone with no rung (400) sends nothing.
 		if (isStreakMilestone(newStreak)) {
+			const before = { freezes: state.freezes, savers };
 			savers = Math.min(savers + 1, SAVER_CAP);
+			added = milestoneAdded(before, { freezes, savers });
 		}
 	} else {
 		newStreak = 1;
@@ -189,11 +193,65 @@ export async function recordActivity(
 		ctx,
 		args.emotionalProfileId,
 		{ from: previousLongestStreak, to: newLongestStreak },
-		now
+		now,
+		// Only a first time at this length earns the rung, so only then is the
+		// week worth reading.
+		added && newStreak > previousLongestStreak
+			? {
+					detail: {
+						added,
+						dayKey,
+						week: await showedUpWeek(ctx, args.emotionalProfileId, dayKey),
+					},
+					rung: newStreak,
+				}
+			: undefined
 	);
 	if (firstShowedUp) {
 		await awardShowingUpRung(ctx, args.emotionalProfileId, daysShowedUp, now);
 	}
+}
+
+/** What a milestone day put in hand: a saver first, then a freeze, else nothing. */
+export function milestoneAdded(
+	before: { savers: number; freezes: number },
+	after: { savers: number; freezes: number }
+): MilestoneDetail["added"] {
+	if (after.savers > before.savers) {
+		return "saver";
+	}
+	return after.freezes > before.freezes ? "freeze" : "nothing";
+}
+
+const WEEK_DAYS = 7;
+
+/**
+ * The seven local days ending on `dayKey`, oldest first: true for a day showed
+ * up (a row that counts toward the streak), false for one a freeze or a
+ * revive kept. Read once, on the day the milestone is reached.
+ */
+async function showedUpWeek(
+	ctx: MutationCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	dayKey: string
+): Promise<boolean[]> {
+	const first = shiftDayKey(dayKey, 1 - WEEK_DAYS);
+	const shown = new Set<string>();
+	for await (const row of ctx.db
+		.query("activity_log")
+		.withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) =>
+			q
+				.eq("emotionalProfileId", emotionalProfileId)
+				.gte("dayKey", first)
+				.lte("dayKey", dayKey)
+		)) {
+		if (countsTowardStreak(row.actionType)) {
+			shown.add(row.dayKey);
+		}
+	}
+	return Array.from({ length: WEEK_DAYS }, (_, i) =>
+		shown.has(shiftDayKey(first, i))
+	);
 }
 
 /** The instant a local day begins. Two passes land right across a DST change. */

@@ -140,6 +140,7 @@ describe("launch catalog (#683, #687)", () => {
 			["exploring", "first-xolacer-chat", 10],
 			["exploring", "shared-reflection", 10],
 			["exploring", "first-listen", 10],
+			["exploring", "first-letter", 10],
 			["understanding", "understanding-1", 50],
 			["understanding", "understanding-3", 50],
 			["understanding", "understanding-8", 50],
@@ -177,8 +178,8 @@ describe("badge art keys (#687, #690)", () => {
 		expect(new Set(BADGE_ART_KEYS)).toEqual(shown);
 	});
 
-	it("count 27 fixed images, 18 streak stage rungs, the bonfire and 5 yearly", () => {
-		expect(BADGE_ART_KEYS).toHaveLength(51);
+	it("count 28 fixed images, 18 streak stage rungs, the bonfire and 5 yearly", () => {
+		expect(BADGE_ART_KEYS).toHaveLength(52);
 		expect(BADGE_ART_KEYS).toContain("streak-hearth-5");
 		expect(BADGE_ART_KEYS).toContain("streak-year-5");
 		expect(BADGE_ART_KEYS).not.toContain("streak-year-6");
