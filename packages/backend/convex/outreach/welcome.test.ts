@@ -188,6 +188,9 @@ describe("the welcome after sign-up", () => {
 			expect(part).toContain("Settings");
 			expect(part).toContain("A person reads replies, not instantly");
 		}
+		// The one image, served by this deployment, not anyone else's host.
+		expect(email?.html).toContain(`src="${SITE}/email/logo.png"`);
+		expect(email?.html.match(/<img /g)).toHaveLength(1);
 		const preview = email?.html
 			.match(/data-skip-in-text="true">([^<]*)/)?.[1]
 			?.replaceAll("&#x27;", "'");

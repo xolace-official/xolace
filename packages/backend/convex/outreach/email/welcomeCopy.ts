@@ -1,5 +1,7 @@
 import { IASP_DIRECTORY_URL } from "../../lib/crisisResources";
+import { siteLink } from "../appLinks";
 import { type EmailLinkTarget, emailLink } from "./appLinks";
+import { EMAIL_LOGO_PATH } from "./logo";
 
 /**
  * The welcome's words (#915), in one place for both the HTML template and the
@@ -45,6 +47,8 @@ export const WELCOME_SIGN_OFF = "The Xolace team";
 
 export type WelcomeLinks = Record<EmailLinkTarget, string> & {
 	helplines: string;
+	/** The logo, served by this deployment. */
+	logo: string;
 };
 
 /** Every link the welcome carries, for this deployment. */
@@ -52,6 +56,7 @@ export function welcomeLinks(): WelcomeLinks {
 	return {
 		explore: emailLink("explore"),
 		helplines: IASP_DIRECTORY_URL,
+		logo: siteLink(EMAIL_LOGO_PATH, ""),
 		support: emailLink("support"),
 		talk: emailLink("talk"),
 		vent: emailLink("vent"),

@@ -53,6 +53,12 @@ The words live in `packages/backend/convex/outreach/email/welcomeCopy.ts`, share
 the HTML template (`welcome.tsx`) and the plain-text part. Copy changes go through
 review, and the subject and preview must say nothing about mental health.
 
+The template uses the app's Default theme (light) and the wordmark's gradient, in the
+reader's system font: a web font would tell its host when the email is opened. Its one
+image, the logo, is served by the deployment itself at `<CONVEX_SITE_URL>/email/logo.png`
+(`email/logo.ts`, the lockup from `apps/admin/public/brand/` at 300 × 112), so no email
+loads anything from another host, and the route records nothing.
+
 ### Links in an email
 
 Mail clients don't open the app's `xolace://` scheme, so each link points at the

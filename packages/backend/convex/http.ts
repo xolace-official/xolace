@@ -5,6 +5,7 @@ import {
 	EMAIL_LINK_PATH_PREFIX,
 	openAppFromEmail,
 } from "./outreach/email/appLinks";
+import { EMAIL_LOGO_PATH, emailLogo } from "./outreach/email/logo";
 import { RESEND_WEBHOOK_PATH, resendWebhook } from "./outreach/email/webhook";
 import { APP_LINK_PATH_PREFIX, openApp } from "./outreach/telegram/appLinks";
 import { TELEGRAM_WEBHOOK_PATH } from "./outreach/telegram/botApi";
@@ -62,6 +63,14 @@ http.route({
 	handler: openAppFromEmail,
 	method: "GET",
 	pathPrefix: EMAIL_LINK_PATH_PREFIX,
+});
+
+// The welcome's logo (#918): served here so no email loads an image from
+// anyone else. Records nothing.
+http.route({
+	handler: emailLogo,
+	method: "GET",
+	path: EMAIL_LOGO_PATH,
 });
 
 // Resend's delivery events (#916): a hard bounce or a spam complaint stops
