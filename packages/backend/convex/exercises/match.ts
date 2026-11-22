@@ -36,6 +36,11 @@ const GROUNDING: ReadonlySet<ExerciseTitle> = new Set([
 	"name_the_room",
 ]);
 
+/** Whether a flagged session may play this exercise (by its seeded title). */
+export function isGroundingTitle(title: string): boolean {
+	return [...GROUNDING].some((t) => t === title);
+}
+
 const HIGH_INTENSITY = 8;
 /** Anger at or above this reaches for Pause before you act first. */
 const PAUSE_FIRST_INTENSITY = 6;

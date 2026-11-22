@@ -260,6 +260,30 @@ describe("exercise routing on meaning", () => {
 		});
 	});
 
+	it("a session flagged after it matched plays grounding, not its match", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "shame",
+		});
+		const { sessionId, user } = await runMirror({ flagged: true });
+		const sit = await user.t.query(api.exercises.getForSession, { sessionId });
+		expect(sit?.exercise.title).toBe("reset");
+	});
+
+	it("a flagged session keeps a grounding exercise it swapped to", async () => {
+		stub.cache.classification = classificationResult({
+			...CATCH_ALL,
+			primaryEmotion: "shame",
+		});
+		const { sessionId, titleOf, user } = await runMirror({ flagged: true });
+		const edges = [...titleOf].find(([, t]) => t === "find_your_edges")![0];
+		await user.root.run((ctx) =>
+			ctx.db.patch("sessions", sessionId, { swappedExerciseIds: [edges] })
+		);
+		const sit = await user.t.query(api.exercises.getForSession, { sessionId });
+		expect(sit?.exercise.title).toBe("find_your_edges");
+	});
+
 	it("a flagged session with no matched exercise falls back to grounding", async () => {
 		stub.cache.classification = classificationResult({
 			...CATCH_ALL,

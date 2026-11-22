@@ -12,6 +12,7 @@ import {
 import {
 	isAtRisk,
 	isFlagged,
+	isGroundingTitle,
 	type MatchInput,
 	matchExercise,
 } from "./exercises/match";
@@ -170,17 +171,26 @@ export const getForSession = query({
 				? swapped[swapped.length - 1]
 				: (session.matchedExerciseId ?? null);
 
-		if (!exerciseId) {
-			// Nothing matched (or its row was missing): Let it land, but a flagged
-			// session gets the first grounding exercise there is.
-			const metadata = await ctx.db
-				.query("emotional_metadata")
-				.withIndex("by_session", (q) => q.eq("sessionId", session._id))
-				.unique();
-			const input = metadata ? matchInputFor(session, metadata) : undefined;
-			const flagged = input
-				? isFlagged(input)
-				: session.escalationTriggered === true;
+		const metadata = await ctx.db
+			.query("emotional_metadata")
+			.withIndex("by_session", (q) => q.eq("sessionId", session._id))
+			.unique();
+		const input = metadata ? matchInputFor(session, metadata) : undefined;
+		const flagged = input
+			? isFlagged(input)
+			: session.escalationTriggered === true;
+
+		const exercise = exerciseId
+			? await ctx.db.get("exercises", exerciseId)
+			: null;
+		if (exerciseId && !exercise) {
+			return null;
+		}
+		// A session flagged after it matched (clarify raised the risk or the
+		// intensity) still plays only grounding; a grounding swap it chose stays.
+		if (!exercise || (flagged && !isGroundingTitle(exercise.title))) {
+			// Let it land, or for a flagged session the first grounding exercise
+			// there is.
 			const titles: string[] = flagged
 				? matchExercise(input ?? { ...UNKNOWN, atRisk: true })
 				: ["let_it_land"];
@@ -193,11 +203,6 @@ export const getForSession = query({
 					return { exercise: fallback, slots: {} as Record<string, string> };
 				}
 			}
-			return null;
-		}
-
-		const exercise = await ctx.db.get("exercises", exerciseId);
-		if (!exercise) {
 			return null;
 		}
 
