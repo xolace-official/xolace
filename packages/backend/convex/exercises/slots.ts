@@ -1,0 +1,70 @@
+/**
+ * Slot values as Sit with this shows them. Every client renders a slot
+ * verbatim inside the seed's copy, so the values carry their own grammar,
+ * casing and typography: an emotion fits "Something in you is ___.", the
+ * mirror line is one sentence, a phrase keeps "I" upright.
+ */
+
+const EMOTION_ADJECTIVE: Readonly<Record<string, string>> = {
+	anger: "angry",
+	anxiety: "anxious",
+	calm: "calm",
+	confusion: "confused",
+	demotivation: "flat",
+	disappointment: "disappointed",
+	disgust: "disgusted",
+	embarrassment: "embarrassed",
+	exhaustion: "exhausted",
+	fear: "afraid",
+	frustration: "frustrated",
+	gratitude: "grateful",
+	grief: "grieving",
+	guilt: "guilty",
+	homesickness: "homesick",
+	hope: "hopeful",
+	hopelessness: "hopeless",
+	joy: "glad",
+	loneliness: "lonely",
+	numbness: "numb",
+	overwhelm: "overwhelmed",
+	pride: "proud",
+	regret: "regretful",
+	relief: "relieved",
+	sadness: "sad",
+	"self-doubt": "doubting itself",
+	shame: "ashamed",
+	stress: "stressed",
+	surprise: "startled",
+	uncertainty: "unsure",
+};
+
+/** The adjective for a classifier emotion, or undefined when none reads well. */
+export function emotionAdjective(emotion: string): string | undefined {
+	const key = emotion.trim().toLowerCase();
+	return Object.hasOwn(EMOTION_ADJECTIVE, key)
+		? EMOTION_ADJECTIVE[key]
+		: undefined;
+}
+
+const SENTENCE_END = /(?<=[.!?…]["”’)]?)\s+(?=["“‘(]?\p{Lu})/u;
+
+/** The mirror's first sentence, whitespace collapsed. */
+export function firstSentence(text: string): string {
+	const cleaned = text.replace(/\s+/g, " ").trim();
+	return cleaned.split(SENTENCE_END)[0]?.trim() ?? "";
+}
+
+const APOSTROPHE = /(\p{L})'(\p{L})/gu;
+const DOUBLE_QUOTED = /"([^"]+)"/g;
+
+/** Curly apostrophes and double quotes, as the seed's own copy is set. */
+export function typeset(text: string): string {
+	return text.replace(APOSTROPHE, "$1’$2").replace(DOUBLE_QUOTED, "“$1”");
+}
+
+const LOWER_I = /(^|[^\p{L}'’])i(?=$|[^\p{L}])/gu;
+
+/** A lowercased phrase with "I" upright again and its apostrophes curled. */
+export function tidyPhrase(phrase: string): string {
+	return typeset(phrase.replace(LOWER_I, "$1I"));
+}
