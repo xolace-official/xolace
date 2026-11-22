@@ -88,10 +88,13 @@ export function ItemTile({
 	it,
 	from,
 	slot,
+	art,
 }: {
 	it: HomeItem;
 	from: HomeFrom;
 	slot: string;
+	/** The art's edge: the phone tile size, or larger on wide screens (`tileArt`). */
+	art: number;
 }) {
 	const { state, actions } = useHome();
 	const T = HOME_S.tile;
@@ -107,14 +110,14 @@ export function ItemTile({
 			{...h.a11y}
 			accessibilityLabel={itemLabel(it, meta, state.locked)}
 			accessibilityRole="button"
-			style={{ gap: T.gap, width: T.art }}
+			style={{ gap: T.gap, width: art }}
 		>
 			<ItemCover
 				hearing={h.hearing}
 				it={it}
 				pressed={h.pressed}
 				radius={T.artR}
-				size={T.art}
+				size={art}
 			/>
 			<View className="gap-0.75">
 				<AppText

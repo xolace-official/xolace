@@ -3,7 +3,9 @@ import { EXS, HOME_S } from "@/features/explore/explore-style";
 import type { HomeFrom } from "@/features/explore/home/home-data";
 import { type HomeItem, pages } from "@/features/explore/home/home-model";
 import { Hairline } from "@/features/explore/rows/track-row";
+import { useScreen } from "@/lib/wide-layout";
 import { ItemRow, ItemTile } from "./home-item";
+import { tileArt } from "./home-sizes";
 
 export function HourList({ items }: { items: readonly HomeItem[] }) {
 	return (
@@ -32,6 +34,7 @@ export function TileShelf({
 	from: HomeFrom;
 	slot: string;
 }) {
+	const art = tileArt(useScreen());
 	return (
 		<ScrollView
 			contentContainerStyle={{
@@ -41,10 +44,10 @@ export function TileShelf({
 			decelerationRate="fast"
 			horizontal
 			showsHorizontalScrollIndicator={false}
-			snapToInterval={HOME_S.tile.art + HOME_S.shelfGap}
+			snapToInterval={art + HOME_S.shelfGap}
 		>
 			{items.map((it) => (
-				<ItemTile from={from} it={it} key={it.key} slot={slot} />
+				<ItemTile art={art} from={from} it={it} key={it.key} slot={slot} />
 			))}
 		</ScrollView>
 	);

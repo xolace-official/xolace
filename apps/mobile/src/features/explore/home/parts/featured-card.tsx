@@ -1,4 +1,4 @@
-import { useWindowDimensions, View } from "react-native";
+import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { CoverImage } from "@/components/shared/cover-image";
 import { Icon } from "@/components/shared/icon";
@@ -12,6 +12,8 @@ import {
 	isLocked,
 	type ShelfTrack,
 } from "@/features/explore/home/home-model";
+import { useScreen } from "@/lib/wide-layout";
+import { featuredSize } from "./home-sizes";
 
 const F = HOME_S.feat;
 const LOCK = 22;
@@ -21,8 +23,7 @@ const SCRIM = [ON_ART.scrimFrom, ON_ART.scrimTo] as const;
 
 export function FeaturedCard({ track }: { track: ShelfTrack }) {
 	const { state, actions } = useHome();
-	const { width } = useWindowDimensions();
-	const w = width - HOME_S.gutter * 2;
+	const { w, h } = featuredSize(useScreen());
 	const it = fromTrack(track);
 	const locked = isLocked(it, state.locked);
 	const here = state.nowPlaying === track.slug;
@@ -41,11 +42,11 @@ export function FeaturedCard({ track }: { track: ShelfTrack }) {
 				card
 				className="overflow-hidden border-continuous bg-surface-secondary"
 				onPress={() => actions.open(it, "explore-featured")}
-				style={{ borderRadius: F.r, height: F.h, width: w }}
+				style={{ borderRadius: F.r, height: h, width: w }}
 			>
 				<CoverImage
 					recyclingKey={track._id}
-					style={{ height: F.h, width: w }}
+					style={{ height: h, width: w }}
 					thumbhash={track.thumbhash}
 					uri={track.thumbUrl}
 				/>

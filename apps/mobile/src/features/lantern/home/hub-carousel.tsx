@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { useWindowDimensions, View } from "react-native";
+import { View } from "react-native";
 import Animated, {
 	type SharedValue,
 	useAnimatedScrollHandler,
@@ -17,14 +17,17 @@ import { type HomeHub, hubCountLine } from "@/features/lantern/lantern-model";
 import { LS } from "@/features/lantern/lantern-style";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
+import { capped, useScreen } from "@/lib/wide-layout";
 
 const H = LS.hub;
+/** A hub card's widest on wide screens: two side by side with the next peeking, its cover a cover rather than a wall. */
+const WIDE_CARD = 460;
 
 export function HubCarousel() {
 	const hubs = useHomeScreen().state.home?.hubs ?? [];
-	const { width } = useWindowDimensions();
+	const screen = useScreen();
 	const [page, separator] = useTokenColors(["background", "separator"]);
-	const cardW = width - H.inset * 2;
+	const cardW = capped(screen, screen.width - H.inset * 2, WIDE_CARD);
 	const step = cardW + H.gap;
 	const scrollX = useSharedValue(0);
 	const onScroll = useAnimatedScrollHandler((e) => {

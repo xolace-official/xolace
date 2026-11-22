@@ -15,6 +15,8 @@ import { TileLock } from "./tile-lock";
 
 type Props = {
 	tile: RailTile;
+	/** The tile's edge: the phone size, or larger on wide screens. */
+	w: number;
 	angle: SharedValue<number>;
 	playing: boolean;
 	locked: boolean;
@@ -25,6 +27,7 @@ type Props = {
 
 export function ChimeTile({
 	tile,
+	w,
 	angle,
 	playing,
 	locked,
@@ -43,10 +46,7 @@ export function ChimeTile({
 	return (
 		<Animated.View
 			className="gap-2"
-			style={[
-				{ transformOrigin: [TILE.w / 2, -TILE.hang, 0], width: TILE.w },
-				swing,
-			]}
+			style={[{ transformOrigin: [w / 2, -TILE.hang, 0], width: w }, swing]}
 		>
 			<View
 				className="absolute w-px bg-subtle opacity-30"
@@ -81,11 +81,11 @@ export function ChimeTile({
 					/>
 					<View
 						className="overflow-hidden border-continuous bg-surface-secondary"
-						style={{ borderRadius: TILE.r, height: TILE.w, width: TILE.w }}
+						style={{ borderRadius: TILE.r, height: w, width: w }}
 					>
 						<CoverImage
 							accessible={false}
-							style={{ height: TILE.w, width: TILE.w }}
+							style={{ height: w, width: w }}
 							thumbhash={tile.thumbhash}
 							uri={tile.cover}
 						/>

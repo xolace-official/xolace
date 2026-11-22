@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import Animated from "react-native-reanimated";
 import { EaseView } from "@/design/ease";
+import { rowTile, useScreen } from "@/lib/wide-layout";
 import { COPY } from "../copy";
 import { useToday } from "../today-data";
 import { useTodayFrame } from "../today-frame";
@@ -12,12 +13,20 @@ import { TILE } from "./rail-model";
 import { useChimes } from "./use-chimes";
 
 const RISE_SLOT = 2;
+/** The row's side padding (`px-4`). */
+const ROW_PAD = 16;
 
 export function ListenRail() {
 	const { state, actions } = useToday();
 	const { live, reduced, intro, waiting } = useTodayFrame();
 	const tiles = state.rail ?? [];
 	const { angles, onScroll } = useChimes(tiles.length, reduced);
+	const screen = useScreen();
+	const w = rowTile(screen, {
+		gap: TILE.gap,
+		row: screen.width - ROW_PAD * 2,
+		size: TILE.w,
+	});
 	if (tiles.length === 0) {
 		return null;
 	}
@@ -63,6 +72,7 @@ export function ListenRail() {
 							playing={state.playingSlug === tile.slug}
 							reduced={reduced}
 							tile={tile}
+							w={w}
 						/>
 					);
 				})}

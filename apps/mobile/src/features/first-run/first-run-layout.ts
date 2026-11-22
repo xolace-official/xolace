@@ -1,3 +1,4 @@
+import { isWide } from "@/lib/wide-layout";
 import { BOARD, type Stage } from "./first-run-motion";
 
 export const BOARD_TEXT_MAX = 1.15;
@@ -33,12 +34,9 @@ export const CONTROL_MIN_SCALE = 0.5;
 export const SEAT_TITLE_MAX = 1.6;
 export const SEAT_TEXT_MAX = 2.4;
 
-/** The shortest side, in points, from which a screen counts as a tablet. No phone comes close (the widest iPhone is 440). */
-export const TABLET_MIN_SIDE = 600;
-
 /**
  * The board on a screen of `width` x `height`. A phone keeps the board at scale 1,
- * centred across and hung from the safe area; a tablet scales it up to fit and
+ * centred across and hung from the safe area; a wide screen (`isWide`) scales it up to fit and
  * centres it both ways, on a virtual screen of the real one divided by the scale.
  */
 export function stageFor(
@@ -46,7 +44,7 @@ export function stageFor(
 	height: number,
 	insetTop: number
 ): Stage {
-	if (Math.min(width, height) < TABLET_MIN_SIDE) {
+	if (!isWide({ height, width })) {
 		return {
 			dx: (width - BOARD.w) / 2,
 			dy: insetTop - BOARD.status,
