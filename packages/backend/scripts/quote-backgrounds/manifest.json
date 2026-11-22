@@ -159,5 +159,40 @@
     "kind": "loop",
     "ink": "light",
     "plus": true
+  },
+  {
+    "key": "earth-turning",
+    "name": "Earth turning",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "golden-meadow",
+    "name": "Golden meadow",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "ink-in-water",
+    "name": "Ink in water",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "paper-sea",
+    "name": "Paper sea",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "tea-steam",
+    "name": "Tea steam",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
   }
 ]

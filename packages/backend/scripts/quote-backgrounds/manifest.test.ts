@@ -66,7 +66,7 @@ describe("the committed manifest", () => {
 		]);
 	});
 
-	it("lists only the backgrounds whose art has landed: sixteen stills and five loops, besides Poster and Night", () => {
+	it("lists only the backgrounds whose art has landed: sixteen stills and ten loops, besides Poster and Night", () => {
 		const stills = list.filter((e) => e.kind === "still");
 		expect(stills).toHaveLength(18);
 		expect(list.filter((e) => e.kind === "loop").map((e) => e.key)).toEqual([
@@ -75,6 +75,11 @@ describe("the committed manifest", () => {
 			"shoreline",
 			"hearth",
 			"forest-rain",
+			"earth-turning",
+			"golden-meadow",
+			"ink-in-water",
+			"paper-sea",
+			"tea-steam",
 		]);
 	});
 
