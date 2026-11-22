@@ -33,27 +33,40 @@ export interface ChannelSetting {
 	plan: ChannelPlan;
 }
 
+/**
+ * Push and Telegram on turning off: what moves (`router.ts`) and what a
+ * queued delivery does (`deliver.ts`: a quiet-hours deferral checks the
+ * channel again on its first try, then falls back once or is dropped).
+ */
+const turnOffRerouted = (title: string) =>
+	`New outreach stops going to ${title} at once. Where another channel the person has can carry it, it goes there; otherwise it isn't sent. Messages still waiting out someone's quiet hours check again before sending, so they move or are dropped too; other queued deliveries still go. Nobody is unlinked.`;
+
 export const CHANNEL_COPY: Record<
 	Channel,
-	{ description: string; title: string; turnOn: string }
+	{ description: string; title: string; turnOff: string; turnOn: string }
 > = {
-	// Test mode and the welcome's rules: `outreach/email/config.ts`, `outreach/welcome.ts`.
+	// Email carries only the welcome, checked when it comes due and never
+	// deferred: `outreach/welcome.ts`, `channels.ts`, `email/config.ts`.
 	email: {
 		description:
-			"The welcome after sign-up, and outreach routed to email. Signing up links it.",
+			"The welcome, about 30 minutes after sign-up. Signing up links it.",
 		title: "Email",
+		turnOff:
+			"New welcomes stop at once, and no other channel carries them: a welcome that comes due while email is off is never sent. Emails already queued still go. Nobody is unlinked.",
 		turnOn:
-			"Every new sign-up gets the welcome email, and outreach routed to email goes out. If this deployment's EMAIL_TEST_MODE is false, that means real people's inboxes; in test mode every email goes to Resend's test address instead. People who signed up while email was off never get a welcome.",
+			"Welcomes go out by email again. Each one checks the switch when it comes due, about 30 minutes after sign-up, so anyone who signed up in the last half hour still gets one; people whose welcome came due while email was off never do. If this deployment's EMAIL_TEST_MODE is false, that means real people's inboxes; in test mode every email goes to Resend's test address instead.",
 	},
 	push: {
 		description: "Notifications on the phones where people allowed them.",
 		title: "Push",
+		turnOff: turnOffRerouted("Push"),
 		turnOn:
 			"Outreach routed to push goes to people's phones again, starting with the next message Xolace queues.",
 	},
 	telegram: {
 		description: "Messages from the Xolace bot to people who linked Telegram.",
 		title: "Telegram",
+		turnOff: turnOffRerouted("Telegram"),
 		turnOn:
 			"People who linked Telegram start getting outreach from the Xolace bot, starting with the next message Xolace queues.",
 	},

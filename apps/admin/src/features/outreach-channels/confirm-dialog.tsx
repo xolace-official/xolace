@@ -49,9 +49,7 @@ export function ConfirmDialog({
 						Turn {on ? "on" : "off"} {copy.title}?
 					</AlertDialogTitle>
 					<AlertDialogDescription>
-						{on
-							? `${copy.turnOn} ${PLAN_SCOPE[plan]}`
-							: `New outreach stops going to ${copy.title} at once and moves to each person's next channel. Deliveries already queued still go, and nobody is unlinked.`}
+						{on ? `${copy.turnOn} ${PLAN_SCOPE[plan]}` : copy.turnOff}
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

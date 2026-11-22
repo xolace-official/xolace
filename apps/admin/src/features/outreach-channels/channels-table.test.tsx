@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ChannelsTable } from "./channels-table";
-import type { ChannelConfig } from "./types";
+import type { Channel, ChannelConfig } from "./types";
 
 const CONFIGS: ChannelConfig[] = [
 	{ channel: "push", enabled: true, plan: "free" },
@@ -17,9 +17,9 @@ const CONFIGS: ChannelConfig[] = [
 	},
 ];
 
-function setup() {
+function setup(busy: ReadonlySet<Channel> = new Set()) {
 	const onSet = vi.fn();
-	render(<ChannelsTable configs={CONFIGS} onSet={onSet} />);
+	render(<ChannelsTable busy={busy} configs={CONFIGS} onSet={onSet} />);
 	return { onSet, user: userEvent.setup() };
 }
 
@@ -47,7 +47,7 @@ describe("ChannelsTable", () => {
 		expect(email?.textContent).toContain("3 marked it spam");
 	});
 
-	it("asks before turning email on, and warns about real inboxes and earlier sign-ups", async () => {
+	it("asks before turning email on, and says who gets a welcome and when it's a real inbox", async () => {
 		const { onSet, user } = setup();
 		await user.click(screen.getByRole("switch", { name: "Email outreach" }));
 
@@ -55,7 +55,10 @@ describe("ChannelsTable", () => {
 		expect(within(dialog).getByText("Turn on Email?")).toBeTruthy();
 		expect(dialog.textContent).toContain("EMAIL_TEST_MODE is false");
 		expect(dialog.textContent).toContain(
-			"People who signed up while email was off never get a welcome"
+			"anyone who signed up in the last half hour still gets one"
+		);
+		expect(dialog.textContent).toContain(
+			"people whose welcome came due while email was off never do"
 		);
 		expect(onSet).not.toHaveBeenCalled();
 
@@ -78,14 +81,16 @@ describe("ChannelsTable", () => {
 		expect(toggle.getAttribute("aria-checked")).toBe("false");
 	});
 
-	it("says queued deliveries still go before turning a channel off", async () => {
+	it("says what moves, what's dropped and what still goes before turning push off", async () => {
 		const { onSet, user } = setup();
 		await user.click(screen.getByRole("switch", { name: "Push outreach" }));
 
 		const dialog = await screen.findByRole("alertdialog");
 		expect(within(dialog).getByText("Turn off Push?")).toBeTruthy();
 		expect(dialog.textContent).toContain("stops going to Push at once");
-		expect(dialog.textContent).toContain("Deliveries already queued still go");
+		expect(dialog.textContent).toContain("otherwise it isn't sent");
+		expect(dialog.textContent).toContain("they move or are dropped too");
+		expect(dialog.textContent).toContain("other queued deliveries still go");
 
 		await user.click(within(dialog).getByRole("button", { name: "Turn off" }));
 		expect(onSet).toHaveBeenCalledExactlyOnceWith("push", {
@@ -105,5 +110,62 @@ describe("ChannelsTable", () => {
 			enabled: true,
 			plan: "plus",
 		});
+	});
+
+	it("says nothing else carries the welcome before turning email off", async () => {
+		const user = userEvent.setup();
+		render(
+			<ChannelsTable
+				busy={new Set()}
+				configs={[{ channel: "email", enabled: true, plan: "free" }]}
+				onSet={vi.fn()}
+			/>
+		);
+		await user.click(screen.getByRole("switch", { name: "Email outreach" }));
+
+		const dialog = await screen.findByRole("alertdialog");
+		expect(dialog.textContent).toContain("no other channel carries them");
+		expect(dialog.textContent).toContain("Emails already queued still go");
+		expect(dialog.textContent).not.toContain("quiet hours");
+	});
+
+	it("writes a plan change at once, without asking, keeping the switch", async () => {
+		const { onSet, user } = setup();
+		await user.click(
+			screen.getByRole("combobox", { name: "Telegram is open to" })
+		);
+		await user.click(await screen.findByRole("option", { name: "Everyone" }));
+
+		expect(screen.queryByRole("alertdialog")).toBeNull();
+		expect(onSet).toHaveBeenCalledExactlyOnceWith("telegram", {
+			enabled: false,
+			plan: "free",
+		});
+	});
+
+	it("keeps a channel on when its plan narrows to Plus", async () => {
+		const { onSet, user } = setup();
+		await user.click(screen.getByRole("combobox", { name: "Push is open to" }));
+		await user.click(await screen.findByRole("option", { name: "Plus only" }));
+
+		expect(onSet).toHaveBeenCalledExactlyOnceWith("push", {
+			enabled: true,
+			plan: "plus",
+		});
+	});
+
+	it("locks only the rows whose write is in flight", () => {
+		setup(new Set<Channel>(["email", "push"]));
+		const locked = (name: string) =>
+			screen.getByRole("switch", { name }).hasAttribute("data-disabled");
+
+		expect(locked("Email outreach")).toBe(true);
+		expect(locked("Push outreach")).toBe(true);
+		expect(locked("Telegram outreach")).toBe(false);
+		expect(
+			screen
+				.getByRole("combobox", { name: "Email is open to" })
+				.hasAttribute("data-disabled")
+		).toBe(true);
 	});
 });

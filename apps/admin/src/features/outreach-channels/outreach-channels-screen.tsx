@@ -25,7 +25,7 @@ export function OutreachChannelsScreen() {
 		isAuthenticated ? {} : "skip"
 	);
 	const setConfig = useMutation(api.admin.outreachChannels.setChannelConfig);
-	const [busy, setBusy] = useState<Channel>();
+	const [busy, setBusy] = useState<ReadonlySet<Channel>>(() => new Set());
 
 	return (
 		<>
@@ -53,12 +53,17 @@ export function OutreachChannelsScreen() {
 					configs={configs}
 					onSet={async (channel, setting) => {
 						const { title } = CHANNEL_COPY[channel];
-						setBusy(channel);
+						setBusy((prev) => new Set(prev).add(channel));
 						await runAction(
 							() => setConfig({ channel, ...setting }),
 							`${title} is ${setting.enabled ? "on" : "off"}, open to ${PLAN_LABEL[setting.plan].toLowerCase()}`
 						);
-						setBusy(undefined);
+						// Only this channel: another row's write may still be in flight.
+						setBusy((prev) => {
+							const next = new Set(prev);
+							next.delete(channel);
+							return next;
+						});
 					}}
 				/>
 			)}

@@ -50,8 +50,11 @@ export function ChannelsTable({
 	onSet,
 }: {
 	configs: readonly ChannelConfig[];
-	/** The channel whose write is in flight, if any. */
-	busy?: Channel;
+	/**
+	 * Channels with a write in flight. Each write sends the whole row, so a row
+	 * stays locked until its own write lands, whatever other rows do.
+	 */
+	busy: ReadonlySet<Channel>;
 	onSet: (channel: Channel, setting: ChannelSetting) => void;
 }) {
 	return (
@@ -67,7 +70,7 @@ export function ChannelsTable({
 			<TableBody>
 				{configs.map((config) => (
 					<ChannelRow
-						busy={busy === config.channel}
+						busy={busy.has(config.channel)}
 						config={config}
 						key={config.channel}
 						onSet={(setting) => onSet(config.channel, setting)}
