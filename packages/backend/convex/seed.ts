@@ -1184,18 +1184,19 @@ export const seedReflections = internalAction({
 });
 
 // ---------------------------------------------------------------------------
-// Exercise seed data — 6 exercises for beta.
+// Exercise seed data — 6 exercises for beta. seedExercises.test.ts checks the
+// rules every client relies on.
 // Run: bunx convex run seed:seedExercises
 // Safe to re-run — upserts by title.
 // ---------------------------------------------------------------------------
 
-const EXERCISES = [
+export const EXERCISES = [
 	{
 		estimatedMinutes: 1.5,
 		intensityRange: { max: 7, min: 2 },
 		steps: [
 			{
-				content: "You named it. Let's just sit with that for a moment.",
+				content: "You named it. Let’s just sit with that for a moment.",
 				durationSeconds: 4,
 				order: 1,
 				type: "text" as const,
@@ -1218,7 +1219,7 @@ const EXERCISES = [
 			},
 			{
 				content:
-					"Notice where in your body '{{user_phrase}}' lives right now. Not to fix it. Just so it knows you heard it.",
+					"Notice where in your body “{{user_phrase}}” lives right now. Not to fix it. Just so it knows you heard it.",
 				defaultContent:
 					"Notice where this lives in your body right now. Not to fix it. Just so it knows you heard it.",
 				durationSeconds: 6,
@@ -1227,7 +1228,7 @@ const EXERCISES = [
 				type: "text" as const,
 			},
 			{
-				content: "You don't have to do anything with it.",
+				content: "You don’t have to do anything with it.",
 				durationSeconds: 6,
 				order: 5,
 				type: "text" as const,
@@ -1242,13 +1243,13 @@ const EXERCISES = [
 		intensityRange: { max: 5, min: 1 },
 		steps: [
 			{
-				content: "Before anything else, let's find where you are.",
+				content: "Before anything else, let’s find where you are.",
 				durationSeconds: 5,
 				order: 1,
 				type: "text" as const,
 			},
 			{
-				content: "Look around. Don't move your head much — just your eyes.",
+				content: "Look around. Don’t move your head much, just your eyes.",
 				durationSeconds: 4,
 				order: 2,
 				type: "text" as const,
@@ -1260,19 +1261,19 @@ const EXERCISES = [
 				type: "text" as const,
 			},
 			{
-				content: "Now feel your feet. Whatever they're touching.",
+				content: "Now feel your feet. Whatever they’re touching.",
 				durationSeconds: 5,
 				order: 4,
 				type: "text" as const,
 			},
 			{
-				content: "Your back. Against what's behind it.",
+				content: "Your back. Against what’s behind it.",
 				durationSeconds: 5,
 				order: 5,
 				type: "text" as const,
 			},
 			{
-				content: "Hands. What temperature are they.",
+				content: "Your hands. What temperature are they?",
 				durationSeconds: 6,
 				order: 6,
 				type: "text" as const,
@@ -1285,7 +1286,7 @@ const EXERCISES = [
 				type: "breath" as const,
 			},
 			{
-				content: "You're here. That's enough.",
+				content: "You’re here. That’s enough.",
 				durationSeconds: 5,
 				order: 8,
 				type: "text" as const,
@@ -1301,14 +1302,14 @@ const EXERCISES = [
 		steps: [
 			{
 				content: "{{mirror_line}}",
-				defaultContent: "You're carrying something heavy.",
+				defaultContent: "You’re carrying something heavy.",
 				durationSeconds: 4,
 				order: 1,
 				slotKeys: ["mirror_line"],
 				type: "text" as const,
 			},
 			{
-				content: "What if you didn't have to make this smaller right now?",
+				content: "What if you didn’t have to make this smaller right now?",
 				durationSeconds: 4,
 				order: 2,
 				type: "text" as const,
@@ -1317,23 +1318,17 @@ const EXERCISES = [
 				breathCycles: 3,
 				breathPattern: "extended_exhale" as const,
 				content:
-					"Breathing in; imagine giving it room.\nBreathing out; rest beside it.",
+					"Breathing in, imagine giving it room.\nBreathing out, rest beside it.",
 				order: 3,
 				type: "breath" as const,
 			},
 			{
 				breathCycles: 1,
 				breathPattern: "slow_exhale" as const,
-				content: "It doesn't have to leave to stop hurting.",
+				content: "It doesn’t have to leave to stop hurting.",
 				durationSeconds: 6,
 				order: 4,
 				syncToBreath: true,
-				type: "text" as const,
-			},
-			{
-				content: "You stayed.",
-				durationSeconds: 5,
-				order: 5,
 				type: "text" as const,
 			},
 		],
@@ -1366,22 +1361,16 @@ const EXERCISES = [
 				type: "text" as const,
 			},
 			{
-				content: "This stays on your phone. No one else will see it.",
+				content: "What does it want you to know?",
 				order: 4,
 				promptMaxSeconds: 60,
-				promptPlaceholder: "What does it want you to know?",
+				promptPlaceholder: "Say it however it comes.",
 				type: "private_prompt" as const,
 			},
 			{
 				content: "You heard it. That matters.",
 				durationSeconds: 4,
 				order: 5,
-				type: "text" as const,
-			},
-			{
-				content: "You stayed.",
-				durationSeconds: 5,
-				order: 6,
 				type: "text" as const,
 			},
 		],
@@ -1394,7 +1383,7 @@ const EXERCISES = [
 		intensityRange: { max: 8, min: 3 },
 		steps: [
 			{
-				content: "You said: '{{user_phrase}}'.",
+				content: "You said: “{{user_phrase}}.”",
 				defaultContent: "You named something hard.",
 				durationSeconds: 4,
 				order: 1,
@@ -1403,7 +1392,7 @@ const EXERCISES = [
 			},
 			{
 				content:
-					"Right now, in this moment, you're not the only one feeling something like this.",
+					"Right now, in this moment, you’re not the only one feeling something like this.",
 				durationSeconds: 5,
 				order: 2,
 				type: "text" as const,
@@ -1416,9 +1405,9 @@ const EXERCISES = [
 				type: "text" as const,
 			},
 			{
-				content: "",
+				content: "Feel your hand resting there.",
 				defaultContent: "Feel your hand resting there.",
-				durationSeconds: 4,
+				durationSeconds: 6,
 				hapticIntensity: "medium" as const,
 				order: 4,
 				type: "haptic" as const,
@@ -1434,14 +1423,14 @@ const EXERCISES = [
 				breathCycles: 1,
 				breathPattern: "slow_exhale" as const,
 				content:
-					"You don't have to say it out loud. Just let yourself hear it.",
+					"You don’t have to say it out loud. Just let yourself hear it.",
 				durationSeconds: 6,
 				order: 6,
 				syncToBreath: true,
 				type: "text" as const,
 			},
 			{
-				content: "That was kind. You stayed.",
+				content: "That was kind.",
 				durationSeconds: 5,
 				order: 7,
 				type: "text" as const,
@@ -1456,7 +1445,7 @@ const EXERCISES = [
 		intensityRange: { max: 10, min: 5 },
 		steps: [
 			{
-				content: "Three breaths. That's it.",
+				content: "Three breaths. That’s it.",
 				durationSeconds: 3,
 				order: 1,
 				type: "text" as const,
