@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
 import type { ExerciseSimilarity } from "../exercises/match";
+import { slotKeysToFill } from "../exercises/slots";
 import { AI_MIRROR_LIMITS_PLUS, rateLimiter } from "../lib/rateLimits";
 import { ERROR_CODES } from "../lib/shared";
 import { posthog } from "../posthog";
@@ -403,13 +404,9 @@ export const generateMirror = internalAction({
 				});
 
 				// Slot-fill — fire-and-forget so it doesn't block mirror delivery.
-				const slotKeys = [
-					...new Set(
-						matched.steps.flatMap(
-							(s: { slotKeys?: string[] }) => s.slotKeys ?? []
-						)
-					),
-				];
+				const slotKeys = slotKeysToFill(matched.steps, {
+					fallbackMirror: isFallback,
+				});
 				if (slotKeys.length > 0) {
 					await ctx.scheduler.runAfter(0, internal.ai.slotFill.fillSlots, {
 						exerciseTitle: plan.exerciseTitle,

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { PRIMARY_EMOTIONS } from "../lib/understandingVocab";
-import { emotionAdjective, firstSentence, tidyPhrase, typeset } from "./slots";
+import {
+	emotionAdjective,
+	firstSentence,
+	slotKeysToFill,
+	tidyPhrase,
+	typeset,
+} from "./slots";
 
 describe("emotionAdjective", () => {
 	it("turns the classifier's noun into a word that fits “Something in you is ___.”", () => {
@@ -58,5 +64,26 @@ describe("typeset and tidyPhrase", () => {
 		expect(tidyPhrase("like i'm failing")).toBe("like I’m failing");
 		expect(tidyPhrase("it is hitting me")).toBe("it is hitting me");
 		expect(tidyPhrase("one step behind")).toBe("one step behind");
+	});
+});
+
+describe("slotKeysToFill", () => {
+	const steps = [
+		{ slotKeys: ["mirror_line"] },
+		{},
+		{ slotKeys: ["user_emotion", "mirror_line"] },
+	];
+
+	it("asks for each slot once", () => {
+		expect(slotKeysToFill(steps, { fallbackMirror: false })).toEqual([
+			"mirror_line",
+			"user_emotion",
+		]);
+	});
+
+	it("leaves the mirror line to its default when the mirror fell back", () => {
+		expect(slotKeysToFill(steps, { fallbackMirror: true })).toEqual([
+			"user_emotion",
+		]);
 	});
 });

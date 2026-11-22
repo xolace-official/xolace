@@ -68,3 +68,18 @@ const LOWER_I = /(^|[^\p{L}'’])i(?=$|[^\p{L}])/gu;
 export function tidyPhrase(phrase: string): string {
 	return typeset(phrase.replace(LOWER_I, "$1I"));
 }
+
+/**
+ * The slots an exercise's steps ask for, once each. A fallback mirror says
+ * nothing about the session, so it leaves mirror_line to the seed's default.
+ */
+export function slotKeysToFill(
+	steps: readonly { slotKeys?: readonly string[] }[],
+	{ fallbackMirror }: { fallbackMirror: boolean }
+): string[] {
+	const keys = new Set(steps.flatMap((s) => s.slotKeys ?? []));
+	if (fallbackMirror) {
+		keys.delete("mirror_line");
+	}
+	return [...keys];
+}
