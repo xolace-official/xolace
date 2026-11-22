@@ -65,7 +65,7 @@ export const FIND_YOUR_EDGES: CatalogueExercise = {
 		},
 		{
 			content: "Find three things. A corner. A shadow. A color. Anything.",
-			durationSeconds: 6,
+			durationSeconds: 10,
 			order: 3,
 			type: "text",
 		},
@@ -160,7 +160,7 @@ export const SPEAK_TO_IT: CatalogueExercise = {
 			type: "text",
 		},
 		{
-			content: "If it could speak, what does it want you to know?",
+			content: "Imagine it could speak. Let it, for a moment.",
 			durationSeconds: 6,
 			order: 3,
 			type: "text",
