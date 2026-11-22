@@ -8,6 +8,12 @@ const PUSH_PARALLELISM = 10;
 const TELEGRAM_PARALLELISM = 5;
 
 /**
+ * Each email send looks its address up in Clerk first (ADR 0004): few at
+ * once, so a large send stays well under Clerk's Backend API rate limit.
+ */
+const EMAIL_PARALLELISM = 3;
+
+/**
  * Every outreach workpool: one per channel for deliveries (#760), so a slow
  * or rate-limited provider never holds up another channel's, plus Telegram's
  * inbound pool.
@@ -22,6 +28,15 @@ export const outreachPushPool = new Workpool(components.outreachPush, {
  */
 export const outreachTelegramPool = new Workpool(components.outreachTelegram, {
 	maxParallelism: TELEGRAM_PARALLELISM,
+});
+
+/**
+ * Email (#914). No workpool retries: the delivery runner retries itself, and
+ * the Resend component retries Resend's own 429s and 5xx behind its
+ * idempotency key.
+ */
+export const outreachEmailPool = new Workpool(components.outreachEmail, {
+	maxParallelism: EMAIL_PARALLELISM,
 });
 
 /**

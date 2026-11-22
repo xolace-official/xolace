@@ -2,7 +2,12 @@ import type { Workpool } from "@convex-dev/workpool";
 import type { Value } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
-import { outreachPushPool, outreachTelegramPool } from "./pools";
+import { emailAdapter } from "./email/adapter";
+import {
+	outreachEmailPool,
+	outreachPushPool,
+	outreachTelegramPool,
+} from "./pools";
 import { pushAdapter } from "./push";
 import { telegramAdapter } from "./telegram/adapter";
 import type { ChannelErrorKind, OutreachChannel } from "./validators";
@@ -108,6 +113,7 @@ export class ChannelError extends Error {
 
 /** Channels with an adapter. A channel missing here is `not_configured`. */
 export const ADAPTERS: Partial<Record<OutreachChannel, ChannelAdapter>> = {
+	email: actionAdapter({ ...emailAdapter, pool: outreachEmailPool }),
 	push: { ...pushAdapter, pool: outreachPushPool },
 	telegram: actionAdapter({ ...telegramAdapter, pool: outreachTelegramPool }),
 };

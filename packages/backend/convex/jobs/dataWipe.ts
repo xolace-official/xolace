@@ -27,9 +27,9 @@ const BATCH_SIZE = 100;
  *          monthly_event_states, activity_log,
  *          frozen_days, compounding_stretches, steadiness_insights, outreach,
  *          the letters they sent and received (letters/erasure.ts),
- *          outreach_deliveries, the linked chats' inbound_events, an unused
- *          channel_link_tokens row, and the bot's last 48 h of Telegram
- *          messages (#773)
+ *          outreach_deliveries, the email_channel_states row (#916), the
+ *          linked chats' inbound_events, an unused channel_link_tokens row,
+ *          and the bot's last 48 h of Telegram messages (#773)
  * Anonymizes: escalation_events (strip profileId for safety audit)
  * Resets: emotional_profile counters, the companion's preferred name, the
  *         Continue cards removed from Explore (`exploreHiddenContinue`)

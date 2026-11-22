@@ -4,7 +4,8 @@ import type { MutationCtx } from "../_generated/server";
 import { adminMutation } from "../lib/adminAuth";
 import { hasPremium } from "../lib/premium";
 import { rateLimiter } from "../lib/rateLimits";
-import { DEFAULT_CHANNEL_ORDER } from "../outreach/channels";
+import { routingOrder } from "../outreach/channels";
+import { emailStateOf } from "../outreach/email/state";
 import {
 	channelIneligibility,
 	ESCALATION_HOLD_MS,
@@ -22,8 +23,11 @@ import {
 } from "../outreach/telegram/lifecycle";
 import {
 	channelErrorKindValidator,
+	closedEmailStatusValidator,
 	deliveryStatusValidator,
 	ineligibilityReasonValidator,
+	type OutreachChannel,
+	type OutreachIntent,
 	outreachChannelValidator,
 	outreachIntentValidator,
 	outreachOutcomeValidator,
@@ -67,12 +71,19 @@ const adminSuppressedReasonValidator = v.union(
 const channelEntryValidator = v.object({
 	channel: outreachChannelValidator,
 	eligible: v.boolean(),
+	/**
+	 * Email: closed by a hard bounce or a spam complaint, and since when
+	 * (#916). Shown on its own: the kill switch's reason comes first.
+	 */
+	emailState: v.optional(
+		v.object({ changedAt: v.number(), status: closedEmailStatusValidator })
+	),
 	/** Why outreach can't land here now; absent when eligible. */
 	ineligibleReason: v.optional(ineligibilityReasonValidator),
 	linkedAt: v.optional(v.number()),
 	revokedAt: v.optional(v.number()),
 	revokedReason: v.optional(revokedReasonValidator),
-	/** `app` for push, which has no link. */
+	/** `app` for push, which has no link; email is `active` from sign-up. */
 	status: v.union(
 		v.literal("app"),
 		v.literal("active"),
@@ -188,6 +199,16 @@ async function aiReplyUsage(
 	return { cap, used };
 }
 
+/**
+ * An intent each channel takes, so eligibility speaks to the channel alone:
+ * email takes only its own intents.
+ */
+const PROBE_INTENT: Record<OutreachChannel, OutreachIntent> = {
+	email: "welcome",
+	push: "nudge",
+	telegram: "nudge",
+};
+
 async function channelEntries(
 	ctx: MutationCtx,
 	profile: Doc<"emotional_profiles">,
@@ -195,21 +216,19 @@ async function channelEntries(
 	telegramBucketFull: boolean
 ): Promise<ChannelEntry[]> {
 	const notifications = await loadNotifications(ctx, profile._id);
-	const order = notifications?.channelOrder ?? DEFAULT_CHANNEL_ORDER;
 	const shown = [
 		...new Set([
-			...order,
+			...routingOrder(notifications),
 			// A link outside the order still shows, after it.
 			...(telegramIdentities.length > 0 ? (["telegram"] as const) : []),
 		]),
 	];
 	const entries: ChannelEntry[] = [];
 	for (const channel of shown) {
-		// Both channels take a nudge, so it asks only about the channel.
 		let reason = await channelIneligibility(
 			ctx,
 			channel,
-			{ emotionalProfileId: profile._id, intent: "nudge" },
+			{ emotionalProfileId: profile._id, intent: PROBE_INTENT[channel] },
 			profile,
 			notifications
 		);
@@ -222,6 +241,18 @@ async function channelEntries(
 		};
 		if (channel === "push") {
 			entries.push({ channel, status: "app", ...eligibility });
+			continue;
+		}
+		if (channel === "email") {
+			// Linked at sign-up; the address stays in Clerk (ADR 0004). A
+			// bounce or complaint shows whatever else closes it (#916).
+			const emailState = await emailStateOf(ctx, profile._id);
+			entries.push({
+				channel,
+				status: "active",
+				...eligibility,
+				...(emailState.status !== "linked" && { emailState }),
+			});
 			continue;
 		}
 		const link =

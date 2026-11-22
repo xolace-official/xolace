@@ -5,9 +5,9 @@ docs site, all on **one Convex backend with Clerk auth**. bun 1.3.14 workspaces
 (isolated linker) + Turborepo + Biome/Ultracite. Many people and agents work here at
 once: stay inside your task, your worktree and your Convex dev deployment.
 
-The mobile app and backend are real (moved in Phase 2). Web, admin, desktop, CLI and
-docs are still placeholders until Phase 4. Plan and decisions:
-`docs/plan/workspace-migration-plan.md`.
+The mobile app, backend and internal admin are real (mobile and backend moved in
+Phase 2). Web, desktop, CLI and docs are still placeholders until Phase 4. Plan and
+decisions: `docs/plan/workspace-migration-plan.md`.
 
 ## Repo map
 
@@ -70,13 +70,26 @@ Put a dependency in the package that uses it; shared versions come from the root
   reason is its **intent** (a nudge, a gentle return, a pattern nudge…). A message
   relaying something another person did (a chat message) is a notification, not
   outreach.
-- **channel**: a place outreach can land: push, Telegram, later SMS and others. A user
-  **links** a channel before Xolace may reach them there. Each channel is open to
+- **channel**: a place outreach can land: push, Telegram, email, later SMS and others. A user
+  **links** a channel before Xolace may reach them there; signing up links email,
+  since the address comes verified from the sign-in provider. Each channel is open to
   free users or only to Plus, and that can change at any time.
 - **delivery**: one outreach landing, or failing to land, on one channel. One outreach
   can have several deliveries.
 - **nudge**: an outreach a follow-up sends to invite the user back to its card.
   Gentle returns and pattern nudges are other intents, not nudges.
+- **welcome**: the one outreach every user gets once, after signing up. Never sent
+  twice, never to someone who signed up before it existed.
+- **gist**: a weekly piece of mental-health reading that every subscriber gets in the
+  same form. Drafted by AI, sent only once a person at Xolace approves it; a week
+  with no approved gist sends nothing. Nothing in it is about the user. Opt-in.
+- **recap**: an outreach summarizing one user's own week. It carries only
+  showing-up facts (days showed up, streak, achievements, sparks), never what the
+  user said, felt or struggled with. Opt-in. Not a gist, which is the same for
+  everyone.
+- **account notice**: a message about the user's account itself (data export ready,
+  deletion confirmed, trial ending). Sent because something happened to the account,
+  not to bring the user back, so it is not outreach and ignores outreach opt-outs.
 - **letter**: a short, anonymous message of encouragement that one user (the
   **sender**) writes for a stranger, and Xolace chooses who receives it (the
   **recipient**, always someone who opted in to receive letters). A letter is

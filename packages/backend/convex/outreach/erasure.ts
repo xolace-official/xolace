@@ -1,5 +1,7 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { cancelQueuedEmail } from "./email/resend";
+import { drainEmailChannelState } from "./email/state";
 import { eraseTelegramChats } from "./telegram/erase";
 
 /**
@@ -38,11 +40,17 @@ export async function eraseForWipe(
 	await eraseTelegramChats(ctx, profileId, { accountDeleted: false });
 }
 
-/** Every outreach row, with its deliveries. */
+/**
+ * Every outreach row, with its deliveries, and the email channel state. An
+ * email the component still holds unsent is cancelled first (#917).
+ */
 export async function drainOutreach(
 	ctx: MutationCtx,
 	profileId: ProfileId
 ): Promise<boolean> {
+	// One row at most (#916): a bounce or complaint is forgotten with the
+	// outreach that drew it.
+	await drainEmailChannelState(ctx, profileId);
 	const rows = await ctx.db
 		.query("outreach")
 		.withIndex("by_profile_created", (q) =>
@@ -56,6 +64,10 @@ export async function drainOutreach(
 			.withIndex("by_outreach", (q) => q.eq("outreachId", row._id))
 			.take(BATCH);
 		for (const delivery of deliveries) {
+			if (delivery.channel === "email" && delivery.providerMessageId) {
+				// Handed to the component, maybe not yet to Resend (#917).
+				await cancelQueuedEmail(ctx, delivery.providerMessageId);
+			}
 			await ctx.db.delete("outreach_deliveries", delivery._id);
 		}
 		if (deliveries.length === BATCH) {

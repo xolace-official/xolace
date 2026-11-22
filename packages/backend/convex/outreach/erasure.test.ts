@@ -8,12 +8,20 @@
  * account's note is missing, or a wipe sends one; a row the user's outreach
  * left behind survives deletion; a wipe ends the link or its consent.
  */
+import type { EmailId } from "@convex-dev/resend";
+import resendTest from "@convex-dev/resend/test";
 import type { WorkflowId } from "@convex-dev/workflow";
-import { describe, expect, it, vi } from "vitest";
-import { internal } from "../_generated/api";
+import workpoolTest from "@convex-dev/workpool/test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { api, components, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { seedSession } from "../test/fixtures.helpers";
-import { asNewUser, type SeededUser } from "../test/harness.helpers";
+import {
+	asAdmin,
+	asNewUser,
+	makeIdentity,
+	type SeededUser,
+} from "../test/harness.helpers";
 import { aggregatesMock, ragMock, revenuecatMock } from "../test/mocks.helpers";
 import { drainInbound } from "./erasure";
 import { ACCOUNT_DELETED, CHECK_IN_CLOSED } from "./telegram/copy";
@@ -65,6 +73,11 @@ vi.mock("@convex-dev/workflow", async (orig) => {
 stubTelegramEachTest();
 
 const CHAT = String(STRANGER_CHAT);
+const MINUTE = 60_000;
+/** Steps of the scheduler given to hand the welcome to the component. */
+const HANDOVER_HOPS = 20;
+/** Under the component's one-second batch delay, so a step can't send it. */
+const HOP_MS = 100;
 /** The stub numbers sent messages from 100: the welcome took it. */
 const WELCOME_ID = 100;
 
@@ -448,6 +461,248 @@ describe("data wipe", () => {
 		expect(rows.inbound).toEqual([]);
 		// The used token stays: it's the record of the link that still stands.
 		expect(rows.tokens.map((t) => t.usedAt !== undefined)).toEqual([true]);
+	});
+});
+
+describe("email channel state (#916)", () => {
+	/** Two people email can't reach: the one being erased, and another. */
+	async function twoUnreachable() {
+		const user = await asNewUser();
+		const other = await asNewUser(2, user.root);
+		await user.root.run(async (ctx) => {
+			await ctx.db.insert("email_channel_states", {
+				changedAt: Date.now(),
+				emotionalProfileId: user.profileId,
+				status: "complained",
+			});
+			await ctx.db.insert("email_channel_states", {
+				changedAt: Date.now(),
+				emotionalProfileId: other.profileId,
+				status: "unreachable",
+			});
+		});
+		return { other, user };
+	}
+
+	const statesOf = (user: SeededUser) =>
+		user.root.run((ctx) =>
+			ctx.db
+				.query("email_channel_states")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.collect()
+		);
+
+	it.each([
+		["account deletion", purge],
+		["a wipe", wipe],
+	])("%s removes it, and only that person's", async (_name, erase) => {
+		const { other, user } = await twoUnreachable();
+
+		await erase(user);
+
+		expect(await statesOf(user)).toEqual([]);
+		expect(await statesOf(other)).toMatchObject([{ status: "unreachable" }]);
+	});
+});
+
+describe("an email still queued in Resend (#917)", () => {
+	const ADDRESS = "sam@example.com";
+	/** What reached Resend's API: nothing, if erasure cancelled in time. */
+	const resendCalls: string[] = [];
+	/** Runs while the adapter waits on Clerk: mid-send, before the handover. */
+	let duringClerkLookup: (() => Promise<void>) | undefined;
+
+	beforeEach(() => {
+		resendCalls.length = 0;
+		duringClerkLookup = undefined;
+		vi.stubEnv("CLERK_SECRET_KEY", "sk_test_key");
+		vi.stubEnv("RESEND_API_KEY", "re_test_key");
+		vi.stubEnv("EMAIL_TEST_MODE", "false");
+		vi.stubGlobal("fetch", async (input: RequestInfo | URL) => {
+			const url = String(input);
+			if (url.startsWith("https://api.clerk.com/")) {
+				const hook = duringClerkLookup;
+				duringClerkLookup = undefined;
+				await hook?.();
+				return Response.json({
+					email_addresses: [
+						{
+							email_address: ADDRESS,
+							id: "idn_primary",
+							verification: { status: "verified" },
+						},
+					],
+					id: makeIdentity().subject,
+					primary_email_address_id: "idn_primary",
+				});
+			}
+			if (url.startsWith("https://api.resend.com/")) {
+				resendCalls.push(url);
+				return Response.json({ data: [{ id: "re_sent" }] });
+			}
+			throw new Error(`unexpected fetch: ${url}`);
+		});
+	});
+	afterEach(() => {
+		vi.unstubAllEnvs();
+	});
+
+	const emailDelivery = (user: SeededUser) =>
+		user.root.run(async (ctx) => {
+			const rows = await ctx.db.query("outreach_deliveries").take(10);
+			return rows.find((row) => row.channel === "email");
+		});
+
+	/** A new user, their welcome due in 30 minutes, with email switched on. */
+	async function emailOn() {
+		const user = await asNewUser();
+		backend(user.root);
+		resendTest.register(user.root);
+		workpoolTest.register(user.root, "outreachEmail");
+		await asAdmin(9, user.root).mutation(
+			api.admin.outreachChannels.setChannelConfig,
+			{ channel: "email", enabled: true, plan: "free" }
+		);
+		return user;
+	}
+
+	/**
+	 * A new user whose welcome the email channel handed to the component,
+	 * which hasn't batched it to Resend yet. Its id there.
+	 */
+	async function welcomeWaiting() {
+		const user = await emailOn();
+		vi.advanceTimersByTime(30 * MINUTE);
+		let emailId: string | undefined;
+		for (let hop = 0; hop < HANDOVER_HOPS && !emailId; hop++) {
+			await user.root.finishInProgressScheduledFunctions();
+			emailId = (await emailDelivery(user))?.providerMessageId;
+			if (!emailId) {
+				vi.advanceTimersByTime(HOP_MS);
+			}
+		}
+		if (!emailId) {
+			throw new Error("the welcome never reached the component");
+		}
+		const status = () =>
+			user.root.query(components.resend.lib.getStatus, {
+				emailId: emailId as EmailId,
+			});
+		expect(await status()).toMatchObject({ status: "waiting" });
+		return { status, user };
+	}
+
+	it.each([
+		["account deletion", purge],
+		["a wipe", wipe],
+	])(
+		"%s cancels it, and Resend is never asked to send it",
+		async (_name, erase) => {
+			const { status, user } = await welcomeWaiting();
+
+			await erase(user);
+			await user.root.finishAllScheduledFunctions(vi.runAllTimers);
+
+			expect(await status()).toMatchObject({ status: "cancelled" });
+			expect(resendCalls).toEqual([]);
+		}
+	);
+
+	/**
+	 * A second email delivery for the welcome's outreach, claimed and
+	 * mid-send: what the adapter holds between the Clerk lookup and settling.
+	 */
+	const sendingDelivery = (
+		user: SeededUser,
+		outreachId: Doc<"outreach">["_id"]
+	) =>
+		user.root.run((ctx) =>
+			ctx.db.insert("outreach_deliveries", {
+				attempts: 1,
+				channel: "email",
+				createdAt: Date.now(),
+				isFallback: false,
+				outreachId,
+				status: "sending",
+			})
+		);
+
+	const handOver = (
+		user: SeededUser,
+		deliveryId: Doc<"outreach_deliveries">["_id"]
+	) =>
+		user.root.mutation(internal.outreach.email.handover.handOver, {
+			deliveryId,
+			email: {
+				from: "Xolace <hello@notifications.xolaceinc.com>",
+				html: "<p>Welcome</p>",
+				replyTo: [],
+				subject: "Welcome to Xolace",
+				text: "Welcome",
+				to: ADDRESS,
+			},
+		});
+
+	it("finds a handover the moment it commits, before the send is settled, and cancels it", async () => {
+		const { user } = await welcomeWaiting();
+		const outreachId = (await emailDelivery(user))?.outreachId;
+		if (!outreachId) {
+			throw new Error("no welcome outreach");
+		}
+		const deliveryId = await sendingDelivery(user, outreachId);
+
+		const emailId = await handOver(user, deliveryId);
+		// Stored by the handover itself: erasure needs nothing from settling.
+		expect(
+			await user.root.run((ctx) =>
+				ctx.db.get("outreach_deliveries", deliveryId)
+			)
+		).toMatchObject({ providerMessageId: emailId, status: "sending" });
+
+		await purge(user);
+		await user.root.finishAllScheduledFunctions(vi.runAllTimers);
+
+		const status = await user.root.query(components.resend.lib.getStatus, {
+			emailId: emailId as EmailId,
+		});
+		expect(status).toMatchObject({ status: "cancelled" });
+		expect(resendCalls).toEqual([]);
+	});
+
+	it("queues nothing for a delivery erasure already drained", async () => {
+		const { user } = await welcomeWaiting();
+		const outreachId = (await emailDelivery(user))?.outreachId;
+		if (!outreachId) {
+			throw new Error("no welcome outreach");
+		}
+		const deliveryId = await sendingDelivery(user, outreachId);
+		await user.root.run((ctx) =>
+			ctx.db.delete("outreach_deliveries", deliveryId)
+		);
+
+		expect(await handOver(user, deliveryId)).toBeNull();
+	});
+
+	it("cancels one handed over after account deletion drained its delivery mid-send", async () => {
+		const user = await emailOn();
+		let drained = false;
+		duringClerkLookup = async () => {
+			// The purge itself, not `purge`: the scheduler is already running.
+			await user.root.run((ctx) =>
+				ctx.db.patch("users", user.userId, { accountStatus: "purging" })
+			);
+			await user.root.mutation(internal.jobs.accountDeletion.purgeUser, {
+				userId: user.userId,
+			});
+			drained = !(await emailDelivery(user));
+		};
+
+		await user.root.finishAllScheduledFunctions(vi.runAllTimers);
+
+		expect(drained).toBe(true);
+		expect(resendCalls).toEqual([]);
 	});
 });
 

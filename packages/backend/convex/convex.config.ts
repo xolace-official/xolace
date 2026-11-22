@@ -7,6 +7,7 @@ import presence from "@convex-dev/presence/convex.config.js";
 import r2 from "@convex-dev/r2/convex.config.js";
 import rag from "@convex-dev/rag/convex.config.js";
 import rateLimiter from "@convex-dev/rate-limiter/convex.config.js";
+import resend from "@convex-dev/resend/convex.config.js";
 import workflow from "@convex-dev/workflow/convex.config.js";
 import workpool from "@convex-dev/workpool/convex.config.js";
 import posthog from "@posthog/convex/convex.config.js";
@@ -40,6 +41,11 @@ app.use(credits);
 // convex/outreach/pools.ts.
 app.use(workpool, { name: "outreachPush" });
 app.use(workpool, { name: "outreachTelegram" });
+app.use(workpool, { name: "outreachEmail" });
+// Email sends (#914), reached only through convex/outreach/email/resend.ts.
+// It keeps each email, address included, until it is cleaned up: the daily
+// cleanup of ADR 0004 lands with #917.
+app.use(resend);
 // Telegram webhook updates (#765), reached only through convex/outreach/pools.ts.
 app.use(workpool, { name: "telegramInbound" });
 app.use(posthog, {
