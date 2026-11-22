@@ -8,7 +8,7 @@ import { useWindowDimensions } from "react-native";
  */
 
 /** The widest iPhone is 440 pt across; the smallest iPad is 744. */
-export const WIDE_MIN_SIDE = 600;
+const WIDE_MIN_SIDE = 600;
 
 /** A reading column on wide screens: about 70 characters of 17–19 pt body. */
 export const READING_WIDTH = 640;
