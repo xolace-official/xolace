@@ -45,6 +45,8 @@ const h = vi.hoisted(() => ({
 	/** Clerk's answers to the next user lookups, one each, in order. */
 	clerk: [] as Response[],
 	clerkCalls: [] as string[],
+	/** Runs on the next Clerk lookup, before it answers (then clears). */
+	onClerk: undefined as (() => Promise<unknown>) | undefined,
 	pushes: [] as unknown[],
 	queued: [] as Queued[],
 	resendFailures: [] as Error[],
@@ -107,6 +109,7 @@ beforeEach(() => {
 	vi.setSystemTime(NOW);
 	h.clerk.length = 0;
 	h.clerkCalls.length = 0;
+	h.onClerk = undefined;
 	h.pushes.length = 0;
 	h.queued.length = 0;
 	h.resendFailures.length = 0;
@@ -122,6 +125,9 @@ beforeEach(() => {
 			throw new Error(`unexpected fetch: ${url}`);
 		}
 		h.clerkCalls.push(url);
+		const onClerk = h.onClerk;
+		h.onClerk = undefined;
+		await onClerk?.();
 		return h.clerk.shift() ?? clerkUser();
 	});
 });
@@ -439,6 +445,28 @@ describe("delivery errors", () => {
 		expect(delivery).toMatchObject({ attempts: 2, status: "sent" });
 		expect(h.clerkCalls).toHaveLength(2);
 		expect(h.queued).toHaveLength(1);
+	});
+
+	it("sends nothing on a retry once the account's deletion was requested", async () => {
+		const user = await signedUp();
+		h.clerk.push(new Response(null, { status: 429 }));
+		// Between the 429 and the retry, before the purge drains anything.
+		h.onClerk = () =>
+			user.root.run((ctx) =>
+				ctx.db.patch("users", user.userId, { accountStatus: "deleted" })
+			);
+
+		const result = await welcome(user);
+		await drain(user);
+
+		const [delivery] = await deliveriesOf(user, result.outreachId);
+		expect(delivery).toMatchObject({ attempts: 1, status: "canceled" });
+		expect(await outreachRow(user, result.outreachId)).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "account_deleted",
+		});
+		expect(h.clerkCalls).toHaveLength(1);
+		expect(h.queued).toEqual([]);
 	});
 
 	it("fails a Clerk 4xx for good, with its status", async () => {

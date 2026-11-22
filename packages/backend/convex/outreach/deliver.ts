@@ -11,6 +11,7 @@ import { quoteOpened } from "../dailyQuotes/opened";
 import { ADAPTERS, type ChannelAdapter, ChannelError } from "./adapters";
 import { captureDelivery } from "./analytics";
 import {
+	accountDeleted,
 	channelIneligibility,
 	loadNotifications,
 	personGates,
@@ -165,7 +166,8 @@ type Recheck =
  * user back to its follow-up: once they're back (the card is ready or shown)
  * or it's answered, dismissed or gone, nothing is left to nudge (a deferral
  * or a retry can outlive it). A missed-beat push stands down once the app
- * showed its moment. A quiet-window deferral can sit for hours, and what
+ * showed its moment. A deletion request stops every try. A quiet-window
+ * deferral can sit for hours, and what
  * changed in that time still counts: on its first try gates 2–4 run again
  * (a deletion request, a crisis, a toggle turned off), and so does the
  * channel check (push turned off, a kill switch, a lost plan).
@@ -187,6 +189,12 @@ async function heldSince(
 	}
 	if (outreach.moment && (await momentSeen(ctx, outreach.moment))) {
 		return { kind: "held", reason: "moment_seen" };
+	}
+	// Every try, retries and undeferred sends included: a deletion request
+	// can land between attempts, and the purge that drains this delivery
+	// runs later, so nothing may go once it's made (#918 review).
+	if (await accountDeleted(ctx, outreach.emotionalProfileId)) {
+		return { kind: "held", reason: "account_deleted" };
 	}
 	if (outreach.sendAt === undefined || delivery.attempts > 0) {
 		return null;
