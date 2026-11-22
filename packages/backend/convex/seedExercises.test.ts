@@ -9,6 +9,14 @@ import { EXERCISES } from "./seed";
 const MIN_HAND_PULSE_S = 6;
 const STAYED = /you stayed\.?$/i;
 const STRAIGHT_QUOTE = /['"]/;
+// Copy never promises an outcome or tells someone to relax.
+const PROMISES = /\b(relax\w*|relief|reliev\w*|calm\w*)\b/i;
+const MODERATE_ONLY = [
+	"pause_before_acting",
+	"slow_it_down",
+	"not_only_you",
+	"name_the_room",
+];
 
 type Step = Doc<"exercises">["steps"][number] & { exercise: string };
 
@@ -57,6 +65,39 @@ describe("the exercise seed", () => {
 		for (const s of steps.filter((x) => x.slotKeys?.length)) {
 			expect(s.defaultContent, s.exercise).toBeTruthy();
 			expect(s.defaultContent, s.exercise).not.toMatch(/\{\{/);
+		}
+	});
+
+	it("never promises relief or calm, or tells anyone to relax", () => {
+		for (const line of lines) {
+			expect(line).not.toMatch(PROMISES);
+		}
+	});
+
+	it("seeds the four for moderate moments, ending before intensity 8", () => {
+		for (const title of MODERATE_ONLY) {
+			const e = EXERCISES.find((x) => x.title === title);
+			expect(e, title).toBeDefined();
+			expect(e?.intensityRange.max, title).toBeLessThan(8);
+		}
+	});
+
+	it("never says “everyone” in Not only you", () => {
+		const notOnlyYou = steps.filter((s) => s.exercise === "not_only_you");
+		for (const s of notOnlyYou) {
+			expect(`${s.content} ${s.defaultContent ?? ""}`).not.toMatch(
+				/\beveryone\b/i
+			);
+		}
+	});
+
+	it("never asks for a held breath in Slow it down", () => {
+		const slow = steps.filter((s) => s.exercise === "slow_it_down");
+		for (const s of slow) {
+			expect(s.content).not.toMatch(/\bhold/i);
+			if (s.breathPattern !== undefined) {
+				expect(["slow_exhale", "extended_exhale"]).toContain(s.breathPattern);
+			}
 		}
 	});
 
