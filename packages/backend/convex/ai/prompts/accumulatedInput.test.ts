@@ -3,6 +3,8 @@ import {
 	buildAccumulatedInput,
 	entryForAi,
 	ownWords,
+	writtenSoFar,
+	wroteInRefinement,
 } from "./accumulatedInput";
 
 describe("buildAccumulatedInput", () => {
@@ -113,5 +115,41 @@ describe("ownWords (B10)", () => {
 		expect(
 			ownWords({ entryType: "word_cloud", rawInput: "heavy, tight" })
 		).toBe("");
+	});
+});
+
+describe("refinement turns' own words (B10)", () => {
+	const turns = [
+		{ turnNumber: 1, userFeedback: "not_quite" },
+		{ turnNumber: 2, userFeedback: "say_more", userInput: "  my brother  " },
+	];
+
+	it("counts the entry's own words and every turn's, never labels or picked words", () => {
+		expect(
+			writtenSoFar(
+				{
+					entryType: "guided_entry",
+					rawInput: "work again",
+					textures: ["heavy"],
+				},
+				turns
+			)
+		).toBe("work again".length + "my brother".length);
+	});
+
+	it("a words-only entry counts only what was written later", () => {
+		expect(
+			writtenSoFar(
+				{ entryType: "word_cloud", rawInput: "heavy, restless" },
+				turns
+			)
+		).toBe("my brother".length);
+	});
+
+	it("knows whether a turn added their own words", () => {
+		expect(wroteInRefinement(turns)).toBe(true);
+		expect(wroteInRefinement([{ turnNumber: 1, userInput: "   " }])).toBe(
+			false
+		);
 	});
 });

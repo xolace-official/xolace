@@ -98,3 +98,25 @@ export function entryForAi({
  */
 export const ownWords = ({ rawInput = "", entryType }: EntryInput): string =>
 	entryType === WORDS_ONLY ? "" : rawInput;
+
+/** The words a refinement turn added, trimmed; "" when it added none. */
+const addedWords = (turn: RefinementTurn): string =>
+	(turn.userInput ?? "").trim();
+
+/** Whether any refinement turn added their own words. */
+export const wroteInRefinement = (turns: readonly RefinementTurn[]): boolean =>
+	turns.some((t) => addedWords(t).length > 0);
+
+/**
+ * Characters they actually wrote so far: their entry's own words plus every
+ * refinement turn's. Never the labels or the picked words (B10), which the
+ * refinement base carries too.
+ */
+export const writtenSoFar = (
+	entry: EntryInput,
+	turns: readonly RefinementTurn[]
+): number =>
+	turns.reduce(
+		(chars, t) => chars + addedWords(t).length,
+		ownWords(entry).length
+	);

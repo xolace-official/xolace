@@ -22,6 +22,8 @@ import {
 	buildAccumulatedInput,
 	entryForAi,
 	type RefinementTurn,
+	writtenSoFar,
+	wroteInRefinement,
 } from "./prompts/accumulatedInput";
 import {
 	buildArticulatorPrompt,
@@ -355,6 +357,20 @@ export const handleClarification = internalAction({
 				turnCount: args.turnNumber,
 				useAudioTags: context.isPremium,
 				userFeedback,
+				// With picked words the base carries labels, so count only what
+				// they wrote, later turns included (process.ts does the same).
+				...(session.textures?.length
+					? {
+							writtenChars: writtenSoFar(
+								{
+									entryType: session.entryType,
+									rawInput: (session.rawInput as string | undefined) ?? "",
+								},
+								turns
+							),
+							wroteLater: wroteInRefinement(turns),
+						}
+					: {}),
 			});
 
 			// 5. Call Sonnet for revised mirror. Stage hint first (see process.ts).

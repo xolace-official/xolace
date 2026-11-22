@@ -117,11 +117,13 @@ const buildWith = ({
 	rawInput,
 	textures,
 	writtenChars,
+	wroteLater,
 }: {
 	entryType: string;
 	rawInput: string;
 	textures?: string[];
 	writtenChars?: number;
+	wroteLater?: boolean;
 }) =>
 	buildArticulatorPrompt({
 		classification: {
@@ -144,9 +146,26 @@ const buildWith = ({
 		safeguardLevel: "none",
 		textures,
 		writtenChars,
+		wroteLater,
 	});
 
 describe("articulator — picked feeling words (B10)", () => {
+	it("words only, then written in a refinement: no longer says they wrote nothing", () => {
+		const { system } = buildWith({
+			entryType: "word_cloud",
+			rawInput: "heavy, restless",
+			textures: ["heavy", "restless"],
+			writtenChars: 10,
+			wroteLater: true,
+		});
+		expect(system).not.toContain("wrote nothing");
+		expect(system).toContain(
+			"At first they only picked these feeling words, without writing: heavy, restless"
+		);
+		expect(system).toContain("never a picked word as something they said");
+		expect(system).toContain("10 characters written");
+	});
+
 	it("typed only: no feeling-words block, their text as the input", () => {
 		const { system, user } = buildWith({
 			entryType: "open_prompt",

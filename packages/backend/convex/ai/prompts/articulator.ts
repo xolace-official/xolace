@@ -51,6 +51,9 @@ interface ArticulatorInput {
 	userFeedback?: string;
 	// Characters they actually wrote, when `rawInput` is labelled (B10).
 	writtenChars?: number;
+	// A refinement turn added their own words (B10). On a words-only entry the
+	// feeling-words block then no longer says they wrote nothing.
+	wroteLater?: boolean;
 }
 
 /**
@@ -96,6 +99,7 @@ export function buildArticulatorPrompt(input: ArticulatorInput): {
 		turnCount,
 		textures,
 		writtenChars,
+		wroteLater,
 	} = input;
 
 	// The reach paths (§4.3): the blocks only hold once the standing prompt
@@ -106,7 +110,7 @@ export function buildArticulatorPrompt(input: ArticulatorInput): {
 	const claimStrengthInstructions = getClaimStrengthInstructions(claimStrength);
 	const safeguardInstructions = getSafeguardInstructions(safeguardLevel);
 	const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
-	const entryTypeInstructions = `${getEntryTypeInstructions(entryType, isFaint)}${getFeelingWordsInstructions(textures, entryType)}`;
+	const entryTypeInstructions = `${getEntryTypeInstructions(entryType, isFaint)}${getFeelingWordsInstructions(textures, entryType, wroteLater)}`;
 	const intakeInstructions = getIntakeInstructions(
 		intakeSignals,
 		entryType,
@@ -455,12 +459,16 @@ Only let the intake claim shape your mirror if what they actually did tonight co
  */
 export function getFeelingWordsInstructions(
 	textures: readonly string[] | undefined,
-	entryType?: string
+	entryType?: string,
+	wroteLater?: boolean
 ): string {
 	if (!textures?.length) {
 		return "";
 	}
 	const words = textures.join(", ");
+	if (entryType === "word_cloud" && wroteLater) {
+		return `## Feeling Words\nAt first they only picked these feeling words, without writing: ${words}. Since then they have added their own words, after the original. Read both as one moment: let what they wrote tell you what the words are about. The words were tapped, not typed: quote only what they wrote, never a picked word as something they said.\n\n`;
+	}
 	if (entryType === "word_cloud") {
 		return `## Feeling Words\nThey picked these feeling words and wrote nothing: ${words}. Build the mirror from them. They were tapped, not typed: never present them as something they wrote or said.\n\n`;
 	}
