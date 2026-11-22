@@ -79,9 +79,12 @@ Any other path is a 404. The footer also links IASP's helpline directory directl
 
 Resend tells each deployment what happened to an email through a webhook at
 `<CONVEX_SITE_URL>/webhooks/resend` (#916). The component checks the signature against
-`RESEND_WEBHOOK_SECRET`, updates its own copy of the email, then hands the event to
+`RESEND_WEBHOOK_SECRET` (an event that fails it is rejected and nothing acts on it),
+updates its own copy of the email, then hands the event to
 `outreach/email/events:onEmailEvent`. That callback finds the delivery by the
-component's email id (`outreach_deliveries.providerMessageId`) and acts on two events:
+component's email id (`outreach_deliveries.providerMessageId`) and copies Resend's own
+id for the email onto it (`resendEmailId`), from the first event it sees, usually
+`email.sent` seconds after sending. Two events close email:
 
 | Event | Email channel state | Effect |
 |---|---|---|
@@ -91,6 +94,24 @@ component's email id (`outreach_deliveries.providerMessageId`) and acts on two e
 The component learns which callback to call when an email is sent, so a deployment
 acts on events only from its first email after this shipped. Email shipped switched
 off, so nothing was sent before that.
+
+### Late bounces and complaints
+
+The component passes an event on only while it still holds its copy of the email, and
+the daily cleanup deletes that copy after 7 or 28 days (see
+[Retention and erasure](#retention-and-erasure)). A complaint can come weeks later, so
+the webhook route also handles the two closing events itself, once the component has
+verified them: `outreach/email/events:closeByResendId` finds the delivery by Resend's
+id (`resendEmailId`) and sets the same state. It runs for every closing event, early or
+late; setting a state twice changes nothing. Resend's id is an opaque id, not an
+address, so it stays on the delivery after the cleanup (ADR 0004).
+
+A late event still finds its person only if an earlier event copied Resend's id. The
+webhook must therefore have been up for at least one event of that email (normally
+`email.sent`) while the component still held it. An email sent while the webhook was
+missing or down, with no event until after the cleanup, is the gap: its late complaint
+is ignored. Deliveries from before this shipped have no `resendEmailId`, and the same
+applies to them.
 
 Everything else is ignored, including soft bounces (`Transient`, `Undetermined`), which
 Resend retries itself. An event for an email no delivery sent (another sender's mail,
@@ -121,7 +142,8 @@ runs daily, not hourly: volume is low, so more runs would only cost function cal
 Account deletion and a data wipe cancel any email the component still holds unsent for
 that person (status `waiting` or `queued`), so Resend is never asked to send it. That
 includes one handed over while deletion was draining its delivery. An email already
-sent is left alone; its copy goes with the daily cleanup.
+sent is left alone; its copy goes with the daily cleanup. The delivery keeps only
+Resend's id for the email, so a late bounce or complaint still finds the person.
 
 ## Environment variables
 
