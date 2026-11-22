@@ -138,6 +138,7 @@ export const COPY = {
 		warming: "You're ready. Waiting on a few more people around the fire.",
 	},
 	screen: {
+		loading: "Loading your page",
 		settings: "Settings",
 		tabs: { followUps: "Follow-ups", insights: "Insights" },
 	},

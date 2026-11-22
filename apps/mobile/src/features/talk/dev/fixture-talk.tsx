@@ -33,6 +33,7 @@ export type FixtureTalkProps = {
 	directness?: Directness;
 	week?: number;
 	micAsk?: boolean;
+	locked?: boolean;
 	help?: TalkHelp;
 	error?: string;
 	step?: Step;
@@ -89,6 +90,7 @@ export function FixtureTalk(p: FixtureTalkProps) {
 			setView,
 			stopSample: preview.stop,
 			toggleMic: talk.toggleMic,
+			unlock: () => undefined,
 		},
 		state: {
 			clockFromS: CLOCK_FROM_S,
@@ -97,6 +99,7 @@ export function FixtureTalk(p: FixtureTalkProps) {
 			error: p.error ?? null,
 			help: p.help ?? null,
 			live: talk.live,
+			locked: p.locked ?? false,
 			look,
 			micAsk,
 			micLevel: talk.level,

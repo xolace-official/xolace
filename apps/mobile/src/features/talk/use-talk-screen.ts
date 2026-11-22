@@ -9,6 +9,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Linking } from "react-native";
 import { toast } from "@/components/shared/toast";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { playAffirmativePress } from "@/lib/haptics";
 import { useCompanionName } from "@/lib/talk/use-companion-name";
 import { useTalkStyle } from "@/lib/talk/use-talk-style";
@@ -50,6 +52,7 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 	const time = useTalkTime();
 	const name = useCompanionName();
 	const preview = useVoicePreview();
+	const locked = usePlusEntitlement().status === "free";
 	const help =
 		useQuery(
 			api.talk.safety.help,
@@ -89,7 +92,7 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 					justEnded.current = false;
 					setStartError(null);
 					preview.stop();
-					if (isLow(week) || talk.started) {
+					if (locked || isLow(week) || talk.started) {
 						return;
 					}
 					playAffirmativePress();
@@ -138,6 +141,10 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			setView: style.setView,
 			stopSample: preview.stop,
 			toggleMic: talk.toggleMic,
+			unlock() {
+				preview.stop();
+				usePaywall.getState().open("talk_door");
+			},
 		},
 		state: {
 			clockFromS: talk.clockFromS,
@@ -146,6 +153,7 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			error: talk.error ?? startError,
 			help,
 			live: talk.live,
+			locked,
 			look: style.look,
 			micAsk,
 			micLevel: talk.micLevel,

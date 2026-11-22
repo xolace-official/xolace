@@ -1,12 +1,12 @@
 import { GlassView } from "expo-glass-effect";
 import { useState } from "react";
-import { Pressable, TextInput } from "react-native";
+import { Pressable, TextInput, View } from "react-native";
 import Animated, {
 	type SharedValue,
 	useSharedValue,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { Icon } from "@/components/shared/icon";
+import { Icon, type IconName } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { useScheme } from "@/design/scheme";
 import { press } from "@/design/springs";
@@ -23,6 +23,14 @@ import { MuteButton } from "./mute-button";
 import { HAS_GLASS, ROUND, useComposerMorph } from "./use-composer-morph";
 
 const START_PRESS = 0.97;
+const LOCK: IconName = { android: "lock", ios: "lock.fill" };
+
+function startLabel(locked: boolean, low: boolean): string {
+	if (locked) {
+		return TALK_COPY.start.unlock;
+	}
+	return low ? TALK_COPY.start.resets : TALK_COPY.start.button;
+}
 
 type Props = {
 	geo: TalkGeometry;
@@ -37,9 +45,11 @@ export function StartComposer({ geo, motion, startTop, lift, before }: Props) {
 	const scheme = useScheme();
 	const [text, setText] = useState("");
 	const typed = text.trim().length > 0;
-	const low = isLow(state.week);
+	const { locked } = state;
+	const low = !locked && isLow(state.week);
 	const pressed = useSharedValue(1);
 	const fill = useTokenColor(low ? "surface-secondary" : "foreground");
+	const background = useTokenColor("background");
 	const glass = useTokenColor("glass");
 	const accentForeground = useTokenColor("accent-foreground");
 
@@ -100,24 +110,30 @@ export function StartComposer({ geo, motion, startTop, lift, before }: Props) {
 					style={morph.label}
 				>
 					<Pressable
+						accessibilityHint={locked ? TALK_COPY.start.unlockHint : undefined}
 						accessibilityRole="button"
 						accessibilityState={{ busy: state.starting, disabled: low }}
 						className="flex-1 items-center justify-center"
 						disabled={low || state.starting}
-						onPress={actions.begin}
+						onPress={locked ? actions.unlock : actions.begin}
 						onPressIn={() =>
 							pressed.set(press(START_PRESS, motion.reduced.get()))
 						}
 						onPressOut={() => pressed.set(press(1, motion.reduced.get()))}
 					>
-						<AppText
-							className="text-[17px] leading-[22px]"
-							color={low ? "subtle" : "background"}
-							variant="body"
-							weight="semibold"
-						>
-							{low ? TALK_COPY.start.resets : TALK_COPY.start.button}
-						</AppText>
+						<View className="flex-row items-center gap-2">
+							{locked ? (
+								<Icon color={background} name={LOCK} size={15} />
+							) : null}
+							<AppText
+								className="text-[17px] leading-[22px]"
+								color={low ? "subtle" : "background"}
+								variant="body"
+								weight="semibold"
+							>
+								{startLabel(locked, low)}
+							</AppText>
+						</View>
 					</Pressable>
 				</Animated.View>
 				<Animated.View

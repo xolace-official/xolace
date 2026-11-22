@@ -110,11 +110,13 @@ export function PaceLine({
 export function Footnote({
 	week,
 	micAsk,
+	locked,
 	error,
 	onKept,
 }: {
 	week: WeekLeft;
 	micAsk: boolean;
+	locked: boolean;
 	error: string | null;
 	onKept: () => void;
 }) {
@@ -127,7 +129,7 @@ export function Footnote({
 	}
 	return (
 		<AppText center className={FOOT} color="subtle" variant="caption">
-			{footnoteLead(week, micAsk)}
+			{footnoteLead(week, micAsk, locked)}
 			<AppText
 				accessibilityRole="link"
 				className={FOOT}

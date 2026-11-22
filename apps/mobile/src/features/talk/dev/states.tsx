@@ -14,6 +14,12 @@ export const devStates: readonly DevState[] = [
 		title: "Start, first talk (Flux, Vesper)",
 	},
 	{
+		id: "start-locked",
+		options: OWN_HEADER,
+		Screen: () => <FixtureTalk locked />,
+		title: "Start, free: Unlock with Xolace+",
+	},
+	{
 		id: "look-moss",
 		options: OWN_HEADER,
 		Screen: () => <FixtureTalk look="moss" micAsk />,

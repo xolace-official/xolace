@@ -12,6 +12,12 @@ export const devStates: readonly DevState[] = [
 		title: "You, at the top (Xolace+)",
 	},
 	{
+		id: "loading",
+		options: OPTIONS,
+		Screen: () => <FixtureYou loading />,
+		title: "Loading: the header's skeleton",
+	},
+	{
 		id: "docked",
 		options: OPTIONS,
 		Screen: () => <FixtureYou start={{ toTop: true }} />,

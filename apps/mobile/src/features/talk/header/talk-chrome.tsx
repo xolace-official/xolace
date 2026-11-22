@@ -94,6 +94,7 @@ export function FootnoteOverlay({
 		>
 			<Footnote
 				error={state.error}
+				locked={state.locked}
 				micAsk={state.micAsk}
 				onKept={actions.openKept}
 				week={state.week}
