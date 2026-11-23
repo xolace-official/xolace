@@ -1,7 +1,7 @@
 import type { Doc, Id } from "../../_generated/dataModel";
 import type { QueryCtx } from "../../_generated/server";
 import { readRow } from "../../library/reads";
-import { slugKey } from "./bind";
+import { isTrackTwig, slugKey } from "./bind";
 import { MAX_TWIGS } from "./prompt";
 import { isTryThis } from "./tryThis";
 
@@ -28,6 +28,14 @@ export interface KindRecord {
 
 export interface KindlingHistory {
 	kinds: KindRecord[];
+	/**
+	 * Per track twig type, the `slugKey` of its newest offer on another
+	 * session's kindling, whatever its state: the binder keeps that track from
+	 * coming twice in a row. Read from the pool, like the rest.
+	 */
+	lastOfferedSlugs: string[];
+	/** Bare slugs of the tracks on the newest kindling of another session. */
+	previousTrackSlugs: string[];
 	/** `slugKey`s whose newest verdict is a skip: they lose binder ties (#566). A later tend clears it. */
 	skippedSlugs: string[];
 	/**
@@ -131,18 +139,37 @@ export async function loadHistory(
 	ctx: QueryCtx,
 	profileId: ProfileId,
 	matchKeys: readonly string[],
-	now: number
+	now: number,
+	/** Tonight's session: its own kindling (a re-run) is never "the last one". */
+	sessionId?: Id<"sessions">
 ): Promise<KindlingHistory> {
 	const records = new Map<string, KindRecord>();
 	const verdicts = new Map<string, Verdict[]>(); // newest first
 	const readSlugs = new Set<string | undefined>(); // checked once: one entry helps once, however often tended
 	const slugVerdicts = new Map<string, Verdict>(); // newest verdict per slugKey
-	for (const path of await historyPool(ctx, profileId, matchKeys, now)) {
+	const pool = await historyPool(ctx, profileId, matchKeys, now);
+	const previousKindling = pool.find((p) => p.sessionId !== sessionId);
+	const lastOffered = new Map<string, string>(); // track twig type → slug, newest offer
+	const previousTrackSlugs: string[] = [];
+	for (const path of pool) {
 		for (const step of await stepsOf(ctx, path._id)) {
+			const type = step.actionType;
+			const stepSlug = slugOf(step.params);
+			if (
+				stepSlug !== undefined &&
+				isTrackTwig(type) &&
+				path.sessionId !== sessionId
+			) {
+				if (!lastOffered.has(type)) {
+					lastOffered.set(type, stepSlug);
+				}
+				if (path._id === previousKindling?._id) {
+					previousTrackSlugs.push(stepSlug);
+				}
+			}
 			if (step.state === "pending" && path.status === "active") {
 				continue;
 			}
-			const type = step.actionType;
 			const r = records.get(type) ?? {
 				actionType: type,
 				helped: 0,
@@ -156,7 +183,6 @@ export async function loadHistory(
 				continue;
 			}
 			const verdict: Verdict = step.state === "done" ? "tended" : "skipped";
-			const stepSlug = slugOf(step.params);
 			const key = stepSlug === undefined ? undefined : slugKey(type, stepSlug);
 			if (key !== undefined && !slugVerdicts.has(key)) {
 				slugVerdicts.set(key, verdict);
@@ -180,6 +206,10 @@ export async function loadHistory(
 		kinds: [...records.values()]
 			.filter((r) => r.tended + r.skipped > 0)
 			.sort((a, b) => (a.actionType < b.actionType ? -1 : 1)),
+		lastOfferedSlugs: [...lastOffered]
+			.map(([type, slug]) => slugKey(type, slug))
+			.sort(),
+		previousTrackSlugs: previousTrackSlugs.sort(),
 		skippedSlugs: [...slugVerdicts]
 			.filter(([, v]) => v === "skipped")
 			.map(([slug]) => slug)
