@@ -1,3 +1,5 @@
+import { useIsFocused } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { type ReactNode, useEffect, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -42,6 +44,7 @@ export function TodayScreen({ finding, pill, revealed = true }: Props) {
 	const { height } = useWindowDimensions();
 	const { state } = useToday();
 	const late = state.phase === "late";
+	const focused = useIsFocused();
 	const top = skyTop(state.phase, useScheme() === "dark");
 	const reduced = useEffectiveReducedMotion();
 	const live = useLive(reduced);
@@ -55,6 +58,7 @@ export function TodayScreen({ finding, pill, revealed = true }: Props) {
 
 	return (
 		<View className="flex-1 bg-background">
+			{late && focused ? <StatusBar style="light" /> : null}
 			{/*
 				The tab bar finds its scroll view only through this marker: Today sits in a stack
 				inside a native tab, and UIKit's own search stops at the tab. The top edge effect is
