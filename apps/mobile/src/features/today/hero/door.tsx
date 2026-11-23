@@ -8,7 +8,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { Icon, type IconName } from "@/components/shared/icon";
+import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { keyframes } from "@/design/keyframes";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
@@ -17,25 +17,9 @@ import { COPY } from "../copy";
 import { useTodayFrame } from "../today-frame";
 import type { Door as DoorId } from "../today-model";
 import { riseFn } from "../today-motion";
+import { DOOR_LOOK } from "./door-look";
 import { BURST, burstFromX } from "./hero-model";
 
-const LOOK: Record<DoorId, { icon: IconName; tile: string; ink: string }> = {
-	sit: {
-		icon: { android: "waves", ios: "water.waves" },
-		ink: "door-sit-ink",
-		tile: "bg-door-sit",
-	},
-	talk: {
-		icon: { android: "mic", ios: "mic" },
-		ink: "door-talk-ink",
-		tile: "bg-door-talk",
-	},
-	vent: {
-		icon: { android: "graphic_eq", ios: "waveform.path.ecg" },
-		ink: "door-vent-ink",
-		tile: "bg-door-vent",
-	},
-};
 const ICON = 19;
 const FIT = 0.75;
 const TRAVEL = [
@@ -64,7 +48,7 @@ export function Door({
 	count: number;
 	onPick: (d: DoorId) => void;
 }) {
-	const door = LOOK[id];
+	const door = DOOR_LOOK[id];
 	const { reduced } = useTodayFrame();
 	const [ink, label, sub] = useTokenColors([
 		door.ink,

@@ -24,6 +24,7 @@ export const COPY = {
 			title: "That one didn't go through",
 		},
 		hint: (doors: string) => `Hold the card for ${doors}`,
+		hintLead: "Hold the card for",
 		monthLabel: "THIS MONTH",
 		next: {
 			body: "Your mirror landed. The next step is yours to choose.",

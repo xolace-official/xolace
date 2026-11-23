@@ -93,6 +93,28 @@ export function doorsCopy(doors: readonly Door[]): {
 	};
 }
 
+/** The hint line in pieces, so each door's word can wear its icon: "Talk," "Vent" "or" "Sit with this". */
+export type HintPart =
+	| { kind: "words"; text: string }
+	| { kind: "door"; door: Door; label: string; trail: string };
+
+export function hintParts(doors: readonly Door[]): HintPart[] {
+	const parts: HintPart[] = [{ kind: "words", text: COPY.card.hintLead }];
+	const last = doors.length - 1;
+	for (const [i, door] of doors.entries()) {
+		if (i === last && i > 0) {
+			parts.push({ kind: "words", text: COPY.card.or });
+		}
+		parts.push({
+			door,
+			kind: "door",
+			label: COPY.doors[door].label,
+			trail: i < last - 1 ? "," : "",
+		});
+	}
+	return parts;
+}
+
 export type HoldState = {
 	phase: "rest" | "holding" | "drifted" | "chosen";
 	x: number;

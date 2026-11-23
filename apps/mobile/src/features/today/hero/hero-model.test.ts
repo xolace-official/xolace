@@ -9,6 +9,7 @@ import {
 	doorsLandMs,
 	HOLD_REST,
 	type HoldEvent,
+	hintParts,
 	holdNext,
 } from "./hero-model";
 
@@ -42,6 +43,19 @@ describe("the doors", () => {
 			action: "Talk, Vent or Sit with this",
 			hint: "Hold the card for Talk, Vent or Sit with this",
 		});
+	});
+
+	it("split the hint so each door's word can carry its icon", () => {
+		const read = (doors: Parameters<typeof hintParts>[0]) =>
+			hintParts(doors)
+				.map((p) => (p.kind === "words" ? p.text : `${p.label}${p.trail}`))
+				.join(" ");
+		for (const doors of [["talk"], ["talk", "vent"], DOORS] as const) {
+			expect(read(doors)).toBe(doorsCopy(doors).hint);
+		}
+		expect(
+			hintParts(DOORS).flatMap((p) => (p.kind === "door" ? [p.door] : []))
+		).toEqual(["talk", "vent", "sit"]);
 	});
 });
 
