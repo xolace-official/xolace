@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
+import { cn } from "@/lib/cn";
 import { useTokenColors } from "@/lib/use-token-color";
 import type { Door } from "../today-model";
 import { DOOR_LOOK } from "./door-look";
@@ -29,7 +30,10 @@ export function DoorsHint({
 			accessibilityElementsHidden={hidden}
 			accessibilityLabel={label}
 			accessible
-			className={`flex-row flex-wrap items-center justify-center gap-x-1 gap-y-1${hidden ? "opacity-0" : ""}`}
+			className={cn(
+				"flex-row flex-wrap items-center justify-center gap-x-1 gap-y-1",
+				hidden && "opacity-0"
+			)}
 			importantForAccessibility={hidden ? "no-hide-descendants" : "yes"}
 		>
 			{parts.map((part) =>
