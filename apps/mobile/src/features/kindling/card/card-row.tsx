@@ -1,12 +1,13 @@
 import { ActivityIndicator } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 
 const MAIN =
-	"h-12.5 flex-1 flex-row items-center justify-center gap-2 rounded-full bg-accent";
+	"h-12.5 flex-1 flex-row items-center justify-center gap-2 rounded-full";
 
 export function WaitingRow({
 	action,
@@ -34,10 +35,11 @@ export function WaitingRow({
 					{COPY.notForMe}
 				</AppText>
 			</PressScale>
-			<PressScale
+			<GlassButton
 				accessibilityState={{ busy: matching, disabled: matching }}
 				className={MAIN}
 				disabled={matching}
+				fill="accent"
 				onPress={onAct}
 			>
 				{matching ? <ActivityIndicator color={onViolet} size="small" /> : null}
@@ -50,7 +52,7 @@ export function WaitingRow({
 				>
 					{matching ? COPY.finding : action}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 		</>
 	);
 }
@@ -102,7 +104,7 @@ export function PassedRow({ onUndo }: { onUndo?: () => void }) {
 
 export function FinishRow({ onBack }: { onBack: () => void }) {
 	return (
-		<PressScale className={MAIN} onPress={onBack}>
+		<GlassButton className={MAIN} fill="accent" onPress={onBack}>
 			<AppText
 				className="text-[16px]"
 				color="accentForeground"
@@ -112,7 +114,7 @@ export function FinishRow({ onBack }: { onBack: () => void }) {
 			>
 				{COPY.all.back}
 			</AppText>
-		</PressScale>
+		</GlassButton>
 	);
 }
 

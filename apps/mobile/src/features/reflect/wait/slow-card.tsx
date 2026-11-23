@@ -1,7 +1,6 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
-import { cn } from "@/lib/cn";
+import { GlassButton } from "@/components/shared/glass-button";
 
 const PILL = 40;
 
@@ -9,13 +8,11 @@ export type CardAction = { label: string; go: () => void };
 
 function Pill({ action, primary }: { action: CardAction; primary: boolean }) {
 	return (
-		<PressScale
+		<GlassButton
 			accessibilityLabel={action.label}
 			accessibilityRole="button"
-			className={cn(
-				"justify-center rounded-full px-4",
-				primary ? "bg-foreground" : "bg-surface-secondary"
-			)}
+			className="justify-center rounded-full px-4"
+			fill={primary ? "foreground" : "secondary"}
 			onPress={action.go}
 			style={{ height: PILL }}
 		>
@@ -27,7 +24,7 @@ function Pill({ action, primary }: { action: CardAction; primary: boolean }) {
 			>
 				{action.label}
 			</AppText>
-		</PressScale>
+		</GlassButton>
 	);
 }
 

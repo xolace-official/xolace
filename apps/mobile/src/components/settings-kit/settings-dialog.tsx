@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Modal, Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { cn } from "@/lib/cn";
 
 type Props = {
@@ -75,15 +76,11 @@ export function SettingsDialog({
 								{cancel}
 							</AppText>
 						</Pressable>
-						<Pressable
-							accessibilityRole="button"
+						<GlassButton
 							accessibilityState={{ disabled: okDisabled }}
-							className={cn(
-								BUTTON,
-								"bg-accent",
-								okDisabled ? "opacity-40" : "opacity-100"
-							)}
+							className={cn(BUTTON, okDisabled ? "opacity-40" : "opacity-100")}
 							disabled={okDisabled}
+							fill="accent"
 							onPress={onOk}
 						>
 							<AppText
@@ -94,7 +91,7 @@ export function SettingsDialog({
 							>
 								{ok}
 							</AppText>
-						</Pressable>
+						</GlassButton>
 					</View>
 				</View>
 			</View>

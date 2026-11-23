@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import Animated from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { fadeUp } from "@/design/entering";
@@ -99,8 +100,8 @@ export function ReadingAsCard() {
 				<Animated.View
 					entering={fadeUp(0, LT.riseMs, LT.rise, reduced, LT.press)}
 				>
-					<PressScale
-						className="h-11 items-center justify-center rounded-full bg-foreground"
+					<GlassButton
+						className="h-11 items-center justify-center rounded-full"
 						onPress={() => actions.answerReadingAs(picks)}
 					>
 						<AppText
@@ -111,7 +112,7 @@ export function ReadingAsCard() {
 						>
 							{COPY.readingAs.done}
 						</AppText>
-					</PressScale>
+					</GlassButton>
 				</Animated.View>
 			) : null}
 		</View>

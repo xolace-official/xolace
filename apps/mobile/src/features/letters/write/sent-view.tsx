@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { useFixedFaces } from "@/design/fonts";
 import { FONTS } from "@/design/type";
@@ -49,15 +50,14 @@ export function SentView({
 				</AppText>
 			</Fade>
 			<Fade {...enter} className="absolute right-4 bottom-10 left-4 gap-1">
-				<PressScale
-					accessibilityRole="button"
-					className="min-h-[50px] items-center justify-center rounded-full bg-foreground px-4"
+				<GlassButton
+					className="min-h-[50px] items-center justify-center rounded-full px-4"
 					onPress={backToLetters}
 				>
 					<AppText color="background" variant="body" weight="semibold">
 						{LETTERS.sent.seeLetters}
 					</AppText>
-				</PressScale>
+				</GlassButton>
 				<PressScale
 					accessibilityRole="button"
 					className="min-h-[50px] items-center justify-center"

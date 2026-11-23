@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Card } from "@/components/shared/card";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { useBadgesScreen } from "@/features/achievements/badges/badges-data";
 import { COPY } from "@/features/achievements/copy";
 import { cn } from "@/lib/cn";
@@ -31,13 +31,14 @@ export function FreezeCard() {
 					{freeze.line}
 				</AppText>
 			</View>
-			<PressScale
+			<GlassButton
 				accessibilityHint={freeze.reason ?? undefined}
 				accessibilityState={{ busy: buying, disabled: off }}
 				className={cn(
 					"h-9.5 items-center justify-center rounded-[19px] px-3.5",
-					off ? "bg-surface-secondary opacity-60" : "bg-accent"
+					off && "opacity-60"
 				)}
+				fill={off ? "secondary" : "accent"}
 				onPress={actions.buyFreeze}
 			>
 				<AppText
@@ -48,7 +49,7 @@ export function FreezeCard() {
 				>
 					{freeze.buy}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 		</Card>
 	);
 }

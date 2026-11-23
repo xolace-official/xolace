@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { LETTERS } from "../copy";
 import { EmberSeal } from "../ember-seal";
 import { Fade } from "../fade";
@@ -40,15 +40,14 @@ export function LimitView({
 			<AppText className="text-center" color="muted" variant="body">
 				{LETTERS.limit[which]}
 			</AppText>
-			<PressScale
-				accessibilityRole="button"
-				className="min-h-[50px] items-center justify-center rounded-full bg-foreground px-[22px]"
+			<GlassButton
+				className="min-h-[50px] items-center justify-center rounded-full px-[22px]"
 				onPress={backToLetters}
 			>
 				<AppText color="background" variant="body" weight="semibold">
 					{LETTERS.sent.seeLetters}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 		</Fade>
 	);
 }

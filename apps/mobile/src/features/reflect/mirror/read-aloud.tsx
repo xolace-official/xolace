@@ -7,6 +7,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { Equaliser } from "@/components/shared/equaliser";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon, type IconName } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
@@ -74,15 +75,15 @@ export function ReadAloud({ landN }: { landN: number }) {
 	return (
 		<Animated.View className="ml-auto" style={style}>
 			{audio.playing ? (
-				<PressScale
+				<GlassButton
 					accessibilityLabel={COPY.mirror.pause}
 					accessibilityRole="button"
-					className="h-9 flex-row items-center gap-2 rounded-full bg-foreground px-3"
+					className="h-9 flex-row items-center gap-2 rounded-full px-3"
 					onPress={toggle}
 				>
 					<Icon color={background} name={PAUSE} size={PAUSE_SIZE} />
 					<Equaliser className="bg-background" playing />
-				</PressScale>
+				</GlassButton>
 			) : (
 				<PressScale
 					accessibilityLabel={COPY.mirror.readAloud}
