@@ -2,7 +2,7 @@ import type { ComponentProps, Ref } from "react";
 import {
 	Pressable,
 	type StyleProp,
-	type View,
+	type ViewInstance,
 	type ViewStyle,
 } from "react-native";
 import Animated, {
@@ -19,7 +19,7 @@ type Props = Omit<ComponentProps<typeof Pressable>, "style"> & {
 	card?: boolean;
 	scaleTo?: number;
 	haptic?: () => void;
-	ref?: Ref<View>;
+	ref?: Ref<ViewInstance>;
 };
 
 export function PressScale({

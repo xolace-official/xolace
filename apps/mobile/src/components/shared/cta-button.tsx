@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { cn } from "@/lib/cn";
 
 const HEIGHT = 56;
@@ -17,6 +17,7 @@ type Props = {
 	children?: ReactNode;
 };
 
+/** The screen's one committing action: a full-width glass capsule. */
 export function CtaButton({
 	label,
 	onPress,
@@ -28,21 +29,17 @@ export function CtaButton({
 	children,
 }: Props) {
 	return (
-		<PressScale
+		<GlassButton
 			accessibilityLabel={accessibilityLabel ?? label}
 			accessibilityState={{ busy, disabled }}
 			className={cn(
-				"items-center justify-center overflow-hidden bg-foreground",
+				"items-center justify-center overflow-hidden rounded-full border-continuous",
 				disabled && dimWhenDisabled && "opacity-40"
 			)}
 			disabled={disabled}
 			haptic={haptic}
 			onPress={onPress}
-			style={{
-				borderCurve: "continuous",
-				borderRadius: HEIGHT / 2,
-				height: HEIGHT,
-			}}
+			style={{ height: HEIGHT }}
 		>
 			{children ? <View className="absolute inset-0">{children}</View> : null}
 			<AppText
@@ -54,6 +51,6 @@ export function CtaButton({
 			>
 				{label}
 			</AppText>
-		</PressScale>
+		</GlassButton>
 	);
 }
