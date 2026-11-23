@@ -31,6 +31,7 @@ export function TodayHeader({
 	const { state, actions } = useToday();
 	const { intro, reduced, scrollY, live, waiting } = useTodayFrame();
 	const faded = useScrolledPast(scrollY, FADE_OVER);
+	const night = state.phase === "late";
 	const fade = useAnimatedStyle(() => ({
 		opacity: Math.max(0, 1 - scrollY.get() / FADE_OVER),
 	}));
@@ -47,7 +48,7 @@ export function TodayHeader({
 				>
 					<AppText
 						className="tracking-[0.13px]"
-						color="muted"
+						color={night ? "nightInk2" : "muted"}
 						variant="footnote"
 						weight="semibold"
 					>
@@ -76,6 +77,7 @@ export function TodayHeader({
 			</View>
 			<Greeting
 				intro={intro}
+				night={night}
 				reduced={reduced}
 				text={state.greeting}
 				waiting={waiting}

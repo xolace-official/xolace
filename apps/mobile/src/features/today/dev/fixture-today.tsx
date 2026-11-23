@@ -46,6 +46,8 @@ function usePhase(start: TodayPhase, cycle: boolean): TodayPhase {
 export type FixtureProps = FixtureKindling & {
 	phase: TodayPhase;
 	theme?: ThemeMode;
+	/** Late keeps `theme` instead of the night theme (a theme picked after night mode began). */
+	themeKept?: boolean;
 	intro?: boolean;
 	offline?: boolean;
 	ignite?: boolean;
@@ -64,6 +66,7 @@ export type FixtureProps = FixtureKindling & {
 function FixtureToday({
 	phase: start,
 	theme = "light",
+	themeKept = false,
 	intro = false,
 	offline = false,
 	ignite = false,
@@ -136,7 +139,11 @@ function FixtureToday({
 	};
 	return (
 		<ScopedTheme
-			theme={phase === "late" ? NIGHT_VARIANT : themeVariant("default", theme)}
+			theme={
+				phase === "late" && !themeKept
+					? NIGHT_VARIANT
+					: themeVariant("default", theme)
+			}
 		>
 			<TodayProvider value={{ actions: FIXTURE_ACTIONS, state }}>
 				<TodayScreen finding={finding ? <FixtureFinding /> : undefined} />
