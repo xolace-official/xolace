@@ -1,6 +1,8 @@
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
-import { cn } from "@/lib/cn";
+
+const PILL = "min-h-9 items-center justify-center rounded-full px-4 py-1.5";
 
 export function LetterPill({
 	label,
@@ -13,24 +15,33 @@ export function LetterPill({
 	plain?: boolean;
 	a11y?: string;
 }) {
-	return (
+	const text = (
+		<AppText
+			className="text-[14.5px]"
+			color={plain ? "foreground" : "background"}
+			variant="callout"
+			weight="semibold"
+		>
+			{label}
+		</AppText>
+	);
+	const accessibilityLabel = a11y ?? label;
+	return plain ? (
 		<PressScale
-			accessibilityLabel={a11y ?? label}
+			accessibilityLabel={accessibilityLabel}
 			accessibilityRole="button"
-			className={cn(
-				"min-h-9 items-center justify-center rounded-full px-4 py-1.5",
-				!plain && "bg-foreground"
-			)}
+			className={PILL}
 			onPress={onPress}
 		>
-			<AppText
-				className="text-[14.5px]"
-				color={plain ? "foreground" : "background"}
-				variant="callout"
-				weight="semibold"
-			>
-				{label}
-			</AppText>
+			{text}
 		</PressScale>
+	) : (
+		<GlassButton
+			accessibilityLabel={accessibilityLabel}
+			className={PILL}
+			onPress={onPress}
+		>
+			{text}
+		</GlassButton>
 	);
 }

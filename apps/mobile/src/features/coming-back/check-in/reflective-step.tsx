@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Pressable, Switch, TextInput, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { useTokenColors } from "@/lib/use-token-color";
@@ -121,9 +122,9 @@ export function ReflectiveStep({
 						{R.skip}
 					</AppText>
 				</PressScale>
-				<PressScale
+				<GlassButton
 					accessibilityState={{ busy: state.saving }}
-					className="h-13.5 flex-[1.4] items-center justify-center rounded-full bg-foreground"
+					className="h-13.5 flex-[1.4] items-center justify-center rounded-full"
 					disabled={state.saving}
 					haptic={Presets.System.selection}
 					onPress={actions.done}
@@ -136,7 +137,7 @@ export function ReflectiveStep({
 					>
 						{state.saving ? R.saving : R.done}
 					</AppText>
-				</PressScale>
+				</GlassButton>
 			</View>
 		</>
 	);

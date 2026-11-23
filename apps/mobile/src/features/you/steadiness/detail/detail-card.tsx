@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { COPY } from "@/features/you/copy";
 import {
 	HalfGauge,
@@ -103,9 +103,10 @@ export function LockedDetail({
 				>
 					{part.peek}
 				</AppText>
-				<PressScale
+				<GlassButton
 					accessibilityRole="button"
-					className="h-11 items-center justify-center rounded-[22px] bg-accent"
+					className="h-11 items-center justify-center rounded-[22px]"
+					fill="accent"
 					haptic={playSoftPress}
 					onPress={onUnlock}
 				>
@@ -116,7 +117,7 @@ export function LockedDetail({
 					>
 						{S.peekGo}
 					</AppText>
-				</PressScale>
+				</GlassButton>
 			</Surface>
 		</Animated.View>
 	);

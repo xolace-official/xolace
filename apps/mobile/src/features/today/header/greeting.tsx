@@ -22,11 +22,13 @@ const WORD_GAP = "mr-2";
 type Props = {
 	text: string;
 	intro: boolean;
+	/** Late, the sky is night whatever the theme, so the words take the night's ink. */
+	night: boolean;
 	reduced: boolean;
 	waiting: boolean;
 };
 
-export function Greeting({ text, intro, reduced, waiting }: Props) {
+export function Greeting({ text, intro, night, reduced, waiting }: Props) {
 	const words = text.split(" ");
 	return (
 		<View
@@ -40,6 +42,7 @@ export function Greeting({ text, intro, reduced, waiting }: Props) {
 					gap={i < words.length - 1}
 					index={i}
 					key={i}
+					night={night}
 					play={intro && !reduced}
 					text={w}
 					waiting={waiting}
@@ -55,14 +58,20 @@ function Word({
 	play,
 	waiting,
 	gap,
+	night,
 }: {
 	text: string;
 	index: number;
 	play: boolean;
 	waiting: boolean;
 	gap: boolean;
+	night: boolean;
 }) {
-	const [ink, gleam] = useTokenColors(["foreground", "today-gleam"]);
+	const [ink, gleam] = useTokenColors([
+		night ? "night-ink" : "foreground",
+		"today-gleam",
+	]);
+	const color = night ? "nightInk" : "foreground";
 	const p = useSharedValue(play ? 0 : 1);
 
 	useEffect(() => {
@@ -105,6 +114,7 @@ function Word({
 		return (
 			<AppText
 				className={margin}
+				color={color}
 				importantForAccessibility="no"
 				variant="greeting"
 			>
@@ -131,7 +141,9 @@ function Word({
 				</AppText>
 			</Animated.View>
 			<Animated.View style={sharp}>
-				<AppText variant="greeting">{text}</AppText>
+				<AppText color={color} variant="greeting">
+					{text}
+				</AppText>
 			</Animated.View>
 			<Animated.View className="absolute top-0 left-0" style={soft}>
 				<AppText

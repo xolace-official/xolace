@@ -1,5 +1,6 @@
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
 import {
 	NOTIFY_COPY,
@@ -37,9 +38,8 @@ export function BlockedBanner({
 				>
 					{C.body}
 				</AppText>
-				<Pressable
-					accessibilityRole="button"
-					className="mt-2 h-8 justify-center self-start rounded-full bg-foreground px-3.25"
+				<GlassButton
+					className="mt-2 h-8 justify-center self-start rounded-full px-3.25"
 					onPress={onOpenSettings}
 				>
 					<AppText
@@ -49,7 +49,7 @@ export function BlockedBanner({
 					>
 						{C.cta}
 					</AppText>
-				</Pressable>
+				</GlassButton>
 			</View>
 		</View>
 	);

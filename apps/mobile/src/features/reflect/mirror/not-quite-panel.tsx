@@ -7,6 +7,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon, type IconName } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
@@ -137,12 +138,12 @@ export function NotQuitePanel({ line }: { line: string }) {
 					selectionColorClassName="accent-foreground"
 					value={nqText}
 				/>
-				<PressScale
+				<GlassButton
 					accessibilityLabel={COPY.notQuite.send}
 					accessibilityRole="button"
 					accessibilityState={{ disabled: !ready }}
 					className={cn(
-						"size-12 items-center justify-center rounded-full bg-foreground",
+						"size-12 items-center justify-center rounded-full",
 						!ready && "opacity-28"
 					)}
 					disabled={!ready}
@@ -150,7 +151,7 @@ export function NotQuitePanel({ line }: { line: string }) {
 					onPress={actions.submitNotQuite}
 				>
 					<Icon color={background} name={SEND} size={SEND_SIZE} weight="bold" />
-				</PressScale>
+				</GlassButton>
 			</View>
 		</Animated.View>
 	);

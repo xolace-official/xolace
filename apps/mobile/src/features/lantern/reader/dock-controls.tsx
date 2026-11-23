@@ -13,6 +13,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon, type IconName } from "@/components/shared/icon";
 import { fadeUp } from "@/design/entering";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
@@ -100,7 +101,7 @@ export function Transport() {
 				onPress={() => actions.audio.skip(-1)}
 				size={20}
 			/>
-			<Pressable
+			<GlassButton
 				accessibilityActions={[
 					{ name: "activate" },
 					{ name: "increment" },
@@ -115,7 +116,7 @@ export function Transport() {
 				accessibilityValue={{
 					text: COPY.reader.dock.value(mmss(currentTime), mmss(left)),
 				}}
-				className="size-10 items-center justify-center rounded-full bg-foreground active:scale-92"
+				className="size-10 items-center justify-center rounded-full"
 				hitSlop={8}
 				onAccessibilityAction={(e) => {
 					const n = e.nativeEvent.actionName;
@@ -132,7 +133,7 @@ export function Transport() {
 					name={a.playing ? ICON.pause : ICON.play}
 					size={16}
 				/>
-			</Pressable>
+			</GlassButton>
 		</>
 	);
 }
@@ -156,10 +157,11 @@ export function KeepListening({ onPress }: { onPress: () => void }) {
 	}, []);
 	return (
 		<Animated.View entering={fadeUp(0, LT.riseMs, LT.rise, reduced, LT.press)}>
-			<Pressable
+			<GlassButton
 				accessibilityLabel={COPY.reader.dock.keepListeningLabel}
 				accessibilityRole="button"
-				className="h-[38px] flex-row items-center gap-[7px] rounded-full bg-accent px-[15px] active:opacity-80"
+				className="h-[38px] flex-row items-center gap-[7px] rounded-full px-[15px]"
+				fill="accent"
 				onPress={onPress}
 				ref={ref}
 			>
@@ -173,7 +175,7 @@ export function KeepListening({ onPress }: { onPress: () => void }) {
 				>
 					{COPY.reader.dock.keepListening}
 				</AppText>
-			</Pressable>
+			</GlassButton>
 		</Animated.View>
 	);
 }

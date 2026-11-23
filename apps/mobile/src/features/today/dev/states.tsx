@@ -8,6 +8,11 @@ export const devStates: readonly DevState[] = [
 	{ id: "day", title: "03 Day", ...today({ phase: "day" }) },
 	{ id: "late", title: "04 Late (night mode)", ...today({ phase: "late" }) },
 	{
+		id: "late-light",
+		title: "04 Late, a light theme picked after night mode began",
+		...today({ phase: "late", themeKept: true }),
+	},
+	{
 		id: "late-loading",
 		title: "Late, the shelf still loading (the quiet row keeps its place)",
 		...today({ modules: "loading", phase: "late" }),

@@ -10,7 +10,16 @@ import { useTokenColors } from "@/lib/use-token-color";
 import { AnimatedCarouselCard } from "./animated-carousel-card";
 import { CarouselPaginator } from "./carousel-paginator";
 
-export const carouselHeightFor = (cardHeight: number) => cardHeight + 40;
+/** Room above the front card so the clipped container doesn't cut its shadow. */
+const CARD_TOP_INSET = 10;
+/** How far the cards stacked behind peek out below the front card. */
+const STACK_PEEK = 34;
+/** Air between the bottom of the stack and the dots. */
+const PAGINATOR_GAP = 4;
+const PAGINATOR_HEIGHT = 20;
+
+export const carouselHeightFor = (cardHeight: number) =>
+	CARD_TOP_INSET + cardHeight + STACK_PEEK + PAGINATOR_GAP + PAGINATOR_HEIGHT;
 
 const STACK_OFFSET = 8;
 const PAGINATOR_VISIBLE_DOTS = 3;
@@ -62,25 +71,28 @@ export const StackedCarousel = <T,>({
 	);
 
 	return (
-		<View
-			className="items-center justify-start overflow-hidden"
-			style={{ height: carouselHeight }}
-		>
-			{data.map((item, index) => (
-				<AnimatedCarouselCard
-					cardBackground={cardBackground}
-					cardHeight={cardHeight}
-					cardWidth={cardWidth}
-					hairline={hairline}
-					index={index}
-					key={index}
-					scrollX={scrollX}
-					shadowColor={shadowColor}
-					totalCards={data.length}
-				>
-					{renderCard(item, index)}
-				</AnimatedCarouselCard>
-			))}
+		<View className="overflow-hidden" style={{ height: carouselHeight }}>
+			<View
+				className="absolute inset-x-0 bottom-0 items-center"
+				pointerEvents="none"
+				style={{ top: CARD_TOP_INSET }}
+			>
+				{data.map((item, index) => (
+					<AnimatedCarouselCard
+						cardBackground={cardBackground}
+						cardHeight={cardHeight}
+						cardWidth={cardWidth}
+						hairline={hairline}
+						index={index}
+						key={index}
+						scrollX={scrollX}
+						shadowColor={shadowColor}
+						totalCards={data.length}
+					>
+						{renderCard(item, index)}
+					</AnimatedCarouselCard>
+				))}
+			</View>
 
 			{/* Invisible list over the cards: the sole touch target, driving both
 			 * scroll and onCardPress (the card visuals are pointerEvents:none). */}
@@ -107,12 +119,16 @@ export const StackedCarousel = <T,>({
 				scrollEventThrottle={16}
 				showsHorizontalScrollIndicator={false}
 				snapToInterval={cardWidth}
-				style={{ height: cardHeight + STACK_OFFSET * 6, width: screenWidth }}
+				style={{
+					height: cardHeight + STACK_OFFSET * 6,
+					top: CARD_TOP_INSET,
+					width: screenWidth,
+				}}
 			/>
 
 			<View
 				className="absolute bottom-0"
-				style={{ top: cardHeight, width: screenWidth }}
+				style={{ height: PAGINATOR_HEIGHT, width: screenWidth }}
 			>
 				<CarouselPaginator
 					currentPageIndex={currentPageIndex}

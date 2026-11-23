@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
 import { LETTERS, REPORT_REASONS, type ReportReason } from "../copy";
@@ -51,15 +52,12 @@ export function ReportSheet() {
 					</PressScale>
 				))}
 			</View>
-			<PressScale
+			<GlassButton
 				accessibilityHint={r.note}
-				accessibilityRole="button"
 				accessibilityState={{ disabled: !reason }}
-				className={cn(
-					"mx-4 mt-2 min-h-[50px] items-center justify-center rounded-full py-2",
-					reason ? "bg-foreground" : "bg-surface-secondary"
-				)}
+				className="mx-4 mt-2 min-h-[50px] items-center justify-center rounded-full py-2"
 				disabled={!reason}
+				fill={reason ? "foreground" : "secondary"}
 				onPress={send}
 			>
 				<AppText
@@ -69,7 +67,7 @@ export function ReportSheet() {
 				>
 					{r.send}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 			<AppText
 				accessibilityElementsHidden
 				className="mt-1 text-center"

@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent } from "react";
 import { BackHandler, Pressable, View } from "react-native";
 import Animated, { FadeIn, FadeOut, ZoomIn } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { BlurView } from "@/components/shared/styled";
 import { useScheme } from "@/design/scheme";
@@ -75,10 +76,7 @@ export function TalkLeave({ reduced, onMirror, onJustEnd, onKeep }: Props) {
 					{leave.body}
 				</AppText>
 				<View className="gap-2">
-					<PressScale
-						className={cn(BUTTON, "bg-foreground")}
-						onPress={onMirror}
-					>
+					<GlassButton className={BUTTON} onPress={onMirror}>
 						<AppText
 							className="text-[15px]"
 							color="background"
@@ -87,7 +85,7 @@ export function TalkLeave({ reduced, onMirror, onJustEnd, onKeep }: Props) {
 						>
 							{leave.mirror}
 						</AppText>
-					</PressScale>
+					</GlassButton>
 					<PressScale
 						className={cn(BUTTON, "bg-surface-secondary")}
 						onPress={onJustEnd}

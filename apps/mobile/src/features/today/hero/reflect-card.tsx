@@ -131,6 +131,7 @@ export function ReflectCard() {
 							]}
 						>
 							<CardBody
+								doors={face ? null : DOORS}
 								hint={face?.hint ?? doors.hint}
 								late={late}
 								mode={mode}

@@ -1675,21 +1675,30 @@ describe("past outcomes shape the pick (#565)", () => {
 			});
 		}
 
-		const boundRead = async (user: SeededUser, sessionId: Id<"sessions">) => {
-			stub.reply = JSON.stringify([
+		/** Generates tonight's kindling from `twigs` and reads the slug `actionType` bound. */
+		const boundSlug = async (
+			user: SeededUser,
+			sessionId: Id<"sessions">,
+			actionType: string,
+			twigs: ReturnType<typeof twig>[]
+		) => {
+			stub.reply = JSON.stringify(twigs);
+			await generate(user, sessionId);
+			const active = (await readPaths(user)).find(
+				(p) => p.status === "active" && p.sessionId === sessionId
+			)!;
+			const step = (await readSteps(user, active._id)).find(
+				(t) => t.actionType === actionType
+			)!;
+			return (step.params as { slug: string }).slug;
+		};
+
+		const boundRead = (user: SeededUser, sessionId: Id<"sessions">) =>
+			boundSlug(user, sessionId, "read", [
 				twig("read", 1),
 				twig("breathing", 2),
 				twig("xolacer", 3),
 			]);
-			await generate(user, sessionId);
-			const active = (await readPaths(user)).find(
-				(p) => p.status === "active"
-			)!;
-			const read = (await readSteps(user, active._id)).find(
-				(t) => t.actionType === "read"
-			)!;
-			return (read.params as { slug: string }).slug;
-		};
 
 		const tonight = async (user: SeededUser, thematicTags: string[] = []) => {
 			const sessionId = await seedSession(user.root, user.profileId, {
@@ -1725,6 +1734,82 @@ describe("past outcomes shape the pick (#565)", () => {
 				[CATALOGUE_TOPIC, "skipped", { slug: seeded }],
 			]);
 			expect(await boundRead(elsewhere, await tonight(elsewhere))).toBe(seeded);
+		});
+
+		describe("a track never comes twice in a row", () => {
+			const TOPIC = "music_topic_sleep_rest"; // two tracks in the dev catalogue
+			const boundTrack = (user: SeededUser, sessionId: Id<"sessions">) =>
+				boundSlug(user, sessionId, TOPIC, [
+					twig(TOPIC, 1),
+					twig("breathing", 2),
+					twig("bridge", 3),
+				]);
+			const listener = async () => {
+				const user = await asNewUser();
+				await seedCatalogue(user);
+				return user;
+			};
+			/** The pick with no history, and the topic's other track. */
+			async function coldTrack() {
+				const user = await listener();
+				const seeded = await boundTrack(user, await tonight(user));
+				const other = manifest.find(
+					(t) => t.topic === TOPIC && t.slug !== seeded
+				)!.slug;
+				return { other, seeded };
+			}
+
+			it("the track the topic bound last time sits this offer out, still pending or not", async () => {
+				const { seeded, other } = await coldTrack();
+				const user = await listener();
+				await pastKindling(user, 1, [[TOPIC, "pending", { slug: seeded }]], {
+					status: "active",
+				});
+				expect(await boundTrack(user, await tonight(user))).toBe(other);
+			});
+
+			it("a kindling without the topic is no break; the topic's next offer is", async () => {
+				const { seeded, other } = await coldTrack();
+				const noBreak = await listener();
+				await pastKindling(noBreak, 2, [[TOPIC, "done", { slug: seeded }]]);
+				await pastKindling(noBreak, 1, [["breathing", "done"]]);
+				expect(await boundTrack(noBreak, await tonight(noBreak))).toBe(other);
+
+				const afterBreak = await listener();
+				await pastKindling(afterBreak, 2, [[TOPIC, "done", { slug: seeded }]]);
+				await pastKindling(afterBreak, 1, [[TOPIC, "done", { slug: other }]]);
+				expect(await boundTrack(afterBreak, await tonight(afterBreak))).toBe(
+					seeded
+				);
+			});
+
+			it("holds a track the previous kindling offered under another twig, for that one kindling", async () => {
+				const { seeded, other } = await coldTrack();
+				const elsewhere: Outcome = [
+					"music_topic_calm_peace",
+					"done",
+					{ slug: seeded },
+				];
+				const user = await listener();
+				await pastKindling(user, 1, [elsewhere]);
+				expect(await boundTrack(user, await tonight(user))).toBe(other);
+
+				const later = await listener();
+				await pastKindling(later, 2, [elsewhere]);
+				await pastKindling(later, 1, [["breathing", "done"]]);
+				expect(await boundTrack(later, await tonight(later))).toBe(seeded);
+			});
+
+			it("a re-run of tonight's own session binds the same track", async () => {
+				const { seeded } = await coldTrack();
+				const user = await listener();
+				const sessionId = await tonight(user);
+				await pastKindling(user, 0, [[TOPIC, "pending", { slug: seeded }]], {
+					sessionId,
+					status: "active",
+				});
+				expect(await boundTrack(user, sessionId)).toBe(seeded);
+			});
 		});
 
 		it("a returning stretch re-offers the read tended during its previous run", async () => {

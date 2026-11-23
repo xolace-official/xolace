@@ -11,8 +11,8 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { BandBlur } from "@/components/shared/band-blur";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
-import { PressScale } from "@/components/shared/press-scale";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { canAppleZoom } from "@/lib/apple-zoom";
 import { useTokenColor } from "@/lib/use-token-color";
@@ -150,9 +150,9 @@ export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 						onPress={actions.pressReflect}
 					>
 						<Link.Trigger withAppleZoom={!reduced && canAppleZoom()}>
-							<PressScale
+							<GlassButton
 								{...(IOS ? HIDDEN : ANNOUNCED)}
-								className="h-9.5 flex-row items-center gap-1.5 rounded-full bg-foreground pr-3.5 pl-2.5"
+								className="h-9.5 flex-row items-center gap-1.5 rounded-full pr-3.5 pl-2.5"
 							>
 								<Icon
 									color={page}
@@ -168,7 +168,7 @@ export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 								>
 									{COPY.reflect}
 								</AppText>
-							</PressScale>
+							</GlassButton>
 						</Link.Trigger>
 					</Link>
 					{/* VoiceOver can't see into the zoom source (`display: contents`), so iOS announces

@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
-import { PressScale } from "@/components/shared/press-scale";
 import { COPY } from "@/features/lantern/copy";
 import { useReaderScreen } from "@/features/lantern/reader/reader-data";
 import { REFLECT_PROMPT } from "@/features/lantern/reader/reader-model";
@@ -30,8 +30,9 @@ export function ReflectOnThis() {
 			>
 				{state.entry.reflectPrompt ?? REFLECT_PROMPT}
 			</AppText>
-			<PressScale
-				className="h-11.5 items-center justify-center rounded-full bg-accent"
+			<GlassButton
+				className="h-11.5 items-center justify-center rounded-full"
+				fill="accent"
 				onPress={actions.reflect}
 			>
 				<AppText
@@ -42,7 +43,7 @@ export function ReflectOnThis() {
 				>
 					{COPY.reader.reflect}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 		</View>
 	);
 }

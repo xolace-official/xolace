@@ -1,6 +1,6 @@
 import type { Doc } from "../../_generated/dataModel";
 import { freeEmotionFamily } from "../../lib/understandingVocab";
-import { CATALOG_BY_KEY } from "./catalog";
+import { CATALOG_BY_KEY, TOPIC_PREFIX } from "./catalog";
 import { isTryThis } from "./tryThis";
 
 /**
@@ -9,7 +9,9 @@ import { isTryThis } from "./tryThis";
  * The model picks an action TYPE; this pure function picks the concrete
  * target. Deterministic on Understanding fields + candidate rows only — no
  * clock, no randomness, no model call — so the same session always binds
- * the same slug and a re-run is a no-op.
+ * the same slug and a re-run is a no-op. History (`skippedSlugs`,
+ * `lastOfferedSlugs`, `previousTrackSlugs`) arrives as fields and never counts
+ * the session's own kindling.
  */
 
 export type BindTrack = Pick<
@@ -23,6 +25,18 @@ export type BindTrack = Pick<
 export interface BindUnderstanding {
 	/** Life areas of the compounding domains tonight touched (#521): tie-breakers, never a gate. */
 	compoundingTags?: string[];
+	/**
+	 * Per track twig type, the `slugKey` it bound the last time it was offered,
+	 * whatever became of it. That track sits the type's next offer out, so none
+	 * comes twice in a row, and is free again the offer after. A kindling
+	 * without the type is no break. Never empties a topic: an only track binds.
+	 */
+	lastOfferedSlugs?: string[];
+	/**
+	 * Bare slugs of every track on the previous kindling: they sit this one out
+	 * under any twig type, so a track can't return through a secondary topic.
+	 */
+	previousTrackSlugs?: string[];
 	primaryEmotion: string;
 	/**
 	 * `slugKey`s tended during a returning compounding domain's previous stretch
@@ -70,6 +84,16 @@ export type BoundParams =
 
 /** Track 2 "Reality, Not False Hope" — the one cross-topic series (§3.1). */
 export const REFRAME_SERIES = "reality-not-false-hope";
+
+/** The twig types `bindTrack` binds: their `params.slug` is an `audio_tracks` slug. */
+export const isTrackTwig = (actionType: string) =>
+	TOPIC_PREFIX.test(actionType) || actionType === "episode_reframe";
+
+/** `kept`, unless that would leave nothing: a rule narrows a pool, never empties it. */
+function narrow<T>(pool: readonly T[], keep: (t: T) => boolean): readonly T[] {
+	const kept = pool.filter(keep);
+	return kept.length > 0 ? kept : pool;
+}
 
 /** History is per twig type (#566): a skipped read never demotes a track that shares its slug. */
 export const slugKey = (actionType: string, slug: string) =>
@@ -127,7 +151,7 @@ function bindTrack(
 	// Acuity `tier` is editorial (tone, review process, Browse grouping) — it
 	// never gates binding. Standalones and episodes of a topic compete as one.
 	const family = actionType.startsWith("music_topic_") ? "music" : "support";
-	const candidates = tracks.filter(
+	const inTopic = tracks.filter(
 		(t) =>
 			t.active &&
 			t.family === family &&
@@ -135,9 +159,18 @@ function bindTrack(
 				? t.series === REFRAME_SERIES
 				: t.topic === actionType || t.secondaryTopic === actionType)
 	);
-	if (candidates.length === 0) {
+	if (inTopic.length === 0) {
 		return null;
 	}
+	// Not twice in a row: ahead of every score, a re-offer included.
+	const candidates = narrow(
+		inTopic,
+		(t) =>
+			!(
+				u.lastOfferedSlugs?.includes(slugKey(actionType, t.slug)) ||
+				u.previousTrackSlugs?.includes(t.slug)
+			)
+	);
 
 	// Closest in meaning first (#572); with nothing above the floor, tag overlap.
 	const close = candidates.filter(
@@ -224,10 +257,6 @@ function pickSeeded<T extends { slug: string }>(
 	const topScore = score(sorted[0]);
 	// Within the top band, in order (#566): the returning stretch's re-offer,
 	// then a slug skipped before loses ties. Each step keeps the band if it'd empty it.
-	const narrow = (band: T[], keep: (t: T) => boolean) => {
-		const kept = band.filter(keep);
-		return kept.length > 0 ? kept : band;
-	};
 	const band = sorted.filter((t) => score(t) === topScore);
 	const reoffered = narrow(
 		band,

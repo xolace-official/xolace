@@ -409,3 +409,62 @@ describe("bindTwig", () => {
 		});
 	});
 });
+
+describe("a track never comes twice in a row", () => {
+	const TOPIC = "audio_topic_anxiety_relief";
+	const best = track({ slug: "best", tags: ["anxiety", "sleep"] });
+	const next = track({ slug: "next", tags: ["anxiety"] });
+	const sleepy = { thematicTags: ["sleep"] };
+
+	it("the track the last kindling offered sits this one out, however well it scores", () => {
+		expect(bind(TOPIC, [best, next], sleepy)).toEqual({ slug: "best" });
+		expect(
+			bind(TOPIC, [best, next], { ...sleepy, lastOfferedSlugs: k("best") })
+		).toEqual({ slug: "next" });
+	});
+
+	it("holds on the meaning path too, and falls to tags when nothing else is close", () => {
+		const close = { ...best, similarity: 0.71 };
+		expect(
+			bind(TOPIC, [close, { ...next, similarity: 0.42 }], {
+				lastOfferedSlugs: k("best"),
+			})
+		).toEqual({ slug: "next" });
+		expect(
+			bind(TOPIC, [close, { ...next, similarity: 0.1 }], {
+				lastOfferedSlugs: k("best"),
+			})
+		).toEqual({ slug: "next" });
+	});
+
+	it("a topic's only track still binds", () => {
+		expect(bind(TOPIC, [best], { lastOfferedSlugs: k("best") })).toEqual({
+			slug: "best",
+		});
+	});
+
+	it("a track the previous kindling offered under another twig sits out here too", () => {
+		expect(
+			bind(TOPIC, [best, next], { ...sleepy, previousTrackSlugs: ["best"] })
+		).toEqual({ slug: "next" });
+		expect(bind(TOPIC, [best], { previousTrackSlugs: ["best"] })).toEqual({
+			slug: "best",
+		});
+	});
+
+	it("is per twig type, and outranks a returning stretch's re-offer", () => {
+		expect(
+			bind(TOPIC, [best, next], {
+				...sleepy,
+				lastOfferedSlugs: [slugKey("read", "best")],
+			})
+		).toEqual({ slug: "best" });
+		expect(
+			bind(TOPIC, [best, next], {
+				...sleepy,
+				lastOfferedSlugs: k("best"),
+				reofferSlugs: k("best"),
+			})
+		).toEqual({ slug: "next" });
+	});
+});

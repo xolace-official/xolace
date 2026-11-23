@@ -6,7 +6,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { lerpPose } from "@/components/xolace-face/pose";
 import { useFace } from "@/components/xolace-face/use-face";
 import { fadeUp } from "@/design/entering";
@@ -122,10 +122,10 @@ export function HeardStage() {
 				)}
 			</View>
 			<View className="absolute inset-x-4 bottom-[34px]">
-				<PressScale
+				<GlassButton
 					accessibilityLabel={H_COPY.next}
 					accessibilityRole="button"
-					className="h-14 items-center justify-center rounded-full bg-foreground"
+					className="h-14 items-center justify-center rounded-full"
 					onPress={actions.finish}
 				>
 					<AppText
@@ -136,7 +136,7 @@ export function HeardStage() {
 					>
 						{H_COPY.next}
 					</AppText>
-				</PressScale>
+				</GlassButton>
 			</View>
 		</View>
 	);

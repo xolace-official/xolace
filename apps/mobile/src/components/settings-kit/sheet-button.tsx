@@ -1,6 +1,6 @@
 import { ActivityIndicator } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { cn } from "@/lib/cn";
 import { playSoftPress } from "@/lib/haptics";
 
@@ -19,16 +19,15 @@ export function SheetButton({
 }) {
 	const off = disabled || busy;
 	return (
-		<PressScale
+		<GlassButton
 			accessibilityLabel={label}
-			accessibilityRole="button"
 			accessibilityState={{ busy, disabled: off }}
 			className={cn(
 				"h-12.5 items-center justify-center rounded-[14px] border-continuous",
-				primary ? "bg-accent" : "bg-surface-secondary",
 				off && !busy ? "opacity-40" : "opacity-100"
 			)}
 			disabled={off}
+			fill={primary ? "accent" : "secondary"}
 			haptic={playSoftPress}
 			onPress={onPress}
 		>
@@ -48,6 +47,6 @@ export function SheetButton({
 					{label}
 				</AppText>
 			)}
-		</PressScale>
+		</GlassButton>
 	);
 }

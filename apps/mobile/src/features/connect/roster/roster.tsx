@@ -26,6 +26,59 @@ export type RosterView = {
 	cards: Card[] | undefined;
 };
 
+/** The empty roster (no Xolacers, no filter) shows its own note and no chips. */
+function isBare({ cards, filter }: RosterView) {
+	return cards !== undefined && cards.length === 0 && filter === null;
+}
+
+export function RosterFilters({
+	roster,
+	onFilter,
+}: {
+	roster: RosterView;
+	onFilter: (slug: string | null) => void;
+}) {
+	const { filters, filter } = roster;
+	if (filters.length === 0 || isBare(roster)) {
+		return null;
+	}
+	return (
+		<ScrollView
+			className="-mx-4"
+			contentContainerClassName="gap-2"
+			contentContainerStyle={{ paddingHorizontal: GUTTER }}
+			horizontal
+			showsHorizontalScrollIndicator={false}
+		>
+			{filters.map((f) => {
+				const on = f.slug === filter;
+				return (
+					<PressScale
+						accessibilityLabel={COPY.roster.filterA11y(f.label)}
+						accessibilityState={{ selected: on }}
+						className={cn(
+							"min-h-8 justify-center rounded-[16px] px-3",
+							on ? "bg-foreground" : "bg-surface-secondary"
+						)}
+						haptic={Presets.System.selection}
+						key={f.slug ?? "everyone"}
+						onPress={() => onFilter(on ? null : f.slug)}
+					>
+						<AppText
+							className="text-[12.5px]"
+							color={on ? "background" : "foreground"}
+							variant="footnote"
+							weight="semibold"
+						>
+							{f.label}
+						</AppText>
+					</PressScale>
+				);
+			})}
+		</ScrollView>
+	);
+}
+
 export function Roster({
 	roster,
 	onFilter,
@@ -36,9 +89,9 @@ export function Roster({
 	onOpen: (card: Card) => void;
 }) {
 	const reduced = useEffectiveReducedMotion();
-	const { cards, filters, filter } = roster;
+	const { cards } = roster;
 
-	if (cards !== undefined && cards.length === 0 && filter === null) {
+	if (isBare(roster)) {
 		return (
 			<EmptyState
 				body={COPY.roster.emptyBody}
@@ -51,42 +104,6 @@ export function Roster({
 
 	return (
 		<View className="gap-2.5">
-			{filters.length ? (
-				<ScrollView
-					className="-mx-4"
-					contentContainerClassName="gap-2"
-					contentContainerStyle={{ paddingHorizontal: GUTTER }}
-					horizontal
-					showsHorizontalScrollIndicator={false}
-				>
-					{filters.map((f) => {
-						const on = f.slug === filter;
-						return (
-							<PressScale
-								accessibilityLabel={COPY.roster.filterA11y(f.label)}
-								accessibilityState={{ selected: on }}
-								className={cn(
-									"min-h-8 justify-center rounded-[16px] px-3",
-									on ? "bg-foreground" : "bg-surface-secondary"
-								)}
-								haptic={Presets.System.selection}
-								key={f.slug ?? "everyone"}
-								onPress={() => onFilter(on ? null : f.slug)}
-							>
-								<AppText
-									className="text-[12.5px]"
-									color={on ? "background" : "foreground"}
-									variant="footnote"
-									weight="semibold"
-								>
-									{f.label}
-								</AppText>
-							</PressScale>
-						);
-					})}
-				</ScrollView>
-			) : null}
-
 			{cards === undefined ? (
 				<DiscoverySkeleton label={COPY.loading.xolacers} />
 			) : null}

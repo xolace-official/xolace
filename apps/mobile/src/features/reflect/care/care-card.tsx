@@ -9,6 +9,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { FONTS } from "@/design/type";
@@ -163,8 +164,8 @@ export function CareCard() {
 
 function Big({ label, onPress }: { label: string; onPress: () => void }) {
 	return (
-		<PressScale
-			className="h-14 items-center justify-center rounded-full bg-foreground"
+		<GlassButton
+			className="h-14 items-center justify-center rounded-full"
 			haptic={playAffirmativePress}
 			onPress={onPress}
 		>
@@ -176,6 +177,6 @@ function Big({ label, onPress }: { label: string; onPress: () => void }) {
 			>
 				{label}
 			</AppText>
-		</PressScale>
+		</GlassButton>
 	);
 }

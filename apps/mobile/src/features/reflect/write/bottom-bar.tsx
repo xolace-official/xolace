@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { cn } from "@/lib/cn";
 import { COPY } from "../copy";
 import { LAYOUT } from "../layout";
@@ -38,12 +38,12 @@ export function BottomBar({
 				onRelease={mic.release}
 				phase={mic.phase}
 			/>
-			<PressScale
+			<GlassButton
 				accessibilityLabel={COPY.write.send}
 				accessibilityRole="button"
 				accessibilityState={{ disabled: !ready }}
 				className={cn(
-					"flex-1 items-center justify-center rounded-full bg-foreground",
+					"flex-1 items-center justify-center rounded-full",
 					!ready && "opacity-28"
 				)}
 				disabled={!ready}
@@ -59,7 +59,7 @@ export function BottomBar({
 				>
 					{COPY.write.send}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 			<ListenPill
 				countdown={takeCountdown(take.remainingMs)}
 				listening={listening}

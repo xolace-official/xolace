@@ -91,3 +91,6 @@ ds-bundle/
 *.swp
 *.swo
 *~
+
+# Marketing screen recordings (large; shared outside git)
+docs/marketing/badges-footage/
