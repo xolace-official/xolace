@@ -2,6 +2,7 @@ import { AnimatedLegendList } from "@legendapp/list/reanimated";
 import type { ReactElement } from "react";
 import { View } from "react-native";
 import { LinearTransition, ReduceMotion } from "react-native-reanimated";
+import { ScrollViewMarker } from "react-native-screens/experimental";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 import { useTokenColor } from "@/lib/use-token-color";
@@ -19,37 +20,45 @@ export function ChatsList({
 	actions,
 	header,
 	footer,
+	top = 0,
 	bottom,
 }: {
 	rows: readonly ChatRowView[];
 	actions: RowActions;
-	header: ReactElement;
+	header?: ReactElement | null;
 	footer?: ReactElement | null;
+	top?: number;
 	bottom: number;
 }) {
 	const reduced = useEffectiveReducedMotion();
 	const background = useTokenColor("background");
 	const playerInset = useMiniPlayerInset();
 	return (
-		<AnimatedLegendList
-			contentContainerStyle={{ paddingBottom: bottom + playerInset }}
-			contentInsetAdjustmentBehavior="automatic"
-			data={rows}
-			estimatedItemSize={ROW_ESTIMATE}
-			getItemType={(row) => row.kind}
-			itemLayoutAnimation={
-				reduced
-					? undefined
-					: LinearTransition.duration(REFLOW_MS).reduceMotion(
-							ReduceMotion.Never
-						)
-			}
-			keyExtractor={(row) => row.id}
-			ListFooterComponent={footer ?? null}
-			ListHeaderComponent={header}
-			renderItem={({ item }) => <ChatItem actions={actions} row={item} />}
-			style={{ backgroundColor: background }}
-		/>
+		<ScrollViewMarker scrollEdgeEffects={{ top: "soft" }} style={{ flex: 1 }}>
+			<AnimatedLegendList
+				alwaysBounceVertical={false}
+				contentContainerStyle={{
+					paddingBottom: bottom + playerInset,
+					paddingTop: top,
+				}}
+				contentInsetAdjustmentBehavior="automatic"
+				data={rows}
+				estimatedItemSize={ROW_ESTIMATE}
+				getItemType={(row) => row.kind}
+				itemLayoutAnimation={
+					reduced
+						? undefined
+						: LinearTransition.duration(REFLOW_MS).reduceMotion(
+								ReduceMotion.Never
+							)
+				}
+				keyExtractor={(row) => row.id}
+				ListFooterComponent={footer ?? null}
+				ListHeaderComponent={header ?? null}
+				renderItem={({ item }) => <ChatItem actions={actions} row={item} />}
+				style={{ backgroundColor: background }}
+			/>
+		</ScrollViewMarker>
 	);
 }
 
