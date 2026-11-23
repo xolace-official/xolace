@@ -287,6 +287,11 @@ older piece.
 - **Pieces:** `Card` + `SectionHeader`, `MediaRow` + `Kicker`, `CareRow`, `Avatar`,
   `BackButton`, `GlassGroup`, `DetachedSheet` (its route takes `DETACHED_SHEET`), `RollDigits`,
   `CountryMenu`, `Flux`, `Aura`.
+- **Filled buttons** are `GlassButton` (`fill`: `foreground`, `accent`, or the solid
+  `secondary`), never a `PressScale` with `bg-foreground`/`bg-accent`: tinted Liquid Glass
+  on iOS 26+, a solid fill elsewhere. Same `className`, minus the `bg-*`; it moves padding,
+  alignment and corners onto the glass. Not inside another `GlassView` (nested glass
+  doesn't render). `CtaButton` is the full-width one.
 - **Settings kit:** every settings-like page builds from it, never its own rows:
   `SettingsHeader`, `SectionTitle`, `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`,
   `OpenRow`, `TileRow`, `SheetButton`, `SettingsDialog`, `NameDialog`. Row measures live in

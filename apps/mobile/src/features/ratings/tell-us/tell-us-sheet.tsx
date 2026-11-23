@@ -2,9 +2,9 @@ import { FEEDBACK_MAX_CHARS } from "@xolace/backend/shared";
 import { Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { EaseView, FADE_IN, fadeTiming } from "@/design/ease";
-import { cn } from "@/lib/cn";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { TELL_US_COPY as C } from "../copy";
 import { SCENE_MOTION } from "../rate/ember-scene";
@@ -111,14 +111,12 @@ export function TellUsSheet() {
 						value={state.text}
 					/>
 					<View className="flex-1" />
-					<PressScale
+					<GlassButton
 						accessibilityLabel={C.send}
 						accessibilityState={{ busy: state.sending, disabled: !ready }}
-						className={cn(
-							"h-14 items-center justify-center rounded-full",
-							ready ? "bg-foreground" : "bg-surface-secondary"
-						)}
+						className="h-14 items-center justify-center rounded-full"
 						disabled={!ready}
+						fill={ready ? "foreground" : "secondary"}
 						onPress={actions.send}
 					>
 						<AppText
@@ -128,7 +126,7 @@ export function TellUsSheet() {
 						>
 							{C.send}
 						</AppText>
-					</PressScale>
+					</GlassButton>
 				</View>
 			)}
 		</View>

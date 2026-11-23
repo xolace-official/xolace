@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { EaseView, type TimingTransition } from "@/design/ease";
 import { HOME } from "@/features/explore/copy";
 import {
@@ -16,7 +16,6 @@ import {
 	isLocked,
 	pickAt,
 } from "@/features/explore/home/home-model";
-import { cn } from "@/lib/cn";
 import { ItemRow } from "./home-item";
 
 export function ChooseForMe({ pool }: { pool: readonly HomeItem[] }) {
@@ -121,12 +120,10 @@ function PickButton({
 	onPress: () => void;
 }) {
 	return (
-		<PressScale
+		<GlassButton
 			accessibilityLabel={label}
-			className={cn(
-				"h-10.5 items-center justify-center rounded-[21px] px-4.5",
-				primary ? "bg-accent" : "bg-surface-secondary"
-			)}
+			className="h-10.5 items-center justify-center rounded-[21px] px-4.5"
+			fill={primary ? "accent" : "secondary"}
 			onPress={onPress}
 		>
 			<AppText
@@ -136,6 +133,6 @@ function PickButton({
 			>
 				{label}
 			</AppText>
-		</PressScale>
+		</GlassButton>
 	);
 }

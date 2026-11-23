@@ -5,7 +5,7 @@ import {
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { BackButton } from "@/components/shared/back-button";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Bone, Line, SkeletonBreath } from "@/components/shared/skeleton";
 import { EaseView, fadeTiming } from "@/design/ease";
 import { playSoftPress } from "@/lib/haptics";
@@ -75,10 +75,10 @@ export function SetupScreen() {
 				</EaseView>
 			</ScrollView>
 			<View className="px-4 pt-2 pb-safe-or-4">
-				<PressScale
+				<GlassButton
 					accessibilityRole="button"
 					accessibilityState={{ busy, disabled: last && !ready }}
-					className="h-14 items-center justify-center rounded-[28px] bg-foreground"
+					className="h-14 items-center justify-center rounded-[28px]"
 					disabled={off}
 					onPress={actions.next}
 					style={{ opacity: last && !ready ? 0.4 : 1 }}
@@ -91,7 +91,7 @@ export function SetupScreen() {
 					>
 						{last ? (busy ? SETUP.publishing : SETUP.publish) : SETUP.cont}
 					</AppText>
-				</PressScale>
+				</GlassButton>
 			</View>
 			<KeyboardSpacer />
 		</View>

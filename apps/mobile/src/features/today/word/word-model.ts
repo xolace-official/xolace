@@ -7,5 +7,5 @@ export function wordLine(today: Today | undefined): string | null | undefined {
 	if (today === undefined) {
 		return;
 	}
-	return today.curated?.text ?? today.session?.text ?? null;
+	return today.session?.text ?? today.curated?.text ?? null;
 }

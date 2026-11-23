@@ -2,7 +2,7 @@ import { Stack } from "expo-router";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { useFixedFaces } from "@/design/fonts";
 import { useScheme } from "@/design/scheme";
 import { playSoftPress } from "@/lib/haptics";
@@ -90,16 +90,17 @@ export function WhatsNewScreen() {
 					))}
 				</View>
 			</ScrollView>
-			<PressScale
+			<GlassButton
 				accessibilityLabel={C.continue}
-				className="mx-6 h-14 items-center justify-center rounded-full bg-accent"
+				className="mx-6 h-14 items-center justify-center rounded-full"
+				fill="accent"
 				haptic={playSoftPress}
 				onPress={actions.continue}
 			>
 				<AppText color="accentForeground" variant="body" weight="semibold">
 					{C.continue}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 		</View>
 	);
 }

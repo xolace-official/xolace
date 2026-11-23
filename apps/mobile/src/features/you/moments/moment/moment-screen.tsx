@@ -1,6 +1,7 @@
 import { ActivityIndicator, ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { BackButton } from "@/components/shared/back-button";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { MOMENTS_COPY } from "@/features/you/moments/copy";
@@ -100,9 +101,9 @@ export function MomentScreen() {
 				className="mb-2 flex-row gap-2.5 pt-2 pb-safe-or-4"
 				style={{ paddingHorizontal: barX }}
 			>
-				<PressScale
+				<GlassButton
 					accessibilityRole="button"
-					className="h-13.5 flex-1 items-center justify-center rounded-[27px] bg-foreground"
+					className="h-13.5 flex-1 items-center justify-center rounded-[27px]"
 					haptic={playSoftPress}
 					onPress={actions.again}
 				>
@@ -114,7 +115,7 @@ export function MomentScreen() {
 					>
 						{M.again}
 					</AppText>
-				</PressScale>
+				</GlassButton>
 				{moment.mirror ? (
 					<PressScale
 						accessibilityLabel={M.share}

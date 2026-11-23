@@ -6,7 +6,7 @@ import {
 	View,
 } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { LETTERS } from "../copy";
 import {
 	type ReaderAction,
@@ -116,16 +116,15 @@ export function Reader({
 			</ScrollView>
 			{sealed ? (
 				<View className="px-4 pt-3 pb-safe-offset-4">
-					<PressScale
-						accessibilityRole="button"
-						className="min-h-[50px] items-center justify-center rounded-full bg-foreground py-2"
+					<GlassButton
+						className="min-h-[50px] items-center justify-center rounded-full py-2"
 						onPress={open}
 						ref={buttonRef}
 					>
 						<AppText color="background" variant="body" weight="semibold">
 							{r.open}
 						</AppText>
-					</PressScale>
+					</GlassButton>
 				</View>
 			) : null}
 			{u.undo ? (

@@ -1,5 +1,4 @@
 import { useRef } from "react";
-import { Pressable } from "react-native";
 import Animated, {
 	cancelAnimation,
 	Easing,
@@ -9,6 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { COPY } from "@/features/lantern/copy";
 import { LT } from "@/features/lantern/lantern-style";
@@ -35,11 +35,11 @@ export function HoldToBegin({ onDone }: { onDone: () => void }) {
 		onDone();
 	};
 	return (
-		<Pressable
+		<GlassButton
 			accessibilityActions={[{ name: "activate" }]}
 			accessibilityLabel={COPY.welcome.hold}
 			accessibilityRole="button"
-			className="mt-5 items-center justify-center self-stretch overflow-hidden bg-foreground"
+			className="mt-5 items-center justify-center self-stretch overflow-hidden"
 			onAccessibilityAction={done}
 			onPressIn={() => {
 				fill.set(
@@ -57,6 +57,7 @@ export function HoldToBegin({ onDone }: { onDone: () => void }) {
 				cancelAnimation(fill);
 				fill.set(withTiming(0, RELEASE));
 			}}
+			scaleTo={1}
 			style={{ borderRadius: H / 2, height: H }}
 		>
 			<Animated.View
@@ -71,6 +72,6 @@ export function HoldToBegin({ onDone }: { onDone: () => void }) {
 			>
 				{COPY.welcome.hold}
 			</AppText>
-		</Pressable>
+		</GlassButton>
 	);
 }

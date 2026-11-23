@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
-import { PressScale } from "@/components/shared/press-scale";
 import { useTokenColor } from "@/lib/use-token-color";
 import { useAgeSheetScreen } from "./age-gate-data";
 import { AGE } from "./copy";
@@ -45,10 +45,10 @@ export function AgeAsk() {
 					{AGE.ask.private[state.surface]}
 				</AppText>
 			</View>
-			<PressScale
+			<GlassButton
 				accessibilityRole="button"
 				accessibilityState={{ busy: state.saving, disabled: !picked }}
-				className="mt-5 h-14 items-center justify-center rounded-[28px] bg-foreground"
+				className="mt-5 h-14 items-center justify-center rounded-[28px]"
 				disabled={!picked || state.saving}
 				onPress={actions.submit}
 				style={{ opacity: picked ? 1 : 0.4 }}
@@ -61,7 +61,7 @@ export function AgeAsk() {
 				>
 					{state.saving ? AGE.ask.saving : AGE.ask.cont}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 			<Pressable
 				accessibilityRole="button"
 				className="mt-1 h-12 items-center justify-center"

@@ -114,3 +114,6 @@ ds-bundle/
 
 # Agent worktrees (Claude Code)
 .claude/worktrees/
+
+# Marketing screen recordings (large; shared outside git)
+docs/marketing/badges-footage/

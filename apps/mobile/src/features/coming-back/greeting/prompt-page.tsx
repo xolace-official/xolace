@@ -3,6 +3,7 @@ import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
 import { useSheetClose } from "@/components/shared/detached-sheet";
 import { Flux } from "@/components/shared/flux";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { LinearGradient } from "@/components/shared/styled";
@@ -135,8 +136,8 @@ export function PromptPage() {
 			) : null}
 			<View className="min-h-3.5 flex-1" />
 			{prompt ? (
-				<PressScale
-					className="h-14 items-center justify-center rounded-full bg-foreground"
+				<GlassButton
+					className="h-14 items-center justify-center rounded-full"
 					haptic={Presets.System.selection}
 					onPress={() => {
 						actions.write();
@@ -151,7 +152,7 @@ export function PromptPage() {
 					>
 						{P.write}
 					</AppText>
-				</PressScale>
+				</GlassButton>
 			) : null}
 			<PressScale
 				className="mt-1 h-11 items-center justify-center"

@@ -7,6 +7,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { COPY } from "../copy";
@@ -73,14 +74,14 @@ export function ShareRow({
 				pointerEvents={share ? "none" : "auto"}
 				style={[{ gap: C.gap }, bt]}
 			>
-				<PressScale
+				<GlassButton
 					accessibilityLabel={COPY.share.leave}
-					className="flex-1 items-center justify-center overflow-hidden rounded-full bg-foreground"
+					className="flex-1 items-center justify-center overflow-hidden rounded-full"
 					onPress={onLeave}
 					style={{ minHeight: C.row }}
 				>
 					<HoldLabels hold={hold} reduced={reduced} />
-				</PressScale>
+				</GlassButton>
 				<PressScale
 					accessibilityLabel={COPY.share.keep}
 					className="flex-1 items-center justify-center rounded-full bg-surface-secondary"

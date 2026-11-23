@@ -15,7 +15,7 @@ import { posthog } from "../../posthog";
  * milestone push earlier in the day can never silently swallow it.
  */
 
-const CONTENT = "Your kindling is ready — a few small things picked for you.";
+const CONTENT = "Your kindling is ready: a few small things picked for you.";
 
 export const notifyReady = internalMutation({
 	args: {

@@ -1,5 +1,6 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
@@ -33,9 +34,9 @@ export function AgeOutcome() {
 					</View>
 				))}
 			</View>
-			<PressScale
+			<GlassButton
 				accessibilityRole="button"
-				className="mt-6 h-14 items-center justify-center rounded-[28px] bg-foreground"
+				className="mt-6 h-14 items-center justify-center rounded-[28px]"
 				haptic={playSoftPress}
 				onPress={actions.close}
 			>
@@ -47,7 +48,7 @@ export function AgeOutcome() {
 				>
 					{AGE.ok}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 		</View>
 	);
 }

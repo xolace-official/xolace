@@ -9,14 +9,16 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
+import { BODY_MAX_SCALE } from "@/design/type";
 import type { KeyboardLift } from "@/lib/keyboard/use-keyboard-lift";
 import { LAYOUT } from "../layout";
 import { TEXTURE_OUT } from "../motion";
 import { useReflectDraw } from "../reflect-draw";
+import { bandFits } from "./band-room";
+import { FIELD_TEXT } from "./field-type";
 import { TexturePicker } from "./texture-picker";
 
 const BAND_ABOVE_BAR = LAYOUT.texture.bottom - 34;
-const MIN_WRITING_ROOM = 88;
 const DOWN = 0.01;
 
 type Props = {
@@ -28,7 +30,8 @@ type Props = {
 
 export function TextureBand({ lift, boxTop, away, blur }: Props) {
 	const { reduced } = useReflectDraw();
-	const { height: screenH } = useWindowDimensions();
+	const { height: screenH, fontScale } = useWindowDimensions();
+	const line = FIELD_TEXT.lineHeight * Math.min(fontScale, BODY_MAX_SCALE);
 	const band = useSharedValue(away ? 0 : 1);
 	useEffect(() => {
 		band.set(
@@ -55,8 +58,14 @@ export function TextureBand({ lift, boxTop, away, blur }: Props) {
 	};
 
 	const roomy = useDerivedValue(() => {
-		const top = screenH - lift.bottom.get() - BAND_ABOVE_BAR - bandH.get();
-		const fits = top - boxTop.get() >= MIN_WRITING_ROOM;
+		const fits = bandFits({
+			bandAboveBar: BAND_ABOVE_BAR,
+			bandH: bandH.get(),
+			boxTop: boxTop.get(),
+			liftBottom: lift.bottom.get(),
+			line,
+			screenH,
+		});
 		return lift.progress.get() < DOWN || picking.get() || fits ? 1 : 0;
 	});
 	const style = useAnimatedStyle(() => {

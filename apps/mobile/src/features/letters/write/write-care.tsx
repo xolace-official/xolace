@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { useThemeFaces } from "@/design/fonts";
 import { LETTERS } from "../copy";
@@ -130,15 +131,14 @@ export function WriteCare({
 
 function Big({ label, onPress }: { label: string; onPress: () => void }) {
 	return (
-		<PressScale
-			accessibilityRole="button"
-			className="min-h-14 items-center justify-center rounded-full bg-foreground px-4"
+		<GlassButton
+			className="min-h-14 items-center justify-center rounded-full px-4"
 			onPress={onPress}
 		>
 			<AppText color="background" variant="body" weight="semibold">
 				{label}
 			</AppText>
-		</PressScale>
+		</GlassButton>
 	);
 }
 

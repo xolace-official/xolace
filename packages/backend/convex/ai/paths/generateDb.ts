@@ -185,7 +185,13 @@ export const getContext = internalQuery({
 			.unique();
 		const matchKeys =
 			prefs?.personalMemoryEnabled === false ? [] : (u.episodicMatchKeys ?? []);
-		const history = await loadHistory(ctx, profile._id, matchKeys, now);
+		const history = await loadHistory(
+			ctx,
+			profile._id,
+			matchKeys,
+			now,
+			args.sessionId
+		);
 		const tracks = (await ctx.db.query("audio_tracks").take(MAX_TRACKS))
 			.filter((t) => t.active)
 			.map(({ slug, family, topic, secondaryTopic, tags, active, series }) => ({
@@ -201,6 +207,8 @@ export const getContext = internalQuery({
 		return {
 			binding: {
 				compoundingTags: compounding.flatMap((c) => lifeAreasOf(c.domain)),
+				lastOfferedSlugs: history.lastOfferedSlugs,
+				previousTrackSlugs: history.previousTrackSlugs,
 				primaryEmotion: u.primaryEmotion,
 				reofferSlugs,
 				secondaryEmotion: u.secondaryEmotion,

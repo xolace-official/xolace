@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { useTokenColor } from "@/lib/use-token-color";
@@ -57,8 +58,8 @@ export function SheetChrome({
 
 export function SheetDone({ label }: { label: string }) {
 	return (
-		<PressScale
-			className="h-12.5 items-center justify-center rounded-full bg-foreground"
+		<GlassButton
+			className="h-12.5 items-center justify-center rounded-full"
 			onPress={() => router.back()}
 		>
 			<AppText
@@ -69,6 +70,6 @@ export function SheetDone({ label }: { label: string }) {
 			>
 				{label}
 			</AppText>
-		</PressScale>
+		</GlassButton>
 	);
 }

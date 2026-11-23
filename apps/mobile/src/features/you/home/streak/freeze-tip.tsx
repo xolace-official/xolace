@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { COPY } from "@/features/you/copy";
 import { useYouHome } from "@/features/you/home/you-data";
 import { freezeCopy } from "@/features/you/home/you-model";
@@ -79,15 +79,16 @@ export function FreezeTip() {
 					</AppText>
 				</View>
 				<View className="mt-2.5 flex-row items-center gap-2.5 border-separator border-t-[0.5px] pt-2.5">
-					<PressScale
+					<GlassButton
 						accessibilityHint={freeze.reason ?? undefined}
 						accessibilityRole="button"
 						accessibilityState={{ busy: buying, disabled: off }}
 						className={cn(
-							"h-8 justify-center rounded-[16px] bg-accent px-3.5",
+							"h-8 justify-center rounded-[16px] px-3.5",
 							off ? "opacity-40" : "opacity-100"
 						)}
 						disabled={off}
+						fill="accent"
 						onPress={actions.buyFreeze}
 					>
 						<AppText
@@ -98,7 +99,7 @@ export function FreezeTip() {
 						>
 							{COPY.streak.buy(freeze.price)}
 						</AppText>
-					</PressScale>
+					</GlassButton>
 					<AppText
 						accessibilityLiveRegion="polite"
 						className="flex-1 text-[11.5px] leading-[15.5px]"

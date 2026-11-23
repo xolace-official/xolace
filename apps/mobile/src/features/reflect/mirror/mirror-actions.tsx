@@ -6,6 +6,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { GlassButton } from "@/components/shared/glass-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { fadeUp } from "@/design/entering";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
@@ -78,9 +79,9 @@ export function MirrorActions({ startMs }: { startMs: number }) {
 				</AppText>
 			</Animated.View>
 			<Animated.View entering={enter(STEP.button)}>
-				<PressScale
+				<GlassButton
 					accessibilityRole="button"
-					className="h-14 items-center justify-center rounded-full bg-foreground"
+					className="h-14 items-center justify-center rounded-full"
 					onPress={() => {
 						playAffirmativePress();
 						actions.thatsIt();
@@ -94,7 +95,7 @@ export function MirrorActions({ startMs }: { startMs: number }) {
 					>
 						{COPY.mirror.thatsIt}
 					</AppText>
-				</PressScale>
+				</GlassButton>
 			</Animated.View>
 			<Animated.View
 				className="flex-row items-center gap-2.5"

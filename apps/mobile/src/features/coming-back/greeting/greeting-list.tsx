@@ -3,7 +3,7 @@ import { AccessibilityInfo, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
 import { useSheetClose } from "@/components/shared/detached-sheet";
-import { PressScale } from "@/components/shared/press-scale";
+import { GlassButton } from "@/components/shared/glass-button";
 import { useScheme } from "@/design/scheme";
 import { cn } from "@/lib/cn";
 import { playFollowUpEntrance } from "@/lib/haptics";
@@ -155,8 +155,8 @@ export function GreetingList() {
 			{rows.length > 0 ? (
 				<View className="mx-1 gap-px bg-separator">{rows.map(row)}</View>
 			) : null}
-			<PressScale
-				className="h-14 items-center justify-center rounded-full bg-foreground"
+			<GlassButton
+				className="h-14 items-center justify-center rounded-full"
 				haptic={Presets.System.selection}
 				onPress={close}
 			>
@@ -168,7 +168,7 @@ export function GreetingList() {
 				>
 					{copy.cta}
 				</AppText>
-			</PressScale>
+			</GlassButton>
 		</View>
 	);
 }
