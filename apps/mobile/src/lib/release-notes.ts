@@ -16,23 +16,38 @@ export type Release = {
 
 const RELEASES: readonly [Release, ...Release[]] = [
 	{
-		date: "December 2026",
+		date: "November 2026",
 		highlights: [
 			{
-				body: "Write a few kind lines for someone you'll never meet. Xolace finds who needs them.",
-				icon: { android: "mail", ios: "envelope" },
-				title: "Letters to strangers",
+				body: "Xolace looks and feels new: warmer, calmer, and easier to find your way around. Four tabs hold everything: Today, Explore, Connect and You. Reflect starts right from Today, and everything you had is still here.",
+				icon: { android: "auto_awesome", ios: "sparkles" },
+				title: "A whole new Xolace",
 				tone: "ember",
 			},
 			{
-				body: "Ember's words appear as it speaks, so you can follow along quietly.",
-				icon: { android: "subject", ios: "text.alignleft" },
-				title: "Talk, with captions",
+				body: 'Write a few kind lines for someone you\'ll never meet, and Xolace places them with someone who asked to receive letters. No names, and no replies. Just a quiet "This reached me" if your words found their mark. You can choose to receive letters too.',
+				icon: { android: "mail", ios: "envelope.fill" },
+				title: "Letters to strangers",
 			},
 			{
-				body: "The message box grows with what you write, and the thread shows through the glass.",
-				icon: { android: "chat_bubble", ios: "bubble.left" },
-				title: "A calmer chat",
+				body: "Set today's quote on a background, some of them softly moving, and share it as an image or a short video. If you'd like, Xolace can send you a quote each day, in the morning, afternoon or evening.",
+				icon: { android: "format_quote", ios: "quote.bubble.fill" },
+				title: "Quotes in a new light",
+			},
+			{
+				body: "Four new short exercises join Sit with this: Pause before you act, Slow it down, Not only you, and Name the room.",
+				icon: { android: "air", ios: "wind" },
+				title: "More ways to sit with it",
+			},
+			{
+				body: "Rather get your check-ins somewhere else? Link Telegram in Settings, under Notifications, and they'll arrive there as a message. Answer with a tap, or just write back.",
+				icon: { android: "send", ios: "paperplane.fill" },
+				title: "Check-ins on Telegram",
+			},
+			{
+				body: "The mirror now reads the feeling words you pick, not just what you write. Slide the mic right to keep talking hands-free, share a badge as an image, and Xolace now fits iPad properly.",
+				icon: { android: "auto_fix_high", ios: "wand.and.stars" },
+				title: "And a few more things",
 			},
 		],
 		id: "1.17.0",
