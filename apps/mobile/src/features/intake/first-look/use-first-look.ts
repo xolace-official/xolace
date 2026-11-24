@@ -16,9 +16,9 @@ import type { PlanId } from "@/features/purchases/screens/paywall-period-picker"
 import { usePlans } from "@/features/purchases/use-plans";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useSingleFlight } from "@/lib/use-single-flight";
-import type { RowId } from "./copy";
+import { FIRST_LOOK, type RowId } from "./copy";
 import type { FirstLookValue } from "./first-look-data";
-import { keepTalkingLabel, saidWords } from "./first-look-model";
+import { saidWords } from "./first-look-model";
 
 export type FirstLookStepProps = {
 	answer: string;
@@ -154,7 +154,7 @@ export function useFirstLook({
 					},
 		},
 		demo: {
-			label: keepTalkingLabel(plan, plans),
+			label: FIRST_LOOK.keepTalking,
 			onClose: () => {
 				setDemoOpen(false);
 				if (demoSafety.current) {

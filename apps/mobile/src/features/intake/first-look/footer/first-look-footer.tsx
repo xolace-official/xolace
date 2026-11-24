@@ -5,7 +5,7 @@ import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { LinearGradient } from "@/components/shared/styled";
 import { clearOf } from "@/design/clear-of";
-import { planCta, planPriceLine } from "@/features/purchases/plans";
+import { PLAN_CTA, planPriceLine } from "@/features/purchases/plans";
 import { PaywallPlansUnavailable } from "@/features/purchases/screens/paywall-plans-unavailable";
 import { cn } from "@/lib/cn";
 import { playSoftPress } from "@/lib/haptics";
@@ -23,7 +23,7 @@ const CTA_MAX_SCALE = 1.4;
 function BuyButton() {
 	const { actions, state } = useFirstLookData();
 	const onEmber = useTokenColor("offer-ink");
-	const label = planCta(state.plan, state.plans);
+	const label = PLAN_CTA;
 	const off =
 		state.busy ||
 		state.buying ||

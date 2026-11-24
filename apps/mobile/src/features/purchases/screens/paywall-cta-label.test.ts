@@ -1,6 +1,6 @@
 import type { PurchasesPackage } from "react-native-purchases";
 import { describe, expect, it } from "vitest";
-import { paywallCtaLabel } from "./paywall-cta-label";
+import { hasFreeTrial } from "./paywall-cta-label";
 
 const pkg = (product: Record<string, unknown>) =>
 	({ product }) as unknown as PurchasesPackage;
@@ -13,39 +13,23 @@ const playTrial = pkg({
 const shortTrial = pkg({ introPrice: { period: "P3D", price: 0 } });
 const noTrial = pkg({ defaultOption: { freePhase: null }, introPrice: null });
 
-describe("paywallCtaLabel", () => {
-	it("claims the free week only for an annual package that carries one", () => {
-		expect(paywallCtaLabel("annual", appStoreTrial, true)).toBe(
-			"Start your free week"
-		);
-		expect(paywallCtaLabel("annual", playTrial, true)).toBe(
-			"Start your free week"
-		);
+describe("hasFreeTrial", () => {
+	it("finds a free week on either store", () => {
+		expect(hasFreeTrial(appStoreTrial, true)).toBe(true);
+		expect(hasFreeTrial(playTrial, true)).toBe(true);
 	});
 
 	it("never claims a week for an offer that is not seven days", () => {
-		expect(paywallCtaLabel("annual", shortTrial, true)).toBe(
-			"Continue with Plus"
-		);
+		expect(hasFreeTrial(shortTrial, true)).toBe(false);
 	});
 
-	it("never claims a trial on monthly, even if the product carries one", () => {
-		expect(paywallCtaLabel("monthly", appStoreTrial, true)).toBe(
-			"Continue with Plus"
-		);
-	});
-
-	it("falls back to the plain label without a trial or without a package", () => {
-		expect(paywallCtaLabel("annual", noTrial, true)).toBe("Continue with Plus");
-		expect(paywallCtaLabel("annual", null, true)).toBe("Continue with Plus");
+	it("is false without a trial or without a package", () => {
+		expect(hasFreeTrial(noTrial, true)).toBe(false);
+		expect(hasFreeTrial(null, true)).toBe(false);
 	});
 
 	it("never claims a week for someone who already spent theirs", () => {
-		expect(paywallCtaLabel("annual", appStoreTrial, false)).toBe(
-			"Continue with Plus"
-		);
-		expect(paywallCtaLabel("annual", playTrial, false)).toBe(
-			"Continue with Plus"
-		);
+		expect(hasFreeTrial(appStoreTrial, false)).toBe(false);
+		expect(hasFreeTrial(playTrial, false)).toBe(false);
 	});
 });
