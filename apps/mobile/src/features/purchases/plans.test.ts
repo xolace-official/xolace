@@ -2,11 +2,11 @@ import type { PurchasesPackage } from "react-native-purchases";
 import { describe, expect, it } from "vitest";
 import {
 	defaultPlan,
+	PLAN_CTA,
 	type Plans,
-	planCta,
+	planNote,
 	planPrice,
 	planPriceLine,
-	planTag,
 } from "@/features/purchases/plans";
 
 const pkg = (product: Record<string, unknown>) =>
@@ -56,45 +56,16 @@ describe("defaultPlan", () => {
 	});
 });
 
-describe("planCta", () => {
-	it("offers the free week on yearly when it has one", () => {
-		expect(planCta("annual", plans(yearlyWithWeek, monthlyPlain))).toBe(
-			"Start my free week"
-		);
-	});
-
-	it("never claims a week someone already spent", () => {
-		expect(planCta("annual", plans(yearlyWithWeek, monthlyPlain, false))).toBe(
-			"Continue with Plus"
-		);
-	});
-
-	it("names monthly's discount", () => {
-		expect(planCta("monthly", plans(yearlyPlain, monthlyDiscounted))).toBe(
-			"Get 40% off your first 3 months"
-		);
-	});
-
-	it("is plain on a plan with no offer", () => {
-		expect(planCta("annual", plans(yearlyPlain, monthlyPlain))).toBe(
-			"Continue with Plus"
-		);
-		expect(planCta("monthly", plans(yearlyPlain, monthlyPlain))).toBe(
-			"Continue with Plus"
-		);
-	});
-
-	it("is plain on a discount the user can't take", () => {
-		expect(
-			planCta("monthly", plans(yearlyPlain, monthlyDiscounted, false))
-		).toBe("Continue with Plus");
+describe("PLAN_CTA", () => {
+	it("never sells the trial or a discount (App Review 3.1.2(c))", () => {
+		expect(PLAN_CTA).not.toMatch(/free|trial|week|off|%/i);
 	});
 });
 
 describe("planPriceLine", () => {
-	it("says what the free week turns into", () => {
+	it("leads with the billed amount, then the free week", () => {
 		expect(planPriceLine("annual", plans(yearlyWithWeek, null))).toBe(
-			"Then $49.99 a year. Renews automatically. Cancel any time."
+			"$49.99 a year after a 7-day free trial. Renews automatically. Cancel any time."
 		);
 	});
 
@@ -104,9 +75,9 @@ describe("planPriceLine", () => {
 		);
 	});
 
-	it("gives monthly's discount and what it renews at", () => {
+	it("leads with what monthly renews at, then the discount", () => {
 		expect(planPriceLine("monthly", plans(null, monthlyDiscounted))).toBe(
-			"$5.99/mo for your first 3 months, then $9.99/mo. Renews automatically. Cancel any time."
+			"$9.99 a month after $5.99/mo for your first 3 months. Renews automatically. Cancel any time."
 		);
 	});
 
@@ -121,51 +92,55 @@ describe("planPriceLine", () => {
 	});
 });
 
-describe("planTag", () => {
-	it("marks the free week on yearly", () => {
-		expect(planTag("annual", plans(yearlyWithWeek, monthlyPlain))).toBe(
-			"7 days free"
+describe("planPrice", () => {
+	it("is the billed amount, whatever the offer", () => {
+		expect(planPrice("annual", plans(yearlyWithWeek, monthlyDiscounted))).toBe(
+			"$49.99/yr"
+		);
+		expect(planPrice("monthly", plans(yearlyPlain, monthlyDiscounted))).toBe(
+			"$9.99/mo"
 		);
 	});
 
-	it("marks monthly's discount", () => {
-		expect(planTag("monthly", plans(yearlyPlain, monthlyDiscounted))).toBe(
-			"40% off"
-		);
-	});
-
-	it("marks nothing without an offer", () => {
-		expect(planTag("annual", plans(yearlyPlain, monthlyPlain))).toBeNull();
-		expect(planTag("monthly", plans(yearlyPlain, monthlyPlain))).toBeNull();
+	it("is null for a plan the store doesn't sell", () => {
+		expect(planPrice("monthly", plans(yearlyPlain, null))).toBeNull();
 	});
 });
 
-describe("planPrice", () => {
-	const yearlyPerMonth = pkg({
+describe("planNote", () => {
+	const yearlyWeekPerMonth = pkg({
+		introPrice: { period: "P1W", price: 0 },
 		price: 59.99,
 		pricePerMonthString: "$5.00",
 		priceString: "$59.99",
 	});
 
-	it("gives yearly per month when the store works it out", () => {
-		expect(planPrice("annual", plans(yearlyPerMonth, monthlyPlain))).toBe(
-			"$59.99/yr · $5.00/mo"
+	it("puts the free week and the per-month working-out under yearly", () => {
+		expect(planNote("annual", plans(yearlyWeekPerMonth, monthlyPlain))).toBe(
+			"7 days free · $5.00/mo"
 		);
-		expect(planPrice("annual", plans(yearlyPlain, monthlyPlain))).toBe(
-			"$49.99/yr"
+		expect(planNote("annual", plans(yearlyWithWeek, monthlyPlain))).toBe(
+			"7 days free"
 		);
 	});
 
-	it("gives a monthly discount per month, for its term", () => {
-		expect(planPrice("monthly", plans(yearlyPlain, monthlyDiscounted))).toBe(
+	it("never claims a week someone already spent", () => {
+		expect(
+			planNote("annual", plans(yearlyWeekPerMonth, monthlyPlain, false))
+		).toBe("$5.00/mo");
+	});
+
+	it("puts monthly's discount under its billed amount", () => {
+		expect(planNote("monthly", plans(yearlyPlain, monthlyDiscounted))).toBe(
 			"$5.99/mo for 3 months"
 		);
 		expect(
-			planPrice("monthly", plans(yearlyPlain, monthlyDiscounted, false))
-		).toBe("$9.99/mo");
+			planNote("monthly", plans(yearlyPlain, monthlyDiscounted, false))
+		).toBeNull();
 	});
 
-	it("is null for a plan the store doesn't sell", () => {
-		expect(planPrice("monthly", plans(yearlyPlain, null))).toBeNull();
+	it("is null without an offer or a working-out", () => {
+		expect(planNote("annual", plans(yearlyPlain, monthlyPlain))).toBeNull();
+		expect(planNote("monthly", plans(yearlyPlain, monthlyPlain))).toBeNull();
 	});
 });

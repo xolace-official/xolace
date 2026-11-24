@@ -27,6 +27,9 @@ export const FIRST_LOOK = {
 	example: "Example",
 	free: "Free",
 	headline: "Free hears you.\nPlus stays with you.",
+	/** Names no trial or discount: the offer lives only beside its billed price (App Review
+	 * 3.1.2(c)). */
+	keepTalking: "Keep talking",
 	legal: { privacy: "Privacy", restore: "Restore", terms: "Terms" },
 	named: "guilt",
 	pill: "Xolace+",

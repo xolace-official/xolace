@@ -10,6 +10,7 @@ import type { PurchasesPackage } from "react-native-purchases";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appConfig } from "@/config/app";
 import { introOfferOf } from "@/features/purchases/intro-offer";
+import { PLAN_CTA } from "@/features/purchases/plans";
 import { useRevenueCat } from "@/features/purchases/revenuecat-context";
 import { useIntroEligibility } from "@/features/purchases/use-intro-eligibility";
 import {
@@ -18,7 +19,7 @@ import {
 } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { PaywallCta } from "./paywall-cta";
-import { hasFreeTrial, paywallCtaLabel } from "./paywall-cta-label";
+import { hasFreeTrial } from "./paywall-cta-label";
 import { PaywallFeatureItem } from "./paywall-feature-item";
 import { PaywallFeatureSection } from "./paywall-feature-section";
 import {
@@ -48,10 +49,9 @@ import { ProgressiveBlurView } from "./progressive-blur-view";
 const FALLBACK = {
 	annual: {
 		detail: "$4.17/mo, billed yearly",
-		numericPrice: 49.99,
 		price: "$49.99/yr",
 	},
-	monthly: { detail: "billed monthly", numericPrice: 9.99, price: "$9.99/mo" },
+	monthly: { detail: "billed monthly", price: "$9.99/mo" },
 } as const;
 
 export type PaywallExitReason = "purchased" | "dismissed";
@@ -130,19 +130,9 @@ export function PaywallScreen({
 		pkg
 			? {
 					detail: planDetail(plan, pkg.product),
-					price: pkg.product.priceString,
+					price: `${pkg.product.priceString}/${plan === "annual" ? "yr" : "mo"}`,
 				}
 			: FALLBACK[plan];
-
-	const numericPriceOf = (pkg: PurchasesPackage | null, plan: PlanId) =>
-		pkg ? pkg.product.price : FALLBACK[plan].numericPrice;
-
-	const annualNumeric = numericPriceOf(annualPkg, "annual");
-	const monthlyNumeric = numericPriceOf(monthlyPkg, "monthly");
-	const discountPercent =
-		monthlyNumeric > 0
-			? Math.round((1 - annualNumeric / (monthlyNumeric * 12)) * 100)
-			: null;
 
 	const selectedPkg = selected === "annual" ? annualPkg : monthlyPkg;
 
@@ -182,7 +172,6 @@ export function PaywallScreen({
 	const selectedEligible =
 		selected === "annual" ? annualIntroEligible : monthlyIntroEligible;
 	const trialAvailable = hasFreeTrial(selectedPkg, selectedEligible);
-	const ctaLabel = paywallCtaLabel(selected, selectedPkg, selectedEligible);
 
 	return (
 		<>
@@ -301,7 +290,6 @@ export function PaywallScreen({
 						<>
 							<PaywallPeriodPicker
 								annual={priceOf(annualPkg, "annual")}
-								discountPercent={discountPercent}
 								hasFreeTrial={trialAvailable}
 								monthly={priceOf(monthlyPkg, "monthly")}
 								monthlyIntro={monthlyIntro}
@@ -315,7 +303,7 @@ export function PaywallScreen({
 									isPlus ||
 									(appConfig.features.payments && !selectedPkg)
 								}
-								label={ctaLabel}
+								label={PLAN_CTA}
 								onPress={handleContinue}
 							/>
 						</>

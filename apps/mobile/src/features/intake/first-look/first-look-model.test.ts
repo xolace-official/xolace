@@ -1,13 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-	OFFERS_USED,
-	TRIAL_AND_DISCOUNT,
-	TRIAL_ONLY,
-} from "./dev/sample-plans";
-import {
 	ARRIVE_END,
 	HAPPY_AT,
-	keepTalkingLabel,
 	litAt,
 	SAID_MAX,
 	saidWords,
@@ -127,23 +121,5 @@ describe("rows", () => {
 				viewH: 400,
 			})
 		).toBeNull();
-	});
-});
-
-describe("keepTalkingLabel", () => {
-	it("names the free week on yearly when it has one", () => {
-		expect(keepTalkingLabel("annual", TRIAL_ONLY)).toBe(
-			"Keep talking · 7 days free"
-		);
-	});
-
-	it("promises no week the store won't give", () => {
-		expect(keepTalkingLabel("annual", OFFERS_USED)).toBe("Keep talking");
-	});
-
-	it("follows the plan picked, with its discount", () => {
-		expect(keepTalkingLabel("monthly", TRIAL_AND_DISCOUNT)).toBe(
-			"Keep talking · 40% off"
-		);
 	});
 });
