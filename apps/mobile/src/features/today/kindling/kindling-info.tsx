@@ -8,10 +8,20 @@ export const INFO_ROOM = 28;
 const BUTTON_TOP = 18;
 const BUTTON_RIGHT = 18;
 const TIP_TOP = 44;
+const TIP_BOTTOM = 12;
 
-/** The "i" at the card's top right, and the tip it opens over the card. */
-export function KindlingInfo() {
+/**
+ * The "i" at the card's top right, and the tip it opens over the card.
+ * The card clips its content, so `onRoom` reports the height the card needs
+ * to show the whole tip (0 when closed); on a narrow phone with large text
+ * the tip runs past the card's own height.
+ */
+export function KindlingInfo({ onRoom }: { onRoom: (height: number) => void }) {
 	const [open, setOpen] = useState(false);
+	const close = () => {
+		setOpen(false);
+		onRoom(0);
+	};
 	return (
 		<>
 			<View
@@ -20,13 +30,16 @@ export function KindlingInfo() {
 			>
 				<InfoButton
 					label={COPY.kindling.infoLabel}
-					onPress={() => setOpen((v) => !v)}
+					onPress={() => (open ? close() : setOpen(true))}
 				/>
 			</View>
 			{open ? (
 				<InfoTip
 					body={COPY.kindling.info}
-					onClose={() => setOpen(false)}
+					onClose={close}
+					onLayout={(e) =>
+						onRoom(TIP_TOP + e.nativeEvent.layout.height + TIP_BOTTOM)
+					}
 					title={COPY.kindling.title}
 					top={TIP_TOP}
 				/>

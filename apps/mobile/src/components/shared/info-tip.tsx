@@ -1,4 +1,4 @@
-import { Pressable } from "react-native";
+import { type LayoutChangeEvent, Pressable } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
@@ -40,17 +40,21 @@ export function InfoTip({
 	body,
 	top,
 	onClose,
+	onLayout,
 }: {
 	title: string;
 	body: string;
 	top: number;
 	onClose: () => void;
+	/** For a card that must grow to fit the tip instead of clipping it. */
+	onLayout?: (e: LayoutChangeEvent) => void;
 }) {
 	return (
 		<Animated.View
 			className="absolute right-3 left-3 z-5 rounded-[16px] border-[0.5px] border-continuous border-separator bg-surface-secondary px-3.25 py-2.75 shadow-card"
 			entering={FadeIn.duration(IN_MS)}
 			exiting={FadeOut.duration(OUT_MS)}
+			onLayout={onLayout}
 			style={{ top }}
 		>
 			<Pressable accessibilityLabel={`${title}. ${body}`} onPress={onClose}>

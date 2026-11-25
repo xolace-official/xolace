@@ -59,6 +59,8 @@ export function KindlingCard({ width }: { width: number }) {
 	const { kindling, kindlingEmpty } = state;
 	const mode = kindlingCardMode(kindling, kindlingEmpty);
 	const { lastLive, leaving, shown, swapped } = useSwap(mode, kindling);
+	const [infoRoom, setInfoRoom] = useState(0);
+	const info = shown !== SKELETON;
 	const pathW = width - PAD_X * 2;
 	const layers: { layer: Layer; out: boolean }[] =
 		leaving === null
@@ -75,7 +77,11 @@ export function KindlingCard({ width }: { width: number }) {
 			onLayout={(e) => top.set(e.nativeEvent.layout.y)}
 			style={{ marginTop: MODULE_GAP }}
 		>
-			<Card className="overflow-hidden" radius={RADIUS}>
+			<Card
+				className="overflow-hidden"
+				radius={RADIUS}
+				style={{ minHeight: info ? infoRoom : 0 }}
+			>
 				<View style={{ paddingHorizontal: PAD_X, paddingVertical: PAD_Y }}>
 					{layers.map((l) => (
 						<SwapLayer
@@ -93,7 +99,7 @@ export function KindlingCard({ width }: { width: number }) {
 						</SwapLayer>
 					))}
 				</View>
-				{shown === SKELETON ? null : <KindlingInfo />}
+				{info ? <KindlingInfo onRoom={setInfoRoom} /> : null}
 			</Card>
 		</EaseView>
 	);
