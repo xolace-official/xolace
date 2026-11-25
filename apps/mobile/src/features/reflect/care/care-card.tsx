@@ -40,7 +40,7 @@ const GROW = LinearTransition.springify()
 	.damping(MORPH.spring.damping)
 	.mass(MORPH.spring.mass);
 
-export function CareCard() {
+export function CareCard({ onHeight }: { onHeight?: (h: number) => void }) {
 	const { state, actions } = useReflect();
 	const { reduced, light } = useReflectDraw();
 	const shadow = useTokenColor("reflect-care-shadow");
@@ -91,6 +91,7 @@ export function CareCard() {
 		<Animated.View
 			className="absolute gap-3 rounded-[28px] border border-continuous border-separator bg-surface px-4.5 pt-5 pb-4"
 			layout={reduced ? undefined : GROW}
+			onLayout={(ev) => onHeight?.(ev.nativeEvent.layout.height)}
 			style={[
 				{
 					bottom: C.bottom,
