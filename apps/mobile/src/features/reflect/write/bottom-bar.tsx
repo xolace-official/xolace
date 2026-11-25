@@ -1,4 +1,5 @@
 import { View } from "react-native";
+import { useSharedValue } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { GlassButton } from "@/components/shared/glass-button";
 import { cn } from "@/lib/cn";
@@ -8,6 +9,8 @@ import { useReflect } from "../reflect-data";
 import { takeCountdown } from "../reflect-model";
 import { ListenPill } from "./listen-pill";
 import { MicButton } from "./mic-button";
+import { type MicReach, NO_REACH } from "./mic-gesture";
+import { CancelHint } from "./mic-hints";
 import { useMicPhase } from "./use-mic-phase";
 
 const BAR = LAYOUT.bar;
@@ -27,6 +30,7 @@ export function BottomBar({
 		(state.text.trim().length > 0 || state.picks.length > 0) &&
 		!(listening || writing);
 	const mic = useMicPhase(onTap);
+	const reach = useSharedValue<MicReach>(NO_REACH);
 
 	return (
 		<View
@@ -37,6 +41,7 @@ export function BottomBar({
 				onPhase={mic.setPhase}
 				onRelease={mic.release}
 				phase={mic.phase}
+				reach={reach}
 			/>
 			<GlassButton
 				accessibilityLabel={COPY.write.send}
@@ -65,8 +70,10 @@ export function BottomBar({
 				listening={listening}
 				onCancel={mic.cancelLocked}
 				phase={mic.phase}
+				reach={reach}
 				writing={writing}
 			/>
+			<CancelHint phase={mic.phase} reach={reach} />
 		</View>
 	);
 }

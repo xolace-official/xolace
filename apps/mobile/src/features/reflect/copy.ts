@@ -194,7 +194,6 @@ export const COPY = {
 		},
 		replySeed: (seed: string) => `You wrote: “${seed}”`,
 		send: "Let it out",
-		slideCancel: "Slide up to cancel",
 		speakHint: "Hold and talk. Slide up to cancel, or right to lock.",
 		speakLabel: "Hold to speak",
 		stopHint: "Keeps what you said.",
