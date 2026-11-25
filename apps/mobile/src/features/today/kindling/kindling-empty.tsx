@@ -9,6 +9,7 @@ import { useToday } from "../today-data";
 import { useTodayFrame } from "../today-frame";
 import type { KindlingEmptyMode } from "./card-mode";
 import { pathGeometry } from "./kindling-geometry";
+import { INFO_ROOM } from "./kindling-info";
 import { BEAT, PATH_H } from "./kindling-model";
 import { KindlingPath } from "./kindling-path";
 
@@ -63,7 +64,10 @@ export function KindlingEmpty({ mode, width, onScreen }: Props) {
 			accessible
 			onAccessibilityAction={action}
 		>
-			<View className="min-h-5.5 flex-row items-center">
+			<View
+				className="min-h-5.5 flex-row items-center"
+				style={{ paddingRight: INFO_ROOM }}
+			>
 				<AppText className="text-[16.5px]" variant="subhead" weight="semibold">
 					{COPY.kindling.title}
 				</AppText>

@@ -8,7 +8,7 @@ import Animated, {
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
-import { planPrice, planTag } from "@/features/purchases/plans";
+import { planNote, planPrice } from "@/features/purchases/plans";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { playSoftPress } from "@/lib/haptics";
 import { FIRST_LOOK } from "../copy";
@@ -66,11 +66,11 @@ export function PlanCards({ reduced }: { reduced: boolean }) {
 			{sellable.map((id) => {
 				const on = id === state.plan;
 				const price = planPrice(id, state.plans) ?? "";
-				const tag = planTag(id, state.plans);
+				const note = planNote(id, state.plans);
 				const name = FIRST_LOOK.plans[id];
 				return (
 					<PressScale
-						accessibilityLabel={[name, price, tag].filter(Boolean).join(", ")}
+						accessibilityLabel={[name, price, note].filter(Boolean).join(", ")}
 						accessibilityRole="radio"
 						accessibilityState={{ checked: on, disabled: lock, selected: on }}
 						className="flex-1 justify-center gap-0.5 rounded-[18px] border-[1.5px] border-separator px-3 py-2"
@@ -80,35 +80,31 @@ export function PlanCards({ reduced }: { reduced: boolean }) {
 						onPress={() => actions.pick(id)}
 						style={{ borderCurve: "continuous" }}
 					>
-						<View className="flex-row items-center justify-between gap-1">
-							<AppText
-								maxFontSizeMultiplier={CARD_MAX_SCALE}
-								variant="callout"
-								weight="semibold"
-							>
-								{name}
-							</AppText>
-							{tag ? (
-								<View className="h-5 justify-center rounded-full bg-ember px-[7px]">
-									<AppText
-										className="text-offer-ink"
-										maxFontSizeMultiplier={CARD_MAX_SCALE}
-										variant="caption"
-										weight="bold"
-									>
-										{tag}
-									</AppText>
-								</View>
-							) : null}
-						</View>
 						<AppText
-							className="tabular-nums"
 							color="muted"
 							maxFontSizeMultiplier={CARD_MAX_SCALE}
-							variant="caption"
+							variant="callout"
+						>
+							{name}
+						</AppText>
+						<AppText
+							className="tabular-nums"
+							maxFontSizeMultiplier={CARD_MAX_SCALE}
+							variant="body"
+							weight="semibold"
 						>
 							{price}
 						</AppText>
+						{note ? (
+							<AppText
+								className="tabular-nums"
+								color="muted"
+								maxFontSizeMultiplier={CARD_MAX_SCALE}
+								variant="caption"
+							>
+								{note}
+							</AppText>
+						) : null}
 					</PressScale>
 				);
 			})}

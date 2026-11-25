@@ -6,6 +6,10 @@ export const SAMPLE =
 export const MIRROR_TEXT =
 	"It sounds like replaying the meeting is still with you, and part of you keeps rewriting what you should have said. Underneath it there’s a tiredness, of always feeling one step behind while everyone else seemed fine. That’s a lot to carry quietly.";
 
+/** Long enough to run past the actions on a small phone: the mirror has no length cap. */
+export const LONG_MIRROR_TEXT =
+	"It sounds like replaying the meeting is still with you, and part of you keeps rewriting what you should have said. Underneath it there’s a tiredness, of always feeling one step behind while everyone else seemed fine. You went in hoping to be heard and came out feeling small, and that stayed with you on the drive home. When you asked yourself what to do next, the answer that came back wasn’t a plan at all, just “keep going, quietly.” That’s a gentle answer from the part of you that’s usually carrying the most. It might be worth noticing how often that part does the carrying on its own. And it might be worth letting tonight be a night it gets to set some of it down.";
+
 export const REVISED_TEXT =
 	"It sounds like the meeting is still with you, mostly the moment you went quiet. Underneath it there’s something closer to embarrassment, as if everyone saw you fall behind. And you’ve been carrying it on your own all day.";
 

@@ -1,6 +1,4 @@
 import type { PaletteName } from "@/components/xolace-face/face-palette";
-import { type Plans, planTag } from "@/features/purchases/plans";
-import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { FIRST_LOOK, type RowId, type VoiceId } from "./copy";
 
 export const SAID_MAX = 48;
@@ -79,8 +77,3 @@ export const VOICE_PALETTE = {
 	vesper: "dusk",
 	wren: "ember",
 } as const satisfies Record<VoiceId, PaletteName>;
-
-export const keepTalkingLabel = (plan: PlanId, plans: Plans): string => {
-	const tag = planTag(plan, plans);
-	return tag ? `Keep talking · ${tag}` : "Keep talking";
-};

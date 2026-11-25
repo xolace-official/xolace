@@ -70,3 +70,18 @@ export function afterRelease(phase: MicPhase): MicPhase {
 	"worklet";
 	return phase === "lock" ? "locked" : "idle";
 }
+
+/** How far a held press has gone toward each target, 0 at rest and 1 at its threshold. */
+export type MicReach = { cancel: number; lock: number };
+
+export const NO_REACH: MicReach = { cancel: 0, lock: 0 };
+
+/** Drives the hints: each direction's mark leans in as the finger heads its way. */
+export function dragReach(dx: number, dy: number): MicReach {
+	"worklet";
+	const clamp = (u: number) => Math.min(1, Math.max(0, u));
+	return {
+		cancel: clamp(dy / MIC_DRAG.cancelArm),
+		lock: clamp(dx / MIC_DRAG.lockArm),
+	};
+}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
+import { InfoButton, InfoTip } from "@/components/shared/info-tip";
 import { PressScale } from "@/components/shared/press-scale";
 import { COPY } from "@/features/you/copy";
 import { PartRow } from "@/features/you/home/steadiness/part-row";
@@ -11,7 +12,6 @@ import {
 	litTicks,
 } from "@/features/you/home/steadiness/steadiness-model";
 import { FAN_W, TickFan } from "@/features/you/home/steadiness/tick-fan";
-import { InfoButton, InfoTip } from "@/features/you/info-tip";
 import { Surface } from "@/features/you/surface";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";

@@ -1,4 +1,10 @@
-import { type ComponentRef, useEffect, useEffectEvent, useRef } from "react";
+import {
+	type ComponentRef,
+	useEffect,
+	useEffectEvent,
+	useRef,
+	useState,
+} from "react";
 import { AccessibilityInfo, View } from "react-native";
 import { useAnimatedReaction } from "react-native-reanimated";
 import { useFixedFaces } from "@/design/fonts";
@@ -15,6 +21,7 @@ import { easeOut, smooth } from "./curves";
 import { MirrorActions } from "./mirror-actions";
 import { MirrorLabel } from "./mirror-label";
 import { MirrorLines } from "./mirror-lines";
+import { MirrorScroll } from "./mirror-scroll";
 import type { MirrorInk } from "./mirror-word";
 import { NotQuitePanel } from "./not-quite-panel";
 import { QuoteMarks } from "./quote-marks";
@@ -23,6 +30,10 @@ import { useMirrorFace } from "./use-mirror-face";
 
 const M = LAYOUT.mirror;
 const MS_PER_S = 1000;
+/** Room between the mirror's last line and the actions (or care card) under it. */
+const FLOOR_GAP = 12;
+/** The actions' height before they lay out: hint, button and row. */
+const ACTIONS_GUESS = 150;
 const INK_TOKENS = [
 	"reflect-mirror-halo",
 	"eink",
@@ -43,6 +54,9 @@ export function MirrorStage() {
 	const { face, glance } = useMirrorFace(tl, live);
 	const facesReady = useFixedFaces("mirror");
 	const firstLine = useRef<ComponentRef<typeof View>>(null);
+	const [floor, setFloor] = useState(
+		LAYOUT.actions.bottom + ACTIONS_GUESS + FLOOR_GAP
+	);
 	const [halo, lit, warm, glow, ember, wash] = useTokenColors(INK_TOKENS);
 	const ink: MirrorInk = { ember, flash: warm, glow, halo, lit };
 
@@ -81,10 +95,7 @@ export function MirrorStage() {
 
 	return (
 		<View className="flex-1">
-			<View
-				className="absolute"
-				style={{ gap: M.gap, left: M.side, right: M.side, top: y(M.top) }}
-			>
+			<MirrorScroll bottom={floor} gap={M.gap} side={M.side} top={y(M.top)}>
 				<YourWords at={{ x: M.side, y: y(M.top) }}>
 					{tl.lights ? (
 						<QuoteMarks
@@ -109,13 +120,20 @@ export function MirrorStage() {
 						wash={wash}
 					/>
 				) : null}
-			</View>
+			</MirrorScroll>
 			{heavy ? (
-				<CareCard />
+				<CareCard
+					onHeight={(h) => setFloor(LAYOUT.care.bottom + h + FLOOR_GAP)}
+				/>
 			) : (
 				<>
 					<View
 						className="absolute"
+						onLayout={(ev) =>
+							setFloor(
+								LAYOUT.actions.bottom + ev.nativeEvent.layout.height + FLOOR_GAP
+							)
+						}
 						style={{
 							bottom: LAYOUT.actions.bottom,
 							left: LAYOUT.actions.side,

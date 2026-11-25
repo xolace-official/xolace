@@ -1,4 +1,4 @@
-import { Surface, useThemeColor } from "heroui-native";
+import { Surface } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { SegmentedControl } from "@/components/shared/segmented-control";
@@ -12,7 +12,6 @@ type PlanPrice = { price: string; detail: string };
 type Props = {
 	annual: PlanPrice;
 	monthly: PlanPrice;
-	discountPercent: number | null;
 	hasFreeTrial: boolean;
 	monthlyIntro: IntroOffer | null;
 	selected: PlanId;
@@ -22,14 +21,17 @@ type Props = {
 export function PaywallPeriodPicker({
 	annual,
 	monthly,
-	discountPercent,
 	hasFreeTrial,
 	monthlyIntro,
 	selected,
 	onSelect,
 }: Props) {
 	const current = selected === "annual" ? annual : monthly;
-	const intro = selected === "monthly" ? monthlyIntro : null;
+	const note = priceNote(
+		current,
+		selected === "annual" && hasFreeTrial,
+		selected === "monthly" ? monthlyIntro : null
+	);
 
 	return (
 		<View className="gap-3">
@@ -42,147 +44,62 @@ export function PaywallPeriodPicker({
 					className="top-1 rounded-xl bg-accent"
 					style={styles.borderCurve}
 				/>
-
-				<SegmentedControl.Item
-					className="flex-1 flex-row items-center justify-center gap-2 py-2.5"
-					value="monthly"
-				>
-					<AppText
-						className={cn(
-							"font-medium text-[14px]",
-							selected === "monthly"
-								? "text-accent-foreground"
-								: "text-foreground"
-						)}
-					>
-						Monthly
-					</AppText>
-					{monthlyIntro && (
-						<SegmentBadge
-							isSelected={selected === "monthly"}
-							label={
-								selected === "monthly"
-									? `-${monthlyIntro.percentOff}%`
-									: `${monthlyIntro.percentOff}% off`
-							}
-						/>
-					)}
-				</SegmentedControl.Item>
-
-				<SegmentedControl.Item
-					className="flex-1 flex-row items-center justify-center gap-2 py-2.5"
-					value="annual"
-				>
-					<AppText
-						className={cn(
-							"font-medium text-[14px]",
-							selected === "annual"
-								? "text-accent-foreground"
-								: "text-foreground"
-						)}
-					>
-						Yearly
-					</AppText>
-					{discountPercent !== null && (
-						<SegmentBadge
-							isSelected={selected === "annual"}
-							label={
-								selected === "annual"
-									? `-${discountPercent}%`
-									: `Save ${discountPercent}%`
-							}
-						/>
-					)}
-				</SegmentedControl.Item>
+				<SegmentItem label="Monthly" selected={selected} value="monthly" />
+				<SegmentItem label="Yearly" selected={selected} value="annual" />
 			</SegmentedControl>
 
 			<Surface
-				className="flex-row items-center justify-between rounded-2xl px-4 py-3.5"
+				accessibilityLabel={`${current.price}, ${note}`}
+				accessible
+				className="rounded-2xl px-4 py-3.5"
 				style={styles.borderCurve}
 			>
-				{intro ? (
-					<IntroPrice intro={intro} />
-				) : (
-					<View>
-						<AppText className="font-semibold text-[15px] text-foreground">
-							{current.price}
-						</AppText>
-						<AppText className="mt-0.5 text-[12px] text-muted">
-							{current.detail}
-						</AppText>
-					</View>
-				)}
-				{selected === "annual" && hasFreeTrial && (
-					<View
-						className="rounded-full bg-accent/12 px-2.5 py-1"
-						style={styles.borderCurve}
-					>
-						<AppText className="font-medium text-[11px] text-accent">
-							7-day free trial
-						</AppText>
-					</View>
-				)}
-				{intro && (
-					<View
-						className="rounded-full bg-accent/12 px-2.5 py-1"
-						style={styles.borderCurve}
-					>
-						<AppText className="font-medium text-[11px] text-accent">
-							Intro offer
-						</AppText>
-					</View>
-				)}
+				<AppText className="font-semibold text-[17px] text-foreground">
+					{current.price}
+				</AppText>
+				<AppText className="mt-0.5 text-[12px] text-muted">{note}</AppText>
 			</Surface>
 		</View>
 	);
 }
 
-function SegmentBadge({
+function SegmentItem({
 	label,
-	isSelected,
+	selected,
+	value,
 }: {
 	label: string;
-	isSelected: boolean;
+	selected: PlanId;
+	value: PlanId;
 }) {
-	const accentForeground = useThemeColor("accent-foreground") as string;
 	return (
-		<View
-			className={cn(
-				"rounded-full px-2 py-0.5",
-				isSelected ? "bg-accent-foreground/15" : "bg-accent/15"
-			)}
+		<SegmentedControl.Item
+			className="flex-1 flex-row items-center justify-center gap-2 py-2.5"
+			value={value}
 		>
 			<AppText
-				className="font-semibold text-[11px]"
-				style={{ color: isSelected ? accentForeground : undefined }}
+				className={cn(
+					"font-medium text-[14px]",
+					selected === value ? "text-accent-foreground" : "text-foreground"
+				)}
 			>
 				{label}
 			</AppText>
-		</View>
+		</SegmentedControl.Item>
 	);
 }
 
-/** Intro price with the full price struck through and the renewal spelled out: Apple rejects
- * paywalls that hide it. */
-function IntroPrice({ intro }: { intro: IntroOffer }) {
-	const renewal = `for your first ${intro.term}, then ${intro.fullPrice}/mo`;
-	return (
-		<View
-			accessibilityLabel={`${intro.price} per month for your first ${intro.term}, then ${intro.fullPrice} per month`}
-			accessible
-			className="shrink"
-		>
-			<View className="flex-row items-baseline gap-1.5">
-				<AppText className="font-semibold text-[15px] text-foreground">
-					{intro.price}/mo
-				</AppText>
-				<AppText className="text-[13px] text-muted line-through">
-					{intro.fullPrice}
-				</AppText>
-			</View>
-			<AppText className="mt-0.5 text-[12px] text-muted">{renewal}</AppText>
-		</View>
-	);
+/** Everything but the billed amount, on one smaller muted line under it: a trial, intro or
+ * discount never outranks what is billed (App Review 3.1.2(c)). */
+function priceNote(
+	plan: PlanPrice,
+	freeWeek: boolean,
+	intro: IntroOffer | null
+): string {
+	if (intro) {
+		return `${intro.price}/mo for your first ${intro.term} · ${plan.detail}`;
+	}
+	return freeWeek ? `7 days free · ${plan.detail}` : plan.detail;
 }
 
 const styles = StyleSheet.create({

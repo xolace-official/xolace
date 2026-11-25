@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
 import Animated, {
 	cancelAnimation,
+	type SharedValue,
 	useAnimatedStyle,
 	useSharedValue,
 	withDelay,
@@ -20,8 +21,11 @@ import { useReflectDraw } from "../reflect-draw";
 import {
 	afterRelease,
 	dragPhase,
+	dragReach,
 	type MicPhase,
+	type MicReach,
 	type MicRelease,
+	NO_REACH,
 	releaseOf,
 } from "./mic-gesture";
 import { MicGlow, MicRing } from "./mic-glow";
@@ -38,9 +42,11 @@ type Props = {
 	phase: MicPhase;
 	onPhase: (phase: MicPhase) => void;
 	onRelease: (kind: MicRelease) => void;
+	/** Written as the finger moves, for the cancel and lock hints. */
+	reach: SharedValue<MicReach>;
 };
 
-export function MicButton({ phase, onPhase, onRelease }: Props) {
+export function MicButton({ phase, onPhase, onRelease, reach }: Props) {
 	const { state, actions } = useReflect();
 	const { reduced } = useReflectDraw();
 	const { listening } = state;
@@ -98,6 +104,7 @@ export function MicButton({ phase, onPhase, onRelease }: Props) {
 			const next = afterRelease(from);
 			at.set(next);
 			scheduleOnRN(onRelease, releaseOf(from));
+			reach.set(NO_REACH);
 			held.set(withTiming(0, HELD));
 			power.set(withTiming(next === "locked" ? 1 : 0, POWER));
 		},
@@ -105,6 +112,9 @@ export function MicButton({ phase, onPhase, onRelease }: Props) {
 			const x = Math.max(-MIC / 2, Math.min(MIC / 2, e.x - MIC / 2));
 			glowX.set(withSpring(x, { ...SPEAK.glowSpring, ...PLAY_AS_CHOSEN }));
 			const from = at.get();
+			if (from !== "idle" && from !== "locked") {
+				reach.set(dragReach(e.translationX, e.translationY));
+			}
 			const next = dragPhase(from, e.translationX, e.translationY);
 			if (next !== from) {
 				at.set(next);

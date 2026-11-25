@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { View } from "react-native";
 import Animated, {
+	type SharedValue,
 	useAnimatedStyle,
 	useSharedValue,
 	withTiming,
@@ -14,7 +15,8 @@ import { COPY } from "../copy";
 import { LAYOUT } from "../layout";
 import { useReflectDraw } from "../reflect-draw";
 import { LevelBars } from "./level-bars";
-import type { MicPhase } from "./mic-gesture";
+import type { MicPhase, MicReach } from "./mic-gesture";
+import { LockTrail } from "./mic-hints";
 
 const BAR = LAYOUT.bar;
 const LISTEN_MS = 200;
@@ -34,6 +36,7 @@ type Props = {
 	writing: boolean;
 	countdown: string | null;
 	onCancel: () => void;
+	reach: SharedValue<MicReach>;
 };
 
 function pillLine(writing: boolean, phase: MicPhase): string {
@@ -58,6 +61,7 @@ export function ListenPill({
 	writing,
 	countdown,
 	onCancel,
+	reach,
 }: Props) {
 	const up = listening || writing;
 	const locked = phase === "locked" && !writing;
@@ -94,7 +98,12 @@ export function ListenPill({
 				{pillLine(writing, phase)}
 			</AppText>
 			{writing ? null : (
-				<PillEnd countdown={countdown} onCancel={onCancel} phase={phase} />
+				<PillEnd
+					countdown={countdown}
+					onCancel={onCancel}
+					phase={phase}
+					reach={reach}
+				/>
 			)}
 		</Animated.View>
 	);
@@ -104,13 +113,14 @@ function PillEnd({
 	phase,
 	countdown,
 	onCancel,
-}: Pick<Props, "phase" | "countdown" | "onCancel">) {
+	reach,
+}: Pick<Props, "phase" | "countdown" | "onCancel" | "reach">) {
 	const subtle = useTokenColor("subtle");
 	if (phase === "cancel") {
 		return null;
 	}
-	const caption =
-		phase === "locked" ? countdown : (countdown ?? COPY.write.slideCancel);
+	// The way to cancel is the capsule over the mic, so the caption is only the countdown.
+	const caption = countdown;
 	return (
 		<View className="ml-auto shrink flex-row items-center gap-3">
 			{caption === null || phase === "lock" ? null : (
@@ -125,7 +135,10 @@ function PillEnd({
 				</AppText>
 			)}
 			{phase === "holding" || phase === "lock" ? (
-				<LockMark armed={phase === "lock"} />
+				<View className="flex-row items-center gap-1.5">
+					<LockTrail phase={phase} reach={reach} />
+					<LockMark armed={phase === "lock"} />
+				</View>
 			) : null}
 			{phase === "locked" ? (
 				<PressScale
