@@ -1,8 +1,8 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { InfoButton } from "@/components/shared/info-tip";
 import { COPY } from "@/features/you/copy";
 import { type IndexedHistory, readout } from "@/features/you/home/days-model";
-import { InfoButton } from "@/features/you/info-tip";
 
 export function DaysReadout({
 	dayKey,

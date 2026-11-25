@@ -9,6 +9,7 @@ import { MODULE_GAP } from "../today-motion";
 import { todayRiseProps } from "../today-rise";
 import { type KindlingCardMode, kindlingCardMode } from "./card-mode";
 import { KindlingEmpty } from "./kindling-empty";
+import { KindlingInfo } from "./kindling-info";
 import { KindlingLive } from "./kindling-live";
 import type { KindlingView } from "./kindling-model";
 import { SWAP, SwapLayer } from "./swap-layer";
@@ -92,6 +93,7 @@ export function KindlingCard({ width }: { width: number }) {
 						</SwapLayer>
 					))}
 				</View>
+				{shown === SKELETON ? null : <KindlingInfo />}
 			</Card>
 		</EaseView>
 	);

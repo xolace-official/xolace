@@ -118,6 +118,8 @@ export const COPY = {
 				title: "It lands here when it’s ready",
 			},
 		},
+		info: "A few small steps of support, picked for what you brought: a breath, something to hear or read, something to try. A session that leaves something to sit with lights one. Tend them at your own pace.",
+		infoLabel: "About your kindling",
 		kinds: {
 			audio: { length: "SOMETHING TO HEAR", title: "A voice for this" },
 			breathing: { length: "A FEW MINUTES", title: "Sit with this" },
