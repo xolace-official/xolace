@@ -27,6 +27,69 @@ export async function scheduleWelcome(
 	);
 }
 
+/**
+ * One-off, run by hand from the dashboard: welcome the people whose welcome
+ * crashed before it was recorded. Until the adapter import cycle was fixed,
+ * every `sendWelcome` threw in routing and wrote no outreach row, so its
+ * dedupe key is unspent and `sendWelcome` can simply run again.
+ *
+ * Takes users created at or after `since` (when email was switched on, so
+ * nobody from before the welcome existed gets one) and more than the welcome
+ * delay ago (anyone newer still has theirs scheduled), with no welcome
+ * recorded. `dryRun` (the default) only counts them. A deleted account is
+ * left to `enqueue`, which records it as suppressed. Delete once prod has
+ * run it.
+ */
+export const resendMissedWelcomes = internalMutation({
+	args: { dryRun: v.optional(v.boolean()), since: v.number() },
+	handler: async (ctx, { dryRun = true, since }) => {
+		const before = Date.now() - WELCOME_DELAY_MS;
+		const users = await ctx.db
+			.query("users")
+			.withIndex("by_creation_time", (q) =>
+				q.gte("_creationTime", since).lt("_creationTime", before)
+			)
+			.collect();
+		const missed = new Set<Id<"emotional_profiles">>();
+		let alreadyWelcomed = 0;
+		for (const { emotionalProfileId } of users) {
+			if (missed.has(emotionalProfileId)) {
+				continue;
+			}
+			const welcome = await ctx.db
+				.query("outreach")
+				.withIndex("by_dedupe", (q) =>
+					q.eq("dedupeKey", `welcome:${emotionalProfileId}`)
+				)
+				.first();
+			if (welcome) {
+				alreadyWelcomed += 1;
+				continue;
+			}
+			missed.add(emotionalProfileId);
+		}
+		if (!dryRun) {
+			for (const emotionalProfileId of missed) {
+				await ctx.scheduler.runAfter(0, internal.outreach.welcome.sendWelcome, {
+					emotionalProfileId,
+				});
+			}
+		}
+		return {
+			alreadyWelcomed,
+			dryRun,
+			missed: [...missed],
+			usersChecked: users.length,
+		};
+	},
+	returns: v.object({
+		alreadyWelcomed: v.number(),
+		dryRun: v.boolean(),
+		missed: v.array(v.id("emotional_profiles")),
+		usersChecked: v.number(),
+	}),
+});
+
 export const sendWelcome = internalMutation({
 	args: { emotionalProfileId: v.id("emotional_profiles") },
 	handler: async (ctx, { emotionalProfileId }) => {

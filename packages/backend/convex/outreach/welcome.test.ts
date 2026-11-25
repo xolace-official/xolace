@@ -9,7 +9,7 @@
  */
 import workpoolTest from "@convex-dev/workpool/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { api } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { cancelWelcome } from "../test/fixtures.helpers";
 import {
@@ -237,5 +237,69 @@ describe("the welcome after sign-up", () => {
 				suppressedReason: "account_deleted",
 			},
 		]);
+	});
+});
+
+describe("resending welcomes that crashed before they were recorded", () => {
+	const resend = (
+		user: SeededUser,
+		args: { dryRun?: boolean; since: number }
+	) => user.root.mutation(internal.outreach.welcome.resendMissedWelcomes, args);
+
+	/** A sign-up whose scheduled welcome threw: nothing was recorded. */
+	async function signsUpAndWelcomeCrashes(): Promise<SeededUser> {
+		const user = await signsUp();
+		await cancelWelcome(user.root);
+		await after(user, 31 * MINUTE);
+		return user;
+	}
+
+	it("counts by default, then sends the one missed welcome, and never a second", async () => {
+		const user = await signsUpAndWelcomeCrashes();
+
+		expect(await resend(user, { since: NOW })).toEqual({
+			alreadyWelcomed: 0,
+			dryRun: true,
+			missed: [user.profileId],
+			usersChecked: 1,
+		});
+		await drain(user);
+		expect(h.queued).toEqual([]);
+
+		await resend(user, { dryRun: false, since: NOW });
+		await drain(user);
+		expect(h.queued).toMatchObject([
+			{ subject: "Welcome to Xolace", to: ADDRESS },
+		]);
+
+		expect(await resend(user, { dryRun: false, since: NOW })).toMatchObject({
+			alreadyWelcomed: 1,
+			missed: [],
+		});
+		await drain(user);
+		expect(h.queued).toHaveLength(1);
+		expect(await welcomesOf(user)).toHaveLength(1);
+	});
+
+	it("leaves out sign-ups from before `since`", async () => {
+		const user = await signsUpAndWelcomeCrashes();
+
+		expect(
+			await resend(user, { dryRun: false, since: NOW + MINUTE })
+		).toMatchObject({ missed: [], usersChecked: 0 });
+		await drain(user);
+		expect(h.queued).toEqual([]);
+	});
+
+	it("leaves a sign-up whose own welcome is still waiting to it", async () => {
+		const user = await signsUp();
+
+		await after(user, 10 * MINUTE);
+		expect(await resend(user, { dryRun: false, since: NOW })).toMatchObject({
+			missed: [],
+			usersChecked: 0,
+		});
+		await drain(user);
+		expect(h.queued).toHaveLength(1);
 	});
 });
