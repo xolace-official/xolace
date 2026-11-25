@@ -10,14 +10,12 @@ import {
 } from "./pools";
 import { pushAdapter } from "./push";
 import { telegramAdapter } from "./telegram/adapter";
-import type { ChannelErrorKind, OutreachChannel } from "./validators";
+import type { OutreachChannel } from "./validators";
 
 /**
  * The adapter seam (#760). An adapter delivers one outreach on one channel
  * and writes no copy: the outreach carries it. It throws a `ChannelError`
- * when it can't: `retry` (try again after `afterMs`), `permanent` (give up,
- * fall back once) or `unreachable` (the person can't be reached there; fall
- * back once).
+ * (`channelError.ts`) when it can't.
  *
  * A channel whose provider is a database write (push, through its component)
  * sends inside the delivery mutation. One that calls an outside API (Telegram)
@@ -92,26 +90,12 @@ export type DeliveryReceipt = {
 	providerMessageId?: string;
 };
 
-export class ChannelError extends Error {
-	readonly kind: ChannelErrorKind;
-	/** For `retry`: how long to wait. */
-	readonly afterMs?: number;
-	/** A provider code (an HTTP status, Telegram's `error_code`); never raw text. */
-	readonly code?: string;
-
-	constructor(
-		kind: ChannelErrorKind,
-		options: { afterMs?: number; code?: string; message?: string } = {}
-	) {
-		super(options.message ?? `Channel error: ${kind}`);
-		this.name = "ChannelError";
-		this.kind = kind;
-		this.afterMs = options.afterMs;
-		this.code = options.code;
-	}
-}
-
-/** Channels with an adapter. A channel missing here is `not_configured`. */
+/**
+ * Channels with an adapter. A channel missing here is `not_configured`.
+ * An adapter imports only types from this module, never a value: every
+ * Convex module is a bundle entry, so a runtime import back here can build
+ * this before the adapter it spreads exists (`adapters.test.ts`).
+ */
 export const ADAPTERS: Partial<Record<OutreachChannel, ChannelAdapter>> = {
 	email: actionAdapter({ ...emailAdapter, pool: outreachEmailPool }),
 	push: { ...pushAdapter, pool: outreachPushPool },

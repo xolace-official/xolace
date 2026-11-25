@@ -25,7 +25,7 @@ import {
 	type SeededUser,
 } from "../test/harness.helpers";
 import { aggregatesMock, noopJob, revenuecatMock } from "../test/mocks.helpers";
-import { ChannelError } from "./adapters";
+import { ChannelError } from "./channelError";
 
 type Sent = {
 	emotionalProfileId: string;

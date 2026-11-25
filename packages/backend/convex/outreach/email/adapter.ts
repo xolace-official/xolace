@@ -3,7 +3,8 @@ import type { Doc, Id } from "../../_generated/dataModel";
 import type { MutationCtx } from "../../_generated/server";
 import { primaryEmailOf } from "../../integrations/clerk";
 import { clerkUserIdOf } from "../../jobs/clerkUserDeletion";
-import { type ActionAdapter, ChannelError } from "../adapters";
+import type { ActionAdapter } from "../adapters";
+import { ChannelError } from "../channelError";
 import type { EmailTemplate, OutreachIntent } from "../validators";
 import {
 	allowlisted,

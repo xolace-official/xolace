@@ -290,6 +290,7 @@ import type * as outreach_adapters from "../outreach/adapters.js";
 import type * as outreach_analytics from "../outreach/analytics.js";
 import type * as outreach_appLinks from "../outreach/appLinks.js";
 import type * as outreach_attribution from "../outreach/attribution.js";
+import type * as outreach_channelError from "../outreach/channelError.js";
 import type * as outreach_channels from "../outreach/channels.js";
 import type * as outreach_deliver from "../outreach/deliver.js";
 import type * as outreach_email_adapter from "../outreach/email/adapter.js";
@@ -681,6 +682,7 @@ declare const fullApi: ApiFromModules<{
   "outreach/analytics": typeof outreach_analytics;
   "outreach/appLinks": typeof outreach_appLinks;
   "outreach/attribution": typeof outreach_attribution;
+  "outreach/channelError": typeof outreach_channelError;
   "outreach/channels": typeof outreach_channels;
   "outreach/deliver": typeof outreach_deliver;
   "outreach/email/adapter": typeof outreach_email_adapter;
