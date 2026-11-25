@@ -6,6 +6,7 @@ import {
 	HEAVY_MIRROR_TEXT,
 	HEAVY_SAMPLE,
 	LIMIT_MESSAGE,
+	LONG_MIRROR_TEXT,
 	LONG_TEXT,
 	REVISED_TEXT,
 	SAMPLE,
@@ -118,6 +119,16 @@ export const devStates: readonly DevState[] = [
 		id: "mirror-long",
 		title: "The mirror under long text",
 		...reflect({ ...MIRROR, sent: LONG_TEXT }),
+	},
+	{
+		id: "mirror-long-mirror",
+		title: "A long mirror (scrolls above the actions)",
+		...reflect({ ...MIRROR, mirrorText: LONG_MIRROR_TEXT }),
+	},
+	{
+		id: "heavy-long-mirror",
+		title: "Heavy: a long mirror above the care card",
+		...reflect({ ...HEAVY, mirrorText: LONG_MIRROR_TEXT }),
 	},
 	{
 		id: "pick-line",

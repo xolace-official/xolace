@@ -1,7 +1,8 @@
 import type { Doc } from "../_generated/dataModel";
 import { NUDGE_NOTIFICATION_SOUND } from "../lib/notificationSounds";
 import { sendPushToProfile } from "../lib/pushNotifications";
-import { ChannelError, type MutationAdapter } from "./adapters";
+import type { MutationAdapter } from "./adapters";
+import { ChannelError } from "./channelError";
 
 type NotificationType = Doc<"notification_log">["type"];
 

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { ScrollView, type ScrollViewInstance, View } from "react-native";
+import { InfoTip } from "@/components/shared/info-tip";
 import {
 	buildHeatmapCalendar,
 	type HeatmapCell,
@@ -19,7 +20,6 @@ import {
 } from "@/features/you/home/days-model";
 import { DaysReadout } from "@/features/you/home/insights/days-readout";
 import { useYouUi } from "@/features/you/home/you-ui";
-import { InfoTip } from "@/features/you/info-tip";
 import { Surface } from "@/features/you/surface";
 import { tap } from "@/lib/haptics";
 import { useTokenColors } from "@/lib/use-token-color";

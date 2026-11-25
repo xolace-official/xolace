@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	afterRelease,
 	dragPhase,
+	dragReach,
 	MIC_DRAG,
 	type MicPhase,
 	releaseOf,
@@ -109,5 +110,23 @@ describe("letting go", () => {
 	] as const)("from %s does %s and leaves %s", (phase, release, next) => {
 		expect(releaseOf(phase)).toBe(release);
 		expect(afterRelease(phase)).toBe(next);
+	});
+});
+
+describe("reach toward each target", () => {
+	it("is nothing at rest or when moving away", () => {
+		expect(dragReach(0, 0)).toEqual({ cancel: 0, lock: 0 });
+		expect(dragReach(-30, 30)).toEqual({ cancel: 0, lock: 0 });
+	});
+
+	it("grows toward each threshold and stops there", () => {
+		expect(dragReach(MIC_DRAG.lockArm / 2, MIC_DRAG.cancelArm / 2)).toEqual({
+			cancel: 0.5,
+			lock: 0.5,
+		});
+		expect(dragReach(MIC_DRAG.lockArm * 3, MIC_DRAG.cancelArm * 3)).toEqual({
+			cancel: 1,
+			lock: 1,
+		});
 	});
 });

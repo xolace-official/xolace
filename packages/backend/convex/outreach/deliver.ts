@@ -8,8 +8,9 @@ import {
 	type MutationCtx,
 } from "../_generated/server";
 import { quoteOpened } from "../dailyQuotes/opened";
-import { ADAPTERS, type ChannelAdapter, ChannelError } from "./adapters";
+import { ADAPTERS, type ChannelAdapter } from "./adapters";
 import { captureDelivery } from "./analytics";
+import { ChannelError } from "./channelError";
 import {
 	accountDeleted,
 	channelIneligibility,

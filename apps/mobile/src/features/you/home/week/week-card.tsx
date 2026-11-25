@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { InfoButton, InfoTip } from "@/components/shared/info-tip";
 import { COPY } from "@/features/you/copy";
 import type { IntensityWeek } from "@/features/you/home/use-you-week";
 import {
@@ -15,7 +16,6 @@ import {
 import { WeekPlot } from "@/features/you/home/week/week-plot";
 import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
-import { InfoButton, InfoTip } from "@/features/you/info-tip";
 import { Surface } from "@/features/you/surface";
 import { tap } from "@/lib/haptics";
 
