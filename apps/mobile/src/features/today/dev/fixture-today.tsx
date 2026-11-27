@@ -7,7 +7,6 @@ import { type CardMode, headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
 import { useFixtureCovers } from "./covers";
 import { FIXTURE_ACTIONS } from "./fixture-actions";
-import { FixtureFinding } from "./fixture-finding";
 import { type FixtureKindling, useFixtureKindling } from "./fixture-kindling";
 import {
 	FIXTURE_CAMPFIRE,
@@ -117,6 +116,7 @@ function FixtureToday({
 		},
 		day: FIXTURE_DAY,
 		eyebrow,
+		findingDue: finding,
 		greeting,
 		intro,
 		...kindling,
@@ -146,7 +146,7 @@ function FixtureToday({
 			}
 		>
 			<TodayProvider value={{ actions: FIXTURE_ACTIONS, state }}>
-				<TodayScreen finding={finding ? <FixtureFinding /> : undefined} />
+				<TodayScreen />
 			</TodayProvider>
 		</ScopedTheme>
 	);

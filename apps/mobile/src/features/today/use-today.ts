@@ -11,6 +11,7 @@ import { playSoftPress } from "@/lib/haptics";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import { usePushOnce } from "@/lib/use-push-once";
+import { useFinding } from "./finding/use-finding";
 import { useRekindle } from "./rekindle/use-rekindle";
 import type { Today } from "./today-data";
 import {
@@ -125,12 +126,15 @@ export function useTodayData(): Today {
 	const lower = useLowerModules();
 	const moduleActions = useTodayActions();
 	const { offer: rekindle, rekindle: spendSaver } = useRekindle();
+	const finding = useFinding(now);
 
 	const pushOnce = usePushOnce();
 
 	return {
 		actions: {
 			...moduleActions,
+			answerFinding: finding.answer,
+			dismissFinding: finding.dismiss,
 			openDoor: (door) => pushOnce(() => router.push(DOOR_HREF[door])),
 			openHelp: () => router.push("/crisis-resources"),
 			openKindling: () =>
@@ -162,6 +166,7 @@ export function useTodayData(): Today {
 			},
 			day,
 			eyebrow,
+			findingDue: finding.due,
 			greeting,
 			intro,
 			kindling,

@@ -15,6 +15,7 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { useQualityGate } from "@/lib/motion/use-quality-gate";
 import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 import { CampfireCard } from "./campfire/campfire-card";
+import { FindingCard } from "./finding/finding-card";
 import { TodayHeader } from "./header/today-header";
 import { ReflectCard } from "./hero/reflect-card";
 import { KindlingCard } from "./kindling/kindling-card";
@@ -34,12 +35,11 @@ const PAGE_X = 16;
 const INTRO_WINDOW_MS = 3200;
 
 type Props = {
-	finding?: ReactNode;
 	revealed?: boolean;
 	pill?: (fallback: ReactNode) => ReactNode;
 };
 
-export function TodayScreen({ finding, pill, revealed = true }: Props) {
+export function TodayScreen({ pill, revealed = true }: Props) {
 	const insets = useSafeAreaInsets();
 	const { height } = useWindowDimensions();
 	const { state } = useToday();
@@ -85,7 +85,6 @@ export function TodayScreen({ finding, pill, revealed = true }: Props) {
 						style={{ backgroundColor: top, height, top: -height }}
 					/>
 					<TodayBody
-						finding={finding}
 						flameClock={flameClock}
 						key={state.day}
 						live={live}
@@ -111,18 +110,11 @@ export function TodayScreen({ finding, pill, revealed = true }: Props) {
 
 type BodyProps = Omit<TodayFrameValue, "intro" | "low" | "waiting"> & {
 	flameClock: SharedValue<number>;
-	finding: ReactNode;
 	pill: Props["pill"];
 	revealed: boolean;
 };
 
-function TodayBody({
-	flameClock,
-	finding,
-	pill,
-	revealed,
-	...frame
-}: BodyProps) {
+function TodayBody({ flameClock, pill, revealed, ...frame }: BodyProps) {
 	const { width } = useWindowDimensions();
 	const { state } = useToday();
 	const [intro, setIntro] = useState(state.intro);
@@ -150,7 +142,9 @@ function TodayBody({
 				<>
 					<KindlingCard width={width - PAGE_X * 2} />
 					<CampfireCard />
-					{finding ? <TodaySlot>{finding}</TodaySlot> : null}
+					<TodaySlot>
+						<FindingCard />
+					</TodaySlot>
 					<ListenRail />
 					<MomentsSection />
 					<WordCard />
