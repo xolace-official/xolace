@@ -1,10 +1,10 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useAction } from "convex/react";
 import * as Clipboard from "expo-clipboard";
-import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { Linking } from "react-native";
+import { toast } from "@/components/shared/toast";
 import {
 	deviceRegion,
 	TELEGRAM_OUTREACH_CONSENT_VERSION,
@@ -42,7 +42,6 @@ export function useTelegramLink(
 ) {
 	const createLink = useAction(api.outreach.telegram.link.createLink);
 	const posthog = usePostHog();
-	const { toast } = useToast();
 	const [step, dispatch] = useReducer(linkFlow, "idle");
 	const [minting, setMinting] = useState(false);
 	const minted = useRef<Minted | null>(null);
@@ -107,7 +106,7 @@ export function useTelegramLink(
 			minted.current = { at: Date.now(), url };
 			return minted.current;
 		} catch (error) {
-			toast.show({ label: mintFailure(error), variant: "danger" });
+			toast(mintFailure(error), { variant: "danger" });
 			return null;
 		} finally {
 			setMinting(false);
@@ -146,9 +145,8 @@ export function useTelegramLink(
 			await Linking.openURL(link.url);
 			handOff(link);
 		} catch {
-			toast.show({
+			toast("Couldn't open Telegram", {
 				description: "Copy the link and open it where Telegram is installed.",
-				label: "Couldn't open Telegram",
 				variant: "warning",
 			});
 		}
@@ -163,9 +161,8 @@ export function useTelegramLink(
 		await Clipboard.setStringAsync(link.url);
 		posthog.capture("channel_link_copied", { channel: "telegram" });
 		handOff(link);
-		toast.show({
+		toast("Link copied", {
 			description: "Open it in Telegram on your other device. It works once.",
-			label: "Link copied",
 		});
 	};
 
