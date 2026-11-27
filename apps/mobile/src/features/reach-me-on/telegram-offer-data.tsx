@@ -8,7 +8,7 @@ import {
 export type TelegramOffer = {
 	state: {
 		visible: boolean;
-		offline: boolean;
+		cantReach: boolean;
 		link: { step: LinkStep; minting: boolean };
 	};
 	actions: {

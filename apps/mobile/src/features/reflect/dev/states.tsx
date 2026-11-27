@@ -79,7 +79,12 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "offline",
 		title: "Offline during the wait",
-		...reflect({ ...SENT, offline: true, stage: "wait" }),
+		...reflect({ ...SENT, reach: "offline", stage: "wait" }),
+	},
+	{
+		id: "cant-reach",
+		title: "Xolace can't be reached during the wait (internet works)",
+		...reflect({ ...SENT, reach: "cant_reach", stage: "wait" }),
 	},
 	{
 		id: "error",

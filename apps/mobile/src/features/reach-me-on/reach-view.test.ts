@@ -5,6 +5,7 @@ import {
 	reachRowValue,
 	sheetOrder,
 	telegramCard,
+	unreachableNotice,
 } from "@/features/reach-me-on/reach-view";
 
 describe("reachRowValue", () => {
@@ -204,5 +205,21 @@ describe("sheetOrder", () => {
 
 	it("shows push alone where the deployment offers no Telegram", () => {
 		expect(sheetOrder([push()]).map((e) => e.channel)).toEqual(["push"]);
+	});
+});
+
+describe("unreachableNotice", () => {
+	it("says offline, with the no-wifi mark, only when the device is offline", () => {
+		expect(unreachableNotice("offline")).toEqual({
+			icon: { android: "wifi_off", ios: "wifi.slash" },
+			line: "You're offline. Changes wait until the connection is back.",
+		});
+	});
+
+	it("says Xolace can't be reached when the internet works", () => {
+		expect(unreachableNotice("cant_reach")).toEqual({
+			icon: { android: "cloud_off", ios: "icloud.slash" },
+			line: "Can't reach Xolace right now. Changes wait until it's back.",
+		});
 	});
 });

@@ -80,6 +80,13 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   sheets via `@gorhom/bottom-sheet`, sheets that are routes via `fitSheet`.
 - **State:** see "Feature shape". Backend calls live in the feature's `use-*.ts` data
   hook, never in components.
+- **Connection:** `useOffline()`, `useCantReachXolace()` and `useReach()` from
+  `src/lib/connection/use-connection.ts` (one model, 3 s grace, root glossary's words).
+  Copy says "offline" only when the device is (`useReach()`). New code never reads NetInfo
+  or Convex's connection state itself. The root "You're offline." banner is a host
+  (`features/offline-banner/`); a screen with its own connection message calls
+  `useClaimOfflineMessage()` (`src/lib/connection/use-offline-claim.ts`) and the banner
+  hides while that screen is focused.
 - **Convex reads with user-driven args** (paging, filters, tabs): `useStableQuery` /
   `useStablePaginatedQuery`, so the UI doesn't blank while new args load.
 - **Reanimated:** `.get()` / `.set()` on shared values, never `.value`.

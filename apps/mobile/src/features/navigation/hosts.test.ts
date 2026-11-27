@@ -19,6 +19,9 @@ vi.mock("@/features/letters/late-risk-host", () => ({
 vi.mock("@/features/quotes/reminders/reminder-handover-host", () => ({
 	ReminderHandoverHost: () => null,
 }));
+vi.mock("@/features/offline-banner/offline-banner-host", () => ({
+	OfflineBannerHost: () => null,
+}));
 vi.mock("@/features/ratings/open-ask-host", () => ({
 	OpenAskHost: () => null,
 }));

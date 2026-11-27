@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/expo";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import type { ReactNode } from "react";
+import { ConnectionProvider } from "@/lib/connection/connection-provider";
 import { instrumentedTokenCache } from "@/lib/instrumented-token-cache";
 import { AccountBootstrapBoundary } from "./account-bootstrap-boundary";
 import { AuthSyncGuard } from "./auth-sync-guard";
@@ -21,8 +22,10 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
 			tokenCache={instrumentedTokenCache}
 		>
 			<ConvexProviderWithClerk client={convex} useAuth={useResilientClerkAuth}>
-				<AuthSyncGuard />
-				<AccountBootstrapBoundary>{children}</AccountBootstrapBoundary>
+				<ConnectionProvider>
+					<AuthSyncGuard />
+					<AccountBootstrapBoundary>{children}</AccountBootstrapBoundary>
+				</ConnectionProvider>
 			</ConvexProviderWithClerk>
 		</ClerkProvider>
 	);

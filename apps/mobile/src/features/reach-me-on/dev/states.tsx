@@ -27,8 +27,14 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "offline",
 		options: OPTIONS,
-		Screen: () => <FixtureSheet channels={LINKED} offline />,
+		Screen: () => <FixtureSheet channels={LINKED} reach="offline" />,
 		title: "Offline: the banner, actions dimmed",
+	},
+	{
+		id: "cant-reach",
+		options: OPTIONS,
+		Screen: () => <FixtureSheet channels={LINKED} reach="cant_reach" />,
+		title: "Can't reach Xolace (internet works): the banner, actions dimmed",
 	},
 	{
 		id: "needs-plus",
@@ -69,8 +75,8 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "offer-offline",
 		options: OFFER_OPTIONS,
-		Screen: () => <FixtureOffer offline />,
-		title: "Check-in offer, offline: Link dimmed",
+		Screen: () => <FixtureOffer cantReach />,
+		title: "Check-in offer, can't reach Xolace: Link dimmed",
 	},
 	{
 		id: "offer-linking",

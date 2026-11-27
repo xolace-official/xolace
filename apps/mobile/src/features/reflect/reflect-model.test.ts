@@ -13,6 +13,7 @@ import {
 	stageOf,
 	takeCountdown,
 	timeline,
+	unreachableLine,
 	WRITE_IN,
 	waitError,
 	waitStageOf,
@@ -289,5 +290,19 @@ describe("takeCountdown", () => {
 	it("stays quiet before then, and with no take", () => {
 		expect(takeCountdown(30_001)).toBeNull();
 		expect(takeCountdown(null)).toBeNull();
+	});
+});
+
+describe("the wait's line when Xolace can't be reached", () => {
+	it("says offline only when the device is offline", () => {
+		expect(unreachableLine("offline")).toBe(
+			"You’re offline. Your words are kept here, and they’ll go when you’re back."
+		);
+	});
+
+	it("says Xolace can't be reached when the internet works", () => {
+		expect(unreachableLine("cant_reach")).toBe(
+			"Can’t reach Xolace right now. Your words are kept here, and they’ll go when it’s back."
+		);
 	});
 });

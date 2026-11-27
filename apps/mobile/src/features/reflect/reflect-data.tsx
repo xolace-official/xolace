@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, use } from "react";
+import type { Reach } from "@/lib/connection/connection-model";
 import type { NotQuiteReason, PathId } from "./copy";
 import type {
 	CareStep,
@@ -39,7 +40,7 @@ export type Reflect = {
 
 		waitStage: number;
 		slow: boolean;
-		offline: boolean;
+		reach: Reach;
 		error: WaitError | null;
 		liftN: number;
 

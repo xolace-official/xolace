@@ -6,7 +6,7 @@ import { useIsPreview } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 import { dwellLeft } from "@/features/lantern/reader/reader-model";
-import { useConnected } from "@/features/lantern/reader/use-connected";
+import { useCantReachXolace } from "@/lib/connection/use-connection";
 import { type ReaderFrom, trackLibrary } from "@/lib/library-analytics";
 
 type EntryId = Id<"library_entries">;
@@ -118,7 +118,7 @@ export function useReadSignals(n: {
 	}, [finished, posthog, slug, isPreview]);
 
 	const completeStep = useMutation(api.paths.completeStep);
-	const connected = useConnected();
+	const connected = !useCantReachXolace();
 	const tended = useRef(false);
 	const tendAttempts = useRef(0);
 	useEffect(() => {

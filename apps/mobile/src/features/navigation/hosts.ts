@@ -5,6 +5,7 @@ import { FeedbackShake } from "@/features/feedback/shake/feedback-shake";
 import { useLaunch, useLaunchRevealed } from "@/features/launch/launch-store";
 import { LateRiskHost } from "@/features/letters/late-risk-host";
 import { isPresentedRoute } from "@/features/navigation/presented-routes";
+import { OfflineBannerHost } from "@/features/offline-banner/offline-banner-host";
 import { GoneHost } from "@/features/peer-reflection/gone-host";
 import { NowPlayingHost } from "@/features/player/now-playing/now-playing-host";
 import { ReminderHandoverHost } from "@/features/quotes/reminders/reminder-handover-host";
@@ -23,6 +24,10 @@ function LateRisk() {
 	return createElement(LateRiskHost, { isPresented: isPresentedRoute });
 }
 
+function OfflineBanner() {
+	return createElement(OfflineBannerHost, { isPresented: isPresentedRoute });
+}
+
 function OpenAsk() {
 	const [firstRun] = useState(() => useLaunch.getState().phase === "gone");
 	return createElement(OpenAskHost, {
@@ -32,6 +37,8 @@ function OpenAsk() {
 }
 
 export const ROOT_HOSTS: readonly RootHost[] = [
+	// First, so a host that draws over every screen (the arrivals moment) covers the banner.
+	{ Host: OfflineBanner, name: "offline-banner" },
 	{ Host: Arrivals, name: "arrivals" },
 	{ Host: GoneHost, name: "peer-reflections-gone" },
 	{ Host: NowPlayingHost, name: "now-playing" },
