@@ -25,4 +25,5 @@ export const connectScreens: readonly RootScreen[] = [
 	{ name: "xolacer-setup" },
 	{ name: "xolacer-edit", options: editOptions },
 	{ name: "age-gate", options: fitSheet },
+	{ name: "rate/[conversationId]", options: fitSheet },
 ];
