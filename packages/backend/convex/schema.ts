@@ -242,6 +242,13 @@ export default defineSchema({
 		.index("by_family_and_topic", ["family", "topic"])
 		.index("by_family_and_secondaryTopic", ["family", "secondaryTopic"])
 		.index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
+		// Browse hub (browse/hub.ts): the New pool's top-up, newest first. Not
+		// redundant with the two below: they order by their second field.
+		.index("by_active", ["active"])
+		// Browse hub: the New pool's fresh tracks, latest window first.
+		.index("by_active_and_newUntil", ["active", "newUntil"])
+		// Browse hub hero: the hand-picked track.
+		.index("by_active_and_featured", ["active", "featured"])
 		// Explore's "Five minutes or less" (B6): short active tracks of a family.
 		.index("by_family_and_active_and_durationSec", [
 			"family",
@@ -2703,6 +2710,17 @@ export default defineSchema({
 	})
 		.index("by_key", ["key"])
 		.index("by_active_and_order", ["active", "order"]),
+
+	// One row per theme a `quotes` row carries, so the nightly curated pick
+	// (quotes.pickCuratedQuote) reads the quotes of a few themes instead of the
+	// whole library for every person. Written with the quote by `quotes.seed`;
+	// `migrations:backfillQuoteThemes` fills it for older rows.
+	quote_themes: defineTable({
+		quoteId: v.id("quotes"),
+		theme: v.string(),
+	})
+		.index("by_theme", ["theme"])
+		.index("by_quoteId", ["quoteId"]),
 
 	// ===========================================================
 	// 13. QUOTES LIBRARY

@@ -1,7 +1,7 @@
 import { type ObjectType, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { type QueryCtx, query } from "../_generated/server";
-import { requireAuth } from "../lib/auth";
+import { requireSignedIn } from "../lib/auth";
 import { attributionFor, familyValidator, thumbUrlFor } from "./catalogue";
 
 /**
@@ -30,10 +30,8 @@ const DAY_MS = 24 * HOUR_MS;
  * (newest window first), topped up with the most recently ingested active
  * tracks so the shelf never empties once every window has passed — it did,
  * on 2026-10-17, when the whole prod manifest's staggered `newUntil`s ran out.
- * No new index — the catalogue is a bounded few hundred rows (docs/paths-v1.md
- * decision 18), so a bounded read + in-memory sort beats indexing a field
- * most rows leave unset. Callers read newest-first, so a catalogue past
- * 1000 rows drops its oldest tracks, not the ones the top-up wants.
+ * Pass it rows newest-first. `readNewPool` reads just the rows it needs;
+ * `getForHour` passes the tracks it has already read.
  */
 export function newPool(tracks: Doc<"audio_tracks">[], now: number) {
 	const active = tracks.filter((t) => t.active);
@@ -45,6 +43,35 @@ export function newPool(tracks: Doc<"audio_tracks">[], now: number) {
 		.filter((t) => !freshIds.has(t._id))
 		.sort((a, b) => b._creationTime - a._creationTime);
 	return [...fresh, ...recent].slice(0, POOL_SIZE);
+}
+
+/**
+ * `newPool` over the catalogue, reading at most `2 * POOL_SIZE` rows instead
+ * of every track: each call used to read all of `audio_tracks` (442 rows in
+ * prod) to show four, and it is the hub's most-read query. The fresh rows come
+ * off `by_active_and_newUntil`, latest window first; the top-up off
+ * `by_active`, newest first. With `f` fresh rows the pool needs `POOL_SIZE - f`
+ * others, and the newest `POOL_SIZE` hold at least that many after skipping
+ * the fresh ones.
+ */
+export async function readNewPool(ctx: QueryCtx, now: number) {
+	const fresh = await ctx.db
+		.query("audio_tracks")
+		.withIndex("by_active_and_newUntil", (q) =>
+			q.eq("active", true).gt("newUntil", now)
+		)
+		.order("desc")
+		.take(POOL_SIZE);
+	const freshIds = new Set(fresh.map((t) => t._id));
+	const recent = await ctx.db
+		.query("audio_tracks")
+		.withIndex("by_active", (q) => q.eq("active", true))
+		.order("desc")
+		.take(POOL_SIZE);
+	return newPool(
+		[...fresh, ...recent.filter((t) => !freshIds.has(t._id))],
+		now
+	);
 }
 
 export const getNewShelfArgs = {
@@ -65,7 +92,7 @@ export async function getNewShelfCore(
 	ctx: QueryCtx,
 	{ day, hour }: ObjectType<typeof getNewShelfArgs>
 ) {
-	await requireAuth(ctx);
+	await requireSignedIn(ctx);
 	const now =
 		hour === undefined
 			? day === undefined
@@ -73,10 +100,7 @@ export async function getNewShelfCore(
 				: day * DAY_MS
 			: hour * HOUR_MS;
 
-	const pool = newPool(
-		await ctx.db.query("audio_tracks").order("desc").take(1000),
-		now
-	);
+	const pool = await readNewPool(ctx, now);
 	const offset = pool.length > 0 && day !== undefined ? day % pool.length : 0;
 	const shelf = [...pool.slice(offset), ...pool.slice(0, offset)].slice(
 		0,
@@ -104,16 +128,20 @@ export const getNewShelf = query({
 
 /**
  * Browse hub hero: the hand-picked `featured` active track, if any — set from
- * the Convex dashboard, no ordering rule needed since only one shows. Falls
- * back to the head of the New pool, so an unflagged catalogue still shows
+ * the Convex dashboard; when several are flagged the newest wins. Falls back
+ * to the head of the New pool, so an unflagged catalogue still shows
  * something.
  */
 export async function getFeaturedCore(ctx: QueryCtx) {
-	await requireAuth(ctx);
-	const tracks = await ctx.db.query("audio_tracks").order("desc").take(1000);
-	const picked =
-		tracks.find((t) => t.active && t.featured) ??
-		newPool(tracks, Date.now())[0];
+	await requireSignedIn(ctx);
+	const featured = await ctx.db
+		.query("audio_tracks")
+		.withIndex("by_active_and_featured", (q) =>
+			q.eq("active", true).eq("featured", true)
+		)
+		.order("desc")
+		.first();
+	const picked = featured ?? (await readNewPool(ctx, Date.now()))[0];
 	if (!picked) {
 		return null;
 	}

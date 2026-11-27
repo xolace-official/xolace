@@ -8,8 +8,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
-import { asNewUser, type SeededUser } from "../test/harness.helpers";
+import type { QueryCtx } from "../_generated/server";
+import {
+	asNewUser,
+	asUnauthed,
+	asUser,
+	makeIdentity,
+	type SeededUser,
+} from "../test/harness.helpers";
 import { aggregatesMock } from "../test/mocks.helpers";
+import { getFeaturedCore, getNewShelfCore } from "./hub";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../ai/paths/audioTracks", () => ({
@@ -133,6 +141,25 @@ describe("browse.hub.getNewShelf", () => {
 		expect(await shelf(user)).toEqual(["e", "d", "c", "b"]);
 	});
 
+	it("fills the pool when the fresh tracks are also the newest", async () => {
+		const user = await asNewUser();
+		const older = Array.from({ length: 14 }, (_, i) => `o${i + 1}`);
+		await seed(user, [
+			...older.map((s) => track(s)),
+			track("f1", { newUntil: FAR_FUTURE }),
+			track("f2", { newUntil: FAR_FUTURE - HOUR_MS }),
+		]);
+
+		// Pool = f1, f2, then the 10 newest others, o14..o5. 20_411 % 12 = 11:
+		// the pool's last, then back to its head.
+		expect(await shelf(user, { day: 20_411 })).toEqual([
+			"o5",
+			"f1",
+			"f2",
+			"o14",
+		]);
+	});
+
 	it("is empty for an empty catalogue, with or without a day", async () => {
 		const user = await asNewUser();
 		expect(await shelf(user)).toEqual([]);
@@ -232,6 +259,18 @@ describe("browse.hub.getFeatured", () => {
 		});
 	});
 
+	it("returns the newest when several are featured", async () => {
+		const user = await asNewUser();
+		await seed(user, [
+			track("older-pick", { featured: true }),
+			track("newer-pick", { featured: true }),
+			track("plain"),
+		]);
+		expect((await user.t.query(api.browse.hub.getFeatured, {}))?.slug).toBe(
+			"newer-pick"
+		);
+	});
+
 	it("falls back to the head of the New pool when no active track is featured", async () => {
 		const user = await asNewUser();
 		await seed(user, [
@@ -259,5 +298,70 @@ describe("browse.hub.getFeatured", () => {
 	it("is null for an empty catalogue", async () => {
 		const user = await asNewUser();
 		expect(await user.t.query(api.browse.hub.getFeatured, {})).toBeNull();
+	});
+});
+
+/**
+ * The hub is open to anyone signed in and says nothing about them, so it
+ * reads no row of theirs: a query re-runs whenever a row it read changes, and
+ * streaks, sparks and achievements patch `emotional_profiles` all day. Reading
+ * it made every open shelf re-read the catalogue on each of those writes.
+ */
+describe("browse.hub reads no row about the caller", () => {
+	/** Runs `read` as a signed-in caller, recording every table it reads. */
+	const tablesRead = (user: SeededUser, read: (ctx: QueryCtx) => unknown) =>
+		user.root.run(async (ctx) => {
+			const tables = new Set<string>();
+			const db = new Proxy(ctx.db, {
+				get(target, prop, receiver) {
+					if (prop === "query" || prop === "get") {
+						return (table: string, ...rest: unknown[]) => {
+							tables.add(table);
+							return Reflect.apply(
+								Reflect.get(target, prop, receiver),
+								target,
+								[table, ...rest]
+							);
+						};
+					}
+					const value = Reflect.get(target, prop, receiver);
+					return typeof value === "function" ? value.bind(target) : value;
+				},
+			});
+			const auth = {
+				...ctx.auth,
+				getUserIdentity: async () => ({
+					...makeIdentity(),
+					tokenIdentifier: `${makeIdentity().issuer}|${makeIdentity().subject}`,
+				}),
+			};
+			await read({ ...ctx, auth, db } as unknown as QueryCtx);
+			return [...tables].sort();
+		});
+
+	it("New shelf and hero read only the catalogue", async () => {
+		const user = await asNewUser();
+		await seed(user, [track("a", { newUntil: FAR_FUTURE }), track("b")]);
+
+		expect(await tablesRead(user, (ctx) => getNewShelfCore(ctx, {}))).toEqual([
+			"audio_tracks",
+		]);
+		expect(await tablesRead(user, getFeaturedCore)).toEqual(["audio_tracks"]);
+	});
+
+	it("needs only a sign-in, not a users row", async () => {
+		const root = asUnauthed();
+		await root.run(async (ctx) => {
+			await ctx.db.insert("audio_tracks", track("a"));
+		});
+
+		expect(
+			(await asUser(1, root).query(api.browse.hub.getNewShelf, {})).map(
+				(t) => t.slug
+			)
+		).toEqual(["a"]);
+		await expect(root.query(api.browse.hub.getFeatured, {})).rejects.toThrow(
+			/Not authenticated/
+		);
 	});
 });
