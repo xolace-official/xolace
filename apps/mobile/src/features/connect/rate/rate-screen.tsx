@@ -1,37 +1,34 @@
-import { api } from "@xolace/backend/convex/_generated/api";
-import type { Id } from "@xolace/backend/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
-import { useRouter } from "expo-router";
 import { type ReactNode, useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { CtaButton } from "@/components/shared/cta-button";
 import { PressScale } from "@/components/shared/press-scale";
 import { Bone, SkeletonBreath } from "@/components/shared/skeleton";
-import { toast } from "@/components/shared/toast";
-import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
 import { playSoftPress } from "@/lib/haptics";
+import { COPY } from "../copy";
+import { RateAvatar } from "./rate-avatar";
+import { useRateScreen } from "./rate-data";
 import { RatingPicker } from "./rating-stars";
 
 const SHEET_BOTTOM = 18;
+/** iOS already ends the sheet ~30pt below its content, clear of the home indicator. */
+const IOS_SHEET_BOTTOM = 8;
 
-export function RateConversationScreen({
-	conversationId,
-}: {
-	conversationId: string;
-}) {
-	const router = useRouter();
-	const conversation = useQuery(api.xolacerChat.getConversation, {
-		conversationId: conversationId as Id<"xolacer_conversations">,
-	});
-	const rateConversation = useMutation(api.xolacerChat.rateConversation);
+export function RateScreen() {
+	const {
+		state: { conversation },
+		actions,
+	} = useRateScreen();
 	const [choice, setChoice] = useState<number | undefined>(undefined);
 
 	if (conversation === undefined) {
 		return (
 			<Sheet>
-				<SkeletonBreath className="items-center gap-4 py-6" label="Loading">
+				<SkeletonBreath
+					className="items-center gap-4 py-6"
+					label={COPY.rate.loading}
+				>
 					<Bone h={76} r={38} w={76} />
 					<Bone h={24} w={224} />
 					<Bone h={40} r={12} w={192} />
@@ -40,16 +37,15 @@ export function RateConversationScreen({
 		);
 	}
 
-	if (conversation === null || !conversation.canRate) {
+	if (conversation === null) {
 		return (
 			<Sheet>
 				<View className="gap-2 px-[22px] py-6">
 					<AppText accessibilityRole="header" center variant="headline">
-						Nothing to rate here
+						{COPY.rate.nothingTitle}
 					</AppText>
 					<AppText center color="muted" variant="footnote">
-						Ratings only come from conversations where messages were actually
-						exchanged.
+						{COPY.rate.nothingBody}
 					</AppText>
 				</View>
 			</Sheet>
@@ -59,24 +55,17 @@ export function RateConversationScreen({
 	const rating = choice ?? conversation.myRating;
 
 	const handleSend = () => {
-		if (rating === undefined) {
-			return;
+		if (rating !== undefined) {
+			actions.send(rating);
 		}
-		rateConversation({ conversationId: conversation.id, rating })
-			.then(() => {
-				toast("Thanks — that stays between you and Xolace.");
-				router.back();
-			})
-			.catch(() => toast("Couldn't send that. Try again."));
 	};
 
 	return (
 		<Sheet>
 			<View className="items-center px-[22px]">
-				<XolacerAvatar
+				<RateAvatar
 					name={conversation.counterpartName}
 					photoUrl={conversation.counterpartPhotoUrl}
-					size="lg"
 				/>
 				<AppText
 					accessibilityRole="header"
@@ -84,11 +73,10 @@ export function RateConversationScreen({
 					className="pt-4"
 					variant="headline"
 				>
-					How was this conversation?
+					{COPY.rate.title}
 				</AppText>
 				<AppText center className="pt-2" color="muted" variant="footnote">
-					Only you and Xolace see this. {conversation.counterpartName} sees an
-					overall score, never which conversation it came from.
+					{COPY.rate.privacy(conversation.counterpartName)}
 				</AppText>
 				<View className="py-6">
 					<RatingPicker onSelect={setChoice} value={rating} />
@@ -98,19 +86,23 @@ export function RateConversationScreen({
 				<CtaButton
 					disabled={rating === undefined}
 					haptic={playSoftPress}
-					label={conversation.myRating === undefined ? "Send" : "Update"}
+					label={
+						conversation.myRating === undefined
+							? COPY.rate.send
+							: COPY.rate.update
+					}
 					onPress={handleSend}
 				/>
 			</View>
 			<View className="mx-[22px] mt-3 mb-1.5 h-px bg-separator" />
 			<PressScale
-				accessibilityLabel="Skip rating"
+				accessibilityLabel={COPY.rate.skipA11y}
 				className="h-12 justify-center px-[22px]"
 				haptic={playSoftPress}
-				onPress={() => router.back()}
+				onPress={actions.skip}
 			>
 				<AppText center color="subtle" variant="body">
-					Skip
+					{COPY.rate.skip}
 				</AppText>
 			</PressScale>
 		</Sheet>
@@ -122,7 +114,12 @@ function Sheet({ children }: { children: ReactNode }) {
 	return (
 		<View
 			className="pt-[26px]"
-			style={{ paddingBottom: Math.max(insets.bottom, SHEET_BOTTOM) }}
+			style={{
+				paddingBottom:
+					Platform.OS === "ios"
+						? IOS_SHEET_BOTTOM
+						: Math.max(insets.bottom, SHEET_BOTTOM),
+			}}
 		>
 			{children}
 		</View>

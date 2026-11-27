@@ -1,7 +1,12 @@
 import { useLocalSearchParams } from "expo-router";
-import { RateConversationScreen } from "@/features/xolacer-chat/components/rate-conversation-screen";
+import { RateData } from "@/features/connect/rate/rate-data";
+import { RateScreen } from "@/features/connect/rate/rate-screen";
 
 export default function RateConversationRoute() {
 	const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
-	return <RateConversationScreen conversationId={conversationId} />;
+	return (
+		<RateData conversationId={conversationId}>
+			<RateScreen />
+		</RateData>
+	);
 }

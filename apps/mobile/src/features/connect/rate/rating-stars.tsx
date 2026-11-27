@@ -3,6 +3,7 @@ import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColors } from "@/lib/use-token-color";
+import { COPY } from "../copy";
 
 const FILLED = { android: "star", ios: "star.fill" } as const;
 const VALUES = [1, 2, 3, 4, 5];
@@ -22,7 +23,7 @@ export function RatingPicker({
 				const filled = value !== undefined && star <= value;
 				return (
 					<PressScale
-						accessibilityLabel={`Rate ${star} out of 5`}
+						accessibilityLabel={COPY.rate.starA11y(star)}
 						accessibilityState={{ selected: filled }}
 						className={filled ? "opacity-100" : "opacity-30"}
 						haptic={playSoftPress}
