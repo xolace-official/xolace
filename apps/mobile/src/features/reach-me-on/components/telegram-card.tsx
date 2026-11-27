@@ -40,9 +40,10 @@ export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 	const view = telegramCard(entry);
 	const ember = useTokenColor("ember-ink");
 	const {
-		state: { link, offline },
+		state: { link, reach },
 		actions,
 	} = useReachSheet();
+	const cantReach = reach !== "reachable";
 	const [confirmUnlink, setConfirmUnlink] = useState(false);
 	const linking = link.step !== "idle";
 
@@ -59,7 +60,7 @@ export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 		<View>
 			<ChannelCard
 				channel="telegram"
-				disabled={offline}
+				disabled={cantReach}
 				mark={
 					link.step === "idle" || link.step === "linked"
 						? orderMark(entry)
@@ -96,7 +97,7 @@ export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 							<View className="flex-row flex-wrap gap-2">
 								{view.actions.map((action) => (
 									<Pill
-										disabled={offline && action !== "get_plus"}
+										disabled={cantReach && action !== "get_plus"}
 										key={action}
 										label={ACTION_LABEL[action]}
 										onPress={run[action]}
@@ -108,7 +109,7 @@ export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 					</>
 				) : (
 					<LinkSteps
-						disabled={offline}
+						disabled={cantReach}
 						minting={link.minting}
 						onCancel={actions.link.cancel}
 						onCopyLink={actions.link.copyLink}

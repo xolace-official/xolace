@@ -13,7 +13,7 @@ import { FACE } from "../face-poses";
 import { LAYOUT, useBoardY } from "../layout";
 import { useReflect } from "../reflect-data";
 import { useReflectDraw } from "../reflect-draw";
-import type { WaitError } from "../reflect-model";
+import { unreachableLine, type WaitError } from "../reflect-model";
 import { YourWords } from "../your-words";
 import { Enso } from "./enso";
 import { type CardAction, SlowCard } from "./slow-card";
@@ -26,7 +26,8 @@ const CARD_IN = { ms: 400, rise: 10 } as const;
 
 export function WaitStage() {
 	const { state, actions } = useReflect();
-	const { stage, waitStage, slow, offline, error } = state;
+	const { stage, waitStage, slow, reach, error } = state;
+	const unreachable = reach === "reachable" ? null : reach;
 	const { late, reduced, live, low } = useReflectDraw();
 	const y = useBoardY();
 	const { width } = useWindowDimensions();
@@ -39,7 +40,7 @@ export function WaitStage() {
 	if (kept && !slow) {
 		setKept(false);
 	}
-	const stuck = (slow && !kept) || offline || error !== null;
+	const stuck = (slow && !kept) || unreachable !== null || error !== null;
 
 	const failed = error !== null;
 	useEffect(() => {
@@ -78,16 +79,19 @@ export function WaitStage() {
 			primary: primary[error.kind],
 			secondary: startOver,
 		};
-	} else if (offline) {
-		card = { body: W.offlineCard, primary: stepAway };
-	} else {
+	} else if (unreachable === null) {
 		card = {
 			body: W.slow,
 			primary: stepAway,
 			secondary: { go: () => setKept(true), label: W.keepWaiting },
 		};
+	} else {
+		card = { body: W.unreachableCard, primary: stepAway };
 	}
-	const line = offline ? W.offline : (W.stages[waitStage] ?? W.stages[0]);
+	const line =
+		unreachable === null
+			? (W.stages[waitStage] ?? W.stages[0])
+			: unreachableLine(unreachable);
 	const wordsAt = { x: LAYOUT.words.side, y: y(LAYOUT.words.top) };
 
 	return (
@@ -119,7 +123,7 @@ export function WaitStage() {
 					landed={landed}
 					late={late}
 					low={low}
-					mode={offline ? "offline" : "paint"}
+					mode={unreachable === null ? "paint" : "offline"}
 					reduced={reduced}
 					running={live}
 					size={E.size}

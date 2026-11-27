@@ -1,11 +1,27 @@
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
+import type { Reach } from "@/lib/connection/connection-model";
 
 export type ChannelEntry = FunctionReturnType<
 	typeof api.outreach.reachMe.listChannels
 >[number];
 
 export type Channel = ChannelEntry["channel"];
+
+const UNREACHABLE_NOTICE = {
+	cant_reach: {
+		icon: { android: "cloud_off", ios: "icloud.slash" },
+		line: "Can't reach Xolace right now. Changes wait until it's back.",
+	},
+	offline: {
+		icon: { android: "wifi_off", ios: "wifi.slash" },
+		line: "You're offline. Changes wait until the connection is back.",
+	},
+} as const;
+
+/** The sheet's notice: "offline" only when the device is, else Xolace can't be reached. */
+export const unreachableNotice = (reach: Exclude<Reach, "reachable">) =>
+	UNREACHABLE_NOTICE[reach];
 
 export type OrderMark = "first" | "try_first" | null;
 

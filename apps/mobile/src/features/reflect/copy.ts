@@ -138,14 +138,14 @@ export const COPY = {
 	},
 	wait: {
 		backOnline: "I’m back online",
+		cantReach:
+			"Can’t reach Xolace right now. Your words are kept here, and they’ll go when it’s back.",
 		failed: "Something went wrong.",
 		keepsGoing: "It keeps going. Today will show when it’s ready.",
 		keepWaiting: "Keep waiting",
 		limitMore: "Xolace+ raises the hourly limit.",
 		offline:
 			"You’re offline. Your words are kept here, and they’ll go when you’re back.",
-		offlineCard:
-			"Nothing is lost. You can close Reflect; your words wait on the Today card.",
 		rejected:
 			"This is something I can't reflect back here. If it's weighing on you, talking to someone can help.",
 		seePlus: "See Xolace+",
@@ -160,6 +160,8 @@ export const COPY = {
 		stepAwayLink: "Step away, I'll keep this",
 		talkToSomeone: "Talk to someone",
 		tryAgain: "Try again",
+		unreachableCard:
+			"Nothing is lost. You can close Reflect; your words wait on the Today card.",
 		yourWords: "YOUR WORDS",
 	},
 	write: {

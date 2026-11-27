@@ -20,14 +20,14 @@ const ACTIONS: TelegramOffer["actions"] = {
 
 export function FixtureOffer({
 	step = "idle",
-	offline = false,
+	cantReach = false,
 }: {
 	step?: LinkStep;
-	offline?: boolean;
+	cantReach?: boolean;
 }) {
 	const value: TelegramOffer = {
 		actions: ACTIONS,
-		state: { link: { minting: false, step }, offline, visible: true },
+		state: { cantReach, link: { minting: false, step }, visible: true },
 	};
 	return (
 		<ScrollView

@@ -11,25 +11,26 @@ import { Icon } from "@/components/shared/icon";
 import { ChannelCard } from "@/features/reach-me-on/components/channel-card";
 import { TelegramCard } from "@/features/reach-me-on/components/telegram-card";
 import { useReachSheet } from "@/features/reach-me-on/reach-sheet-data";
-import { orderMark } from "@/features/reach-me-on/reach-view";
+import {
+	orderMark,
+	unreachableNotice,
+} from "@/features/reach-me-on/reach-view";
 import { useTokenColor } from "@/lib/use-token-color";
-
-const OFFLINE = { android: "wifi_off", ios: "wifi.slash" } as const;
-const OFFLINE_LINE =
-	"You're offline. Changes wait until the connection is back.";
 
 export const ReachMeOnSheet = () => {
 	const subtle = useTokenColor("subtle");
 	const {
-		state: { channels, offline },
+		state: { channels, reach },
 		actions: { tryFirst },
 	} = useReachSheet();
+	const notice = reach === "reachable" ? null : unreachableNotice(reach);
+	const line = notice?.line;
 	// The banner is read out when it appears: a live region on Android, an announcement on iOS.
 	useEffect(() => {
-		if (offline && Platform.OS === "ios") {
-			AccessibilityInfo.announceForAccessibility(OFFLINE_LINE);
+		if (line && Platform.OS === "ios") {
+			AccessibilityInfo.announceForAccessibility(line);
 		}
-	}, [offline]);
+	}, [line]);
 
 	return (
 		<ScrollView
@@ -44,17 +45,17 @@ export const ReachMeOnSheet = () => {
 				Where Xolace checks in on you. We use the one marked First, and the
 				other if it can&apos;t get through.
 			</AppText>
-			{offline ? (
+			{notice ? (
 				<View
 					accessibilityLiveRegion="polite"
 					className="mx-4 flex-row items-center gap-2 rounded-[16px] border-continuous bg-surface-secondary px-3.5 py-2.5"
 				>
-					<Icon color={subtle} name={OFFLINE} size={14} />
+					<Icon color={subtle} name={notice.icon} size={14} />
 					<AppText
 						className="flex-1 text-[13.5px] text-foreground/60 leading-[18px]"
 						variant="body"
 					>
-						{OFFLINE_LINE}
+						{notice.line}
 					</AppText>
 				</View>
 			) : null}
@@ -69,7 +70,7 @@ export const ReachMeOnSheet = () => {
 					) : (
 						<ChannelCard
 							channel={entry.channel}
-							disabled={offline}
+							disabled={notice !== null}
 							key={entry.channel}
 							mark={orderMark(entry)}
 							onTryFirst={() => tryFirst(entry.channel)}

@@ -26,7 +26,7 @@ export const TelegramOfferCard = () => {
 						</AppText>
 						<View className="flex-row flex-wrap gap-2">
 							<Button
-								isDisabled={state.offline}
+								isDisabled={state.cantReach}
 								onPress={() => {
 									playSoftPress();
 									link.start();
@@ -48,7 +48,7 @@ export const TelegramOfferCard = () => {
 					</>
 				) : (
 					<LinkSteps
-						disabled={state.offline}
+						disabled={state.cantReach}
 						minting={state.link.minting}
 						onCancel={link.cancel}
 						onCopyLink={link.copyLink}

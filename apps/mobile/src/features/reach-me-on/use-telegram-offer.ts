@@ -7,9 +7,9 @@ import {
 	offerMoment,
 	telegramOfferVisible,
 } from "@/features/reach-me-on/telegram-offer";
-import { useOffline } from "@/features/reach-me-on/use-offline";
 import { useReachMeOnFlag } from "@/features/reach-me-on/use-reach-channels";
 import { useTelegramLink } from "@/features/reach-me-on/use-telegram-link";
+import { useCantReachXolace } from "@/lib/connection/use-connection";
 import { useAccountFlag } from "@/store/use-account-flag";
 
 export type OfferMoment = Pick<
@@ -26,7 +26,7 @@ export function useTelegramOffer(moment: OfferMoment) {
 	);
 	const telegram = channels?.find((c) => c.channel === "telegram");
 	const { step, minting, ...link } = useTelegramLink(telegram, "offer_card");
-	const offline = useOffline();
+	const cantReach = useCantReachXolace();
 	const posthog = usePostHog();
 	const shownLogged = useRef(false);
 
@@ -59,8 +59,8 @@ export function useTelegramOffer(moment: OfferMoment) {
 			},
 		},
 		state: {
+			cantReach,
 			link: { minting, step },
-			offline,
 			visible: offered || step !== "idle",
 		},
 	};

@@ -1,6 +1,7 @@
 import type { Resource } from "@xolace/backend/convex/lib/crisisResources";
 import { ERROR_CODES, type SessionErrorCode } from "@xolace/backend/shared";
 import type { PlusStatus } from "@/features/purchases/plus-status";
+import type { Reach } from "@/lib/connection/connection-model";
 import { COPY } from "./copy";
 import { isRateLimitMessage } from "./session/session-service";
 import type { ReflectionStateName } from "./session/types";
@@ -408,6 +409,10 @@ export function resourceRows(
 	});
 	return rows.sort((a, b) => a.p - b.p).map(({ p: _p, ...row }) => row);
 }
+
+/** "Offline" only when the device is; otherwise Xolace is the one that can't be reached. */
+export const unreachableLine = (reach: Exclude<Reach, "reachable">): string =>
+	reach === "offline" ? COPY.wait.offline : COPY.wait.cantReach;
 
 export type WaitError = { kind: "rejected" | "limit" | "failed"; body: string };
 

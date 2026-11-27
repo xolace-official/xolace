@@ -2,14 +2,15 @@ import { createContext, type ReactNode, use } from "react";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import type { LinkStep } from "@/features/reach-me-on/link-flow";
 import type { Channel, ChannelEntry } from "@/features/reach-me-on/reach-view";
-import { useOffline } from "@/features/reach-me-on/use-offline";
 import { useReachChannels } from "@/features/reach-me-on/use-reach-channels";
 import { useTelegramLink } from "@/features/reach-me-on/use-telegram-link";
+import type { Reach } from "@/lib/connection/connection-model";
+import { useReach } from "@/lib/connection/use-connection";
 
 export type ReachSheet = {
 	state: {
 		channels: readonly ChannelEntry[] | undefined;
-		offline: boolean;
+		reach: Reach;
 		link: { step: LinkStep; minting: boolean };
 	};
 	actions: {
@@ -41,7 +42,7 @@ export function ReachSheetProvider({
 
 export function ReachSheetData({ children }: { children: ReactNode }) {
 	const { channels, ...channelActions } = useReachChannels();
-	const offline = useOffline();
+	const reach = useReach();
 	const { step, minting, ...link } = useTelegramLink(
 		channels?.find((c) => c.channel === "telegram")
 	);
@@ -52,7 +53,7 @@ export function ReachSheetData({ children }: { children: ReactNode }) {
 			getPlus: () => openPaywall("reach_telegram"),
 			link,
 		},
-		state: { channels, link: { minting, step }, offline },
+		state: { channels, link: { minting, step }, reach },
 	};
 	return <ReachSheetProvider value={value}>{children}</ReachSheetProvider>;
 }

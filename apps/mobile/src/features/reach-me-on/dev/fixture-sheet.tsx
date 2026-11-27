@@ -8,6 +8,7 @@ import {
 	type ChannelEntry,
 	sheetOrder,
 } from "@/features/reach-me-on/reach-view";
+import type { Reach } from "@/lib/connection/connection-model";
 
 const ignore = () => undefined;
 const ACTIONS: ReachSheet["actions"] = {
@@ -27,18 +28,18 @@ const ACTIONS: ReachSheet["actions"] = {
 export function FixtureSheet({
 	channels,
 	step = "idle",
-	offline = false,
+	reach = "reachable",
 }: {
 	channels: readonly ChannelEntry[];
 	step?: LinkStep;
-	offline?: boolean;
+	reach?: Reach;
 }) {
 	const value: ReachSheet = {
 		actions: ACTIONS,
 		state: {
 			channels: sheetOrder(channels),
 			link: { minting: false, step },
-			offline,
+			reach,
 		},
 	};
 	return (

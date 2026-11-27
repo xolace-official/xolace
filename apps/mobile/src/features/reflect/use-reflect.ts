@@ -11,6 +11,7 @@ import { toast } from "@/components/shared/toast";
 import { useSessionMode } from "@/context/session-mode-context";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useReach } from "@/lib/connection/use-connection";
 import { playSoftPress } from "@/lib/haptics";
 import { useAppStore } from "@/store/store";
 import { COPY } from "./copy";
@@ -31,7 +32,6 @@ import {
 import { reportFailure } from "./session/report-failure";
 import { useLanding } from "./session/use-landing";
 import { useMirrorVersions } from "./session/use-mirror-versions";
-import { useOffline } from "./session/use-offline";
 import { useReflectBridge } from "./session/use-reflect-bridge";
 import { useReflectionMachine } from "./session/use-reflection-machine";
 import { useTypingPause } from "./session/use-typing-pause";
@@ -53,7 +53,7 @@ export function useReflectData(): Reflect {
 	const m = useReflectionMachine();
 	const { state: s, dispatch } = m;
 	const { isNight: late } = useSessionMode();
-	const offline = useOffline();
+	const reach = useReach();
 	const set = useAppStore((st) => st.textureSetId);
 	const setTextureSet = useAppStore((st) => st.setTextureSetId);
 	const posthog = usePostHog();
@@ -274,10 +274,10 @@ export function useReflectData(): Reflect {
 			nqReason: s.missReason,
 			nqText: s.clarifyText,
 			nudge: s.screen === "typing-nudge",
-			offline,
 			pickMode: ui.pickMode,
 			picks: s.selectedTextures,
 			prompt: promptFor({ eventPrompt, late, replySeed }),
+			reach,
 			ready: !m.isLoading,
 			resources: resourceRows(m.escalationResources),
 			rewriting: refining,
