@@ -8,15 +8,13 @@ import {
 
 const REPLACED_FEATURES = ["intake"];
 
-const RESTYLED_FEATURES = ["purchases"];
-
-const LEGACY_FEATURES: ReadonlySet<string> = new Set([
-	...REPLACED_FEATURES,
-	...RESTYLED_FEATURES,
-]);
+const LEGACY_FEATURES: ReadonlySet<string> = new Set(REPLACED_FEATURES);
 
 const HUBS: ReadonlySet<string> = new Set(["navigation"]);
 
+/** Modules every feature, old or ported, may import. Neither old nor ported: they hold no
+ * screens, so the screen rules (data hooks, kit, motion) don't apply, and they import no
+ * other feature (`sharedModuleImportsFeatures`). */
 const SHARED_FEATURES: Readonly<Record<string, string>> = {
 	purchases: "the entitlements module: usePlusEntitlement, usePaywall",
 };
@@ -24,8 +22,11 @@ const SHARED_FEATURES: Readonly<Record<string, string>> = {
 export const isLegacyFeature = (feature: string) =>
 	LEGACY_FEATURES.has(feature);
 
+const isSharedFeature = (feature: string) =>
+	Object.hasOwn(SHARED_FEATURES, feature);
+
 const isPortedFeature = (feature: string) =>
-	!(isLegacyFeature(feature) || HUBS.has(feature));
+	!(isLegacyFeature(feature) || HUBS.has(feature) || isSharedFeature(feature));
 
 const FEATURE_FOLDER = /^features\/([^/]+)\//;
 
@@ -46,7 +47,9 @@ export function isNewCode(file: string): boolean {
 }
 
 export const staleListings = (features: readonly string[]): string[] =>
-	[...LEGACY_FEATURES, ...HUBS].filter((f) => !features.includes(f));
+	[...LEGACY_FEATURES, ...HUBS, ...Object.keys(SHARED_FEATURES)].filter(
+		(f) => !features.includes(f)
+	);
 
 const BACKEND_PACKAGES = [
 	/^convex\/react$/,
@@ -214,6 +217,18 @@ export function crossFeatureImportsFromPorted(graph: ImportGraph): string[] {
 					found.push(`${show(edge)} (reaches ${reached})`);
 				}
 			}
+		}
+	}
+	return unique(found);
+}
+
+export function sharedModuleImportsFeatures(graph: ImportGraph): string[] {
+	const found: string[] = [];
+	for (const edge of edges(graph)) {
+		const from = featureOf(edge.file);
+		const to = edge.target && featureOf(edge.target);
+		if (from && to && from !== to && isSharedFeature(from)) {
+			found.push(show(edge));
 		}
 	}
 	return unique(found);

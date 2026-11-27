@@ -150,12 +150,14 @@ src/features/<feature>/
 - **Composition.** Features meet in routes, not screens: a ported feature imports only
   itself, lower layers (`src/lib`, `src/components/shared`, kits in
   `src/components/<kit>`) and `SHARED_FEATURES` (`purchases`). A piece two features
-  need moves down a layer.
+  need moves down a layer. A shared module is neither old nor ported: it holds no
+  screens (Xolace+'s first look and paywall are `plus`), so the screen rules don't
+  apply to it, and it imports no other feature.
 - **Root screens.** A feature's stack entries and options go in its `screens.ts`;
   `src/features/navigation/root-screens.ts` spreads them.
 - **Enforced** by `src/features/import-cycles.test.ts` for every folder not on
   `LEGACY_FEATURES` in `feature-shape.ts` (the old folders: `REPLACED_FEATURES`, which
-  screen PRs replace, and `RESTYLED_FEATURES`, which the sweep reworks; both only shrink);
+  screen PRs replace; it only shrinks) or `SHARED_FEATURES`;
   `bun run check:changed` warns on `.tsx` over 200 lines. Porting a prototype screen:
   the `port-screen` skill.
 

@@ -7,6 +7,7 @@ import {
 	devImportsFromOutside,
 	oldFolderImportsFromNewCode,
 	portedFolderImportsFromOldCode,
+	sharedModuleImportsFeatures,
 	staleListings,
 } from "@/features/feature-shape";
 import { type Import, type ImportGraph, SRC } from "@/features/import-graph";
@@ -61,7 +62,7 @@ describe("oldFolderImportsFromNewCode", () => {
 				local("features/intake/components/intake-screen.tsx"),
 			],
 			"features/intake/quotes-screen.tsx": [
-				local("features/purchases/paywall-screen.tsx"),
+				local("features/purchases/plans.ts"),
 				local("features/intake/tile.tsx"),
 			],
 			"features/navigation/root-screens.ts": [
@@ -218,6 +219,16 @@ describe("backendCallsOutsideDataHooks", () => {
 		expect(backendCallsOutsideDataHooks(graph)).toEqual([]);
 	});
 
+	it("leaves the shared modules alone: they hold no screens", () => {
+		const graph = graphOf({
+			"features/purchases/revenuecat-context.tsx": [
+				pkg("convex/react", ["useQuery"]),
+				pkg("posthog-react-native", ["usePostHog"]),
+			],
+		});
+		expect(backendCallsOutsideDataHooks(graph)).toEqual([]);
+	});
+
 	it("allows data hooks, type-only imports, other heroui parts and old folders", () => {
 		const graph = graphOf({
 			"features/intake/streak-card.tsx": [pkg("convex/react", ["useQuery"])],
@@ -280,7 +291,39 @@ describe("crossFeatureImportsFromPorted", () => {
 describe("staleListings", () => {
 	it("names listed folders that no longer exist", () => {
 		expect(staleListings(["navigation", "streak"])).toContain("intake");
+		expect(staleListings(["navigation", "streak"])).toContain("purchases");
 		expect(staleListings(["navigation", "streak"])).not.toContain("streak");
+	});
+});
+
+describe("sharedModuleImportsFeatures", () => {
+	it("flags a shared module importing any other feature, old or ported, types included", () => {
+		const graph = graphOf({
+			"features/purchases/plans.ts": [
+				local("features/plus/paywall/paywall-period-picker.tsx", true),
+				local("features/intake/analytics.ts"),
+			],
+		});
+		expect(sharedModuleImportsFeatures(graph)).toEqual([
+			"features/purchases/plans.ts -> features/plus/paywall/paywall-period-picker.tsx",
+			"features/purchases/plans.ts -> features/intake/analytics.ts",
+		]);
+	});
+
+	it("allows its own files, lower layers, and features importing it", () => {
+		const graph = graphOf({
+			"features/intake/v2/name-step.tsx": [
+				local("features/purchases/use-plus-entitlement.ts"),
+			],
+			"features/plus/paywall/use-paywall-screen.ts": [
+				local("features/purchases/plans.ts"),
+			],
+			"features/purchases/plans.ts": [
+				local("features/purchases/free-trial.ts"),
+				local("lib/utils.ts"),
+			],
+		});
+		expect(sharedModuleImportsFeatures(graph)).toEqual([]);
 	});
 });
 

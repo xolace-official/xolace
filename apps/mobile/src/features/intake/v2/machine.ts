@@ -1,4 +1,5 @@
 import { DISPLAY_NAME_MAX_CODE_POINTS } from "@xolace/backend/shared";
+import type { SafetyResource } from "@/components/shared/safety-step";
 import {
 	type Chip,
 	type FollowUp,
@@ -7,9 +8,9 @@ import {
 	heardOf,
 	NOTHING_HEARD,
 	type Reading,
-	type SafetyResource,
 	toggleChip,
 } from "@/features/intake/v2/heard";
+import type { MicFailure } from "@/lib/speech/use-listen-take";
 
 export const ANSWER_MAX_CHARS = 1000;
 
@@ -28,8 +29,6 @@ export type IntakeV2Step =
 export type AnswerMode = "quick_reply" | "typed" | "voice" | "skipped";
 
 export type HeardSource = "model" | "suggested" | "pick_list";
-
-export type MicFailure = "denied" | "unavailable";
 
 export type PlusOutcome = "purchased" | "dismissed" | "entitled";
 

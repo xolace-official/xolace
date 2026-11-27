@@ -166,7 +166,7 @@ Not chosen:
 
 ## 5. Intake v2: Flux, live
 
-`intake/v2/flux.tsx`, on every v2 step except `safety` (#710; design in
+`components/xolace-face/mood-flux.tsx` (`MoodFlux`), on every v2 step except `safety`, and in the first look's talk demo (#710; design in
 `docs/plan/onboarding-v2/README.md` § Live Flux). Flux is the brand flame, not the Talk
 companion's look.
 

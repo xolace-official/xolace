@@ -1,5 +1,13 @@
+import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
-import { useEffect, useEffectEvent, useReducer, useRef } from "react";
+import {
+	type ComponentType,
+	useEffect,
+	useEffectEvent,
+	useReducer,
+	useRef,
+} from "react";
+import { SafetyStep } from "@/components/shared/safety-step";
 import {
 	trackAnswerGiven,
 	trackFollowUpShown,
@@ -8,7 +16,6 @@ import {
 	trackSafetyLate,
 	trackSafetyRouted,
 } from "@/features/intake/analytics";
-import { FirstLookStep } from "@/features/intake/first-look/first-look-step";
 import { AskStep } from "@/features/intake/v2/ask-step";
 import { FollowUpStep } from "@/features/intake/v2/follow-up-step";
 import {
@@ -26,17 +33,28 @@ import {
 	initialIntakeV2State,
 	intakeV2Reducer,
 	micOn,
+	type PlusOutcome,
 	voiceAnswer,
 } from "@/features/intake/v2/machine";
 import { NameStep } from "@/features/intake/v2/name-step";
 import { IntakeV2Progress } from "@/features/intake/v2/progress";
-import { SafetyStep } from "@/features/intake/v2/safety-step";
 import { TypeStep } from "@/features/intake/v2/type-step";
 import { useIntakeV2Complete } from "@/features/intake/v2/use-intake-v2-complete";
 import { useReadFirstAnswer } from "@/features/intake/v2/use-read-first-answer";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 
-export function IntakeV2Flow({ initialName }: { initialName: string }) {
+/** The Xolace+ step, which lives in `plus`; the `(intake)/flux` route passes it in. */
+export type PlusOfferProps = {
+	answer: string;
+	busy: boolean;
+	onExit: (outcome: PlusOutcome) => void;
+	onSafetyExit: (outcome?: "purchased") => void;
+	onStoreCall: (active: boolean) => void;
+};
+
+type Props = { initialName: string; PlusOffer: ComponentType<PlusOfferProps> };
+
+export function IntakeV2Flow({ initialName, PlusOffer }: Props) {
 	const [state, dispatch] = useReducer(
 		intakeV2Reducer,
 		initialName,
@@ -46,6 +64,7 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	const complete = useIntakeV2Complete();
 	const readAnswer = useReadFirstAnswer();
 	const { isPlus } = usePlusEntitlement();
+	const { toast } = useToast();
 
 	const onLateRead = useEffectEvent((reading: Reading | null) => {
 		if (reading?.route !== "safety" || state.safetyRouted) {
@@ -190,6 +209,7 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 				return (
 					<SafetyStep
 						onContinue={() => dispatch({ type: "SAFETY_CONTINUE" })}
+						onOpenFailed={(label) => toast.show({ label, variant: "default" })}
 						resources={state.resources}
 					/>
 				);
@@ -236,7 +256,7 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	if (offering) {
 		const busy = state.step === "done";
 		return (
-			<FirstLookStep
+			<PlusOffer
 				answer={firstAnswerToOffer(state)}
 				busy={busy}
 				onExit={(outcome) => busy || dispatch({ outcome, type: "PLUS_EXIT" })}

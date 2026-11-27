@@ -1,7 +1,8 @@
 import type { PurchasesPackage } from "react-native-purchases";
+import { hasFreeTrial } from "@/features/purchases/free-trial";
 import { introOfferOf } from "@/features/purchases/intro-offer";
-import { hasFreeTrial } from "@/features/purchases/screens/paywall-cta-label";
-import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
+
+export type PlanId = "annual" | "monthly";
 
 type PlanOffer = { eligible: boolean; pkg: PurchasesPackage | null };
 
