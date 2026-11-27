@@ -1,4 +1,5 @@
 import { ScrollView, View } from "react-native";
+import { Loading } from "@/components/shared/loading";
 import { HOME } from "@/features/explore/copy";
 import { useHome } from "@/features/explore/home/home-data";
 import {
@@ -6,6 +7,7 @@ import {
 	fromTrack,
 	hourTitle,
 	pickPool,
+	shelvesLoading,
 } from "@/features/explore/home/home-model";
 import { ChooseForMe } from "@/features/explore/home/parts/choose-for-me";
 import { ContinueShelf } from "@/features/explore/home/parts/continue-shelf";
@@ -44,6 +46,8 @@ export function HomeScreen() {
 			<HomeSection top={DOORS_TOP}>
 				<Doors />
 			</HomeSection>
+			{/* The shelves still loading step aside for one message once Xolace can't be reached. */}
+			{shelvesLoading(state) ? <Loading>{null}</Loading> : null}
 			{cont && cont.length > 0 ? (
 				<HomeSection title={HOME.cont}>
 					<ContinueShelf cards={cont} />

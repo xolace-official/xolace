@@ -49,6 +49,8 @@ export type FixtureProps = FixtureKindling & {
 	themeKept?: boolean;
 	intro?: boolean;
 	offline?: boolean;
+	/** Today's data hasn't arrived (`ready` false): the modules draw their placeholders. */
+	loading?: boolean;
 	ignite?: boolean;
 	rekindle?: boolean;
 	cycle?: boolean;
@@ -62,12 +64,13 @@ export type FixtureProps = FixtureKindling & {
 	modules?: FixtureModules;
 };
 
-function FixtureToday({
+export function FixtureToday({
 	phase: start,
 	theme = "light",
 	themeKept = false,
 	intro = false,
 	offline = false,
+	loading = false,
 	ignite = false,
 	cycle = false,
 	monthPrompt = false,
@@ -81,6 +84,8 @@ function FixtureToday({
 	rekindle = false,
 	...kindlingProps
 }: FixtureProps) {
+	// Nothing about the person has loaded: offline drops it the same way.
+	const noData = offline || loading;
 	const covers = useFixtureCovers();
 	const [wordIn, setWordIn] = useState(!lateWord);
 	useEffect(() => {
@@ -104,13 +109,13 @@ function FixtureToday({
 		phase,
 		FIXTURE_HOUR[phase],
 		FIXTURE_WEEKDAY,
-		offline ? null : FIXTURE_NAME
+		noData ? null : FIXTURE_NAME
 	);
 	const kindling = useFixtureKindling(kindlingProps);
 	const state: Today["state"] = {
 		campfire: campfire === "none" ? null : FIXTURE_CAMPFIRE[campfire],
 		card: {
-			mode: reflect,
+			mode: loading ? "loading" : reflect,
 			monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null,
 			reflect: reflectState(reflect, phase, theme),
 		},
@@ -120,17 +125,17 @@ function FixtureToday({
 		greeting,
 		intro,
 		...kindling,
-		...lowerModules(offline ? "loading" : modules, covers),
-		...(longWord && !offline && modules === "board"
+		...lowerModules(noData ? "loading" : modules, covers),
+		...(longWord && !noData && modules === "board"
 			? { word: FIXTURE_LONG_WORD }
 			: {}),
 		...(wordIn ? {} : { word: undefined }),
 		listenLocked: free,
 		phase,
-		ready: true,
+		ready: !loading,
 		rekindle:
-			rekindle && !offline ? { busy: false, streak: FIXTURE_STREAK } : null,
-		streak: offline
+			rekindle && !noData ? { busy: false, streak: FIXTURE_STREAK } : null,
+		streak: noData
 			? null
 			: {
 					count: rekindle ? 0 : FIXTURE_STREAK + (grown ? 1 : 0),

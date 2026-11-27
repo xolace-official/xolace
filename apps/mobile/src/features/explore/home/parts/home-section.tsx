@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { useLoadingStalled } from "@/components/shared/loading";
 import { SkeletonBreath } from "@/components/shared/skeleton";
 import { EASING, EaseView } from "@/design/ease";
 import { COPY } from "@/features/explore/copy";
@@ -26,6 +27,11 @@ export function HomeSection({
 	skeleton,
 	children,
 }: Props) {
+	// A shelf still waiting steps aside; the home screen shows one message for all of them.
+	const stalled = useLoadingStalled(loading);
+	if (stalled) {
+		return null;
+	}
 	const header = title ? <SectionHeader title={title} why={why} /> : null;
 	return (
 		<View style={{ gap: HOME_S.headerGap, paddingTop: top }}>

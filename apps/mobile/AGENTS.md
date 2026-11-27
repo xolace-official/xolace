@@ -86,7 +86,9 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   or Convex's connection state itself. The root "You're offline." banner is a host
   (`features/offline-banner/`); a screen with its own connection message calls
   `useClaimOfflineMessage()` (`src/lib/connection/use-offline-claim.ts`) and the banner
-  hides while that screen is focused.
+  hides while that screen is focused. A screen whose data hasn't arrived wraps its spinner or
+  skeleton in `<Loading>` (`src/components/shared/loading.tsx`): the placeholder while Xolace
+  can be reached, "Can't load this right now." once it can't, never a timeout of its own.
 - **Convex reads with user-driven args** (paging, filters, tabs): `useStableQuery` /
   `useStablePaginatedQuery`, so the UI doesn't blank while new args load.
 - **Reanimated:** `.get()` / `.set()` on shared values, never `.value`.
@@ -211,13 +213,20 @@ worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
 
 ## The root guard
 
-`src/app/_layout.tsx` shows one of three groups, decided by `rootGate`
+`src/app/_layout.tsx` shows one of four groups, decided by `rootGate`
 (`src/features/navigation/root-gate.ts`, a pure function with its tests): `(first-run)`
 (promise, story, sign-in) while signed out, `(intake)` until onboarding is complete, then
 `(protected)`. Change who sees what there and in its tests, never with a `<Redirect>` in a
 screen. `seatHeld` (the store) keeps `(first-run)` up for the seated moment after a sign-in;
 the sign-in hook releases it, and an onboarded account goes straight to `(protected)`.
 The launch cover and native splash sit before the guard and aren't first run's.
+`(cant-reach)` replaces the gate's spinner once Xolace can't be reached (an offline cold
+start): "Can't load this right now." with "Need help now?", which opens the bundled crisis
+resources at `/need-help` inside the group, so they work without passing the gate. The gate
+moves on by itself when Xolace is back, but not while those crisis resources are open. Clerk's
+launch load fails offline and its React wrapper never retries, so `ConvexClientProvider`
+remounts `ClerkProvider` (`ClerkLoadRetry`, `clerkRetryDelay`) once Xolace can be reached
+again; `ConnectionProvider` sits above it so the connection model survives the remount.
 
 ## The launch cover
 

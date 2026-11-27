@@ -1,6 +1,6 @@
 import type { DevState } from "@/dev/dev-state";
 import type { DevMessage } from "./dev-messages";
-import { FixtureThread } from "./fixture-thread";
+import { FixtureThread, StreamDown } from "./fixture-thread";
 import {
 	CLOSED,
 	DECLINED,
@@ -131,10 +131,14 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "thread-offline",
 		options: THREAD,
-		Screen: () => (
-			<FixtureThread conversation={OPEN} messages={TONIGHT} online={false} />
-		),
+		Screen: () => <StreamDown messages={TONIGHT} reach="offline" />,
 		title: "Thread offline",
+	},
+	{
+		id: "thread-cant-reach",
+		options: THREAD,
+		Screen: () => <StreamDown messages={TONIGHT} reach="reachable" />,
+		title: "Thread: chat can't be reached, internet working",
 	},
 	{
 		id: "thread-requested",

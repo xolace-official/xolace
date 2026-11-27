@@ -8,6 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Loading } from "@/components/shared/loading";
 import { PressScale } from "@/components/shared/press-scale";
 import { DiscoverySkeleton } from "@/components/shared/skeleton-shapes";
 import { cn } from "@/lib/cn";
@@ -105,7 +106,9 @@ export function Roster({
 	return (
 		<View className="gap-2.5">
 			{cards === undefined ? (
-				<DiscoverySkeleton label={COPY.loading.xolacers} />
+				<Loading>
+					<DiscoverySkeleton label={COPY.loading.xolacers} />
+				</Loading>
 			) : null}
 
 			{(cards ?? []).map((card) => (

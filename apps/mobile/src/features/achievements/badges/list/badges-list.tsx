@@ -6,6 +6,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { Loading } from "@/components/shared/loading";
 import { useBadgesScreen } from "@/features/achievements/badges/badges-data";
 import { BAR } from "@/features/achievements/badges/list/badges-bar";
 import { CategoryRow } from "@/features/achievements/badges/list/category-row";
@@ -56,9 +57,11 @@ export function BadgesList({
 					<FreezeCard />
 				</>
 			) : (
-				<View className="items-center pt-10">
-					<ActivityIndicator accessibilityLabel={COPY.list.loading} />
-				</View>
+				<Loading>
+					<View className="items-center pt-10">
+						<ActivityIndicator accessibilityLabel={COPY.list.loading} />
+					</View>
+				</Loading>
 			)}
 		</Animated.ScrollView>
 	);

@@ -147,3 +147,15 @@ export function continueLabel(
 		...(isLocked(c, locked) ? [COPY.locked] : []),
 	].join(", ");
 }
+
+/** Shelves that draw a skeleton until their query answers; continue and for-you just appear. */
+type LoadingShelves = {
+	featured: ShelfTrack | null | undefined;
+	hour: HomeTrack[] | undefined;
+	fresh: ShelfTrack[] | undefined;
+	short: ShortItem[] | undefined;
+};
+
+/** True while any skeleton shelf is still waiting on its first answer. */
+export const shelvesLoading = (home: LoadingShelves): boolean =>
+	[home.featured, home.hour, home.fresh, home.short].includes(undefined);

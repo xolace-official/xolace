@@ -7,9 +7,9 @@ import type {
 import { messageActions as defaultMessageActions } from "stream-chat-expo";
 import { AppText } from "@/components/shared/app-text";
 import { REACTIONS } from "../../reactions";
+import { ChannelErrorIndicator } from "./connection-strip";
 import { ConversationMessageSystem } from "./crisis-card";
 import { ConversationMessageAuthor } from "./message-identity";
-import { ChannelErrorIndicator } from "./offline-strip";
 import { ConversationReply } from "./quoted-reply";
 import { ConversationReactionSheet } from "./reaction-sheet";
 import { ConversationReactionUser } from "./reaction-user";

@@ -29,6 +29,9 @@ export const EXIT_LIFT = { scale: 1.05, translateY: -6 } as const;
 
 export type LaunchPhase = "cover" | "exiting" | "gone";
 
+/** Crisis resources inside the root's `(cant-reach)` group: bundled, so they open offline. */
+export const CANT_REACH_HELP_PATH = "/need-help";
+
 export type HoldReason = "fonts" | "gate" | "bootstrap" | "today";
 
 export type LaunchState = {

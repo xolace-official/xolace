@@ -1,3 +1,4 @@
+import { CantReachThenBack } from "@/dev/cant-reach-then-back";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureBadges } from "@/features/achievements/badges/dev/fixture-badges";
 
@@ -14,6 +15,16 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureBadges />,
 		title: "Achievements, at the top",
+	},
+	{
+		id: "cant-load",
+		options: OPTIONS,
+		Screen: () => (
+			<CantReachThenBack>
+				{(back) => <FixtureBadges loading={!back} />}
+			</CantReachThenBack>
+		),
+		title: "Can't reach Xolace before the list loaded, then back",
 	},
 	{
 		id: "held",

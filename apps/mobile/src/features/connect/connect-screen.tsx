@@ -4,6 +4,7 @@ import { Platform, ScrollView, View } from "react-native";
 import { ScrollViewMarker } from "react-native-screens/experimental";
 import { AppText } from "@/components/shared/app-text";
 import { BandBlur } from "@/components/shared/band-blur";
+import { Loading } from "@/components/shared/loading";
 import { Segmented } from "@/components/shared/segmented";
 import { useTokenColor } from "@/lib/use-token-color";
 import { useConnectScreen } from "./connect-data";
@@ -93,7 +94,9 @@ export function ConnectScreen({ letters = null }: { letters?: ReactNode }) {
 					bottom={BOTTOM}
 					footer={
 						ready === null ? (
-							<ListSkeleton label={COPY.loading.chats} />
+							<Loading>
+								<ListSkeleton label={COPY.loading.chats} />
+							</Loading>
 						) : chats ? (
 							<ChatsFooter
 								archived={{

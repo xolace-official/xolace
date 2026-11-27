@@ -1,3 +1,4 @@
+import { CantReachThenBack } from "@/dev/cant-reach-then-back";
 import type { DevState } from "@/dev/dev-state";
 import { COPY } from "@/features/explore/copy";
 import { FixtureHome } from "@/features/explore/dev/fixture-home";
@@ -79,6 +80,16 @@ export const devStates: readonly DevState[] = [
 		options: HOME_BAR,
 		Screen: () => <FixtureHome loading />,
 		title: "Home: loading",
+	},
+	{
+		id: "home-cant-load",
+		options: HOME_BAR,
+		Screen: () => (
+			<CantReachThenBack>
+				{(back) => <FixtureHome loading={!back} />}
+			</CantReachThenBack>
+		),
+		title: "Home: can't reach Xolace before the shelves, then back",
 	},
 	{
 		id: "topics",

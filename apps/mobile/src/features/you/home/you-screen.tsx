@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { View } from "react-native";
 import { Tabs } from "react-native-collapsible-tab";
+import { Loading } from "@/components/shared/loading";
 import { COPY } from "@/features/you/copy";
 import { FollowUpsTab } from "@/features/you/home/follow-ups/follow-ups-tab";
 import { YouHeader } from "@/features/you/home/header/you-header";
@@ -55,7 +56,11 @@ export function YouScreen() {
 				/>
 			</Stack.Toolbar>
 
-			{headerLoaded(state) ? null : <YouSkeleton />}
+			{headerLoaded(state) ? null : (
+				<Loading className="flex-1 justify-center">
+					<YouSkeleton />
+				</Loading>
+			)}
 			{headerHeight > 0 && headerLoaded(state) ? (
 				<Tabs.Container
 					// Solid: a tab keeps its own offset, so its content can sit under the expanded header.

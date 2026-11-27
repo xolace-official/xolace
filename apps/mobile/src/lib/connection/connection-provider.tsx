@@ -1,5 +1,5 @@
 import NetInfo from "@react-native-community/netinfo";
-import { useConvex } from "convex/react";
+import type { ConvexReactClient } from "convex/react";
 import { type ReactNode, useEffect, useState } from "react";
 import { AppState } from "react-native";
 import {
@@ -10,11 +10,18 @@ import {
 import { ConnectionContext } from "./use-connection";
 
 /**
- * Feeds the app's one connection model from NetInfo, Convex's socket and AppState. Sits inside
- * the Convex provider. A model is made per mount, so a remount (Strict Mode) starts clean.
+ * Feeds the app's one connection model from NetInfo, Convex's socket and AppState. Takes the
+ * client itself rather than sitting inside the Convex provider, so it stays mounted above Clerk
+ * and keeps its timers when Clerk is remounted to retry a failed load. A model is made per mount,
+ * so a remount (Strict Mode) starts clean.
  */
-export function ConnectionProvider({ children }: { children: ReactNode }) {
-	const convex = useConvex();
+export function ConnectionProvider({
+	children,
+	convex,
+}: {
+	children: ReactNode;
+	convex: ConvexReactClient;
+}) {
 	const [model, setModel] = useState<ConnectionModel | null>(null);
 
 	useEffect(() => {

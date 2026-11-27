@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollViewMarker } from "react-native-screens/experimental";
+import { Loading } from "@/components/shared/loading";
 import { useScheme } from "@/design/scheme";
 import { useClock, useLive } from "@/lib/motion/clock";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
@@ -136,20 +137,24 @@ function TodayBody({ flameClock, pill, revealed, ...frame }: BodyProps) {
 				<TodayHeader flameClock={flameClock} pill={pill} />
 			</View>
 			<ReflectCard />
-			{late ? (
-				<LateModules />
-			) : (
-				<>
-					<KindlingCard width={width - PAGE_X * 2} />
-					<CampfireCard />
-					<TodaySlot>
-						<FindingCard />
-					</TodaySlot>
-					<ListenRail />
-					<MomentsSection />
-					<WordCard />
-				</>
-			)}
+			{/* Until Today's data arrives the modules draw their own placeholders; once Xolace
+			can't be reached, one message stands in for them. */}
+			<Loading loaded={state.ready}>
+				{late ? (
+					<LateModules />
+				) : (
+					<>
+						<KindlingCard width={width - PAGE_X * 2} />
+						<CampfireCard />
+						<TodaySlot>
+							<FindingCard />
+						</TodaySlot>
+						<ListenRail />
+						<MomentsSection />
+						<WordCard />
+					</>
+				)}
+			</Loading>
 		</TodayFrame>
 	);
 }
