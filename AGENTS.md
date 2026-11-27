@@ -105,6 +105,9 @@ Put a dependency in the package that uses it; shared versions come from the root
   its **contributor**; a contributor is never shown their own. Not a letter (a
   person writes that to a stranger, Xolace only distils a peer reflection).
   Avoid "echo", an early name for these.
+- **offline**: the user's device has no internet: mobile data off or out of range,
+  airplane mode, no Wi-Fi. Being offline means Xolace can't be reached either, but
+  Xolace being unreachable while the device has internet is not being offline.
 
 ## Hit every surface
 
