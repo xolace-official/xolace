@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { CtaButton } from "@/components/shared/cta-button";
@@ -12,6 +12,8 @@ import { useRateScreen } from "./rate-data";
 import { RatingPicker } from "./rating-stars";
 
 const SHEET_BOTTOM = 18;
+/** iOS already ends the sheet ~30pt below its content, clear of the home indicator. */
+const IOS_SHEET_BOTTOM = 8;
 
 export function RateScreen() {
 	const {
@@ -112,7 +114,12 @@ function Sheet({ children }: { children: ReactNode }) {
 	return (
 		<View
 			className="pt-[26px]"
-			style={{ paddingBottom: Math.max(insets.bottom, SHEET_BOTTOM) }}
+			style={{
+				paddingBottom:
+					Platform.OS === "ios"
+						? IOS_SHEET_BOTTOM
+						: Math.max(insets.bottom, SHEET_BOTTOM),
+			}}
 		>
 			{children}
 		</View>
