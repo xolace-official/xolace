@@ -5,7 +5,7 @@ import { type PostHog, usePostHog } from "posthog-react-native";
 import {
 	trackAcquisitionAnswered,
 	trackDeferredAnswered,
-} from "@/features/intake/analytics";
+} from "@/lib/intake-analytics";
 
 type DeferredAnswer = Exclude<
 	FunctionArgs<typeof api.intake.deferred.record>["answer"],

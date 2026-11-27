@@ -1,6 +1,7 @@
 import type { api } from "@xolace/backend/convex/_generated/api";
 import { intakeAnswerValidators } from "@xolace/backend/convex/lib/validators";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
+import { startOfDay } from "@/lib/date";
 import {
 	type IntakeChoice,
 	SECTION_FINDING,
@@ -11,8 +12,7 @@ import {
 	SERIES_SEEN_RATINGS,
 	SERIES_WANT_CHOICES,
 	SERIES_WANT_QUESTION,
-} from "@/features/intake/questions";
-import { startOfDay } from "@/lib/date";
+} from "@/lib/intake/questions";
 
 type DeferredQuestion = FunctionReturnType<
 	typeof api.intake.deferred.missing

@@ -72,3 +72,30 @@ export function intakePersonProperties(
 		$set_once: findingUsOnce(answers),
 	};
 }
+
+export function trackDeferredAnswered(
+	posthog: PostHog,
+	question: "coping_style" | "support_frequency",
+	value: string | string[],
+	surface: "session_end" | "notification_nudge"
+) {
+	posthog.capture("intake_deferred_answered", {
+		$set: { [question]: value },
+		question,
+		surface,
+	});
+}
+
+export function trackAcquisitionAnswered(
+	posthog: PostHog,
+	answer: Pick<
+		IntakeAnswers,
+		"acquisitionSource" | "seriesSeen" | "seriesWantInApp"
+	>
+) {
+	posthog.capture("intake_deferred_answered", {
+		$set_once: findingUsOnce(answer),
+		question: "acquisition_source",
+		surface: "discovery_card",
+	});
+}

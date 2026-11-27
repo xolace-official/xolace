@@ -1,5 +1,4 @@
 import type { PostHog } from "posthog-react-native";
-import { SERIES_BRANCH_VALUE } from "@/features/intake/questions";
 import type { FollowUp, Reading } from "@/features/intake/v2/heard";
 import type {
 	AnswerMode,
@@ -8,8 +7,8 @@ import type {
 	IntakeV2Step,
 	PlusOutcome,
 } from "@/features/intake/v2/machine";
+import { SERIES_BRANCH_VALUE } from "@/lib/intake/questions";
 import {
-	findingUsOnce,
 	intakeArmProps,
 	intakeDurationMs,
 	setIntakeArm,
@@ -176,33 +175,6 @@ export function trackReadFallback(
 	posthog.capture("intake_read_fallback", {
 		...intakeArmProps(),
 		reason,
-	});
-}
-
-export function trackDeferredAnswered(
-	posthog: PostHog,
-	question: "coping_style" | "support_frequency",
-	value: string | string[],
-	surface: "session_end" | "notification_nudge"
-) {
-	posthog.capture("intake_deferred_answered", {
-		$set: { [question]: value },
-		question,
-		surface,
-	});
-}
-
-export function trackAcquisitionAnswered(
-	posthog: PostHog,
-	answer: Pick<
-		IntakeAnswers,
-		"acquisitionSource" | "seriesSeen" | "seriesWantInApp"
-	>
-) {
-	posthog.capture("intake_deferred_answered", {
-		$set_once: findingUsOnce(answer),
-		question: "acquisition_source",
-		surface: "discovery_card",
 	});
 }
 

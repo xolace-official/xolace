@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	findingAnswer,
-	findingCardDue,
-	findingStep,
-} from "@/features/intake/finding-card-model";
+import { findingAnswer, findingCardDue, findingStep } from "./finding-model";
 
 const INTAKE = new Date(2026, 10, 2, 15, 0).getTime();
 const DAY_3 = new Date(2026, 10, 4, 9, 0);

@@ -69,6 +69,11 @@ export const COPY = {
 		vent: { label: "Vent", sub: "Let it rip" },
 		writeInstead: "Write instead",
 	},
+	finding: {
+		back: "Back",
+		notNow: "Not now",
+		thanks: "Thank you. It helps us reach people like you.",
+	},
 	greeting: {
 		afternoon: (name: string | null) =>
 			name ? `Good afternoon, ${name}` : "Good afternoon",
