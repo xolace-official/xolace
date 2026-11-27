@@ -81,3 +81,45 @@ export const HOME = {
 } as const;
 
 export type DoorId = (typeof HOME.doors)[number]["id"];
+
+const THOUSAND = 1000;
+const compact = (n: number) =>
+	n < THOUSAND ? `${n}` : `${(n / THOUSAND).toFixed(1).replace(/\.0$/, "")}k`;
+
+export const SEARCH = {
+	episode: (n: number) => `Episode ${n}`,
+	listenMin: (min: number) => `${min} min listen`,
+	loading: "Loading",
+	needSomeone: {
+		body: "People you can reach, any time.",
+		label: "Need someone now? See people you can reach",
+		title: "Need someone now?",
+	},
+	noResults: (query: string) => `Nothing matches “${query}”`,
+	place: { hub: "Lantern hub", topic: "Topic" },
+	placeholder: "Search audio, music and Lantern",
+	readMin: (min: number) => `${min} min read`,
+	save: "Save",
+	section: {
+		lantern: "Lantern",
+		music: "Music",
+		places: "Hubs & topics",
+		support: "Support audio",
+	},
+	sectionEmpty: {
+		body: "Try a feeling, like “can’t sleep”.",
+		title: "Nothing matches that",
+	},
+	seeAll: "See all",
+	share: "Share",
+	shareMessage: (title: string, url: string) =>
+		`I just read “${title}” on Xolace and thought you might like it too. Worth a few minutes:\n${url}`,
+	unsave: "Remove from saved",
+	views: (n: number) => `${compact(n)} ${n === 1 ? "view" : "views"}`,
+	wayOuts: [
+		{ href: "/explore/topics", label: "Browse topics" },
+		{ href: "/explore/library/subjects", label: "Lantern subjects" },
+	],
+} as const;
+
+export type SearchSection = keyof typeof SEARCH.section;

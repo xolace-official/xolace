@@ -7,6 +7,12 @@ export const PLAYER_COPY = {
 	family: { music: "Music", support: "Support audio" },
 	fwd15: "Forward 15 seconds",
 	gone: "This one isn’t here anymore.",
+	mini: {
+		close: "Stop and close",
+		closeHint: "Stops this track and removes the mini-player",
+		openHint: "Opens the player",
+		sleeping: ", sleep timer on",
+	},
 	pause: "Pause",
 	play: "Play",
 	position: "Position",

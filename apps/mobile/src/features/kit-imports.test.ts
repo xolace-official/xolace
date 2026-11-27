@@ -67,11 +67,11 @@ describe("replacedPiecesInNewCode", () => {
 			"components/shared/toast-bridge.tsx": [
 				pkg("heroui-native", ["useToast"]),
 			],
-			"features/browse/screens.ts": [
-				local("lib/navigation-options.tsx", ["useLargeHeaderOptions"]),
-			],
 			"features/intake/screen.tsx": [
 				pkg("heroui-native", ["PressableFeedback"]),
+			],
+			"features/purchases/screens.ts": [
+				local("lib/navigation-options.tsx", ["useLargeHeaderOptions"]),
 			],
 			"features/today/hero/hero.tsx": [
 				pkg("heroui-native", ["Button", "Toast"]),

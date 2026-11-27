@@ -50,7 +50,7 @@ describe("easeImportsOutsideEaseTs", () => {
 				pkg("react-native-ease"),
 				pkg("react-native-ease/uniwind"),
 			],
-			"features/browse/streak-card.tsx": [pkg("react-native-ease")],
+			"features/intake/streak-card.tsx": [pkg("react-native-ease")],
 			...LEGACY_EASE_FILES,
 		});
 		expect(easeImportsOutsideEaseTs(graph)).toEqual([]);
@@ -104,7 +104,7 @@ describe("osReducedMotionReads", () => {
 			"components/ui/thinking-orb.tsx": [
 				pkg("react-native-reanimated", ["useReducedMotion"]),
 			],
-			"features/browse/campfire-mascot.tsx": [
+			"features/intake/campfire-mascot.tsx": [
 				pkg("react-native-reanimated", ["useReducedMotion"]),
 			],
 			"features/today/hero/glow.tsx": [

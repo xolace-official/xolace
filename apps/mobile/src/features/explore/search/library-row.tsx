@@ -1,8 +1,4 @@
-import { api } from "@xolace/backend/api";
-import { useMutation } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { Link } from "expo-router";
-import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
@@ -16,17 +12,14 @@ import {
 	SkeletonBreath,
 } from "@/components/shared/skeleton";
 import { META_W, TITLE_W, widthAt } from "@/components/shared/skeleton-shapes";
+import { SEARCH } from "@/features/explore/copy";
+import type { EntryItem } from "@/features/explore/search/search-data";
 import {
 	capitalise,
 	facetLabel,
 	readTimeLine,
-	shareEntry,
-} from "@/features/browse/search/library-row-copy";
+} from "@/features/explore/search/search-model";
 import { useTokenColors } from "@/lib/use-token-color";
-
-type EntryItem = FunctionReturnType<
-	typeof api.library.entries.listEntries
->[number];
 
 const THUMB = { height: 78, width: 104 };
 const SAVE = { android: "bookmark_border", ios: "bookmark" } as const;
@@ -36,12 +29,14 @@ const SHARE = "square.and.arrow.up";
 export function EntryRow({
 	entry,
 	onOpen,
+	onToggleSave,
+	onShare,
 }: {
 	entry: EntryItem;
 	onOpen?: () => void;
+	onToggleSave: (saved: boolean) => Promise<unknown>;
+	onShare: () => void;
 }) {
-	const record = useMutation(api.library.reads.record);
-	const posthog = usePostHog();
 	const [accent, foreground] = useTokenColors(["accent", "foreground"]);
 	const [pending, setPending] = useState<boolean | null>(null);
 	const saved = pending ?? entry.saved;
@@ -50,9 +45,7 @@ export function EntryRow({
 			return;
 		}
 		setPending(!saved);
-		record({ entryId: entry._id, saved: !saved })
-			.catch(() => undefined)
-			.finally(() => setPending(null));
+		onToggleSave(!saved).finally(() => setPending(null));
 	};
 	return (
 		<View className="mx-gutter flex-row items-center border-separator border-b">
@@ -97,18 +90,15 @@ export function EntryRow({
 				<Link.Preview />
 				<Link.Menu>
 					<Link.MenuAction icon={saved ? SAVED.ios : SAVE.ios} onPress={toggle}>
-						{saved ? "Remove from saved" : "Save"}
+						{saved ? SEARCH.unsave : SEARCH.save}
 					</Link.MenuAction>
-					<Link.MenuAction
-						icon={SHARE}
-						onPress={() => shareEntry(entry, posthog)}
-					>
-						Share
+					<Link.MenuAction icon={SHARE} onPress={onShare}>
+						{SEARCH.share}
 					</Link.MenuAction>
 				</Link.Menu>
 			</Link>
 			<PressScale
-				accessibilityLabel="Save"
+				accessibilityLabel={SEARCH.save}
 				accessibilityState={{ selected: saved }}
 				className="size-11 items-center justify-center"
 				disabled={pending !== null}
@@ -153,7 +143,7 @@ export function SectionTitle({
 
 export function RowsSkeleton({ count = 6 }: { count?: number }) {
 	return (
-		<SkeletonBreath label="Loading">
+		<SkeletonBreath label={SEARCH.loading}>
 			{Array.from({ length: count }, (_, i) => (
 				<View className="flex-row items-center gap-4 px-4 py-3" key={i}>
 					<Bone h={THUMB.height} r={14} w={THUMB.width} />

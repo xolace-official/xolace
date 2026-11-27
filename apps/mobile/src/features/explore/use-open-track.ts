@@ -6,8 +6,6 @@ import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/lib/haptics";
 import type { BrowseFrom } from "@/lib/now-playing/now-playing-store";
 
-export type { BrowseFrom };
-
 export function useOpenTrack(from: BrowseFrom) {
 	const posthog = usePostHog();
 	const locked = usePlusEntitlement().status === "free";

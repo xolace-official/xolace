@@ -5,9 +5,9 @@ import {
 } from "expo-router/native-tabs";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { MiniPlayerAccessory } from "@/features/browse/now-playing/mini-player-accessory";
-import { MiniPlayerOverlay } from "@/features/browse/now-playing/mini-player-overlay";
 import { TABS } from "@/features/navigation/tabs";
+import { MiniPlayerAccessory } from "@/features/player/now-playing/mini-player-accessory";
+import { MiniPlayerOverlay } from "@/features/player/now-playing/mini-player-overlay";
 import { useYouTabIcon } from "@/features/you/avatar/use-you-tab-icon";
 import { playSoftPress } from "@/lib/haptics";
 import { useMiniPlayerShown } from "@/lib/now-playing/now-playing-store";

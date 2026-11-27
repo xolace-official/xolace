@@ -1,22 +1,19 @@
-import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
 import { AppText } from "@/components/shared/app-text";
-import { playSoftPress } from "@/lib/haptics";
+import { SEARCH } from "@/features/explore/copy";
+import type { WayOut } from "@/features/explore/search/search-data";
 
-export function NeedSomeoneRow() {
+export function NeedSomeoneRow({ onPress }: { onPress: () => void }) {
 	const tint = useCSSVariable("--color-accent");
 	return (
 		<Pressable
-			accessibilityLabel="Need someone now? See people you can reach"
+			accessibilityLabel={SEARCH.needSomeone.label}
 			accessibilityRole="link"
 			className="mx-4 mt-3 flex-row items-center gap-3 rounded-2xl bg-surface-secondary px-4 py-3 active:opacity-70"
-			onPress={() => {
-				playSoftPress();
-				router.push("/(protected)/crisis-resources");
-			}}
+			onPress={onPress}
 		>
 			<SymbolView
 				name={{
@@ -29,10 +26,10 @@ export function NeedSomeoneRow() {
 			/>
 			<View className="flex-1">
 				<AppText className="font-semibold text-[15px]">
-					Need someone now?
+					{SEARCH.needSomeone.title}
 				</AppText>
 				<AppText className="text-[13px] text-muted">
-					People you can reach, any time.
+					{SEARCH.needSomeone.body}
 				</AppText>
 			</View>
 			<SymbolView
@@ -48,30 +45,28 @@ export function NeedSomeoneRow() {
 	);
 }
 
-const WAY_OUTS = [
-	{ href: "/explore/topics", label: "Browse topics" },
-	{ href: "/explore/library/subjects", label: "Lantern subjects" },
-] as const;
-
-export function NoResults({ query }: { query: string }) {
+export function NoResults({
+	query,
+	onWayOut,
+}: {
+	query: string;
+	onWayOut: (href: WayOut) => void;
+}) {
 	return (
 		<View className="items-center gap-4 px-8 pt-16">
 			<AppText
 				className="text-center font-semibold text-[17px]"
 				numberOfLines={3}
 			>
-				Nothing matches “{query}”
+				{SEARCH.noResults(query)}
 			</AppText>
 			<View className="flex-row gap-3">
-				{WAY_OUTS.map((w) => (
+				{SEARCH.wayOuts.map((w) => (
 					<Pressable
 						accessibilityRole="link"
 						className="rounded-full bg-surface-secondary px-4 py-2 active:opacity-70"
 						key={w.href}
-						onPress={() => {
-							playSoftPress();
-							router.push(w.href);
-						}}
+						onPress={() => onWayOut(w.href)}
 					>
 						<AppText className="font-medium text-[15px] text-accent">
 							{w.label}

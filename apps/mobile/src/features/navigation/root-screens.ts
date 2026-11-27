@@ -1,8 +1,8 @@
 import { achievementsScreens } from "@/features/achievements/screens";
-import { browseScreens } from "@/features/browse/screens";
 import { careScreens } from "@/features/care/screens";
 import { comingBackScreens } from "@/features/coming-back/screens";
 import { connectScreens } from "@/features/connect/screens";
+import { exploreScreens } from "@/features/explore/screens";
 import { feedbackScreens } from "@/features/feedback/screens";
 import { kindlingScreens } from "@/features/kindling/screens";
 import { lanternScreens } from "@/features/lantern/screens";
@@ -23,10 +23,10 @@ import type { RootScreen } from "@/lib/root-screen";
 
 export const ROOT_SCREENS: readonly RootScreen[] = [
 	...achievementsScreens,
-	...browseScreens,
 	...careScreens,
 	...comingBackScreens,
 	...connectScreens,
+	...exploreScreens,
 	...feedbackScreens,
 	...kindlingScreens,
 	...lanternScreens,
