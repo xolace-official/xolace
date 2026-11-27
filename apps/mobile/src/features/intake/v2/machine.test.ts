@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { Reading, SafetyResource } from "@/features/intake/v2/heard";
+import type { SafetyResource } from "@/components/shared/safety-step";
+import type { Reading } from "@/features/intake/v2/heard";
 import {
 	firstAnswerToOffer,
 	type IntakeV2Action,

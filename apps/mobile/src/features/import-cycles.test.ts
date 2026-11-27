@@ -12,6 +12,7 @@ import {
 	devImportsFromOutside,
 	oldFolderImportsFromNewCode,
 	portedFolderImportsFromOldCode,
+	sharedModuleImportsFeatures,
 	staleListings,
 } from "@/features/feature-shape";
 import {
@@ -126,6 +127,13 @@ describe("feature shape (apps/mobile/AGENTS.md)", () => {
 		expect(
 			portedFolderImportsFromOldCode(graph),
 			"Old screens still use a part of a folder that was replaced in place: move that part down to src/lib or src/components/shared and point both at it"
+		).toEqual([]);
+	});
+
+	it("keeps the shared modules (purchases) off every feature", () => {
+		expect(
+			sharedModuleImportsFeatures(graph),
+			"A shared module imports no feature: move the piece into it or down to src/lib, or pass it in as a prop from the route"
 		).toEqual([]);
 	});
 

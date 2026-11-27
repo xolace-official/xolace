@@ -7,10 +7,6 @@ type CompleteArgs = FunctionArgs<typeof api.intake.v2.complete>;
 export type Reading = FunctionReturnType<typeof api.ai.intake.read.firstAnswer>;
 type HeardReading = Extract<Reading, { route: "heard" }>;
 export type FollowUp = NonNullable<HeardReading["followUp"]>;
-export type SafetyResource = Extract<
-	Reading,
-	{ route: "safety" }
->["resources"][number];
 
 export type Heard = Omit<
 	Pick<

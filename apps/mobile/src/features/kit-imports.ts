@@ -22,6 +22,13 @@ const TOAST_BRIDGE = "components/shared/toast-bridge.tsx";
 
 const KIT_LEGACY_FILES: ReadonlySet<string> = new Set([
 	"components/shared/resource-item.tsx",
+	// Moved into `plus` without a restyle (the paywall is in store review); the kit's
+	// PressScale and Segmented would change how they look and feel.
+	"features/plus/first-look/talk-demo/demo-listen.tsx",
+	"features/plus/first-look/talk-demo/talk-demo.tsx",
+	"features/plus/first-look/talk-demo/use-talk-demo.ts",
+	"features/plus/paywall/paywall-header-actions.tsx",
+	"features/plus/paywall/paywall-period-picker.tsx",
 ]);
 
 const heldToKit = (file: string) =>

@@ -3,8 +3,8 @@ import { Button, PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { Flux } from "@/features/intake/v2/flux";
-import { useTypedLine } from "@/features/intake/v2/use-typed-line";
+import { MoodFlux } from "@/components/xolace-face/mood-flux";
+import { useTypedLine } from "@/components/xolace-face/use-typed-line";
 import { playSoftPress } from "@/lib/haptics";
 
 const ASK_LINE =
@@ -33,7 +33,7 @@ export function AskStep({ onQuickReply, onSkip, onTalk, onType }: Props) {
 
 	return (
 		<View className="flex-1 items-center px-5 pt-4">
-			<Flux mood={typed.done ? "idle" : "talking"} size={FLUX_SIZE} />
+			<MoodFlux mood={typed.done ? "idle" : "talking"} size={FLUX_SIZE} />
 			<View className="mt-3.5 self-stretch rounded-3xl border border-border bg-surface px-5 py-4">
 				<View className="absolute -top-2 left-1/2 -ml-2 size-4 rotate-45 border-border border-t border-l bg-surface" />
 				<AppText

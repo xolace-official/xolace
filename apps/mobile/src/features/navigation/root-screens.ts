@@ -10,7 +10,7 @@ import { lettersScreens } from "@/features/letters/screens";
 import { navigationScreens } from "@/features/navigation/screens";
 import { peerReflectionScreens } from "@/features/peer-reflection/screens";
 import { playerScreens } from "@/features/player/screens";
-import { purchasesScreens } from "@/features/purchases/screens";
+import { plusScreens } from "@/features/plus/screens";
 import { quotesScreens } from "@/features/quotes/screens";
 import { ratingsScreens } from "@/features/ratings/screens";
 import { reflectScreens } from "@/features/reflect/screens";
@@ -34,7 +34,7 @@ export const ROOT_SCREENS: readonly RootScreen[] = [
 	...navigationScreens,
 	...peerReflectionScreens,
 	...playerScreens,
-	...purchasesScreens,
+	...plusScreens,
 	...quotesScreens,
 	...ratingsScreens,
 	...reflectScreens,

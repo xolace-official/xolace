@@ -4,6 +4,7 @@ import { suggestHandle } from "@/features/intake/answer-rules";
 import { consumesBack } from "@/features/intake/v2/intake-back";
 import { IntakeBlank } from "@/features/intake/v2/intake-screen";
 import { IntakeV2Flow } from "@/features/intake/v2/intake-v2-flow";
+import { FirstLookStep } from "@/features/plus/first-look/first-look-step";
 import { useFullContext } from "@/lib/convex/use-full-context";
 
 export default function IntakeFlux() {
@@ -24,6 +25,7 @@ export default function IntakeFlux() {
 	return (
 		<IntakeV2Flow
 			initialName={context.preferences?.displayName || suggestHandle()}
+			PlusOffer={FirstLookStep}
 		/>
 	);
 }

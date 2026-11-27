@@ -31,7 +31,22 @@ const graphOf = (entries: Record<string, Import[]>): ImportGraph =>
 
 const LEGACY = {
 	"components/shared/resource-item.tsx": [
-		pkg("heroui-native", ["PressableFeedback", "useToast"]),
+		pkg("heroui-native", ["PressableFeedback"]),
+	],
+	"features/plus/first-look/talk-demo/demo-listen.tsx": [
+		pkg("heroui-native", ["PressableFeedback"]),
+	],
+	"features/plus/first-look/talk-demo/talk-demo.tsx": [
+		pkg("heroui-native", ["PressableFeedback"]),
+	],
+	"features/plus/first-look/talk-demo/use-talk-demo.ts": [
+		pkg("heroui-native", ["useToast"]),
+	],
+	"features/plus/paywall/paywall-header-actions.tsx": [
+		pkg("heroui-native", ["PressableFeedback"]),
+	],
+	"features/plus/paywall/paywall-period-picker.tsx": [
+		local("components/shared/segmented-control.tsx", ["SegmentedControl"]),
 	],
 };
 
@@ -70,7 +85,7 @@ describe("replacedPiecesInNewCode", () => {
 			"features/intake/screen.tsx": [
 				pkg("heroui-native", ["PressableFeedback"]),
 			],
-			"features/purchases/screens.ts": [
+			"features/intake/screens.ts": [
 				local("lib/navigation-options.tsx", ["useLargeHeaderOptions"]),
 			],
 			"features/today/hero/hero.tsx": [
@@ -88,14 +103,13 @@ describe("staleKitListings", () => {
 		expect(
 			staleKitListings(
 				graphOf({
+					...LEGACY,
 					"components/shared/resource-item.tsx": [
 						pkg("heroui-native", ["Button"]),
 					],
 				})
 			)
 		).toEqual(["components/shared/resource-item.tsx"]);
-		expect(staleKitListings(graphOf({}))).toEqual([
-			"components/shared/resource-item.tsx",
-		]);
+		expect(staleKitListings(graphOf({}))).toEqual(Object.keys(LEGACY));
 	});
 });

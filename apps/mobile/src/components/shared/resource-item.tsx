@@ -1,5 +1,5 @@
 import type { Resource } from "@xolace/backend/convex/lib/crisisResources";
-import { PressableFeedback, useToast } from "heroui-native";
+import { PressableFeedback } from "heroui-native";
 import { Linking, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
@@ -9,6 +9,8 @@ type Props = {
 	resource: Resource;
 	index: number;
 	onTap?: (resource: Resource) => void;
+	/** Says why a line couldn't open (no dialer, no mail app); the caller owns the toast. */
+	onOpenFailed: (message: string) => void;
 };
 
 async function openResourceUrl(
@@ -52,8 +54,7 @@ const EASE_EASING: [number, number, number, number] = [
 	0.455, 0.03, 0.515, 0.955,
 ];
 
-export function ResourceItem({ resource, index, onTap }: Props) {
-	const { toast } = useToast();
+export function ResourceItem({ resource, index, onTap, onOpenFailed }: Props) {
 	const delay = 400 + index * 150;
 
 	const isTappable =
@@ -77,9 +78,7 @@ export function ResourceItem({ resource, index, onTap }: Props) {
 	const handlePress = async () => {
 		playSoftPress();
 		onTap?.(resource);
-		await openResourceUrl(resource, (msg) =>
-			toast.show({ label: msg, variant: "default" })
-		);
+		await openResourceUrl(resource, onOpenFailed);
 	};
 
 	const inner = (

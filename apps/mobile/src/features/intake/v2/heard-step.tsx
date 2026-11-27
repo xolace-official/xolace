@@ -1,7 +1,7 @@
 import { Button, PressableFeedback } from "heroui-native";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { Flux } from "@/features/intake/v2/flux";
+import { MoodFlux } from "@/components/xolace-face/mood-flux";
 import {
 	CHIP_GROUPS,
 	type Chip,
@@ -48,7 +48,7 @@ export function HeardStep({
 				showsVerticalScrollIndicator={false}
 			>
 				<View className="flex-row items-center gap-3">
-					<Flux mood="warm" size={FLUX_SIZE} />
+					<MoodFlux mood="warm" size={FLUX_SIZE} />
 					<View className="flex-1">
 						<AppText className="font-[Poppins-SemiBold] text-[12px] text-ember uppercase tracking-[1.7px]">
 							Here&apos;s what I heard

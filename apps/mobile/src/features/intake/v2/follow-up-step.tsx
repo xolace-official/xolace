@@ -1,7 +1,7 @@
 import { Button, useThemeColor } from "heroui-native";
 import { TextInput, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { Flux, useSaying } from "@/features/intake/v2/flux";
+import { MoodFlux, useSaying } from "@/components/xolace-face/mood-flux";
 import { KeyboardStep } from "@/features/intake/v2/keyboard-step";
 import { playSoftPress } from "@/lib/haptics";
 
@@ -47,7 +47,7 @@ export function FollowUpStep({
 			}
 		>
 			<View className="flex-row items-center gap-3">
-				<Flux mood={saying ? "talking" : "idle"} size={FLUX_SIZE} />
+				<MoodFlux mood={saying ? "talking" : "idle"} size={FLUX_SIZE} />
 				<AppText
 					accessibilityRole="header"
 					className="flex-1 font-[Poppins-SemiBold] text-[20px] text-foreground leading-[26px]"

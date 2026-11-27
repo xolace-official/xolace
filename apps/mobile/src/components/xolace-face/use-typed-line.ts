@@ -1,0 +1,25 @@
+import { useEffect, useState } from "react";
+import { SAY_MS_PER_CHAR } from "@/components/xolace-face/mood-flux";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+
+export function useTypedLine(line: string) {
+	const reduced = useEffectiveReducedMotion();
+	const [shown, setShown] = useState(reduced ? line.length : 0);
+	useEffect(() => {
+		if (reduced) {
+			setShown(line.length);
+			return;
+		}
+		setShown(0);
+		const timer = setInterval(() => {
+			setShown((n) => {
+				if (n + 1 >= line.length) {
+					clearInterval(timer);
+				}
+				return Math.min(n + 1, line.length);
+			});
+		}, SAY_MS_PER_CHAR);
+		return () => clearInterval(timer);
+	}, [line, reduced]);
+	return { done: shown >= line.length, text: line.slice(0, shown) };
+}

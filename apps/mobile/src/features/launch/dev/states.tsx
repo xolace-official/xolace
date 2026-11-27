@@ -19,7 +19,7 @@ const SIGNED_OUT = {
 const INTAKE = {
 	holdMs: 900,
 	reason: "gate",
-	under: { replace: "/dev/intake/first-look" },
+	under: { replace: "/dev/plus/first-look" },
 } as const;
 const DEEP_LINK = {
 	holdMs: 900,

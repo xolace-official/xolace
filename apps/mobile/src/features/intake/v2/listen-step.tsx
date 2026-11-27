@@ -2,11 +2,10 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { Flux } from "@/features/intake/v2/flux";
-import type { MicFailure } from "@/features/intake/v2/machine";
-import { useListenTake } from "@/features/intake/v2/use-listen-take";
+import { MoodFlux } from "@/components/xolace-face/mood-flux";
 import { formatTime } from "@/lib/format-time";
 import { playSoftPress } from "@/lib/haptics";
+import { type MicFailure, useListenTake } from "@/lib/speech/use-listen-take";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const FLUX_SIZE = 150;
@@ -24,7 +23,7 @@ export function ListenStep({ onDone, onUnavailable }: Props) {
 
 	return (
 		<View className="flex-1 items-center px-6 pt-4">
-			<Flux mood="listening" size={FLUX_SIZE} />
+			<MoodFlux mood="listening" size={FLUX_SIZE} />
 			<AppText className="mt-1.5 font-[Poppins-SemiBold] text-[13px] text-ember uppercase tracking-[1px]">
 				{take.listening
 					? `Listening · ${formatTime(take.seconds)}`
