@@ -49,3 +49,21 @@ export function connectionStripLine({
 	}
 	return THREAD.cantReachStrip;
 }
+
+/**
+ * What VoiceOver hears as the strip's `line` changes; `heard` is the last line it spoke.
+ * Each new message is spoken once. "Reconnecting." lasts only the grace, so it's never
+ * spoken and doesn't count as a change; the strip clearing forgets what was said.
+ */
+export function stripSpeech(
+	heard: string | null,
+	line: string | null
+): { announce: string | null; heard: string | null } {
+	if (line === null) {
+		return { announce: null, heard: null };
+	}
+	if (line === THREAD.reconnecting || line === heard) {
+		return { announce: null, heard };
+	}
+	return { announce: line, heard: line };
+}

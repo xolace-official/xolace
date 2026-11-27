@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { chatStream, connectionStripLine } from "./connection-strip-model";
+import {
+	chatStream,
+	connectionStripLine,
+	stripSpeech,
+} from "./connection-strip-model";
 
 const OFFLINE =
 	"You're offline. Messages won't send until the connection is back.";
@@ -65,5 +69,41 @@ describe("Stream's side of the strip", () => {
 		expect(
 			chatStream({ held: false, isOnline: false, recovering: false })
 		).toBe("down");
+	});
+});
+
+describe("what VoiceOver hears from the strip", () => {
+	it("speaks a new message once", () => {
+		expect(stripSpeech(null, OFFLINE)).toEqual({
+			announce: OFFLINE,
+			heard: OFFLINE,
+		});
+		expect(stripSpeech(OFFLINE, OFFLINE)).toEqual({
+			announce: null,
+			heard: OFFLINE,
+		});
+	});
+
+	it("speaks the next message when the wording changes", () => {
+		expect(stripSpeech(OFFLINE, CANT_REACH)).toEqual({
+			announce: CANT_REACH,
+			heard: CANT_REACH,
+		});
+	});
+
+	it("never speaks the brief reconnecting line, and a reconnect attempt doesn't repeat the last one", () => {
+		expect(stripSpeech(null, RECONNECTING)).toEqual({
+			announce: null,
+			heard: null,
+		});
+		const during = stripSpeech(CANT_REACH, RECONNECTING);
+		expect(during).toEqual({ announce: null, heard: CANT_REACH });
+		expect(stripSpeech(during.heard, CANT_REACH).announce).toBeNull();
+	});
+
+	it("forgets what it said once the strip clears, so the next outage is spoken", () => {
+		const cleared = stripSpeech(OFFLINE, null);
+		expect(cleared).toEqual({ announce: null, heard: null });
+		expect(stripSpeech(cleared.heard, OFFLINE).announce).toBe(OFFLINE);
 	});
 });

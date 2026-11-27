@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { useIsFocused } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { AccessibilityInfo, Platform, View } from "react-native";
 import {
 	NetworkDownIndicator,
 	useChannelContext,
@@ -11,7 +12,11 @@ import { CONNECTION_GRACE_MS } from "@/lib/connection/connection-model";
 import { useReach } from "@/lib/connection/use-connection";
 import { useClaimOfflineMessage } from "@/lib/connection/use-offline-claim";
 import { useTokenColor } from "@/lib/use-token-color";
-import { chatStream, connectionStripLine } from "../connection-strip-model";
+import {
+	chatStream,
+	connectionStripLine,
+	stripSpeech,
+} from "../connection-strip-model";
 
 const OFFLINE = { android: "wifi_off", ios: "wifi.slash" } as const;
 const CANT_REACH = { android: "cloud_off", ios: "icloud.slash" } as const;
@@ -31,6 +36,27 @@ function useHeldDown(down: boolean): boolean {
 }
 
 /**
+ * Speaks each new strip message to VoiceOver while chat is focused. The live region covers
+ * TalkBack; on iOS it does nothing, and the root banner that would announce is claimed here.
+ */
+function useSpokenOnIos(line: string | null): void {
+	const focused = useIsFocused();
+	const heard = useRef<string | null>(null);
+	useEffect(() => {
+		if (Platform.OS !== "ios" || !focused) {
+			return;
+		}
+		const step = stripSpeech(heard.current, line);
+		heard.current = step.heard;
+		if (step.announce !== null) {
+			AccessibilityInfo.announceForAccessibilityWithOptions(step.announce, {
+				queue: true,
+			});
+		}
+	}, [focused, line]);
+}
+
+/**
  * Chat's one connection message, above the composer. While it's mounted on the focused
  * screen it claims the offline message, so the root banner hides; a thread with no composer
  * (closed, or messages that never loaded) keeps the banner.
@@ -45,6 +71,7 @@ export function ConnectionStrip() {
 		reach,
 		stream: chatStream({ held, isOnline, recovering: connectionRecovering }),
 	});
+	useSpokenOnIos(line);
 	if (line === null) {
 		return null;
 	}
