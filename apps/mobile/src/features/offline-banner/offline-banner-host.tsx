@@ -7,6 +7,7 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { OFFLINE_BANNER } from "./copy";
 import { bannerStart, bannerVisible, nextBanner } from "./offline-banner-model";
 import { OfflineStrip } from "./offline-strip";
+import { useAppActive, useScreenReaderOn } from "./use-banner-device";
 
 /** "You're offline." over the main screens, following the device's internet only. */
 export function OfflineBannerHost({
@@ -17,11 +18,19 @@ export function OfflineBannerHost({
 	const offline = useOffline();
 	const claimed = useOfflineMessageClaimed();
 	const covered = isPresented(usePathname());
+	const active = useAppActive();
+	const listening = useScreenReaderOn();
 	const reduced = useEffectiveReducedMotion();
 	const bannerState = useRef(bannerStart);
 
 	useEffect(() => {
-		const step = nextBanner(bannerState.current, { claimed, covered, offline });
+		const step = nextBanner(bannerState.current, {
+			active,
+			claimed,
+			covered,
+			listening,
+			offline,
+		});
 		bannerState.current = step.state;
 		if (step.announce !== null) {
 			AccessibilityInfo.announceForAccessibilityWithOptions(
@@ -29,9 +38,9 @@ export function OfflineBannerHost({
 				{ queue: true }
 			);
 		}
-	}, [claimed, covered, offline]);
+	}, [active, claimed, covered, listening, offline]);
 
-	return bannerVisible({ claimed, covered, offline }) ? (
+	return bannerVisible({ active, claimed, covered, listening, offline }) ? (
 		<OfflineStrip reduced={reduced} />
 	) : null;
 }

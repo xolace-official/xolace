@@ -6,7 +6,13 @@ import {
 	nextBanner,
 } from "./offline-banner-model";
 
-const ONLINE: BannerInput = { claimed: false, covered: false, offline: false };
+const ONLINE: BannerInput = {
+	active: true,
+	claimed: false,
+	covered: false,
+	listening: true,
+	offline: false,
+};
 const OFFLINE: BannerInput = { ...ONLINE, offline: true };
 
 /** Feeds the inputs in order and returns each step's visible flag and announcement. */
@@ -67,6 +73,29 @@ describe("the offline banner", () => {
 			"offline",
 			"back_online",
 			"offline",
+		]);
+	});
+
+	it("says nothing when the app comes back mid-outage and the flag restarts its grace", () => {
+		const away = { ...OFFLINE, active: false };
+		// Back in the foreground, the model restarts the 3 s grace, so offline reads false a moment.
+		const graceAfterReturn = ONLINE;
+		expect(
+			run([OFFLINE, away, graceAfterReturn, OFFLINE]).map((s) => s.announce)
+		).toEqual(["offline", null, null, "offline"]);
+	});
+
+	it("doesn't count the offline line as heard while no screen reader is on", () => {
+		const unheard = { ...OFFLINE, listening: false };
+		expect(run([unheard, ONLINE]).map((s) => s.announce)).toEqual([null, null]);
+	});
+
+	it("announces offline when a screen reader turns on with the banner up", () => {
+		const unheard = { ...OFFLINE, listening: false };
+		expect(run([unheard, OFFLINE, ONLINE]).map((s) => s.announce)).toEqual([
+			null,
+			"offline",
+			"back_online",
 		]);
 	});
 });

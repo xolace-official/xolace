@@ -40,6 +40,13 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
 			} else if (state === "active" && background) {
 				background = false;
 				next.send({ type: "foreground" });
+				// iOS sends no NetInfo event for a Wi-Fi switch made while the app was away, so
+				// read it again (NetInfo's advice). The model ignores an answer that lands after stop.
+				NetInfo.fetch()
+					.then((net) =>
+						next.send({ internet: internetOf(net), type: "internet" })
+					)
+					.catch(() => undefined);
 			}
 		});
 		setModel(next);
