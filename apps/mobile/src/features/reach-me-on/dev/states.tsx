@@ -1,4 +1,5 @@
 import type { DevState } from "@/dev/dev-state";
+import { FixtureOffer } from "@/features/reach-me-on/dev/fixture-offer";
 import { FixtureSheet } from "@/features/reach-me-on/dev/fixture-sheet";
 import {
 	LINKED,
@@ -7,6 +8,7 @@ import {
 } from "@/features/reach-me-on/dev/fixtures";
 
 const OPTIONS = { title: "Reach me on…" };
+const OFFER_OPTIONS = { title: "Check-in" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
 export const devStates: readonly DevState[] = [
@@ -57,5 +59,23 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureSheet channels={LINKED} step="linked" />,
 		title: "Linking, step 3: linked",
+	},
+	{
+		id: "offer",
+		options: OFFER_OPTIONS,
+		Screen: () => <FixtureOffer />,
+		title: "Check-in offer: link Telegram?",
+	},
+	{
+		id: "offer-offline",
+		options: OFFER_OPTIONS,
+		Screen: () => <FixtureOffer offline />,
+		title: "Check-in offer, offline: Link dimmed",
+	},
+	{
+		id: "offer-linking",
+		options: OFFER_OPTIONS,
+		Screen: () => <FixtureOffer step="disclose" />,
+		title: "Check-in offer, step 1: what Telegram gets",
 	},
 ];
