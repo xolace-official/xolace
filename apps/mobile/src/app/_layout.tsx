@@ -18,8 +18,10 @@ import { LaunchCover } from "@/features/launch/launch-cover";
 import { LaunchHold } from "@/features/launch/launch-hold";
 import { useLaunchRevealed } from "@/features/launch/launch-store";
 import { isPresentedRoute } from "@/features/navigation/presented-routes";
-import { isGroupOpen, rootGate } from "@/features/navigation/root-gate";
+import { isGroupOpen } from "@/features/navigation/root-gate";
+import { useRootGate } from "@/features/navigation/use-root-gate";
 import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
+import { useCantReachXolace } from "@/lib/connection/use-connection";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { fitSheet } from "@/lib/root-screen";
 import { OBSERVE_FILTERED_PARAMS, screenName } from "@/lib/screen-name";
@@ -98,6 +100,7 @@ const AppContent = () => {
 	const seatHeld = useAppStore((s) => s.seatHeld);
 	const accountPending = useAppStore((s) => s.accountPending);
 	const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+	const cantReachXolace = useCantReachXolace();
 	const { isSignedIn, isLoaded: isClerkLoaded, userId } = useAuth();
 	const posthog = usePostHog();
 
@@ -107,17 +110,18 @@ const AppContent = () => {
 		context === undefined
 			? undefined
 			: context.profile.onboardingComplete === true;
-	const gate = rootGate({
+	const pathname = usePathname();
+	const gate = useRootGate({
 		authenticated: isAuthenticated,
 		authLoading: isAuthLoading,
+		cantReachXolace,
 		onboardingComplete,
 		seatHeld,
 	});
-	const pathname = usePathname();
 	const revealed = useLaunchRevealed();
 	// A root sheet can't present over a group's own sheet or modal, so the notice waits for it.
 	useUpdatePrompt({
-		gateLoading: gate === "loading",
+		gateLoading: gate === "loading" || gate === "(cant-reach)",
 		presented: isPresentedRoute(pathname),
 		revealed,
 	});
@@ -129,6 +133,7 @@ const AppContent = () => {
 			category: "auth.guard",
 			data: {
 				accountPending,
+				cantReachXolace,
 				clerkLoaded: isClerkLoaded,
 				clerkSignedIn: !!isSignedIn,
 				convexAuthenticated: isAuthenticated,
@@ -143,6 +148,7 @@ const AppContent = () => {
 		});
 	}, [
 		accountPending,
+		cantReachXolace,
 		gate,
 		introSeen,
 		isAuthenticated,
@@ -183,6 +189,9 @@ const AppContent = () => {
 				</Stack.Protected>
 				<Stack.Protected guard={isGroupOpen(gate, "(protected)")}>
 					<Stack.Screen name="(protected)" options={NO_HEADER} />
+				</Stack.Protected>
+				<Stack.Protected guard={isGroupOpen(gate, "(cant-reach)")}>
+					<Stack.Screen name="(cant-reach)" options={NO_HEADER} />
 				</Stack.Protected>
 				<Stack.Screen name="update" options={rootSheet} />
 			</Stack>

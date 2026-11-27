@@ -213,13 +213,20 @@ worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
 
 ## The root guard
 
-`src/app/_layout.tsx` shows one of three groups, decided by `rootGate`
+`src/app/_layout.tsx` shows one of four groups, decided by `rootGate`
 (`src/features/navigation/root-gate.ts`, a pure function with its tests): `(first-run)`
 (promise, story, sign-in) while signed out, `(intake)` until onboarding is complete, then
 `(protected)`. Change who sees what there and in its tests, never with a `<Redirect>` in a
 screen. `seatHeld` (the store) keeps `(first-run)` up for the seated moment after a sign-in;
 the sign-in hook releases it, and an onboarded account goes straight to `(protected)`.
 The launch cover and native splash sit before the guard and aren't first run's.
+`(cant-reach)` replaces the gate's spinner once Xolace can't be reached (an offline cold
+start): "Can't load this right now." with "Need help now?", which opens the bundled crisis
+resources at `/need-help` inside the group, so they work without passing the gate. The gate
+moves on by itself when Xolace is back, but not while those crisis resources are open. Clerk's
+launch load fails offline and its React wrapper never retries, so `ConvexClientProvider`
+remounts `ClerkProvider` (`ClerkLoadRetry`, `clerkRetryDelay`) once Xolace can be reached
+again; `ConnectionProvider` sits above it so the connection model survives the remount.
 
 ## The launch cover
 

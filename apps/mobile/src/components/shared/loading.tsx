@@ -54,8 +54,17 @@ export function Loading({
 export const useLoadingStalled = (loading: boolean): boolean =>
 	useCantReachXolace() && loading;
 
-/** "Can't load this right now." */
-function CantLoad({ className }: { className?: string }) {
+/**
+ * "Can't load this right now." `children` go under the words, outside what a screen reader
+ * reads as the message (the launch gate's way to crisis resources).
+ */
+export function CantLoad({
+	children,
+	className,
+}: {
+	children?: ReactNode;
+	className?: string;
+}) {
 	const reduced = useEffectiveReducedMotion();
 	return (
 		// `className` places the message; the inner view is what a screen reader focuses, so its
@@ -78,6 +87,7 @@ function CantLoad({ className }: { className?: string }) {
 					{CANT_LOAD.body}
 				</AppText>
 			</View>
+			{children}
 		</Animated.View>
 	);
 }

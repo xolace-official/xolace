@@ -9,7 +9,9 @@ import {
 const SIGNED_OUT: RootGateInput = {
 	authenticated: false,
 	authLoading: false,
+	cantReachXolace: false,
 	onboardingComplete: undefined,
+	readingHelp: false,
 	seatHeld: false,
 };
 const SIGNED_IN = { ...SIGNED_OUT, authenticated: true };
@@ -19,7 +21,18 @@ function* everyInput(): Generator<RootGateInput> {
 		for (const authenticated of [true, false]) {
 			for (const seatHeld of [true, false]) {
 				for (const onboardingComplete of [true, false, undefined]) {
-					yield { authenticated, authLoading, onboardingComplete, seatHeld };
+					for (const cantReachXolace of [true, false]) {
+						for (const readingHelp of [true, false]) {
+							yield {
+								authenticated,
+								authLoading,
+								cantReachXolace,
+								onboardingComplete,
+								readingHelp,
+								seatHeld,
+							};
+						}
+					}
 				}
 			}
 		}
@@ -27,6 +40,42 @@ function* everyInput(): Generator<RootGateInput> {
 }
 
 describe("rootGate", () => {
+	it("stops waiting for the token once Xolace can't be reached", () => {
+		const cut = { cantReachXolace: true };
+		expect(rootGate({ ...SIGNED_IN, ...cut, authLoading: true })).toBe(
+			"(cant-reach)"
+		);
+		expect(rootGate({ ...SIGNED_OUT, ...cut, authLoading: true })).toBe(
+			"(cant-reach)"
+		);
+		expect(rootGate({ ...SIGNED_IN, ...cut })).toBe("(cant-reach)");
+	});
+
+	it("never shows the can't-reach message while Xolace can be reached", () => {
+		for (const input of everyInput()) {
+			if (!(input.cantReachXolace || input.readingHelp)) {
+				expect(rootGate(input)).not.toBe("(cant-reach)");
+			}
+		}
+	});
+
+	it("shows the message only in place of a wait, never over a group it could open", () => {
+		for (const input of everyInput()) {
+			if (input.cantReachXolace && !input.readingHelp) {
+				const reachable = rootGate({ ...input, cantReachXolace: false });
+				expect(rootGate(input)).toBe(
+					reachable === "loading" ? "(cant-reach)" : reachable
+				);
+			}
+		}
+	});
+
+	it("keeps crisis resources open from the message even once Xolace is back", () => {
+		const back = { ...SIGNED_IN, onboardingComplete: true, readingHelp: true };
+		expect(rootGate(back)).toBe("(cant-reach)");
+		expect(rootGate({ ...back, readingHelp: false })).toBe("(protected)");
+	});
+
 	it("waits while Convex checks the token, whatever else it knows", () => {
 		expect(rootGate({ ...SIGNED_IN, authLoading: true })).toBe("loading");
 		expect(rootGate({ ...SIGNED_OUT, authLoading: true })).toBe("loading");
@@ -90,7 +139,9 @@ describe("rootGate", () => {
 	it("never opens intake or the app for someone signed out", () => {
 		for (const input of everyInput()) {
 			if (!input.authenticated) {
-				expect(["loading", "(first-run)"]).toContain(rootGate(input));
+				expect(["loading", "(first-run)", "(cant-reach)"]).toContain(
+					rootGate(input)
+				);
 			}
 		}
 	});
