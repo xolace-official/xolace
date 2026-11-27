@@ -18,7 +18,6 @@ import { sessionEndScreens } from "@/features/session-end/screens";
 import { sitWithThisScreens } from "@/features/sit-with-this/screens";
 import { talkScreens } from "@/features/talk/screens";
 import { ventScreens } from "@/features/vent/screens";
-import { xolacerChatScreens } from "@/features/xolacer-chat/screens";
 import { youScreens } from "@/features/you/screens";
 import type { RootScreen } from "@/lib/root-screen";
 
@@ -43,6 +42,5 @@ export const ROOT_SCREENS: readonly RootScreen[] = [
 	...sitWithThisScreens,
 	...talkScreens,
 	...ventScreens,
-	...xolacerChatScreens,
 	...youScreens,
 ];

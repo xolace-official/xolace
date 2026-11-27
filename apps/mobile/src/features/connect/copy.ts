@@ -72,6 +72,22 @@ export const COPY = {
 		label: "Your Xolacer profile",
 		paused: "Your Xolacer profile, you're paused",
 	},
+	rate: {
+		loading: "Loading",
+		nothingBody:
+			"Ratings only come from conversations where messages were actually exchanged.",
+		nothingTitle: "Nothing to rate here",
+		privacy: (name: string) =>
+			`Only you and Xolace see this. ${name} sees an overall score, never which conversation it came from.`,
+		send: "Send",
+		sendFailed: "Couldn't send that. Try again.",
+		sent: "Thanks — that stays between you and Xolace.",
+		skip: "Skip",
+		skipA11y: "Skip rating",
+		starA11y: (star: number) => `Rate ${star} out of 5`,
+		title: "How was this conversation?",
+		update: "Update",
+	},
 	roster: {
 		card: (c: {
 			name: string;
