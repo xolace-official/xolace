@@ -6,7 +6,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { MiniPlayerContent } from "@/features/browse/now-playing/mini-player-accessory";
+import { MiniPlayerContent } from "@/features/player/now-playing/mini-player-accessory";
+import { useMiniPlayer } from "@/features/player/now-playing/use-mini-player";
 
 const GAP = 8;
 const ENTER = FadeInDown.duration(240).easing(Easing.bezier(0.23, 1, 0.32, 1));
@@ -24,6 +25,7 @@ function useTabBarTop() {
 
 export function MiniPlayerOverlay() {
 	const bottom = useTabBarTop() + GAP;
+	const player = useMiniPlayer();
 	return (
 		<Animated.View
 			className="absolute right-3 left-3"
@@ -33,7 +35,7 @@ export function MiniPlayerOverlay() {
 			style={{ bottom }}
 		>
 			<View className="h-12 flex-row rounded-full border border-border/50 bg-surface shadow-lg">
-				<MiniPlayerContent inline={false} />
+				<MiniPlayerContent inline={false} player={player} />
 			</View>
 		</Animated.View>
 	);

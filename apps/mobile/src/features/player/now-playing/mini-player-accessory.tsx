@@ -1,28 +1,22 @@
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
-import { usePostHog } from "posthog-react-native";
 import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import { AppText } from "@/components/shared/app-text";
-import { FAMILY_LABEL } from "@/features/browse/components/track-row";
+import { PLAYER_COPY } from "@/features/player/copy";
 import {
 	MarqueeTitle,
 	useAttentionPulse,
-} from "@/features/browse/now-playing/mini-player-motion";
-import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
-import { playSoftPress } from "@/lib/haptics";
-import { imageSource } from "@/lib/image-source";
+} from "@/features/player/now-playing/mini-player-motion";
 import {
-	clearNowPlaying,
-	togglePlayback,
-	useNowPlaying,
-	useNowPlayingPlayback,
-} from "@/lib/now-playing/now-playing-store";
-import { useSleepTimer } from "@/lib/now-playing/sleep-timer";
+	type MiniPlayer,
+	useMiniPlayer,
+} from "@/features/player/now-playing/use-mini-player";
+import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
+import { imageSource } from "@/lib/image-source";
 import { cn } from "@/lib/utils";
 
 // Object form: a bare SF name renders nothing on Android.
@@ -44,55 +38,39 @@ const ART = {
 
 export function MiniPlayerAccessory() {
 	const placement = NativeTabs.BottomAccessory.usePlacement();
-	return <MiniPlayerContent inline={placement === "inline"} />;
+	const player = useMiniPlayer();
+	return <MiniPlayerContent inline={placement === "inline"} player={player} />;
 }
 
-export function MiniPlayerContent({ inline }: { inline: boolean }) {
-	const np = useNowPlaying();
-	const p = useNowPlayingPlayback();
-	const posthog = usePostHog();
+export function MiniPlayerContent({
+	inline,
+	player,
+}: {
+	inline: boolean;
+	player: MiniPlayer | null;
+}) {
 	const [foreground, muted] = useThemeColor(["foreground", "muted"]);
 	const { reduceTransparencyEnabled } = useAccessibilityInfo();
 	const pulse = useAttentionPulse();
-	const sleeping = useSleepTimer((t) => t.choice !== "off");
-	const track = p.track;
-	if (!(np && track)) {
+	if (!player) {
 		return null;
 	}
-
-	const open = () => {
-		playSoftPress();
-		router.push({
-			params: {
-				slug: np.slug,
-				...(np.stepId && { stepId: np.stepId }),
-				...(np.from && { from: np.from }),
-			},
-			pathname: "/player",
-		});
-	};
-	const toggle = () => {
-		playSoftPress();
-		togglePlayback(p, posthog);
-	};
-	const dismiss = () => {
-		playSoftPress();
-		if (p.isPlaying) {
-			p.toggle();
-		}
-		clearNowPlaying();
-	};
+	const {
+		state: { track, isPlaying, sleeping },
+		actions: { open, toggle, dismiss },
+	} = player;
+	const family = PLAYER_COPY.family[track.family];
 
 	const playGlyph = (
 		<Pressable
-			accessibilityLabel={p.isPlaying ? "Pause" : "Play"}
+			accessibilityLabel={isPlaying ? PLAYER_COPY.pause : PLAYER_COPY.play}
 			accessibilityRole="button"
 			className="p-1.5"
 			hitSlop={8}
 			onPress={toggle}
 		>
 			<SymbolView
-				name={p.isPlaying ? PAUSE : PLAY}
+				name={isPlaying ? PAUSE : PLAY}
 				size={inline ? 16 : 20}
 				tintColor={foreground}
 			/>
@@ -109,12 +87,10 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
 			style={pulse}
 		>
 			<Pressable
-				accessibilityHint="Opens the player"
+				accessibilityHint={PLAYER_COPY.mini.openHint}
 				accessibilityLabel={
-					(inline
-						? track.title
-						: `${track.title}, ${FAMILY_LABEL[track.family]}`) +
-					(sleeping ? ", sleep timer on" : "")
+					(inline ? track.title : `${track.title}, ${family}`) +
+					(sleeping ? PLAYER_COPY.mini.sleeping : "")
 				}
 				accessibilityRole="button"
 				className="flex-1 flex-row items-center gap-2.5"
@@ -138,7 +114,7 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
 								className="flex-1 text-[13px] text-muted"
 								numberOfLines={1}
 							>
-								{FAMILY_LABEL[track.family]}
+								{family}
 							</AppText>
 						</View>
 					)}
@@ -147,8 +123,8 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
 			{playGlyph}
 			{!inline && (
 				<Pressable
-					accessibilityHint="Stops this track and removes the mini-player"
-					accessibilityLabel="Stop and close"
+					accessibilityHint={PLAYER_COPY.mini.closeHint}
+					accessibilityLabel={PLAYER_COPY.mini.close}
 					accessibilityRole="button"
 					className="p-1.5"
 					hitSlop={8}

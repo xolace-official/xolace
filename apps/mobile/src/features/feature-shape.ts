@@ -6,7 +6,7 @@ import {
 	relative,
 } from "@/features/import-graph";
 
-const REPLACED_FEATURES = ["browse", "intake", "reach-me-on", "xolacer-chat"];
+const REPLACED_FEATURES = ["intake", "reach-me-on", "xolacer-chat"];
 
 const RESTYLED_FEATURES = ["purchases"];
 

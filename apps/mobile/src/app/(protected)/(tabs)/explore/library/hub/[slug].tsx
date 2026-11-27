@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { useOpenTrack } from "@/features/browse/use-open-track";
+import { useOpenTrack } from "@/features/explore/use-open-track";
 import {
 	HubData,
 	type HubListen,

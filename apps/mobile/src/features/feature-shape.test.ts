@@ -43,14 +43,14 @@ describe("oldFolderImportsFromNewCode", () => {
 	it("flags a ported folder or a lower layer importing an old folder, types included", () => {
 		const graph = graphOf({
 			"components/shared/card.tsx": [local("features/intake/tile.tsx")],
-			"design/type.ts": [local("features/browse/faces.ts", true)],
+			"design/type.ts": [local("features/intake/faces.ts", true)],
 			"features/today/today-screen.tsx": [
 				local("features/intake/components/intake-screen.tsx"),
 			],
 		});
 		expect(oldFolderImportsFromNewCode(graph)).toEqual([
 			"components/shared/card.tsx -> features/intake/tile.tsx",
-			"design/type.ts -> features/browse/faces.ts",
+			"design/type.ts -> features/intake/faces.ts",
 			"features/today/today-screen.tsx -> features/intake/components/intake-screen.tsx",
 		]);
 	});
@@ -61,11 +61,11 @@ describe("oldFolderImportsFromNewCode", () => {
 				local("features/intake/components/intake-screen.tsx"),
 			],
 			"features/intake/quotes-screen.tsx": [
-				local("features/browse/browse-home.tsx"),
+				local("features/purchases/paywall-screen.tsx"),
 				local("features/intake/tile.tsx"),
 			],
 			"features/navigation/root-screens.ts": [
-				local("features/browse/screens.ts"),
+				local("features/intake/screens.ts"),
 			],
 			"features/today/today-screen.tsx": [
 				local("features/purchases/use-paywall.ts"),
@@ -220,7 +220,7 @@ describe("backendCallsOutsideDataHooks", () => {
 
 	it("allows data hooks, type-only imports, other heroui parts and old folders", () => {
 		const graph = graphOf({
-			"features/browse/streak-card.tsx": [pkg("convex/react", ["useQuery"])],
+			"features/intake/streak-card.tsx": [pkg("convex/react", ["useQuery"])],
 			"features/today/hero/hero.tsx": [
 				{ ...pkg("@xolace/backend/convex/_generated/api"), typeOnly: true },
 				pkg("heroui-native", ["Button"]),
@@ -257,14 +257,14 @@ describe("crossFeatureImportsFromPorted", () => {
 
 	it("leaves an import of an old folder to oldFolderImportsFromNewCode", () => {
 		const graph = graphOf({
-			"features/today/today-screen.tsx": [local("features/browse/x.ts")],
+			"features/today/today-screen.tsx": [local("features/intake/x.ts")],
 		});
 		expect(crossFeatureImportsFromPorted(graph)).toEqual([]);
 	});
 
 	it("allows the shared modules, lower layers, old folders and the navigation hub", () => {
 		const graph = graphOf({
-			"features/intake/quote-screen.tsx": [local("features/browse/x.ts")],
+			"features/intake/quote-screen.tsx": [local("features/purchases/x.ts")],
 			"features/navigation/root-screens.ts": [
 				local("features/today/screens.ts"),
 			],
@@ -304,7 +304,7 @@ describe("portedFolderImportsFromOldCode", () => {
 				local("features/today/today-screen.tsx"),
 			],
 			"features/intake/library-strip.tsx": [
-				local("features/browse/use-open-track.ts"),
+				local("features/purchases/plus-status.ts"),
 				local("features/navigation/tabs.ts"),
 				local("features/purchases/use-paywall.ts"),
 			],
