@@ -1,7 +1,7 @@
 import { type ObjectType, v } from "convex/values";
 import { type QueryCtx, query } from "../_generated/server";
 import { topicTitle } from "../ai/paths/catalog";
-import { requireAuth } from "../lib/auth";
+import { requireSignedIn } from "../lib/auth";
 import {
 	activeTopics,
 	thumbUrlFor,
@@ -26,7 +26,7 @@ export const topicTileValidator = v.object({
 
 /** Topic grid — one tile per shared topic with ≥ 1 active track in either family. */
 export async function getTopicsCore(ctx: QueryCtx) {
-	await requireAuth(ctx);
+	await requireSignedIn(ctx);
 	return await Promise.all(
 		(await activeTopics(ctx)).map(async ({ thumbKey, ...t }) => ({
 			...t,
@@ -54,7 +54,7 @@ export async function getTopicTitleCore(
 	ctx: QueryCtx,
 	args: ObjectType<typeof topicSlugArgs>
 ) {
-	await requireAuth(ctx);
+	await requireSignedIn(ctx);
 	const row = await ctx.db
 		.query("topics")
 		.withIndex("by_slug", (q) => q.eq("slug", args.slug))
@@ -67,7 +67,7 @@ export async function getTopicCore(
 	ctx: QueryCtx,
 	args: ObjectType<typeof topicSlugArgs>
 ) {
-	await requireAuth(ctx);
+	await requireSignedIn(ctx);
 	return await Promise.all(
 		(await topicTracks(ctx, args.slug)).map(trackItems(ctx))
 	);
@@ -108,7 +108,7 @@ export const topicHeaderValidator = v.object({
 export const getTopicHeader = query({
 	args: topicSlugArgs,
 	handler: async (ctx, args) => {
-		await requireAuth(ctx);
+		await requireSignedIn(ctx);
 		const tracks = await topicTracks(ctx, args.slug);
 		const first = tracks[0];
 		if (!first) {
