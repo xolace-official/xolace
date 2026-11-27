@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { Reach } from "@/lib/connection/connection-model";
 import { NOW } from "../../dev/fixtures";
 import { deviceClock } from "../../device-clock";
 import {
@@ -16,6 +17,7 @@ import {
 import { ThreadScreen } from "../thread-screen";
 import type { DevMessage } from "./dev-messages";
 import { DevChat, useDevChannel, useDevTyping } from "./dev-stream";
+import { OPEN } from "./thread-fixtures";
 
 const noop = () => undefined;
 
@@ -36,6 +38,7 @@ export function FixtureThread({
 	typing = false,
 	liveTyping = false,
 	online = true,
+	reach,
 	lastHere,
 	phase,
 }: {
@@ -45,6 +48,7 @@ export function FixtureThread({
 	typing?: boolean;
 	liveTyping?: boolean;
 	online?: boolean;
+	reach?: Reach;
 	lastHere?: number;
 	phase?: "loading" | "gone";
 }) {
@@ -91,7 +95,7 @@ export function FixtureThread({
 		}),
 	};
 	return (
-		<DevChat client={client} online={online}>
+		<DevChat client={client} online={online} reach={reach}>
 			<ThreadProvider value={value}>
 				<ThreadScreen />
 			</ThreadProvider>
@@ -139,5 +143,23 @@ export function FixtureXolacer({
 		<XolacerProvider value={value}>
 			<XolacerScreen />
 		</XolacerProvider>
+	);
+}
+
+/** An open thread with Stream down; `reach` stands in for the device's own reading. */
+export function StreamDown({
+	messages,
+	reach,
+}: {
+	messages: readonly DevMessage[];
+	reach?: Reach;
+}) {
+	return (
+		<FixtureThread
+			conversation={OPEN}
+			messages={messages}
+			online={false}
+			reach={reach}
+		/>
 	);
 }

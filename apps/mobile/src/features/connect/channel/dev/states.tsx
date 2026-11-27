@@ -134,7 +134,9 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "channel-offline",
 		options: CHANNEL,
-		Screen: () => <FixtureChannel online={false} posts={POSTS} />,
+		Screen: () => (
+			<FixtureChannel online={false} posts={POSTS} reach="offline" />
+		),
 		title: "Xolace channel offline",
 	},
 	{

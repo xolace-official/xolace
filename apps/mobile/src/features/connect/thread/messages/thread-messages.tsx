@@ -25,8 +25,8 @@ import {
 	SUPPORTED_REACTIONS,
 	TEXT_ONLY_CAPABILITIES,
 } from "./channel-config";
+import { ConnectionStrip } from "./connection-strip";
 import { ConversationIdentityProvider } from "./message-identity";
-import { OfflineStrip } from "./offline-strip";
 import { useThreadStreamStyle } from "./thread-theme";
 
 export function ThreadMessages({
@@ -82,7 +82,7 @@ export function ThreadMessages({
 							<MessageList />
 							{conversation.status === "open" ? (
 								<>
-									<OfflineStrip />
+									<ConnectionStrip />
 									<MessageComposer />
 								</>
 							) : state.phase === "ready" ? (

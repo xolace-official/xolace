@@ -1,6 +1,8 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { type Channel, StreamChat } from "stream-chat";
 import { Chat } from "stream-chat-expo";
+import type { ConnectionModel, Reach } from "@/lib/connection/connection-model";
+import { ConnectionContext } from "@/lib/connection/use-connection";
 import { useStreamTheme } from "@/lib/stream-chat/stream-theme";
 import { NOW, PEOPLE } from "../../dev/fixtures";
 import { type DevMessage, ME, streamMessage } from "./dev-messages";
@@ -108,15 +110,32 @@ export function useDevTyping(
 	}, [client, channel, live]);
 }
 
+const noop = () => undefined;
+
+/** The connection flags held at one reading, so a dev state can show the device offline. */
+function heldConnection(reach: Reach): ConnectionModel {
+	const flags = {
+		cantReachXolace: reach !== "reachable",
+		offline: reach === "offline",
+	};
+	return { flags: () => flags, send: noop, stop: noop, subscribe: () => noop };
+}
+
+/** Stream's reading is `online`; `reach`, when given, stands in for the app's own. */
 export function DevChat({
 	client,
 	online,
+	reach,
 	children,
 }: {
 	client: StreamChat;
 	online: boolean;
+	reach?: Reach;
 	children: ReactNode;
 }) {
+	const [connection] = useState(() =>
+		reach === undefined ? null : heldConnection(reach)
+	);
 	useEffect(() => {
 		const id = setTimeout(() => {
 			client.dispatchEvent({ online, type: "connection.changed" });
@@ -129,7 +148,11 @@ export function DevChat({
 	const style = useStreamTheme();
 	return (
 		<Chat client={client} style={style}>
-			{children}
+			{connection === null ? (
+				children
+			) : (
+				<ConnectionContext value={connection}>{children}</ConnectionContext>
+			)}
 		</Chat>
 	);
 }

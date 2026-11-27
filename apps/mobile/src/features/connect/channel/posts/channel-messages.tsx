@@ -21,8 +21,8 @@ import {
 } from "../../thread/messages/channel-config";
 import {
 	ChannelErrorIndicator,
-	OfflineStrip,
-} from "../../thread/messages/offline-strip";
+	ConnectionStrip,
+} from "../../thread/messages/connection-strip";
 import { useThreadStreamStyle } from "../../thread/messages/thread-theme";
 import { CHANNEL } from "../copy";
 import { ChannelComposer } from "./composer";
@@ -75,7 +75,7 @@ export function ChannelMessages({ channel }: { channel: StreamChannel }) {
 						topInset={insets.top}
 					>
 						<MessageList />
-						<OfflineStrip />
+						<ConnectionStrip />
 						<ChannelComposer />
 					</Channel>
 				</WithComponents>

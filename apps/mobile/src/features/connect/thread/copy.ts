@@ -74,6 +74,8 @@ export const THREAD = {
 		confirm: "Block",
 		title: "Block this conversation?",
 	},
+	cantReachStrip:
+		"Can't reach chat right now. Messages won't send until it's back.",
 	help: "Get help now",
 	hereNow: "here now",
 	lastHere: (ago: string) => `last here ${ago}`,
