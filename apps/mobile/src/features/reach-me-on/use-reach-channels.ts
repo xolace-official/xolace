@@ -1,8 +1,8 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { useToast } from "heroui-native";
 import { useFeatureFlag, usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
+import { toast } from "@/components/shared/toast";
 import { deviceRegion } from "@/features/reach-me-on/link-consent";
 import { type Channel, sheetOrder } from "@/features/reach-me-on/reach-view";
 
@@ -20,7 +20,6 @@ export function useReachChannels() {
 	const setChannelPaused = useMutation(api.outreach.reachMe.setChannelPaused);
 	const unlinkChannel = useMutation(api.outreach.reachMe.unlinkChannel);
 	const posthog = usePostHog();
-	const { toast } = useToast();
 
 	useEffect(() => {
 		posthog.capture("reach_screen_opened");
@@ -33,9 +32,8 @@ export function useReachChannels() {
 	}, [posthog, refreshCountry]);
 
 	const failed = (label: string) =>
-		toast.show({
+		toast(label, {
 			description: "Check your connection and try again.",
-			label,
 			variant: "danger",
 		});
 
