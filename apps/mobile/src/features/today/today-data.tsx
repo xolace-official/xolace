@@ -1,6 +1,7 @@
 import type { Href } from "expo-router";
 import { createContext, type ReactNode, use } from "react";
 import type { CampfireView } from "./campfire/campfire-model";
+import type { FindingAnswer } from "./finding/finding-model";
 import type { KindlingEmptyMode } from "./kindling/card-mode";
 import type { KindlingView } from "./kindling/kindling-model";
 import type { MomentView } from "./moments/moments-model";
@@ -28,6 +29,7 @@ export type Today = {
 		kindling: KindlingView | null | undefined;
 		kindlingEmpty: KindlingEmptyMode | undefined;
 		campfire: CampfireView | null;
+		findingDue: boolean;
 		day: string;
 		rail: RailTile[] | undefined;
 		playingSlug: string | null;
@@ -40,6 +42,8 @@ export type Today = {
 		openStreak: () => void;
 		rekindle: () => void;
 		pressReflect: () => void;
+		answerFinding: (answer: FindingAnswer) => void;
+		dismissFinding: () => void;
 		openDoor: (door: Door) => void;
 		openKindling: () => void;
 		talkForKindling: () => void;

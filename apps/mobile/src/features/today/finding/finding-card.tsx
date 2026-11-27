@@ -1,40 +1,24 @@
-import { api } from "@xolace/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
-import { PressableFeedback } from "heroui-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { Card } from "@/components/shared/card";
-import {
-	type FindingPicks,
-	findingAnswer,
-	findingCardDue,
-	findingStep,
-} from "@/features/intake/finding-card-model";
-import { useRecordDeferredAnswer } from "@/features/intake/use-record-deferred-answer";
-import { useFullContext } from "@/lib/convex/use-full-context";
+import { PressScale } from "@/components/shared/press-scale";
 import { playSoftPress } from "@/lib/haptics";
-import { useAccountFlag } from "@/store/use-account-flag";
+import { COPY } from "../copy";
+import { useToday } from "../today-data";
+import { type FindingPicks, findingAnswer, findingStep } from "./finding-model";
 
 const FADE_MS = 320;
 const THANKS_MS = 2400;
 
 export function FindingCard() {
-	const missing = useQuery(api.intake.deferred.missing);
-	const completedAt = useFullContext()?.intake?.completedAt;
-	const [dismissed, markDismissed] = useAccountFlag("findingCardDismissed");
-	const recordAnswer = useRecordDeferredAnswer();
+	const { state, actions } = useToday();
 	const [showing, setShowing] = useState(false);
 	const [thanked, setThanked] = useState(false);
 	const [picks, setPicks] = useState<FindingPicks>({});
 
-	if (
-		!(showing || thanked) &&
-		missing !== undefined &&
-		completedAt !== undefined &&
-		findingCardDue({ completedAt, dismissed, missing, now: new Date() })
-	) {
+	if (!(showing || thanked) && state.findingDue) {
 		setShowing(true);
 	}
 
@@ -51,25 +35,25 @@ export function FindingCard() {
 	}
 	const step = findingStep(picks);
 
-	const choose = async (value: string) => {
+	const choose = (value: string) => {
 		playSoftPress();
 		const next = step.pick(picks, value);
 		const answer = findingAnswer(next);
 		setPicks(next);
 		if (answer) {
 			setThanked(true);
-			await recordAnswer(answer);
+			actions.answerFinding(answer);
 		}
 	};
 
 	const notNow = () => {
-		markDismissed();
+		actions.dismissFinding();
 		setShowing(false);
 	};
 	const back = () => setPicks({});
 	const aside = step.dismissible
-		? { label: "Not now", onPress: notNow }
-		: { label: "Back", onPress: back };
+		? { label: COPY.finding.notNow, onPress: notNow }
+		: { label: COPY.finding.back, onPress: back };
 
 	return (
 		<Animated.View
@@ -83,7 +67,7 @@ export function FindingCard() {
 						variant="body"
 						weight="medium"
 					>
-						Thank you. It helps us reach people like you.
+						{COPY.finding.thanks}
 					</AppText>
 				) : (
 					<>
@@ -96,9 +80,8 @@ export function FindingCard() {
 							>
 								{step.question}
 							</AppText>
-							<PressableFeedback
+							<PressScale
 								accessibilityLabel={aside.label}
-								accessibilityRole="button"
 								className="min-h-11 justify-center"
 								hitSlop={8}
 								onPress={aside.onPress}
@@ -106,19 +89,18 @@ export function FindingCard() {
 								<AppText color="muted" variant="footnote">
 									{aside.label}
 								</AppText>
-							</PressableFeedback>
+							</PressScale>
 						</View>
 						<View className="flex-row flex-wrap gap-2">
 							{step.choices.map(({ label, value }) => (
-								<PressableFeedback
+								<PressScale
 									accessibilityLabel={label}
-									accessibilityRole="button"
 									className="rounded-full border border-separator px-3.5 py-2"
 									key={value}
 									onPress={() => choose(value)}
 								>
 									<AppText variant="footnote">{label}</AppText>
-								</PressableFeedback>
+								</PressScale>
 							))}
 						</View>
 					</>

@@ -2,7 +2,6 @@ import { View } from "react-native";
 import { ComingBackHost } from "@/features/coming-back/coming-back-host";
 import { ReturnPill } from "@/features/coming-back/pill/return-pill";
 import { ReturnPillData } from "@/features/coming-back/return-pill-data";
-import { FindingCard } from "@/features/intake/finding-card";
 import {
 	useLaunchHold,
 	useLaunchRevealed,
@@ -18,7 +17,6 @@ export default function TodayRoute() {
 			<TodayData>
 				<HoldForToday />
 				<TodayScreen
-					finding={<FindingCard />}
 					pill={(fallback) => (
 						<ReturnPillData>
 							<ReturnPill fallback={fallback} />

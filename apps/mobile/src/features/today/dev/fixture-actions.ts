@@ -8,6 +8,8 @@ const DOOR_HREF = {
 } as const;
 
 export const FIXTURE_ACTIONS: Today["actions"] = {
+	answerFinding: () => undefined,
+	dismissFinding: () => undefined,
 	openDoor: (door) => router.push(DOOR_HREF[door]),
 	openExplore: () => undefined,
 	openHelp: () => router.push("/crisis-resources"),
