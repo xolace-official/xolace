@@ -1,3 +1,4 @@
+import { CantReachThenBack } from "@/dev/cant-reach-then-back";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureYou } from "@/features/you/home/dev/fixture-you";
 
@@ -16,6 +17,16 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureYou loading />,
 		title: "Loading: the header's skeleton",
+	},
+	{
+		id: "cant-load",
+		options: OPTIONS,
+		Screen: () => (
+			<CantReachThenBack>
+				{(back) => <FixtureYou loading={!back} />}
+			</CantReachThenBack>
+		),
+		title: "Can't reach Xolace before You loaded, then back",
 	},
 	{
 		id: "docked",

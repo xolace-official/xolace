@@ -19,6 +19,7 @@ import {
 	pages,
 	pickAt,
 	pickPool,
+	shelvesLoading,
 	tileMeta,
 } from "./home-model";
 
@@ -113,5 +114,25 @@ describe("pages", () => {
 	it("splits into threes, the last one short", () => {
 		expect(pages([1, 2, 3, 4, 5, 6, 7])).toEqual([[1, 2, 3], [4, 5, 6], [7]]);
 		expect(pages([])).toEqual([]);
+	});
+});
+
+describe("shelvesLoading", () => {
+	const loaded = {
+		featured: null,
+		fresh: [],
+		hour: HOUR.day,
+		short: SHORT,
+	};
+
+	it("is false once every shelf has an answer, even an empty one", () => {
+		expect(shelvesLoading(loaded)).toBe(false);
+	});
+
+	it("is true while any one shelf has no answer yet", () => {
+		expect(shelvesLoading({ ...loaded, featured: undefined })).toBe(true);
+		expect(shelvesLoading({ ...loaded, hour: undefined })).toBe(true);
+		expect(shelvesLoading({ ...loaded, fresh: undefined })).toBe(true);
+		expect(shelvesLoading({ ...loaded, short: undefined })).toBe(true);
 	});
 });

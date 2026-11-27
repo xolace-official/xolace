@@ -1,3 +1,4 @@
+import { CantReachThenBack } from "@/dev/cant-reach-then-back";
 import type { DevState } from "@/dev/dev-state";
 import { FixtureArchived, FixtureConnect } from "./fixture-connect";
 import {
@@ -82,6 +83,16 @@ export const devStates: readonly DevState[] = [
 		options: OWN,
 		Screen: () => <FixtureConnect loading />,
 		title: "Connect loading",
+	},
+	{
+		id: "cant-load",
+		options: OWN,
+		Screen: () => (
+			<CantReachThenBack>
+				{(back) => <FixtureConnect loading={!back} />}
+			</CantReachThenBack>
+		),
+		title: "Can't reach Xolace before Connect loaded, then back",
 	},
 	{
 		id: "disabled",

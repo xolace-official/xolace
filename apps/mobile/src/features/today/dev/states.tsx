@@ -1,11 +1,22 @@
+import { CantReachThenBack } from "@/dev/cant-reach-then-back";
 import type { DevState } from "@/dev/dev-state";
-import { today } from "./fixture-today";
+import { FixtureToday, today } from "./fixture-today";
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
 export const devStates: readonly DevState[] = [
 	{ id: "evening", title: "01 Evening", ...today({ phase: "evening" }) },
 	{ id: "dawn", title: "02 Dawn", ...today({ phase: "dawn" }) },
 	{ id: "day", title: "03 Day", ...today({ phase: "day" }) },
+	{
+		id: "cant-load",
+		options: { headerShown: false },
+		Screen: () => (
+			<CantReachThenBack>
+				{(back) => <FixtureToday loading={!back} phase="day" />}
+			</CantReachThenBack>
+		),
+		title: "Can't reach Xolace before Today loaded, then back",
+	},
 	{ id: "late", title: "04 Late (night mode)", ...today({ phase: "late" }) },
 	{
 		id: "late-light",

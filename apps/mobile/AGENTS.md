@@ -86,7 +86,9 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   or Convex's connection state itself. The root "You're offline." banner is a host
   (`features/offline-banner/`); a screen with its own connection message calls
   `useClaimOfflineMessage()` (`src/lib/connection/use-offline-claim.ts`) and the banner
-  hides while that screen is focused.
+  hides while that screen is focused. A screen whose data hasn't arrived wraps its spinner or
+  skeleton in `<Loading>` (`src/components/shared/loading.tsx`): the placeholder while Xolace
+  can be reached, "Can't load this right now." once it can't, never a timeout of its own.
 - **Convex reads with user-driven args** (paging, filters, tabs): `useStableQuery` /
   `useStablePaginatedQuery`, so the UI doesn't blank while new args load.
 - **Reanimated:** `.get()` / `.set()` on shared values, never `.value`.
