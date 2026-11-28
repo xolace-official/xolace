@@ -14,6 +14,7 @@ import { reflectionRank } from "./lib/aggregates";
 import { authorTagFor } from "./lib/reflectionAuthor";
 import { FREEZE_CAP } from "./lib/streakFreezes";
 import { searchTextOf, trackSearchTextOf } from "./library/searchText";
+import { addQuoteThemes } from "./quotes";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
@@ -370,6 +371,18 @@ export const backfillAchievements = migrations.define({
 	table: "emotional_profiles",
 });
 
+// Curated quote themes: one `quote_themes` row per theme of every quote seeded
+// before the table existed, so the nightly pick stops reading the whole
+// library per person. Until it runs, the pick falls back to that full read.
+// Idempotent: writes only the rows a quote is missing.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillQuoteThemes"}'
+export const backfillQuoteThemes = migrations.define({
+	migrateOne: async (ctx, doc) => {
+		await addQuoteThemes(ctx, doc);
+	},
+	table: "quotes",
+});
+
 export const runAll = migrations.runner([
 	internal.migrations.renameRawInput,
 	internal.migrations.renameUserInput,
@@ -384,4 +397,6 @@ export const runAll = migrations.runner([
 	// Library re-ingest can't fill these: its sha gate skips unchanged rows.
 	internal.migrations.backfillLibraryIndex,
 	internal.migrations.backfillTrackIndex,
+	// Idempotent; the nightly quote pick reads the whole library until it runs.
+	internal.migrations.backfillQuoteThemes,
 ]);

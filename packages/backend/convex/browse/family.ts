@@ -1,7 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { type ObjectType, v } from "convex/values";
 import { type QueryCtx, query } from "../_generated/server";
-import { requireAuth } from "../lib/auth";
+import { requireSignedIn } from "../lib/auth";
 import { familyValidator, trackItems, trackItemValidator } from "./catalogue";
 
 /** Browsing one family's tracks (#339, docs/paths-v1.md §9.3). */
@@ -26,7 +26,7 @@ export async function listByFamilyCore(
 	ctx: QueryCtx,
 	args: ObjectType<typeof listByFamilyArgs>
 ) {
-	await requireAuth(ctx);
+	await requireSignedIn(ctx);
 	const result = await ctx.db
 		.query("audio_tracks")
 		.withIndex("by_family_and_active", (q) =>

@@ -2,7 +2,7 @@ import { type Infer, v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { internalMutation, type QueryCtx, query } from "../_generated/server";
 import { MIN_RESUME_SEC } from "../audio/progress";
-import { requireAuth } from "../lib/auth";
+import { requireAuth, requireSignedIn } from "../lib/auth";
 import {
 	emotionFamily,
 	LIFE_AREA_HOME,
@@ -343,7 +343,7 @@ const FOR_HOUR_SIZE = 3;
 export const getForHour = query({
 	args: { day: v.optional(v.number()), phase: explorePhaseValidator },
 	handler: async (ctx, { day, phase }) => {
-		await requireAuth(ctx);
+		await requireSignedIn(ctx);
 		const tracks = [
 			...(await activeByFamily(ctx, "support")),
 			...(await activeByFamily(ctx, "music")),
@@ -420,7 +420,7 @@ const shortItemValidator = v.union(
 export const getShort = query({
 	args: { day: v.optional(v.number()) },
 	handler: async (ctx, { day }) => {
-		await requireAuth(ctx);
+		await requireSignedIn(ctx);
 		const [tracks, entries] = await Promise.all([
 			ctx.db
 				.query("audio_tracks")

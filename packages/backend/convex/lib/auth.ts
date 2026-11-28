@@ -3,6 +3,30 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
 /**
+ * Ensure the request carries a signed-in identity, without reading any row.
+ *
+ * Only for reads that are the same for everyone signed in and hold nothing
+ * about the caller: the audio catalogue (`browse/`). A query re-runs whenever
+ * a row it read changes, and about thirty writers patch `emotional_profiles`
+ * (streaks, sparks, achievements…), so reading the caller's rows here made
+ * every open catalogue shelf re-read the whole catalogue on each of those
+ * writes. Anything personal, or anything that must refuse an inactive
+ * account, uses `requireAuth`.
+ *
+ * @throws ConvexError `not_authenticated` when the request has no authenticated identity
+ */
+export async function requireSignedIn(ctx: QueryCtx | MutationCtx) {
+	const identity = await ctx.auth.getUserIdentity();
+	if (!identity) {
+		throw new ConvexError({
+			code: "not_authenticated",
+			message: "Not authenticated",
+		});
+	}
+	return identity;
+}
+
+/**
  * Ensure the request is authenticated and return the authenticated user, their emotional profile, and the identity.
  *
  * @returns An object containing `user` (the user document), `profile` (the user's emotional profile document), and `identity` (the authentication identity)
@@ -12,13 +36,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
  * @throws ConvexError `profile_not_found` when the user's emotional profile cannot be found
  */
 export async function requireAuth(ctx: QueryCtx | MutationCtx) {
-	const identity = await ctx.auth.getUserIdentity();
-	if (!identity) {
-		throw new ConvexError({
-			code: "not_authenticated",
-			message: "Not authenticated",
-		});
-	}
+	const identity = await requireSignedIn(ctx);
 
 	const user = await ctx.db
 		.query("users")
