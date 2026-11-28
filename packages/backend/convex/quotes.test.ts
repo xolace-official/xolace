@@ -17,8 +17,8 @@ vi.mock("./lib/aggregates", () => aggregatesMock());
 
 type QuoteIn = { text: string; themes: string[] };
 
-const seedQuotes = (user: SeededUser, quotes: QuoteIn[]) =>
-	user.root.mutation(internal.quotes.seed, { quotes });
+const seedQuotes = (user: SeededUser, quotes: QuoteIn[], force?: boolean) =>
+	user.root.mutation(internal.quotes.seed, { force, quotes });
 
 const idsByText = (user: SeededUser) =>
 	user.root.run(async (ctx) => {
@@ -53,6 +53,30 @@ describe("quotes.pickCuratedQuote", () => {
 			(await ctx.db.query("quote_themes").take(100)).map((r) => r.theme).sort()
 		);
 		expect(rows).toEqual(["fear", "growth", "hope"]);
+	});
+
+	it("files a quote with no listed theme under the unlisted bucket", async () => {
+		const user = await asNewUser();
+		await seedQuotes(user, [
+			{ text: "none", themes: [] },
+			{ text: "custom", themes: ["custom"] },
+		]);
+		const rows = await user.root.run(async (ctx) =>
+			(await ctx.db.query("quote_themes").take(100)).map((r) => r.theme).sort()
+		);
+		expect(rows).toEqual(["_unlisted", "_unlisted", "custom"]);
+	});
+
+	it("reaches quotes with no listed theme once the others are seen", async () => {
+		const user = await asNewUser();
+		await seedQuotes(user, [
+			{ text: "hope", themes: ["hope"] },
+			{ text: "custom", themes: ["custom"] },
+		]);
+		const ids = await idsByText(user);
+
+		expect(await pick(user, [], [ids.hope])).toBe("custom");
+		expect(await pick(user, ["hope"], [ids.hope])).toBe("custom");
 	});
 
 	it("picks an unseen quote of the person's themes", async () => {
@@ -98,18 +122,27 @@ describe("quotes.pickCuratedQuote", () => {
 			{ text: "hope", themes: ["hope"] },
 			{ text: "fear", themes: ["fear"] },
 		]);
-		// Proxies `ctx.db` inside a run, so the query's own reads are counted.
+		// Proxies `ctx.db` inside a run, so the query's own reads of `quotes` are
+		// recorded by method: the backfill check's `.first()` (the oldest quote)
+		// is the only one, never the library read's `.take()`.
 		const counted = await user.root.run(async (ctx) => {
-			let quoteRowsScanned = 0;
+			const quoteReads: string[] = [];
 			const real = ctx.db.query.bind(ctx.db);
 			const db = new Proxy(ctx.db, {
 				get(target, prop, receiver) {
 					if (prop === "query") {
 						return (table: "quotes") => {
-							if (table === "quotes") {
-								quoteRowsScanned++;
+							const q = real(table);
+							if (table !== "quotes") {
+								return q;
 							}
-							return real(table);
+							return new Proxy(q, {
+								get(qt, qp, qr) {
+									quoteReads.push(String(qp));
+									const value = Reflect.get(qt, qp, qr);
+									return typeof value === "function" ? value.bind(qt) : value;
+								},
+							});
 						};
 					}
 					const value = Reflect.get(target, prop, receiver);
@@ -121,10 +154,10 @@ describe("quotes.pickCuratedQuote", () => {
 				shownQuoteIds: [],
 				themes: ["hope"],
 			});
-			return { quote: quote?.text, quoteRowsScanned };
+			return { quote: quote?.text, quoteReads };
 		});
 
-		expect(counted).toEqual({ quote: "hope", quoteRowsScanned: 0 });
+		expect(counted).toEqual({ quote: "hope", quoteReads: ["first"] });
 	});
 
 	describe("before the theme backfill", () => {
@@ -144,6 +177,16 @@ describe("quotes.pickCuratedQuote", () => {
 			]);
 
 			expect(await pick(user, ["fear"])).toBe("fear");
+		});
+
+		it("still reaches the older quotes when a new one was seeded first", async () => {
+			const user = await asNewUser();
+			await insertBare(user, [{ text: "old", themes: ["hope"] }]);
+			await seedQuotes(user, [{ text: "new", themes: ["fear"] }], true);
+			const ids = await idsByText(user);
+
+			expect(await pick(user, [], [ids.new])).toBe("old");
+			expect(await pick(user, ["hope"])).toBe("old");
 		});
 
 		it("the backfill writes each missing row once, however often it runs", async () => {

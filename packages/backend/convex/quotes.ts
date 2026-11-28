@@ -28,6 +28,14 @@ export const THEME_SLUGS = [
 	"inspiration",
 ] as const;
 
+/**
+ * The `quote_themes` bucket for a quote that carries none of `THEME_SLUGS`
+ * (`seed` accepts any theme names, or none), so the fallback pick still
+ * reaches it. Never a person's preference.
+ */
+const UNLISTED_THEME = "_unlisted";
+const LISTED = new Set<string>(THEME_SLUGS);
+
 const quoteDocValidator = v.object({
 	_creationTime: v.number(),
 	_id: v.id("quotes"),
@@ -57,8 +65,9 @@ function shuffled<T>(items: readonly T[]) {
 
 /**
  * Writes the `quote_themes` rows a quote is missing, so the curated pick can
- * reach it by theme. Idempotent: `seed` calls it for each new quote and
- * `migrations:backfillQuoteThemes` for every older one.
+ * reach it by theme: one per theme, plus `UNLISTED_THEME` when none of them is
+ * listed, so every quote has at least one row. Idempotent: `seed` calls it for
+ * each new quote and `migrations:backfillQuoteThemes` for every older one.
  */
 export async function addQuoteThemes(
 	ctx: MutationCtx,
@@ -72,7 +81,11 @@ export async function addQuoteThemes(
 				.take(MAX_PER_THEME)
 		).map((r) => r.theme)
 	);
-	for (const theme of new Set(quote.themes)) {
+	const want = new Set(quote.themes);
+	if (!quote.themes.some((t) => LISTED.has(t))) {
+		want.add(UNLISTED_THEME);
+	}
+	for (const theme of want) {
 		if (!have.has(theme)) {
 			await ctx.db.insert("quote_themes", { quoteId: quote._id, theme });
 		}
@@ -90,12 +103,15 @@ export async function addQuoteThemes(
  *
  * 1. An unseen quote from the person's themes, as before.
  * 2. Else an unseen quote from the first theme, in random order, that still
- *    has one. Every quote carries a `THEME_SLUGS` theme, so all are reachable;
- *    a quote is less evenly likely than in the old pick over the whole
- *    library, which nobody can tell apart in a daily quote.
+ *    has one. Every quote has a row under a `THEME_SLUGS` theme or
+ *    `UNLISTED_THEME`, so all are reachable; a quote is less evenly likely
+ *    than in the old pick over the whole library, which nobody can tell apart
+ *    in a daily quote.
  * 3. All seen: any quote of a random theme (the cycle resets).
- * 4. No `quote_themes` rows yet (the backfill hasn't run on this deployment):
- *    the old read of every quote.
+ * 4. Theme backfill not done on this deployment (the oldest quote has no
+ *    `quote_themes` row): the old read of every quote. A quote seeded before
+ *    the backfill has rows, so an empty table isn't the test. The migration
+ *    walks quotes oldest first, so this holds until it starts.
  */
 export const pickCuratedQuoteArgs = {
 	emotionalProfileId: v.id("emotional_profiles"),
@@ -119,6 +135,19 @@ export async function pickCuratedQuoteFor(
 		[...new Set(ids)].filter((id) => !shownSet.has(id));
 	const get = (id: Id<"quotes">) => ctx.db.get("quotes", id);
 
+	const oldest = await ctx.db.query("quotes").first();
+	if (oldest === null) {
+		return null;
+	}
+	const backfilled =
+		(await ctx.db
+			.query("quote_themes")
+			.withIndex("by_quoteId", (q) => q.eq("quoteId", oldest._id))
+			.first()) !== null;
+	if (!backfilled) {
+		return await pickFromLibrary(ctx, args, shownSet);
+	}
+
 	// 1. Preference-matching quotes first
 	if (args.themes.length > 0) {
 		const matching = unseenOf(
@@ -131,7 +160,7 @@ export async function pickCuratedQuoteFor(
 
 	// 2. Fallback: any unseen quote, one theme at a time
 	let anyIds: Id<"quotes">[] = [];
-	for (const theme of shuffled(THEME_SLUGS)) {
+	for (const theme of shuffled([...THEME_SLUGS, UNLISTED_THEME])) {
 		const ids = await idsFor(theme);
 		const unseen = unseenOf(ids);
 		if (unseen.length > 0) {
@@ -143,11 +172,15 @@ export async function pickCuratedQuoteFor(
 	}
 
 	// 3. All quotes seen — pick random (reset cycle)
-	if (anyIds.length > 0) {
-		return await get(randomOf(anyIds));
-	}
+	return anyIds.length > 0 ? await get(randomOf(anyIds)) : null;
+}
 
-	// 4. Not backfilled yet: every quote, as before quote_themes
+/** 4. Not backfilled yet: every quote, as before quote_themes. */
+async function pickFromLibrary(
+	ctx: QueryCtx,
+	args: ObjectType<typeof pickCuratedQuoteArgs>,
+	shownSet: Set<string>
+) {
 	const allQuotes = await ctx.db.query("quotes").take(LIBRARY_MAX);
 	const themed =
 		args.themes.length > 0
